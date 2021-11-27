@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "strict": true
+  },
+  "_kilo_change_markers": [
+    "forced-capture-the-metaphor-fir-1:docs"
+  ]
+}
