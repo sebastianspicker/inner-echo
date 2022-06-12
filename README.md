@@ -3,10 +3,10 @@
 A working tree for inner-echo with an evolving implementation history.
 
 ## Overview
-inner-echo is moving through bootstrap push work.
+inner-echo is moving through steady build work.
 
 ## Status
-Working state: bootstrap.
+Project phase: bootstrap.
 
 ## Usage
-- Made the the main flow assumptions easier to check later.
+- Made the video assumptions easier to check later.
