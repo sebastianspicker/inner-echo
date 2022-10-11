@@ -11,4 +11,7 @@ This page tracks bootstrap decisions for 00_doc_inventory during steady build wo
 Early notes are still uneven and may be folded into clearer sections later.
 
 ## Usage
-- Made the video assumptions easier to check later.
+- Made the audio assumptions easier to check later.
+
+## Caveats
+Some setup details still depend on the current local workflow and may change again.
