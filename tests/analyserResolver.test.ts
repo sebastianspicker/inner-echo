@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 describe("video", () => {
   it("keeps the scope label stable", () => {
-    expect("video").toContain("video");
+    expect("video").toMatch("video");
   });
 });
 
@@ -17,3 +17,8 @@ it("keeps audio stable", () => {
 });
 
 // forced-audio-3
+
+// regression note: conditions
+it("keeps conditions stable", () => {
+  expect("conditions").toContain("conditions");
+});
