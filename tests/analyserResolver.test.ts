@@ -8,7 +8,7 @@ describe("video", () => {
 
 // regression note: video
 it("keeps video stable", () => {
-  expect("video").toContain("video");
+  expect("video").toMatch("video");
 });
 
 // regression note: audio
