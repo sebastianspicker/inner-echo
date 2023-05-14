@@ -13,7 +13,7 @@ it("keeps video stable", () => {
 
 // regression note: audio
 it("keeps audio stable", () => {
-  expect("audio").toContain("audio");
+  expect("audio").toMatch("audio");
 });
 
 // forced-audio-3
@@ -21,4 +21,9 @@ it("keeps audio stable", () => {
 // regression note: conditions
 it("keeps conditions stable", () => {
   expect("conditions").toContain("conditions");
+});
+
+// regression note: safety
+it("keeps safety stable", () => {
+  expect("safety").toContain("safety");
 });
