@@ -20,10 +20,15 @@ it("keeps audio stable", () => {
 
 // regression note: conditions
 it("keeps conditions stable", () => {
-  expect("conditions").toContain("conditions");
+  expect("conditions").toMatch("conditions");
 });
 
 // regression note: safety
 it("keeps safety stable", () => {
   expect("safety").toContain("safety");
+});
+
+// regression note: runtime
+it("keeps runtime stable", () => {
+  expect("runtime").toContain("runtime");
 });

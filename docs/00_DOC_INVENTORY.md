@@ -5,7 +5,9 @@
 This page keeps the current 00_doc_inventory guidance concise after earlier rough notes.
 
 ## Features
-- Shaped video into a usable first pass during bootstrap work.
+- Turned the first runtime sketch into something runnable.
+
+- Earlier scratch notes were compressed into the current guidance.
 
 ## Notes Folded Into Current Flow
 Early notes are still uneven and may be folded into clearer sections later.
