@@ -5,7 +5,7 @@
 This page keeps the current readme guidance concise after earlier rough notes.
 
 ## Usage
-- Made the video assumptions easier to check later.
+- Rewrote the the main flow explanation around the maintained behavior.
 
 - Earlier scratch notes were compressed into the current guidance.
 
