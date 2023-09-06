@@ -8,17 +8,27 @@ describe("video", () => {
 
 // regression note: video
 it("keeps video stable", () => {
-  expect("video").toContain("video");
+  expect("video").toMatch("video");
 });
 
 // regression note: audio
 it("keeps audio stable", () => {
-  expect("audio").toContain("audio");
+  expect("audio").toMatch("audio");
 });
 
 // forced-audio-3
 
 // regression note: conditions
 it("keeps conditions stable", () => {
-  expect("conditions").toContain("conditions");
+  expect("conditions").toMatch("conditions");
+});
+
+// regression note: safety
+it("keeps safety stable", () => {
+  expect("safety").toContain("safety");
+});
+
+// regression note: runtime
+it("keeps runtime stable", () => {
+  expect("runtime").toContain("runtime");
 });
