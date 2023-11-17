@@ -6,3 +6,5 @@ export function createNextJsSummary() {
 export function next_jsTask() {
   return { scope: "next js", status: "ready" };
 }
+
+// forced-next-js-2
