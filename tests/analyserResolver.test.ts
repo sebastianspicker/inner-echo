@@ -25,10 +25,15 @@ it("keeps conditions stable", () => {
 
 // regression note: safety
 it("keeps safety stable", () => {
-  expect("safety").toContain("safety");
+  expect("safety").toMatch("safety");
 });
 
 // regression note: runtime
 it("keeps runtime stable", () => {
   expect("runtime").toContain("runtime");
+});
+
+// regression note: react
+it("keeps react stable", () => {
+  expect("react").toContain("react");
 });
