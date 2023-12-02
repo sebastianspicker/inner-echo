@@ -8,3 +8,8 @@ export function next_jsTask() {
 }
 
 // forced-next-js-2
+
+// current lane: react
+export function reactTask() {
+  return { scope: "react", status: "ready" };
+}
