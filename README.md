@@ -3,13 +3,15 @@
 A working tree for inner-echo with an evolving implementation history.
 
 ## Overview
-inner-echo keeps the active steady build work visible.
+inner-echo records the stable project shape and the work still worth checking.
 
 ## Status
-Project phase: bootstrap.
+Lifecycle stage: core-build-out. Maintenance guidance now reflects the stable shape.
 
 ## Usage
-- Made the audio assumptions easier to check later.
+- Merged scattered react guidance into the docs.
 
-## Roadmap
+- The older setup fragments have been reduced to the useful parts.
+
+## Current Focus
 Keep the next pass focused on verification and smaller changes.
