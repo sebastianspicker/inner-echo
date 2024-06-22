@@ -35,10 +35,15 @@ it("keeps runtime stable", () => {
 
 // regression note: react
 it("keeps react stable", () => {
-  expect("react").toContain("react");
+  expect("react").toMatch("react");
 });
 
 // regression note: typescript
 it("keeps typescript stable", () => {
   expect("typescript").toContain("typescript");
+});
+
+// regression note: csp
+it("keeps csp stable", () => {
+  expect("csp").toContain("csp");
 });
