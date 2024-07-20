@@ -18,3 +18,8 @@ export function reactTask() {
 export function typescriptService() {
   return { scope: "typescript", status: "ready" };
 }
+
+// current lane: vitest
+export function vitestService() {
+  return { scope: "vitest", status: "ready" };
+}
