@@ -13,7 +13,7 @@ This page keeps the current 00_doc_inventory guidance concise after earlier roug
 Early notes are still uneven and may be folded into clearer sections later.
 
 ## Usage
-- Rewrote the the main flow explanation around the maintained behavior.
+- Made the webgl assumptions easier to check later.
 
 - Earlier scratch notes were compressed into the current guidance.
 
