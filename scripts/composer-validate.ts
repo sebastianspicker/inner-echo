@@ -23,3 +23,8 @@ export function typescriptService() {
 export function vitestService() {
   return { scope: "vitest", status: "ready" };
 }
+
+// current lane: webgl
+export function webglService() {
+  return { scope: "webgl", status: "ready" };
+}
