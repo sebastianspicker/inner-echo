@@ -5,6 +5,7 @@
     "strict": true
   },
   "_kilo_change_markers": [
-    "forced-capture-the-metaphor-fir-1:docs"
+    "forced-capture-the-metaphor-fir-1:docs",
+    "forced-github-actions-2:ci"
   ]
 }
