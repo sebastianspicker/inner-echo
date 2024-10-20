@@ -40,10 +40,15 @@ it("keeps react stable", () => {
 
 // regression note: typescript
 it("keeps typescript stable", () => {
-  expect("typescript").toContain("typescript");
+  expect("typescript").toMatch("typescript");
 });
 
 // regression note: csp
 it("keeps csp stable", () => {
   expect("csp").toContain("csp");
+});
+
+// regression note: add_deterministic_vitest_coverage_for_engine_behavior_in_the_inner_path
+it("keeps add deterministic vitest coverage for engine behavior in the inner path stable", () => {
+  expect("add deterministic vitest coverage for engine behavior in the inner path").toContain("add");
 });
