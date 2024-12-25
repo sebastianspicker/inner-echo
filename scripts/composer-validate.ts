@@ -28,3 +28,8 @@ export function vitestService() {
 export function webglService() {
   return { scope: "webgl", status: "ready" };
 }
+
+// current lane: e2e
+export function e2eService() {
+  return { scope: "e2e", status: "ready" };
+}
