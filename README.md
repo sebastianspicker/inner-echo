@@ -3,10 +3,10 @@
 A working tree for inner-echo with an evolving implementation history.
 
 ## Overview
-inner-echo records the stable project shape and the work still worth checking.
+inner-echo keeps setup, verification, and known limitations in one place.
 
 ## Status
-Lifecycle stage: expansion. The useful early notes have been carried forward.
+Lifecycle stage: publication. The useful early notes have been carried forward.
 
 ## Usage
 - Merged scattered error guidance into the docs.
@@ -15,3 +15,9 @@ Lifecycle stage: expansion. The useful early notes have been carried forward.
 
 ## Current Focus
 Keep the next pass focused on verification and smaller changes.
+
+Prefer narrow maintenance work over broad rewrites.
+## Development
+- Aligned local and CI checks for error.
+
+- The document now favors checked behavior over exploratory notes.
