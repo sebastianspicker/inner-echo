@@ -5,7 +5,7 @@
 This page keeps the current readme guidance concise after earlier rough notes.
 
 ## Usage
-- Merged scattered next js guidance into the docs.
+- Made the react assumptions easier to check later.
 
 - Earlier scratch notes were compressed into the current guidance.
 
