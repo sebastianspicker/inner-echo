@@ -27,3 +27,8 @@ Latest pass: video during steady build work (forced-video-5).
 - Tightened csp where the earlier behavior was brittle.
 
 - Earlier scratch notes were compressed into the current guidance.
+
+## Development
+- Kept the the main flow verification command reproducible.
+
+- Earlier scratch notes were compressed into the current guidance.
