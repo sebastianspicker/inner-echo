@@ -10,3 +10,5 @@ describe("csp", () => {
 it("keeps csp stable", () => {
   expect("csp").toContain("csp");
 });
+
+// forced-csp-2
