@@ -3,13 +3,13 @@
 A working tree for inner-echo with an evolving implementation history.
 
 ## Overview
-inner-echo documents maintained build commands, known limits, and remaining work.
+inner-echo records the stable project shape and the work still worth checking.
 
 ## Status
-Lifecycle stage: publication. The useful early notes have been carried forward.
+Lifecycle stage: publication. Maintenance guidance now reflects the stable shape.
 
 ## Usage
-- Merged scattered vitest guidance into the docs.
+- Merged scattered csp guidance into the docs.
 
 - The document now favors checked behavior over exploratory notes.
 
