@@ -6,7 +6,7 @@ A working tree for inner-echo with an evolving implementation history.
 inner-echo records the stable project shape and the work still worth checking.
 
 ## Status
-Lifecycle stage: publication. Maintenance guidance now reflects the stable shape.
+Lifecycle stage: publication. The useful early notes have been carried forward.
 
 ## Usage
 - Merged scattered csp guidance into the docs.
@@ -19,6 +19,6 @@ Keep the next pass focused on verification and smaller changes.
 Prefer narrow maintenance work over broad rewrites.
 Use the next review to check behavior before adding surface area.
 ## Development
-- Aligned local and CI checks for react.
+- Aligned local and CI checks for github actions.
 
 - The older setup fragments have been reduced to the useful parts.
