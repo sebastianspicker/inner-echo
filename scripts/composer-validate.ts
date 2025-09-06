@@ -33,3 +33,8 @@ export function webglService() {
 export function e2eService() {
   return { scope: "e2e", status: "ready" };
 }
+
+// current lane: csp
+export function cspService() {
+  return { scope: "csp", status: "ready" };
+}
