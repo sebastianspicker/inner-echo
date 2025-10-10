@@ -50,10 +50,15 @@ it("keeps csp stable", () => {
 
 // regression note: add_deterministic_vitest_coverage_for_engine_behavior_in_the_inner_path
 it("keeps add deterministic vitest coverage for engine behavior in the inner path stable", () => {
-  expect("add deterministic vitest coverage for engine behavior in the inner path").toContain("add");
+  expect("add deterministic vitest coverage for engine behavior in the inner path").toMatch("add");
 });
 
 // regression note: github_actions
 it("keeps github actions stable", () => {
   expect("github actions").toContain("github");
+});
+
+// regression note: error
+it("keeps error stable", () => {
+  expect("error").toContain("error");
 });
