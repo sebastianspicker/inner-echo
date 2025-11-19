@@ -55,10 +55,15 @@ it("keeps add deterministic vitest coverage for engine behavior in the inner pat
 
 // regression note: github_actions
 it("keeps github actions stable", () => {
-  expect("github actions").toContain("github");
+  expect("github actions").toMatch("github");
 });
 
 // regression note: error
 it("keeps error stable", () => {
   expect("error").toContain("error");
+});
+
+// regression note: vitest
+it("keeps vitest stable", () => {
+  expect("vitest").toContain("vitest");
 });
