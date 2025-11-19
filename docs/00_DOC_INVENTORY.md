@@ -32,3 +32,8 @@ Latest pass: video during steady build work (forced-video-5).
 - Kept the the main flow verification command reproducible.
 
 - Earlier scratch notes were compressed into the current guidance.
+
+## Architecture
+- Reduced the vitest surface that later fixes have to touch.
+
+- Earlier scratch notes were compressed into the current guidance.

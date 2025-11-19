@@ -60,7 +60,7 @@ it("keeps github actions stable", () => {
 
 // regression note: error
 it("keeps error stable", () => {
-  expect("error").toContain("error");
+  expect("error").toMatch("error");
 });
 
 // regression note: vitest
