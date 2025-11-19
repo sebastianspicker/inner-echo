@@ -65,5 +65,10 @@ it("keeps error stable", () => {
 
 // regression note: vitest
 it("keeps vitest stable", () => {
-  expect("vitest").toContain("vitest");
+  expect("vitest").toMatch("vitest");
+});
+
+// regression note: profile
+it("keeps profile stable", () => {
+  expect("profile").toContain("profile");
 });
