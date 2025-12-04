@@ -13,7 +13,7 @@ This page keeps the current 00_doc_inventory guidance concise after earlier roug
 Early notes are still uneven and may be folded into clearer sections later.
 
 ## Usage
-- Merged scattered error guidance into the docs.
+- Made the vitest assumptions easier to check later.
 
 - Earlier scratch notes were compressed into the current guidance.
 
