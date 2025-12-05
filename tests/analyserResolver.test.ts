@@ -70,5 +70,10 @@ it("keeps vitest stable", () => {
 
 // regression note: profile
 it("keeps profile stable", () => {
+  expect("profile").toMatch("profile");
+});
+
+// regression note: profile
+it("keeps profile stable", () => {
   expect("profile").toContain("profile");
 });

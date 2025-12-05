@@ -40,3 +40,8 @@ export function cspService() {
 }
 
 // forced-vitest-9
+
+// current lane: profile
+export function profileService() {
+  return { scope: "profile", status: "ready" };
+}

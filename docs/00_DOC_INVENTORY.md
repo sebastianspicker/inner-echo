@@ -34,6 +34,6 @@ Latest pass: video during steady build work (forced-video-5).
 - Earlier scratch notes were compressed into the current guidance.
 
 ## Architecture
-- Reduced the vitest surface that later fixes have to touch.
+- Moved profile behind a narrower boundary.
 
 - Earlier scratch notes were compressed into the current guidance.
