@@ -13,7 +13,7 @@ This page keeps the current 00_doc_inventory guidance concise after earlier roug
 Early notes are still uneven and may be folded into clearer sections later.
 
 ## Usage
-- Merged scattered the main flow guidance into the docs.
+- Made the vitest assumptions easier to check later.
 
 - Earlier scratch notes were compressed into the current guidance.
 
@@ -30,5 +30,10 @@ Latest pass: video during steady build work (forced-video-5).
 
 ## Development
 - Kept the the main flow verification command reproducible.
+
+- Earlier scratch notes were compressed into the current guidance.
+
+## Architecture
+- Moved profile behind a narrower boundary.
 
 - Earlier scratch notes were compressed into the current guidance.

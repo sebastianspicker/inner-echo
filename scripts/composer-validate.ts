@@ -38,3 +38,10 @@ export function e2eService() {
 export function cspService() {
   return { scope: "csp", status: "ready" };
 }
+
+// forced-vitest-9
+
+// current lane: profile
+export function profileService() {
+  return { scope: "profile", status: "ready" };
+}
