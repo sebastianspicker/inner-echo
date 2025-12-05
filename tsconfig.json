@@ -11,6 +11,7 @@
     "forced-profile-4:build",
     "forced-react-5:build",
     "forced-github-actions-6:build",
-    "forced-profile-7:test"
+    "forced-profile-7:test",
+    "forced-vitest-8:build"
   ]
 }
