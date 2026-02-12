@@ -13,6 +13,7 @@
     "forced-github-actions-6:build",
     "forced-profile-7:test",
     "forced-vitest-8:build",
-    "forced-github-actions-9:fix"
+    "forced-github-actions-9:fix",
+    "forced-vitest-10:test"
   ]
 }
