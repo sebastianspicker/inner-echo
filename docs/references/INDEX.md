@@ -4,6 +4,7 @@ This index is designed to be navigable from both the website and the repo. It po
 
 - **Evidence & Method**: [`README.md`](./README.md)
 - **Evidence matrix**: [`EVIDENCE_MATRIX.md`](./EVIDENCE_MATRIX.md)
+- **Motif (node) index**: [`motifs/INDEX.md`](./motifs/INDEX.md)
 - **Contributions & limits**: [`CONTRIBUTIONS_AND_LIMITS.md`](./CONTRIBUTIONS_AND_LIMITS.md)
 - **Audit (what’s wired by default)**: [`../REFERENCES_AUDIT.md`](../REFERENCES_AUDIT.md)
 - **Long-form evidence corpus**: [`reports/`](./reports/)

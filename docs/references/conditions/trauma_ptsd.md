@@ -21,6 +21,19 @@
 - `docs/references/EVIDENCE_MATRIX.md` (matrix)
 - `docs/REFERENCES_AUDIT.md` (audit)
 
+## Motifs used in this preset (quick traceability)
+
+These motifs are used by the included dimensions. Each motif is an **artistic/engineering implementation** of a metaphor; the evidence applies primarily to the dimension phenomena.
+
+- `compressor_limiter` — Reduces peaks and smooths dynamics (safety-first). — `docs/references/motifs/compressor_limiter.md`
+- `delay` — Short echo with low feedback/mix (clamped). — `docs/references/motifs/delay.md`
+- `edge_sharpen` — Subtle edge enhancement (non-flickering). — `docs/references/motifs/edge_sharpen.md`
+- `grain` — Adds fine noise texture (clamped). — `docs/references/motifs/grain.md`
+- `highpass` — Attenuates low frequencies below cutoff (clamped). — `docs/references/motifs/highpass.md`
+- `interference` — Adds gentle distortion artifacts (clamped; no strobe). — `docs/references/motifs/interference.md`
+- `noise_bed` — Adds quiet broadband noise floor (clamped). — `docs/references/motifs/noise_bed.md`
+- `vignette` — Darkens edges to narrow the frame (static or gently modulated). — `docs/references/motifs/vignette.md`
+
 ## Safety notes / warnings shown in product
 
 - May be activating. Use Safe Mode and keep Intensity low.

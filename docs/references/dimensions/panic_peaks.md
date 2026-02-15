@@ -15,6 +15,25 @@ These are the conservative *default-enabled* motifs used by the composer when th
 - **Video nodes**: `pulse`, `vignette`, `soft_blur`, `grain`
 - **Audio nodes**: `pulse_tone`, `lowpass`, `compressor_limiter`, `reverb`
 
+## Motif-by-motif traceability (evidence vs likelihood vs artistic)
+
+Each motif below includes:
+
+- a **short technical summary** (what the simulation does)
+- a **claim label** (Supported / Mixed / Hypothesis / Artistic)
+- **sources** (in-repo) so readers can verify
+
+| Motif (node) | What it does in the simulation | Claim label | Likelihood label | Sources |
+|---|---|---|---|---|
+| `pulse` | Slow, bounded envelope modulation (no strobe). | **Mixed** | **High** | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/pulse.md` |
+| `vignette` | Darkens edges to narrow the frame (static or gently modulated). | **Mixed** | **High** | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/vignette.md` |
+| `soft_blur` | Applies mild blur to reduce sharp detail (clamped). | **Mixed** | **High** | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/soft_blur.md` |
+| `grain` | Adds fine noise texture (clamped). | **Mixed** | **High** | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
+| `pulse_tone` | Adds a soft tone pulse (level clamped). | **Mixed** | **High** | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/pulse_tone.md` |
+| `lowpass` | Attenuates high frequencies above cutoff (clamped). | **Mixed** | **High** | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |
+| `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | **Mixed** | **High** | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |
+| `reverb` | Adds gentle space/decay (clamped). | **Mixed** | **High** | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/reverb.md` |
+
 ## Evidence links (in-repo)
 
 - **Matrix row**: `docs/references/EVIDENCE_MATRIX.md`

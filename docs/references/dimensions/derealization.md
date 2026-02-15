@@ -15,6 +15,25 @@ These are the conservative *default-enabled* motifs used by the composer when th
 - **Video nodes**: `haze`, `chroma_aberration`, `temporal_smear`, `color_grade`
 - **Audio nodes**: `flutter`, `lowpass`, `reverb`, `compressor_limiter`
 
+## Motif-by-motif traceability (evidence vs likelihood vs artistic)
+
+Each motif below includes:
+
+- a **short technical summary** (what the simulation does)
+- a **claim label** (Supported / Mixed / Hypothesis / Artistic)
+- **sources** (in-repo) so readers can verify
+
+| Motif (node) | What it does in the simulation | Claim label | Likelihood label | Sources |
+|---|---|---|---|---|
+| `haze` | Adds soft fog/veil (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/haze.md` |
+| `chroma_aberration` | Minor RGB channel offset near edges (very low). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/chroma_aberration.md` |
+| `temporal_smear` | Blends previous frames for persistence/smear (feedback clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/temporal_smear.md` |
+| `color_grade` | Adjusts saturation/contrast/tonal balance (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/color_grade.md` |
+| `flutter` | Low-depth pitch/phase wobble (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/flutter.md` |
+| `lowpass` | Attenuates high frequencies above cutoff (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |
+| `reverb` | Adds gentle space/decay (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/reverb.md` |
+| `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |
+
 ## Evidence links (in-repo)
 
 - **Matrix row**: `docs/references/EVIDENCE_MATRIX.md`

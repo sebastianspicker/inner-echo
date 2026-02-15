@@ -15,6 +15,23 @@ These are the conservative *default-enabled* motifs used by the composer when th
 - **Video nodes**: `grain`, `edge_sharpen`, `vignette`
 - **Audio nodes**: `compressor_limiter`, `highpass`, `noise_bed`
 
+## Motif-by-motif traceability (evidence vs likelihood vs artistic)
+
+Each motif below includes:
+
+- a **short technical summary** (what the simulation does)
+- a **claim label** (Supported / Mixed / Hypothesis / Artistic)
+- **sources** (in-repo) so readers can verify
+
+| Motif (node) | What it does in the simulation | Claim label | Likelihood label | Sources |
+|---|---|---|---|---|
+| `grain` | Adds fine noise texture (clamped). | **Mixed** | **High** | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
+| `edge_sharpen` | Subtle edge enhancement (non-flickering). | **Mixed** | **High** | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/edge_sharpen.md` |
+| `vignette` | Darkens edges to narrow the frame (static or gently modulated). | **Mixed** | **High** | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/vignette.md` |
+| `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | **Mixed** | **High** | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |
+| `highpass` | Attenuates low frequencies below cutoff (clamped). | **Mixed** | **High** | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/highpass.md` |
+| `noise_bed` | Adds quiet broadband noise floor (clamped). | **Mixed** | **High** | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/noise_bed.md` |
+
 ## Evidence links (in-repo)
 
 - **Matrix row**: `docs/references/EVIDENCE_MATRIX.md`

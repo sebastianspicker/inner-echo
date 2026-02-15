@@ -15,6 +15,24 @@ These are the conservative *default-enabled* motifs used by the composer when th
 - **Video nodes**: `feedback_loop`, `grid_hint`, `vignette`, `grain`
 - **Audio nodes**: `delay`, `lowpass`, `compressor_limiter`
 
+## Motif-by-motif traceability (evidence vs likelihood vs artistic)
+
+Each motif below includes:
+
+- a **short technical summary** (what the simulation does)
+- a **claim label** (Supported / Mixed / Hypothesis / Artistic)
+- **sources** (in-repo) so readers can verify
+
+| Motif (node) | What it does in the simulation | Claim label | Likelihood label | Sources |
+|---|---|---|---|---|
+| `feedback_loop` | Low-feedback image recurrence (bounded; reduced-motion disables). | **Mixed** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/feedback_loop.md` |
+| `grid_hint` | Subtle grid overlay hint (very low contrast). | **Mixed** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grid_hint.md` |
+| `vignette` | Darkens edges to narrow the frame (static or gently modulated). | **Mixed** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/vignette.md` |
+| `grain` | Adds fine noise texture (clamped). | **Mixed** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
+| `delay` | Short echo with low feedback/mix (clamped). | **Mixed** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/delay.md` |
+| `lowpass` | Attenuates high frequencies above cutoff (clamped). | **Mixed** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |
+| `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | **Mixed** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |
+
 ## Evidence links (in-repo)
 
 - **Matrix row**: `docs/references/EVIDENCE_MATRIX.md`

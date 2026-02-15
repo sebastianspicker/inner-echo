@@ -52,6 +52,7 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
       'docs/references/README.md',
       'docs/references/INDEX.md',
       'docs/references/EVIDENCE_MATRIX.md',
+      'docs/references/motifs/INDEX.md',
       'docs/references/CONTRIBUTIONS_AND_LIMITS.md',
       'docs/REFERENCES_AUDIT.md',
     ]

@@ -15,6 +15,24 @@ These are the conservative *default-enabled* motifs used by the composer when th
 - **Video nodes**: `grain`, `interference`, `edge_sharpen`, `vignette`
 - **Audio nodes**: `noise_bed`, `compressor_limiter`, `lowpass`
 
+## Motif-by-motif traceability (evidence vs likelihood vs artistic)
+
+Each motif below includes:
+
+- a **short technical summary** (what the simulation does)
+- a **claim label** (Supported / Mixed / Hypothesis / Artistic)
+- **sources** (in-repo) so readers can verify
+
+| Motif (node) | What it does in the simulation | Claim label | Likelihood label | Sources |
+|---|---|---|---|---|
+| `grain` | Adds fine noise texture (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/sensory_overload.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
+| `interference` | Adds gentle distortion artifacts (clamped; no strobe). | **Mixed** | **Medium** | `docs/references/dimensions/sensory_overload.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/interference.md` |
+| `edge_sharpen` | Subtle edge enhancement (non-flickering). | **Mixed** | **Medium** | `docs/references/dimensions/sensory_overload.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/edge_sharpen.md` |
+| `vignette` | Darkens edges to narrow the frame (static or gently modulated). | **Mixed** | **Medium** | `docs/references/dimensions/sensory_overload.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/vignette.md` |
+| `noise_bed` | Adds quiet broadband noise floor (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/sensory_overload.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/noise_bed.md` |
+| `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | **Mixed** | **Medium** | `docs/references/dimensions/sensory_overload.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |
+| `lowpass` | Attenuates high frequencies above cutoff (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/sensory_overload.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |
+
 ## Evidence links (in-repo)
 
 - **Matrix row**: `docs/references/EVIDENCE_MATRIX.md`

@@ -21,6 +21,24 @@
 - `docs/references/EVIDENCE_MATRIX.md` (matrix)
 - `docs/REFERENCES_AUDIT.md` (audit)
 
+## Motifs used in this preset (quick traceability)
+
+These motifs are used by the included dimensions. Each motif is an **artistic/engineering implementation** of a metaphor; the evidence applies primarily to the dimension phenomena.
+
+- `color_grade` — Adjusts saturation/contrast/tonal balance (clamped). — `docs/references/motifs/color_grade.md`
+- `compressor_limiter` — Reduces peaks and smooths dynamics (safety-first). — `docs/references/motifs/compressor_limiter.md`
+- `delay` — Short echo with low feedback/mix (clamped). — `docs/references/motifs/delay.md`
+- `flutter` — Low-depth pitch/phase wobble (clamped). — `docs/references/motifs/flutter.md`
+- `grain` — Adds fine noise texture (clamped). — `docs/references/motifs/grain.md`
+- `haze` — Adds soft fog/veil (clamped). — `docs/references/motifs/haze.md`
+- `lowpass` — Attenuates high frequencies above cutoff (clamped). — `docs/references/motifs/lowpass.md`
+- `noise_bed` — Adds quiet broadband noise floor (clamped). — `docs/references/motifs/noise_bed.md`
+- `pulse` — Slow, bounded envelope modulation (no strobe). — `docs/references/motifs/pulse.md`
+- `reverb` — Adds gentle space/decay (clamped). — `docs/references/motifs/reverb.md`
+- `soft_blur` — Applies mild blur to reduce sharp detail (clamped). — `docs/references/motifs/soft_blur.md`
+- `temporal_smear` — Blends previous frames for persistence/smear (feedback clamped). — `docs/references/motifs/temporal_smear.md`
+- `vignette` — Darkens edges to narrow the frame (static or gently modulated). — `docs/references/motifs/vignette.md`
+
 ## Safety notes / warnings shown in product
 
 - This is a metaphorical overlay. If it feels heavy, reduce Intensity or stop.

@@ -66,6 +66,7 @@ function main(): void {
     'docs/references/README.md',
     'docs/references/INDEX.md',
     'docs/references/EVIDENCE_MATRIX.md',
+    'docs/references/motifs/INDEX.md',
     'docs/references/CONTRIBUTIONS_AND_LIMITS.md',
     'docs/REFERENCES_AUDIT.md',
   ]
@@ -74,6 +75,7 @@ function main(): void {
   }
 
   const dimsFile = readJsonFirstObject<ExperienceDimensionsFile>(path.join(root, 'src/conditions/experience-dimensions.json'))
+  const motifs = new Set<string>()
   for (const d of dimsFile.dimensions ?? []) {
     const doc = d.rationale_doc
     if (!doc) {
@@ -81,6 +83,13 @@ function main(): void {
       continue
     }
     if (!exists(root, doc)) errors.push(`Dimension "${d.id}" rationale_doc not found: ${doc}`)
+    // Ensure motif pages exist for every listed node motif.
+    // We use the dimension pages generator output (docs/references/motifs/<node>.md).
+    // Motifs are read from the SSOT dimension definitions (read-only).
+    const defAny = d as any
+    const video = (defAny?.motif_summary?.video_nodes ?? []) as unknown[]
+    const audio = (defAny?.motif_summary?.audio_nodes ?? []) as unknown[]
+    for (const n of [...video, ...audio]) motifs.add(String(n))
   }
 
   const mapFile = readJsonFirstObject<DimensionToSignalMappingFile>(path.join(root, 'src/conditions/dimension-to-signal-mapping.json'))
@@ -95,6 +104,11 @@ function main(): void {
     const prof = readJsonFirstObject<Profile>(path.join(profilesDir, file))
     const doc = `docs/references/conditions/${prof.id}.md`
     if (!exists(root, doc)) errors.push(`Condition "${prof.id}" missing evidence summary page: ${doc}`)
+  }
+
+  for (const m of Array.from(motifs)) {
+    const doc = `docs/references/motifs/${m}.md`
+    if (!exists(root, doc)) errors.push(`Motif "${m}" missing evidence page: ${doc}`)
   }
 
   if (errors.length) {

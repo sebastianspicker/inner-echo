@@ -15,6 +15,23 @@ These are the conservative *default-enabled* motifs used by the composer when th
 - **Video nodes**: `temporal_smear`, `pulse`, `grain`
 - **Audio nodes**: `flutter`, `delay`, `compressor_limiter`
 
+## Motif-by-motif traceability (evidence vs likelihood vs artistic)
+
+Each motif below includes:
+
+- a **short technical summary** (what the simulation does)
+- a **claim label** (Supported / Mixed / Hypothesis / Artistic)
+- **sources** (in-repo) so readers can verify
+
+| Motif (node) | What it does in the simulation | Claim label | Likelihood label | Sources |
+|---|---|---|---|---|
+| `temporal_smear` | Blends previous frames for persistence/smear (feedback clamped). | **Mixed** | **Medium** | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/temporal_smear.md` |
+| `pulse` | Slow, bounded envelope modulation (no strobe). | **Mixed** | **Medium** | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/pulse.md` |
+| `grain` | Adds fine noise texture (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
+| `flutter` | Low-depth pitch/phase wobble (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/flutter.md` |
+| `delay` | Short echo with low feedback/mix (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/delay.md` |
+| `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | **Mixed** | **Medium** | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |
+
 ## Evidence links (in-repo)
 
 - **Matrix row**: `docs/references/EVIDENCE_MATRIX.md`

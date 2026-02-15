@@ -19,6 +19,12 @@ _No dimensions listed in profile._
 - `docs/references/EVIDENCE_MATRIX.md` (matrix)
 - `docs/REFERENCES_AUDIT.md` (audit)
 
+## Motifs used in this preset (quick traceability)
+
+These motifs are used by the included dimensions. Each motif is an **artistic/engineering implementation** of a metaphor; the evidence applies primarily to the dimension phenomena.
+
+_No motifs listed._
+
 ## Safety notes / warnings shown in product
 
 - Use Safe Mode or stop at any time.
