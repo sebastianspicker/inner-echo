@@ -4,12 +4,7 @@
  * Phase 9: Optional mic (getUserMedia), permission-separate, safety gain + limiter, routing (synth/mic/mix).
  */
 
-import {
-  getAudioContext,
-  startAudioContext,
-  closeAudioContext,
-  addAudioContextListener,
-} from './contextManager'
+import { getAudioContext, startAudioContext, closeAudioContext, addAudioContextListener } from './contextManager'
 import type { AudioContextStatus, MicStatus, AudioInputMode } from './types'
 import type { AudioModule } from './types'
 import type { AudioStackConfig } from '../../conditions/schema'
@@ -31,19 +26,25 @@ const MIC_LIMITER_RATIO = 8
 const MIC_LIMITER_ATTACK = 0.003
 const MIC_LIMITER_RELEASE = 0.1
 
+function ensureSize(buf: Float32Array, size: number): Float32Array {
+  if (buf.length === size) return buf
+  return new Float32Array(size)
+}
+
 /**
  * Compute RMS from AnalyserNode float time-domain data. Returns 0 if no data.
+ * Uses a provided scratch buffer to avoid per-frame allocations.
  */
-function computeRms(analyser: AnalyserNode): number {
+function computeRms(analyser: AnalyserNode, scratchTime: Float32Array): { rms: number; scratch: Float32Array } {
   const bufferLength = analyser.fftSize
-  const data = new Float32Array(bufferLength)
+  const data = ensureSize(scratchTime, bufferLength)
   analyser.getFloatTimeDomainData(data)
   let sum = 0
   for (let i = 0; i < data.length; i++) {
     const x = data[i]
     sum += x * x
   }
-  return data.length > 0 ? Math.sqrt(sum / data.length) : 0
+  return { rms: data.length > 0 ? Math.sqrt(sum / data.length) : 0, scratch: data }
 }
 
 function clamp01(x: number): number {
@@ -67,10 +68,19 @@ function smoothStep(current: number, target: number, dt: number, attack: number,
  */
 function computeSpectralFeatures(
   analyser: AnalyserNode,
-  prevMag: Float32Array | null
-): { centroid: number; flux: number; low: number; mid: number; high: number; nextPrev: Float32Array } {
+  prevMag: Float32Array | null,
+  scratchDb: Float32Array
+): {
+  centroid: number
+  flux: number
+  low: number
+  mid: number
+  high: number
+  nextPrev: Float32Array
+  scratchDb: Float32Array
+} {
   const n = analyser.frequencyBinCount
-  const db = new Float32Array(n)
+  const db = ensureSize(scratchDb, n)
   analyser.getFloatFrequencyData(db)
 
   // Convert dB to magnitude; also compute centroid.
@@ -109,7 +119,7 @@ function computeSpectralFeatures(
   const low = sumMag > 0 ? clamp01(sumLow / sumMag) : 0
   const mid = sumMag > 0 ? clamp01(sumMid / sumMag) : 0
   const high = sumMag > 0 ? clamp01(sumHigh / sumMag) : 0
-  return { centroid, flux, low, mid, high, nextPrev }
+  return { centroid, flux, low, mid, high, nextPrev, scratchDb: db }
 }
 
 export interface AudioEngineCallbacks {
@@ -160,6 +170,8 @@ export function createAudioEngine(
   let unsubscribe: (() => void) | null = null
   let switchTimeoutId: ReturnType<typeof setTimeout> | null = null
   let prevSpectrumMag: Float32Array | null = null
+  let scratchMainTime = new Float32Array(ANALYSER_FFT_SIZE)
+  let scratchMainDb = new Float32Array(ANALYSER_FFT_SIZE)
 
   // Phase 9: Mic — stream and nodes (only when mic is on).
   let micStream: MediaStream | null = null
@@ -170,6 +182,8 @@ export function createAudioEngine(
   let micGateGain: GainNode | null = null
   let micAnalyserNode: AnalyserNode | null = null
   let prevMicSpectrumMag: Float32Array | null = null
+  let scratchMicTime = new Float32Array(ANALYSER_FFT_SIZE)
+  let scratchMicDb = new Float32Array(ANALYSER_FFT_SIZE)
   let micSensitivity = 0.5
   let micGate = 0.25
   let micGateSmoothed = 1
@@ -319,6 +333,8 @@ export function createAudioEngine(
       callbacks.onMicStatusChange?.('error', 'Audio not ready')
       return
     }
+    // If already active, stop existing mic path before re-requesting.
+    if (micStream) stopMic()
     callbacks.onMicStatusChange?.('requesting')
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -391,7 +407,10 @@ export function createAudioEngine(
     },
     setConditionAudio,
     getRms(): number {
-      return analyserNode ? computeRms(analyserNode) : 0
+      if (!analyserNode) return 0
+      const res = computeRms(analyserNode, scratchMainTime)
+      scratchMainTime = res.scratch
+      return res.rms
     },
     getMetrics(): AudioMetrics {
       if (!analyserNode) return { rms: 0, centroid: 0, flux: 0 }
@@ -400,8 +419,10 @@ export function createAudioEngine(
       const dt = lastMetricsTimeMs != null ? Math.max(0.001, (nowMs - lastMetricsTimeMs) / 1000) : 1 / 60
       lastMetricsTimeMs = nowMs
 
-      const rms = computeRms(analyserNode)
-      const main = computeSpectralFeatures(analyserNode, prevSpectrumMag)
+      const mainRms = computeRms(analyserNode, scratchMainTime)
+      scratchMainTime = mainRms.scratch
+      const main = computeSpectralFeatures(analyserNode, prevSpectrumMag, scratchMainDb)
+      scratchMainDb = main.scratchDb
       prevSpectrumMag = main.nextPrev
 
       let micRms: number | undefined
@@ -412,8 +433,11 @@ export function createAudioEngine(
       let micHigh: number | undefined
 
       if (micAnalyserNode && micGateGain) {
-        micRms = computeRms(micAnalyserNode)
-        const mic = computeSpectralFeatures(micAnalyserNode, prevMicSpectrumMag)
+        const micR = computeRms(micAnalyserNode, scratchMicTime)
+        scratchMicTime = micR.scratch
+        micRms = micR.rms
+        const mic = computeSpectralFeatures(micAnalyserNode, prevMicSpectrumMag, scratchMicDb)
+        scratchMicDb = mic.scratchDb
         prevMicSpectrumMag = mic.nextPrev
         micCentroid = mic.centroid
         micFlux = mic.flux
@@ -431,7 +455,7 @@ export function createAudioEngine(
       }
 
       return {
-        rms,
+        rms: mainRms.rms,
         centroid: main.centroid,
         flux: main.flux,
         low: main.low,

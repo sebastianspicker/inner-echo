@@ -89,6 +89,9 @@ export function CameraView() {
   const [maxFeedback, setMaxFeedback] = useState(0.35)
   const [interactionAmount, setInteractionAmount] = useState(0.15)
   const [debugOverlay, setDebugOverlay] = useState(false)
+  // Render-loop consumers should read settings from refs to avoid stale captures.
+  const couplingStrengthRef = useRef(couplingStrength)
+  const maxFeedbackRef = useRef(maxFeedback)
   const streamRef = useRef<MediaStream | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -97,6 +100,13 @@ export function CameraView() {
   const audioEngineControlRef = useRef<ReturnType<typeof createAudioEngine> | null>(null)
   const rmsDebugRef = useRef<HTMLSpanElement | null>(null)
   const videoMetricsRef = useRef<VideoMetrics | null>(null)
+
+  useEffect(() => {
+    couplingStrengthRef.current = couplingStrength
+  }, [couplingStrength])
+  useEffect(() => {
+    maxFeedbackRef.current = maxFeedback
+  }, [maxFeedback])
 
   const getOverlayDiagnostics = useCallback(
     () => overlayControlRef.current?.getDiagnostics?.(),
@@ -338,8 +348,8 @@ export function CameraView() {
       const reactiveList = (prof as { reactive?: { analyser_to_params?: unknown[] } }).reactive
         ?.analyser_to_params
       const couplingEngine = createCouplingEngine(prof, {
-        couplingStrength,
-        maxFeedback,
+        couplingStrength: couplingStrengthRef.current,
+        maxFeedback: maxFeedbackRef.current,
         reducedMotion,
         safeMode,
       })
@@ -368,6 +378,11 @@ export function CameraView() {
 
                   // Coupling layer (audio↔video)
                   const baseAfterReactive = { ...baseControlValues, ...videoReactive }
+                  // Ensure coupling uses the latest UI settings (sliders can change while loop runs).
+                  couplingEngine.setSettings({
+                    couplingStrength: couplingStrengthRef.current,
+                    maxFeedback: maxFeedbackRef.current,
+                  })
                   const coupled = couplingEngine.step(delta, audio, video, baseAfterReactive)
 
                   const audioOut = { ...audioReactive, ...coupled.audio }

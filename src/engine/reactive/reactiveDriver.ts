@@ -100,18 +100,24 @@ export function createReactiveDriver(
     })
   }
 
+  const videoOut: Record<string, number> = {}
+  const audioOut: Record<string, number> = {}
+  function clear(obj: Record<string, number>): void {
+    for (const k of Object.keys(obj)) delete obj[k]
+  }
+
   function stepAll(delta: number, rms: number): { video: Record<string, number>; audio: Record<string, number> } {
-    const video: Record<string, number> = {}
-    const audio: Record<string, number> = {}
+    clear(videoOut)
+    clear(audioOut)
     for (const m of mappings) {
       const raw = rms * m.scale + m.offset
       const smoothed = smoothStep(m.smoothed, raw, delta, m.attack, m.release)
       m.smoothed = smoothed
       const v = clamp(smoothed, m.clampMin, m.clampMax)
-      if (m.kind === 'audio') audio[m.paramKey] = v
-      else video[m.paramKey] = v
+      if (m.kind === 'audio') audioOut[m.paramKey] = v
+      else videoOut[m.paramKey] = v
     }
-    return { video, audio }
+    return { video: videoOut, audio: audioOut }
   }
 
   let lastStep: { video: Record<string, number>; audio: Record<string, number> } = { video: {}, audio: {} }

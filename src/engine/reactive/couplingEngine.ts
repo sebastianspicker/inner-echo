@@ -91,9 +91,12 @@ function resolveAudioKey(profile: Profile, nodeId: string, param: string): strin
 }
 
 export function createCouplingEngine(profile: Profile, settings: CouplingSettings): {
+  setSettings: (next: Pick<CouplingSettings, 'couplingStrength' | 'maxFeedback'>) => void
   step: (deltaSec: number, audio: AudioMetrics, video: VideoMetrics, baseControlValues: Record<string, number | boolean>) => CouplingStepResult
 } {
   const reducedMotion = settings.reducedMotion
+  let couplingStrength = clamp01(settings.couplingStrength)
+  let maxFeedback = clamp01(settings.maxFeedback)
 
   const videoGrainAmount = resolveVideoKey(profile, 'video.grain.amount', reducedMotion)
   const videoVignetteAmount = resolveVideoKey(profile, 'video.vignette.amount', reducedMotion)
@@ -243,11 +246,23 @@ export function createCouplingEngine(profile: Profile, settings: CouplingSetting
     })
   }
 
+  // Reuse output objects to avoid per-frame allocations (callers spread/copy).
+  const outVideo: Record<string, number> = {}
+  const outAudio: Record<string, number> = {}
+
+  function clear(obj: Record<string, number>): void {
+    for (const k of Object.keys(obj)) delete obj[k]
+  }
+
   return {
+    setSettings(next) {
+      couplingStrength = clamp01(next.couplingStrength)
+      maxFeedback = clamp01(next.maxFeedback)
+    },
     step(deltaSec, audio, video, baseControlValues) {
-      const strength = clamp01(settings.couplingStrength) * clamp01(settings.maxFeedback)
-      const outVideo: Record<string, number> = {}
-      const outAudio: Record<string, number> = {}
+      const strength = couplingStrength * maxFeedback
+      clear(outVideo)
+      clear(outAudio)
 
       for (const m of mappings) {
         let base = 0
