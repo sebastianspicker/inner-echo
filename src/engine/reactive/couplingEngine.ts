@@ -38,6 +38,8 @@ type Mapping = {
   release: number
   clampMin: number
   clampMax: number
+  /** Base value for audio params (read once from profile); video bases come from UI/controlValues. */
+  base0?: number
   // compute target absolute value
   compute: (audio: AudioMetrics, video: VideoMetrics, strength: number, base: number) => number
   smoothed: number
@@ -194,6 +196,7 @@ export function createCouplingEngine(profile: Profile, settings: CouplingSetting
 
   // Video → Audio (subtle)
   if (audioTremoloDepth) {
+    const base0 = getProfileAudioBase(profile, audioTremoloDepth)
     mappings.push({
       kind: 'audio',
       key: audioTremoloDepth,
@@ -201,11 +204,13 @@ export function createCouplingEngine(profile: Profile, settings: CouplingSetting
       release: 0.6,
       clampMin: 0,
       clampMax: 0.15,
-      smoothed: getProfileAudioBase(profile, audioTremoloDepth),
+      base0,
+      smoothed: base0,
       compute: (_a, v, strength, base) => base + v.motion * (0.05 * strength),
     })
   }
   if (audioTremoloRate) {
+    const base0 = getProfileAudioBase(profile, audioTremoloRate)
     mappings.push({
       kind: 'audio',
       key: audioTremoloRate,
@@ -213,11 +218,13 @@ export function createCouplingEngine(profile: Profile, settings: CouplingSetting
       release: 0.8,
       clampMin: 0.1,
       clampMax: 4,
-      smoothed: getProfileAudioBase(profile, audioTremoloRate),
+      base0,
+      smoothed: base0,
       compute: (_a, v, strength, base) => base + v.motion * (1.0 * strength),
     })
   }
   if (audioLowpassCutoff) {
+    const base0 = getProfileAudioBase(profile, audioLowpassCutoff)
     mappings.push({
       kind: 'audio',
       key: audioLowpassCutoff,
@@ -225,7 +232,8 @@ export function createCouplingEngine(profile: Profile, settings: CouplingSetting
       release: 0.9,
       clampMin: 300,
       clampMax: 12000,
-      smoothed: getProfileAudioBase(profile, audioLowpassCutoff),
+      base0,
+      smoothed: base0,
       compute: (_a, v, strength, base) => {
         // Brighter luminance => slightly higher cutoff; subtle range.
         const delta = (v.luminance - 0.5) * 2000 * strength
@@ -234,6 +242,7 @@ export function createCouplingEngine(profile: Profile, settings: CouplingSetting
     })
   }
   if (audioNoiseLevel) {
+    const base0 = getProfileAudioBase(profile, audioNoiseLevel)
     mappings.push({
       kind: 'audio',
       key: audioNoiseLevel,
@@ -241,7 +250,8 @@ export function createCouplingEngine(profile: Profile, settings: CouplingSetting
       release: 0.65,
       clampMin: 0,
       clampMax: 0.08,
-      smoothed: getProfileAudioBase(profile, audioNoiseLevel),
+      base0,
+      smoothed: base0,
       compute: (_a, v, strength, base) => base + v.edge * (0.02 * strength),
     })
   }
@@ -270,7 +280,7 @@ export function createCouplingEngine(profile: Profile, settings: CouplingSetting
           // Prefer current UI/base control value if present; else fallback to 0.
           base = getBaseNumeric(baseControlValues, m.key, getProfileVideoBase(profile, m.key, reducedMotion))
         } else {
-          base = getProfileAudioBase(profile, m.key)
+          base = m.base0 ?? 0
         }
 
         const target = m.compute(audio, video, strength, base)
