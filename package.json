@@ -11,11 +11,16 @@
     "docs:gen": "tsx scripts/gen-docs.ts",
     "conditions:validate": "tsx scripts/conditions-validate.ts",
     "composer:validate": "tsx scripts/composer-validate.ts",
+    "evidence:gen": "tsx scripts/evidence-pages-gen.ts",
+    "evidence:verify": "tsx scripts/evidence-verify.ts",
     "nodes:report": "tsx scripts/nodes-report.ts",
     "references:audit": "tsx scripts/references-audit.ts",
-    "runtime:matrix": "tsx scripts/runtime-matrix.ts"
+    "runtime:matrix": "tsx scripts/runtime-matrix.ts",
+    "verify": "npm run build && npm test && npm run conditions:validate && npm run composer:validate && npm run evidence:verify"
   },
   "dependencies": {
+    "dompurify": "^3.3.1",
+    "marked": "^17.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "three": "^0.182.0",

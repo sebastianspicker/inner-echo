@@ -216,6 +216,25 @@
   padding: 0.18rem 0.5rem;
 }
 
+.composer__evidenceBtn {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.composer__evidenceBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
 .composer__hint {
   margin: 0;
   font-size: 12px;

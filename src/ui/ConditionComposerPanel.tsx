@@ -1,7 +1,10 @@
+import { useEffect, useMemo, useState } from 'react'
 import { ConditionPicker } from './ConditionPicker'
 import type { CatalogEntry } from '../conditions/schema'
+import { loadProfile } from '../conditions/loader'
 import type { ComposerMode, SelectedDimension, SelectedPreset } from '../composer'
 import { getExperienceDimensions, type ExperienceDimensionDef } from '../composer'
+import type { EvidenceDocPath } from '../evidence/docs'
 import './ConditionComposerPanel.css'
 
 export type QuickPreset = 'calm' | 'balanced' | 'intense'
@@ -48,6 +51,8 @@ export interface ConditionComposerPanelProps {
   onDebugOverlayChange: (v: boolean) => void
 
   onQuickPreset: (p: QuickPreset) => void
+
+  onOpenEvidence: (docPath: EvidenceDocPath) => void
 }
 
 function clamp01(x: number): number {
@@ -98,13 +103,18 @@ function strengthBadge(strength?: string): { label: string; className: string } 
   return { label: `Evidence: ${strength}`, className: 'composer__badge' }
 }
 
-function EvidenceLink({ doc }: { doc?: string }) {
+function EvidenceButton({ doc, onOpen }: { doc?: string; onOpen: (docPath: EvidenceDocPath) => void }) {
   if (!doc) return null
   return (
-    <span className="composer__evidence">
-      <span className="composer__evidence-label">Evidence</span>
-      <code className="composer__evidence-path">{doc}</code>
-    </span>
+    <button
+      type="button"
+      className="composer__evidenceBtn"
+      onClick={() => onOpen(doc as EvidenceDocPath)}
+      aria-label={`Open evidence doc ${doc}`}
+      title={doc}
+    >
+      Evidence
+    </button>
   )
 }
 
@@ -114,12 +124,14 @@ function DimensionRow({
   weight,
   onToggle,
   onWeight,
+  onEvidence,
 }: {
   dim: ExperienceDimensionDef
   selected: boolean
   weight: number
   onToggle: (enabled: boolean) => void
   onWeight: (w: number) => void
+  onEvidence: (docPath: EvidenceDocPath) => void
 }) {
   const badge = strengthBadge(dim.evidence_strength)
   return (
@@ -131,7 +143,7 @@ function DimensionRow({
       </label>
       <div className="composer__row-meta">
         {badge && <span className={badge.className}>{badge.label}</span>}
-        <EvidenceLink doc={dim.rationale_doc} />
+        <EvidenceButton doc={dim.rationale_doc} onOpen={onEvidence} />
       </div>
       {selected && (
         <label className="composer__slider">
@@ -153,7 +165,35 @@ function DimensionRow({
 
 export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   const dims = getExperienceDimensions()
-  const dimById = new Map<string, ExperienceDimensionDef>(dims.map((d) => [d.id, d]))
+  const dimById = useMemo(() => new Map<string, ExperienceDimensionDef>(dims.map((d) => [d.id, d])), [dims])
+
+  const [conditionStrength, setConditionStrength] = useState<Record<string, string>>({})
+
+  const catalogIds = useMemo(() => (props.catalog ?? []).map((c) => c.id), [props.catalog])
+  useEffect(() => {
+    let cancelled = false
+    async function run() {
+      const out: Record<string, string> = {}
+      for (const id of catalogIds) {
+        const prof = await loadProfile(id)
+        const dimsList = (prof as any)?.experience_dimensions ?? []
+        // Conservative aggregation: hypothesis > low > medium > high.
+        let rank = 0 // 0=unknown,1=high,2=med,3=low,4=hyp
+        for (const d of dimsList) {
+          const s = String(dimById.get(String(d?.id))?.evidence_strength ?? '').toLowerCase()
+          const r = s === 'hypothesis' ? 4 : s === 'low' ? 3 : s === 'medium' ? 2 : s === 'high' ? 1 : 0
+          rank = Math.max(rank, r)
+        }
+        out[id] = rank === 4 ? 'hypothesis' : rank === 3 ? 'low' : rank === 2 ? 'medium' : rank === 1 ? 'high' : ''
+      }
+      if (cancelled) return
+      setConditionStrength(out)
+    }
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [catalogIds, dimById])
 
   const presetIds = new Set(props.presets.map((p) => p.profileId))
   const dimIds = new Set(props.dimensions.map((d) => d.dimensionId))
@@ -295,6 +335,17 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
             onChange={props.onConditionIdChange}
             aria-label="Condition preset"
           />
+          <div className="composer__row-meta">
+            {strengthBadge(conditionStrength[props.conditionId]) && (
+              <span className={strengthBadge(conditionStrength[props.conditionId])!.className}>
+                {strengthBadge(conditionStrength[props.conditionId])!.label}
+              </span>
+            )}
+            <EvidenceButton
+              doc={`docs/references/conditions/${props.conditionId}.md`}
+              onOpen={props.onOpenEvidence}
+            />
+          </div>
         </div>
       )}
 
@@ -306,6 +357,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
             {(props.catalog ?? []).map((entry: CatalogEntry) => {
               const enabled = presetIds.has(entry.id)
               const weight = props.presets.find((p) => p.profileId === entry.id)?.weight ?? 0.5
+              const badge = strengthBadge(conditionStrength[entry.id])
               return (
                 <div key={entry.id} className="composer__row">
                   <label className="composer__row-main">
@@ -317,6 +369,13 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
                     <span className="composer__row-title">{entry.label}</span>
                     <span className="composer__row-sub">{entry.description ?? ''}</span>
                   </label>
+                  <div className="composer__row-meta">
+                    {badge && <span className={badge.className}>{badge.label}</span>}
+                    <EvidenceButton
+                      doc={`docs/references/conditions/${entry.id}.md`}
+                      onOpen={props.onOpenEvidence}
+                    />
+                  </div>
                   {enabled && (
                     <label className="composer__slider">
                       <span>Weight</span>
@@ -359,6 +418,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
                   weight={weight}
                   onToggle={(en) => props.onDimensionsChange(upsertDimension(props.dimensions, dim.id, weight, en))}
                   onWeight={(w) => props.onDimensionsChange(upsertDimension(props.dimensions, dim.id, w, true))}
+                  onEvidence={props.onOpenEvidence}
                 />
               )
             })}
@@ -369,7 +429,11 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
               <ul>
                 {props.dimensions.map((d) => (
                   <li key={d.dimensionId}>
-                    <strong>{dimById.get(d.dimensionId)?.label ?? d.dimensionId}</strong> — {Math.round(d.weight * 100)}%
+                    <strong>{dimById.get(d.dimensionId)?.label ?? d.dimensionId}</strong> — {Math.round(d.weight * 100)}%{' '}
+                    <EvidenceButton
+                      doc={dimById.get(d.dimensionId)?.rationale_doc ?? `docs/references/dimensions/${d.dimensionId}.md`}
+                      onOpen={props.onOpenEvidence}
+                    />
                   </li>
                 ))}
               </ul>

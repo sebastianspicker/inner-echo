@@ -31,6 +31,8 @@ import {
   getOnboardingAccepted,
 } from './OnboardingModal'
 import { DebugPanel } from './DebugPanel'
+import { EvidenceDrawer } from './EvidenceDrawer'
+import type { EvidenceDocPath } from '../evidence/docs'
 import type { ComposerMode, SelectedDimension, SelectedPreset } from '../composer'
 import type { VideoMetrics } from '../engine/canvas'
 
@@ -89,6 +91,8 @@ export function CameraView() {
   const [maxFeedback, setMaxFeedback] = useState(0.35)
   const [interactionAmount, setInteractionAmount] = useState(0.15)
   const [debugOverlay, setDebugOverlay] = useState(false)
+  const [evidenceOpen, setEvidenceOpen] = useState(false)
+  const [evidenceDocPath, setEvidenceDocPath] = useState<EvidenceDocPath>('docs/references/README.md')
   // Render-loop consumers should read settings from refs to avoid stale captures.
   const couplingStrengthRef = useRef(couplingStrength)
   const maxFeedbackRef = useRef(maxFeedback)
@@ -107,6 +111,11 @@ export function CameraView() {
   useEffect(() => {
     maxFeedbackRef.current = maxFeedback
   }, [maxFeedback])
+
+  const openEvidence = useCallback((docPath: EvidenceDocPath) => {
+    setEvidenceDocPath(docPath)
+    setEvidenceOpen(true)
+  }, [])
 
   const getOverlayDiagnostics = useCallback(
     () => overlayControlRef.current?.getDiagnostics?.(),
@@ -505,6 +514,15 @@ export function CameraView() {
               <span className="ie-pillKey">Audio</span>
               <span className="ie-pillVal">{audioStatus}</span>
             </span>
+            <button
+              type="button"
+              className="ie-btn"
+              onClick={() => openEvidence('docs/references/README.md')}
+              aria-label="Open Evidence & Method"
+              title="Evidence & Method"
+            >
+              Evidence
+            </button>
           </div>
 
           <div className="ie-actions">
@@ -597,6 +615,7 @@ export function CameraView() {
                 debugOverlay={debugOverlay}
                 onDebugOverlayChange={setDebugOverlay}
                 onQuickPreset={handleQuickPreset}
+                onOpenEvidence={openEvidence}
               />
 
               {!profileDefinesReducedMotionControl && showReducedMotionHint && (
@@ -933,6 +952,13 @@ export function CameraView() {
           </div>
         </aside>
       </div>
+
+      <EvidenceDrawer
+        open={evidenceOpen}
+        docPath={evidenceDocPath}
+        onNavigate={setEvidenceDocPath}
+        onClose={() => setEvidenceOpen(false)}
+      />
     </section>
   )
 }
