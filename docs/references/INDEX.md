@@ -1,8 +1,15 @@
-# Dimension Reference Index
+# Evidence index (quick links)
 
-This index links each **experience dimension** to its evidence-backed rationale document.
+This index is designed to be navigable from both the website and the repo. It points to:
 
-## Dimensions
+- **Evidence & Method**: [`README.md`](./README.md)
+- **Evidence matrix**: [`EVIDENCE_MATRIX.md`](./EVIDENCE_MATRIX.md)
+- **Contributions & limits**: [`CONTRIBUTIONS_AND_LIMITS.md`](./CONTRIBUTIONS_AND_LIMITS.md)
+- **Audit (what’s wired by default)**: [`../REFERENCES_AUDIT.md`](../REFERENCES_AUDIT.md)
+- **Long-form evidence corpus**: [`reports/`](./reports/)
+
+## Dimensions (one page per experience dimension)
+
 - [Hyperarousal](./dimensions/hyperarousal.md)
 - [Hypervigilance](./dimensions/hypervigilance.md)
 - [Panic Peaks](./dimensions/panic_peaks.md)
@@ -17,28 +24,15 @@ This index links each **experience dimension** to its evidence-backed rationale 
 - [Attention Fragmentation](./dimensions/attention_fragmentation.md)
 - [Compulsive Loop](./dimensions/compulsive_loop.md)
 
-## Provenance
-- Deep research source docs are archived in [`./reports/`](./reports/).
+## Conditions (evidence summaries)
 
-# Dimension Reference Index
+Condition summaries are assembled from their constituent dimensions:
 
-This index links each **experience dimension** to its evidence-backed rationale document.
-
-## Dimensions
-- [Hyperarousal](./dimensions/hyperarousal.md)
-- [Hypervigilance](./dimensions/hypervigilance.md)
-- [Panic Peaks](./dimensions/panic_peaks.md)
-- [Rumination Loop](./dimensions/rumination_loop.md)
-- [Intrusion](./dimensions/intrusion.md)
-- [Emotional Numbing](./dimensions/emotional_numbing.md)
-- [Cognitive Fog](./dimensions/cognitive_fog.md)
-- [Time Dilation](./dimensions/time_dilation.md)
-- [Derealization](./dimensions/derealization.md)
-- [Depersonalization](./dimensions/depersonalization.md)
-- [Sensory Overload](./dimensions/sensory_overload.md)
-- [Attention Fragmentation](./dimensions/attention_fragmentation.md)
-- [Compulsive Loop](./dimensions/compulsive_loop.md)
-
-## Provenance
-- **Single source of truth:** [`Scientific/`](../../Scientific/) at repo root. Dimension rationales and evidence strength are derived from Scientific/ only.
-- Archived reports in [`./reports/`](./reports/) are not used as authoritative source; Scientific/ is.
+- [None / neutral baseline](./conditions/none.md)
+- [Anxiety](./conditions/anxiety.md)
+- [Panic Disorder](./conditions/panic.md)
+- [OCD](./conditions/ocd.md)
+- [Depression](./conditions/depression.md)
+- [ADHD](./conditions/adhd.md)
+- [DPDR](./conditions/dpdr.md)
+- [Trauma / PTSD](./conditions/trauma_ptsd.md)

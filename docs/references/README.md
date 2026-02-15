@@ -1,52 +1,63 @@
-# References (Evidence Rationale)
+# Evidence & Method (inner-echo)
 
-This folder links peer-reviewed sources used to justify **non-diagnostic, metaphorical** AV mappings for inner-echo.
+This folder is the project’s **evidence navigation layer**. It exists so the website and repo never have to say “trust us”: every experience dimension and every mapping can be traced to an **in-repo evidence document**.
 
-Generated on 2026-02-15.
+## What this is / what this is not
 
-# References (Evidence Rationale)
+- **What this is**: a set of cautious, non-diagnostic **design rationales** for audiovisual metaphors (video/audio motifs) that users can browse and verify.
+- **What this is not**: a clinical simulation, a diagnostic tool, or medical advice. This project is an **artistic, educational metaphor**.
 
-**Single source of truth:** All evidence and rationale for experience dimensions and AV metaphor mappings come from the folder **`Scientific/`** at the repo root. No external or uncited claims are used.
+## Non-diagnostic disclaimer (required reading)
 
-- **Scientific/INVENTORY.md** — Lists each Scientific file, topic, dimensions covered, key claims, and safety notes.
-- **Scientific/BIBLIOGRAPHY.md** — Clean list of DOIs/PMIDs/URLs as present in Scientific/.
-- **EVIDENCE_MATRIX.md** — Dimension → phenomena → video/audio motifs → Scientific file citation; evidence strength (High/Medium/Low) from Scientific/ only.
+Inner Echo describes **experience dimensions** (e.g., “Hyperarousal”, “Rumination loop”) as **metaphor targets**, not diagnoses. Any mention of psychological or perceptual phenomena is framed as:
 
----
+- “consistent with reports of…”
+- “a cautious mapping hypothesis…”
+- “a design metaphor for…”
 
-## What this folder is for
+Never as “this is what disorder X looks like”.
 
-This directory holds **derived** dimension rationale documents (`dimensions/*.md`) that align with Scientific/. Each dimension doc:
+## Methodology (how evidence is selected and represented)
 
-- States only what **Scientific/** supports.
-- Cites the Scientific file(s) that support it (e.g. `Scientific/deep-research-report.md`).
-- Includes an **Evidence gap** section where Scientific/ is silent.
-- Keeps the project **non-diagnostic** (metaphor framing, not clinical simulation or medical advice).
+### Evidence corpus (source of truth)
 
----
+The only sources we cite in the product are **documents that exist in this repo** under:
 
-## Safety (from Scientific/)
+- `docs/references/reports/` — long-form research synthesis (includes bibliographies)
+- `docs/references/EVIDENCE_MATRIX.md` — condensed mapping matrix
+- `docs/references/dimensions/*.md` — one page per experience dimension (short, navigable)
+- `docs/REFERENCES_AUDIT.md` — the current “what’s wired by default” inventory (dimension → motifs/nodes → rationale doc)
 
-- Avoid flicker/strobe, sudden loud transients, jump-scares, nausea-inducing motion.
-- Provide Stop Everything, Safe Mode, Reduced Motion, and quick return to neutral.
-- Hard clamps on intensity, temporal feedback, and audio ceiling; see AGENTS.md and profile `safe_mode_clamps`.
+If a claim is not supported by the corpus above, it must be labeled as an **evidence gap** and kept conservative / off-by-default.
 
----
+### Evidence strength ratings (High / Medium / Low)
 
-## File layout
+Evidence strength is a **communication tool**, not a clinical certainty score.
 
-| Path | Purpose |
-|------|--------|
-| `Scientific/` | Authoritative references only (deep-research-report.md, deep-research-report-2.md, INVENTORY.md, BIBLIOGRAPHY.md) |
-| `docs/references/EVIDENCE_MATRIX.md` | Evidence matrix from Scientific/ |
-| `docs/references/dimensions/<id>.md` | Per-dimension rationale (supported by Scientific/) |
-| `docs/references/INDEX.md` | Index of dimension docs |
-| `docs/references/reports/` | Archived reports; **not** used as source of truth (Scientific/ is) |
-| `docs/references/CHANGELOG_SCIENTIFIC_ALIGNMENT.md` | What changed and why (Scientific file citations) |
-| `docs/references/EVIDENCE_GAPS.md` | Remaining evidence gaps (Scientific/ silent) |
+- **High**: multiple converging sources within the evidence corpus support the described phenomenon and the mapping is conservative.
+- **Medium**: some support exists, but there are plausible alternatives, missing details, or the mapping is more interpretive.
+- **Low**: limited discussion in the corpus; treat as fragile and keep subtle.
+- **Hypothesis (evidence gap)**: not clearly supported; must be labeled and default-conservative.
 
----
+### Supported vs Mixed vs Hypothesis (claim labeling)
 
-## Citation rule
+When we describe a dimension→motif relationship, we label it:
 
-Every claim in dimension docs and in `experience-dimensions.json` / `dimension-to-signal-mapping.json` must be traceable to a specific file in **Scientific/**. If Scientific/ does not support a claim, it is marked **Unsupported** or **Needs evidence**.
+- **Supported**: the corpus explicitly supports the relationship as a plausible metaphor.
+- **Mixed**: the corpus supports the phenomenon, but the specific motif choice is partly interpretive.
+- **Hypothesis**: the corpus does not support the relationship clearly; kept conservative and clearly marked.
+
+## Safety & ethics notes (product posture)
+
+- Avoid flicker/strobe and sudden loud transients.
+- Always provide **Stop Everything**, **Safe Mode**, and **Reduced Motion**.
+- Keep modulation smooth; clamp temporal feedback; keep audio under a conservative ceiling.
+
+## Navigation map (canonical files)
+
+- `docs/references/INDEX.md` — quick links to all evidence pages
+- `docs/references/EVIDENCE_MATRIX.md` — dimension → motifs → evidence
+- `docs/references/CONTRIBUTIONS_AND_LIMITS.md` — limitations, controversies, and what is not supported
+- `docs/references/dimensions/*.md` — per-dimension pages with careful summaries and links into the corpus
+- `docs/references/conditions/*.md` — per-condition evidence summaries (assembled from dimensions)
+- `docs/REFERENCES_AUDIT.md` — “what the product uses by default” inventory

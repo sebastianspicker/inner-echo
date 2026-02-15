@@ -1,58 +1,41 @@
 # Panic Peaks
 
-> **Non-diagnostic, metaphor framing:** This document supports design hypotheses for audiovisual metaphors. It does not diagnose, and it is not a clinical simulation.
+> **Non-diagnostic, metaphor framing:** This page supports design rationale for audiovisual metaphors. It does not diagnose or simulate a disorder.
 
+## Summary
 
-## File for panic_peaks
+- **Dimension**: `panic_peaks`
+- **Definition (repo)**: Sudden waves of intense fear or bodily alarm that rise and fall.
+- **Evidence strength (communication label)**: **High**
 
-# Panic Peaks
+## What the product maps (default motifs)
 
-> **Non-diagnostic, metaphor framing:** This document supports design hypotheses for audiovisual metaphors. It does not diagnose, and it is not a clinical simulation. **Source of truth:** Scientific/ only.
+These are the conservative *default-enabled* motifs used by the composer when this dimension is selected:
 
----
+- **Video nodes**: `pulse`, `vignette`, `soft_blur`, `grain`
+- **Audio nodes**: `pulse_tone`, `lowpass`, `compressor_limiter`, `reverb`
 
-## Summary (non-diagnostic)
+## Evidence links (in-repo)
 
-**Repo definition:** Sudden waves of intense fear or bodily alarm that rise and fall.
+- **Matrix row**: `docs/references/EVIDENCE_MATRIX.md`
+- **Audit (what’s wired by default)**: `docs/REFERENCES_AUDIT.md`
+- **Long-form corpus**:
+  - `docs/references/reports/deep-research-report.md`
+  - `docs/references/reports/deep-research-report-2.md`
 
-**Panic peaks** is a metaphorical design hypothesis for sudden, time-bounded surges of alarm. The mapping emphasizes **envelope-shaped change** (rise → crest → release) and is supported by **Scientific/deep-research-report.md**. It does **not** claim to reproduce panic attacks or depict any diagnosis.
+> Note: this page intentionally avoids introducing new external citations beyond the in-repo corpus. Bibliographies live in the report documents above.
 
-**Safety note (from Scientific/):** Strong user control; cap intensity; avoid strobing or harsh audio.
+## Safety notes (must remain true in the product)
 
----
+- Provide strong user control; cap intensity; avoid strobing or harsh audio.
+- Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode.
 
-## Definition & scope (from Scientific/)
+## Claim labeling
 
-- Abrupt onset/intensification; strong bodily salience (interoceptive alarm); return toward baseline (minutes-scale “wave”).
-- **Distinguish:** Hyperarousal = sustained tension; Hypervigilance = scanning; Panic peaks = episodic surges with body focus and catastrophic appraisal.
+- **Supported**: the corpus supports the phenomenon and a conservative mapping is plausible.
+- **Mixed**: phenomenon is supported, but the specific motif choice is interpretive.
+- **Hypothesis**: evidence gap; keep conservative / off-by-default.
 
----
+## Rationale doc path (self-reference)
 
-## Supported phenomena & AV mapping (Scientific/)
-
-**Evidence (from Scientific/):** Cognitive model of panic (catastrophic misinterpretation of bodily sensations); PDSS and panic severity measurement; CO₂ challenge and interoception literature; rise/fall surge dynamics; qualitative “overwhelming bodily sensations.”
-
-**Video motifs (supported):** Slow clamped “pressure swell” (e.g. contrast lift + mild peripheral blur that returns); subtle radial vignette with intensity envelope; minimal chroma desaturation at crest.
-
-**Audio motifs (supported):** Pulse/heartbeat-like or breath-like swell (soft); gentle low-pass sweep; strict limiter ceiling.
-
----
-
-## Safety (from Scientific/)
-
-- No strobing, rapid zooms, or heavy feedback trails (cybersickness risk).
-- No harsh audio distortion or siren-like elements (startle/provocation risk).
-- Reduced Motion: replace swell motion with static scene + slow luminance/contrast envelope; prominent Reduced Motion toggle.
-
----
-
-## Evidence strength: HIGH
-
-Rationale (Scientific/): Panic surges extensively studied and measured; multiple reviews and foundational theory; provocation paradigms and neurobiology not fully specific—design must stay explicitly metaphorical.
-
----
-
-## Evidence gap
-
-- CO₂ and other provocation responses are not diagnosis-specific; interpret cautiously.
-- “Time slows” during fear is not universal (Scientific/ notes counterpoint); do not rely on literal slow-motion as primary metaphor.
+- `docs/references/dimensions/panic_peaks.md`
