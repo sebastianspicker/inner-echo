@@ -1,0 +1,317 @@
+{
+  "version": "0.1.0",
+  "note": "Experience dimensions for metaphorical AV overlays. Not diagnostic. Evidence strength, rationale_doc, and safety_notes are from Scientific/ only (single source of truth). See docs/references/README.md and Scientific/INVENTORY.md.",
+  "dimensions": [
+    {
+      "id": "hyperarousal",
+      "label": "Hyperarousal",
+      "description": "Elevated baseline alertness, physiological tension, and readiness to react.",
+      "safety": [
+        "Prefer smooth modulation; avoid flicker; keep audio dynamics gentle.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "high",
+      "rationale_doc": "docs/references/dimensions/hyperarousal.md",
+      "motif_summary": {
+        "video_nodes": [
+          "grain",
+          "edge_sharpen",
+          "vignette"
+        ],
+        "audio_nodes": [
+          "compressor_limiter",
+          "highpass",
+          "noise_bed"
+        ]
+      }
+    },
+    {
+      "id": "hypervigilance",
+      "label": "Hypervigilance",
+      "description": "Scanning for threats, narrowed attention, heightened sensitivity to cues.",
+      "safety": [
+        "Avoid jump-scares; use subtle focus narrowing and noise, not sudden spikes.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/hypervigilance.md",
+      "motif_summary": {
+        "video_nodes": [
+          "vignette",
+          "edge_sharpen",
+          "grain"
+        ],
+        "audio_nodes": [
+          "noise_bed",
+          "highpass",
+          "compressor_limiter"
+        ]
+      }
+    },
+    {
+      "id": "panic_peaks",
+      "label": "Panic Peaks",
+      "description": "Sudden waves of intense fear or bodily alarm that rise and fall.",
+      "safety": [
+        "Provide strong user control; cap intensity; avoid strobing or harsh audio.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "high",
+      "rationale_doc": "docs/references/dimensions/panic_peaks.md",
+      "motif_summary": {
+        "video_nodes": [
+          "pulse",
+          "vignette",
+          "soft_blur",
+          "grain"
+        ],
+        "audio_nodes": [
+          "pulse_tone",
+          "lowpass",
+          "compressor_limiter",
+          "reverb"
+        ]
+      }
+    },
+    {
+      "id": "rumination_loop",
+      "label": "Rumination Loop",
+      "description": "Repetitive, sticky thought loops; difficulty disengaging.",
+      "safety": [
+        "Make loops subtle; avoid hypnotic flashing patterns; provide an easy stop.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "high",
+      "rationale_doc": "docs/references/dimensions/rumination_loop.md",
+      "motif_summary": {
+        "video_nodes": [
+          "feedback_loop",
+          "grain",
+          "vignette"
+        ],
+        "audio_nodes": [
+          "delay",
+          "tremolo",
+          "lowpass",
+          "compressor_limiter"
+        ]
+      }
+    },
+    {
+      "id": "intrusion",
+      "label": "Intrusion",
+      "description": "Unwanted thoughts/images/memories pushing into awareness.",
+      "safety": [
+        "No graphic content; use abstract interference textures with conservative limits.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/intrusion.md",
+      "motif_summary": {
+        "video_nodes": [
+          "interference",
+          "vignette",
+          "grain"
+        ],
+        "audio_nodes": [
+          "delay",
+          "noise_bed",
+          "compressor_limiter"
+        ]
+      }
+    },
+    {
+      "id": "emotional_numbing",
+      "label": "Emotional Numbing",
+      "description": "Reduced emotional intensity, dampened reward/interest, muted affect.",
+      "safety": [
+        "Keep visuals gentle; avoid making 'numbness' look like moral failure.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/emotional_numbing.md",
+      "motif_summary": {
+        "video_nodes": [
+          "color_grade",
+          "soft_blur",
+          "vignette"
+        ],
+        "audio_nodes": [
+          "lowpass",
+          "noise_bed",
+          "reverb",
+          "compressor_limiter"
+        ]
+      }
+    },
+    {
+      "id": "cognitive_fog",
+      "label": "Cognitive Fog",
+      "description": "Slowed thinking, reduced clarity, difficulty sustaining mental effort.",
+      "safety": [
+        "Prefer softness and subtle blur; avoid disorienting motion.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/cognitive_fog.md",
+      "motif_summary": {
+        "video_nodes": [
+          "haze",
+          "soft_blur",
+          "color_grade"
+        ],
+        "audio_nodes": [
+          "lowpass",
+          "noise_bed",
+          "reverb",
+          "compressor_limiter"
+        ]
+      }
+    },
+    {
+      "id": "time_dilation",
+      "label": "Time Dilation",
+      "description": "Time feels slowed, accelerated, or uneven.",
+      "safety": [
+        "Offer Reduced Motion; cap temporal feedback effects.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/time_dilation.md",
+      "motif_summary": {
+        "video_nodes": [
+          "temporal_smear",
+          "pulse",
+          "grain"
+        ],
+        "audio_nodes": [
+          "flutter",
+          "delay",
+          "compressor_limiter"
+        ]
+      }
+    },
+    {
+      "id": "derealization",
+      "label": "Derealization",
+      "description": "The world feels unreal, distant, 'behind glass'.",
+      "safety": [
+        "Use mild ghosting/chroma drift; avoid intense warping.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/derealization.md",
+      "motif_summary": {
+        "video_nodes": [
+          "haze",
+          "chroma_aberration",
+          "temporal_smear",
+          "color_grade"
+        ],
+        "audio_nodes": [
+          "flutter",
+          "lowpass",
+          "reverb",
+          "compressor_limiter"
+        ]
+      }
+    },
+    {
+      "id": "depersonalization",
+      "label": "Depersonalization",
+      "description": "Feeling detached from the self or body; reduced sense of agency.",
+      "safety": [
+        "Avoid unsettling body distortions; keep it subtle and user-controlled.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/depersonalization.md",
+      "motif_summary": {
+        "video_nodes": [
+          "vignette",
+          "soft_blur",
+          "chroma_aberration",
+          "color_grade"
+        ],
+        "audio_nodes": [
+          "reverb",
+          "lowpass",
+          "flutter",
+          "compressor_limiter"
+        ]
+      }
+    },
+    {
+      "id": "sensory_overload",
+      "label": "Sensory Overload",
+      "description": "Too much input at once; difficulty filtering sensory signals.",
+      "safety": [
+        "Never default to harsh intensity; provide quick calming toggles.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/sensory_overload.md",
+      "motif_summary": {
+        "video_nodes": [
+          "grain",
+          "interference",
+          "edge_sharpen",
+          "vignette"
+        ],
+        "audio_nodes": [
+          "noise_bed",
+          "compressor_limiter",
+          "lowpass"
+        ]
+      }
+    },
+    {
+      "id": "attention_fragmentation",
+      "label": "Attention Fragmentation",
+      "description": "Attention jumps between stimuli; difficulty stabilizing focus.",
+      "safety": [
+        "Use gentle jitter; avoid nausea-inducing motion.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/attention_fragmentation.md",
+      "motif_summary": {
+        "video_nodes": [
+          "focus_jitter",
+          "grain",
+          "edge_sharpen"
+        ],
+        "audio_nodes": [
+          "tremolo",
+          "compressor_limiter",
+          "highpass"
+        ]
+      }
+    },
+    {
+      "id": "compulsive_loop",
+      "label": "Compulsive Loop",
+      "description": "Urge to repeat actions/mental checks; 'stuckness' in a loop.",
+      "safety": [
+        "Do not portray as comedic; keep loop cues minimal and controllable.",
+        "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
+      ],
+      "evidence_strength": "high",
+      "rationale_doc": "docs/references/dimensions/compulsive_loop.md",
+      "motif_summary": {
+        "video_nodes": [
+          "feedback_loop",
+          "grid_hint",
+          "vignette",
+          "grain"
+        ],
+        "audio_nodes": [
+          "delay",
+          "lowpass",
+          "compressor_limiter"
+        ]
+      }
+    }
+  ]
+}
+

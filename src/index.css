@@ -1,0 +1,91 @@
+* {
+  box-sizing: border-box;
+}
+
+/* Minimal dark design tokens (scientific, calm). */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: #070a0d;
+  --surface-1: rgba(255, 255, 255, 0.04);
+  --surface-2: rgba(255, 255, 255, 0.06);
+  --surface-3: rgba(255, 255, 255, 0.08);
+
+  /* Text */
+  --text: rgba(255, 255, 255, 0.88);
+  --muted: rgba(255, 255, 255, 0.64);
+  --faint: rgba(255, 255, 255, 0.44);
+
+  /* Lines + radii */
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+
+  /* Accent (low-chroma teal) */
+  --accent: #7bc8c0;
+  --accent-2: #4fb3a9;
+  --danger: #fca5a5;
+  --warn: #fde68a;
+
+  /* Shadows (very subtle) */
+  --shadow-1: 0 10px 26px rgba(0, 0, 0, 0.40);
+  --shadow-2: 0 18px 46px rgba(0, 0, 0, 0.52);
+
+  /* Spacing scale */
+  --sp-1: 6px;
+  --sp-2: 10px;
+  --sp-3: 14px;
+  --sp-4: 18px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  min-height: 100vh;
+  display: block;
+}
+
+/* Accessible focus ring */
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 70%, white 0%);
+  outline-offset: 2px;
+}
+
+/* Form controls (minimal, calm). */
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Reduce motion: no transitions/animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

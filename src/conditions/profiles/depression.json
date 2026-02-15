@@ -1,0 +1,226 @@
+{
+  "id": "depression",
+  "label": "Depressive Disorder",
+  "summary": "A metaphor of dampened affect and reduced clarity: muted color, softened edges, and slowed visual energy.",
+  "framing": {
+    "type": "metaphor",
+    "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
+  },
+  "experience_dimensions": [
+    {
+      "id": "emotional_numbing",
+      "weight": 0.85
+    },
+    {
+      "id": "cognitive_fog",
+      "weight": 0.6
+    },
+    {
+      "id": "time_dilation",
+      "weight": 0.35
+    }
+  ],
+  "safety": {
+    "intensity_default": 0.38,
+    "intensity_max": 0.7,
+    "warnings": [
+      "This is a metaphorical overlay. If it feels heavy, reduce Intensity or stop.",
+      "Audio is optional; consider keeping it off.",
+      "Avoid flashing lights or rapid flicker; enable Reduced Motion if sensitive.",
+      "Keep volume low; avoid headphones at high volume; you can mute audio at any time."
+    ],
+    "safe_mode_clamps": {
+      "max_intensity": 0.65,
+      "max_temporal_feedback": 0.25,
+      "max_chroma": 0.35,
+      "max_contrast": 0.25,
+      "no_strobe": true,
+      "max_flash_hz": 3,
+      "max_luminance_delta_per_frame": 0.25,
+      "audio_ceiling_dbfs": -6,
+      "max_tremolo_rate_hz": 4,
+      "max_tremolo_depth": 0.15,
+      "max_noise_level": 0.08,
+      "max_feedback": 0.25,
+      "max_jitter": 0.06
+    },
+    "reduced_motion_policy": {
+      "disable_nodes": [
+        "temporal_smear",
+        "feedback_loop",
+        "pulse",
+        "focus_jitter"
+      ],
+      "note": "Reduced Motion removes time-based feedback/jitter nodes and keeps a calmer static overlay."
+    }
+  },
+  "ui": {
+    "controls": [
+      {
+        "id": "intensity",
+        "type": "slider",
+        "label": "Intensity",
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "id": "safe_mode",
+        "type": "toggle",
+        "label": "Safe Mode"
+      },
+      {
+        "id": "reduced_motion",
+        "type": "toggle",
+        "label": "Reduced Motion"
+      },
+      {
+        "id": "audio_enabled",
+        "type": "toggle",
+        "label": "Audio (optional)"
+      },
+      {
+        "id": "saturation",
+        "type": "slider",
+        "label": "Color Muting",
+        "min": -0.6,
+        "max": 0,
+        "step": 0.01,
+        "target": "video.color_grade.saturation"
+      },
+      {
+        "id": "blur_amount",
+        "type": "slider",
+        "label": "Softness",
+        "min": 0,
+        "max": 0.35,
+        "step": 0.01,
+        "target": "video.soft_blur.amount"
+      }
+    ]
+  },
+  "video_stack": [
+    {
+      "id": "grade",
+      "node": "color_grade",
+      "params": {
+        "contrast": -0.08,
+        "saturation": -0.18,
+        "brightness": -0.02
+      }
+    },
+    {
+      "id": "haze",
+      "node": "haze",
+      "params": {
+        "amount": 0.12
+      }
+    },
+    {
+      "id": "blur",
+      "node": "soft_blur",
+      "params": {
+        "amount": 0.1
+      }
+    },
+    {
+      "id": "time",
+      "node": "temporal_smear",
+      "params": {
+        "decay": 0.95,
+        "feedback": 0.08,
+        "jitter": 0.03
+      }
+    },
+    {
+      "id": "grain",
+      "node": "grain",
+      "params": {
+        "amount": 0.12,
+        "scale": 1.4,
+        "speed": 0.06
+      }
+    },
+    {
+      "id": "vignette",
+      "node": "vignette",
+      "params": {
+        "amount": 0.18,
+        "softness": 0.85
+      }
+    }
+  ],
+  "audio_stack": {
+    "enabled": true,
+    "input": "synth",
+    "master": {
+      "volume": 0.2
+    },
+    "chain": [
+      {
+        "node": "lowpass",
+        "params": {
+          "cutoff": 3600,
+          "q": 0.7
+        }
+      },
+      {
+        "node": "noise_bed",
+        "params": {
+          "level": 0.02,
+          "color": "brown"
+        }
+      },
+      {
+        "node": "flutter",
+        "params": {
+          "rate": 0.45,
+          "depth": 0.05
+        }
+      },
+      {
+        "node": "reverb",
+        "params": {
+          "mix": 0.05,
+          "decay": 1.8
+        }
+      },
+      {
+        "node": "compressor_limiter",
+        "params": {
+          "threshold": -20,
+          "ratio": 3,
+          "attack": 0.02,
+          "release": 0.3,
+          "ceiling": -10
+        }
+      }
+    ]
+  },
+  "reactive": {
+    "analyser_to_params": [
+      {
+        "source": "rms",
+        "target": "video.grain.amount",
+        "scale": 0.15,
+        "offset": 0.0,
+        "smoothing": {
+          "attack": 0.08,
+          "release": 0.25
+        },
+        "clamp": [
+          0.0,
+          0.45
+        ]
+      }
+    ]
+  },
+  "references": {
+    "dimensions": [
+      "docs/references/dimensions/emotional_numbing.md",
+      "docs/references/dimensions/cognitive_fog.md",
+      "docs/references/dimensions/time_dilation.md"
+    ]
+  }
+}
+

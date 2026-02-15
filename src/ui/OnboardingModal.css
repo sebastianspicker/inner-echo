@@ -1,0 +1,99 @@
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 1rem;
+}
+
+.onboarding-modal {
+  background: color-mix(in oklab, var(--surface-2) 92%, transparent);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-2);
+  backdrop-filter: blur(12px);
+  max-width: 28rem;
+  width: 100%;
+  padding: 1.5rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.onboarding-modal__title {
+  margin: 0 0 1rem;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.onboarding-modal__content {
+  margin: 0 0 1rem;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.onboarding-modal__content p {
+  margin: 0 0 0.75rem;
+}
+
+.onboarding-modal__content p:last-child {
+  margin-bottom: 0;
+}
+
+.onboarding-modal__checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.onboarding-modal__checkbox input[type="checkbox"] {
+  margin-top: 0.2rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.onboarding-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.onboarding-modal__btn {
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 520;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+
+.onboarding-modal__btn--primary {
+  background: rgba(123, 200, 192, 0.10);
+  color: var(--text);
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--border));
+}
+
+.onboarding-modal__btn--primary:hover:not(:disabled) {
+  background: rgba(123, 200, 192, 0.14);
+  border-color: color-mix(in oklab, var(--accent) 70%, var(--border));
+  transform: translateY(-1px);
+}
+
+.onboarding-modal__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* focus handled by :focus-visible global rule */

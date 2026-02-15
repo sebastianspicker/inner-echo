@@ -1,0 +1,273 @@
+{
+  "id": "panic",
+  "label": "Panic Disorder",
+  "summary": "A metaphor of sudden alarm waves—pulsing intensity with strong smoothing and strict caps to prevent harshness.",
+  "framing": {
+    "type": "metaphor",
+    "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
+  },
+  "experience_dimensions": [
+    {
+      "id": "panic_peaks",
+      "weight": 0.9
+    },
+    {
+      "id": "hyperarousal",
+      "weight": 0.7
+    }
+  ],
+  "safety": {
+    "intensity_default": 0.3,
+    "intensity_max": 0.6,
+    "warnings": [
+      "Designed to be subtle, but may still feel activating for some users.",
+      "Keep Intensity low and enable Safe Mode if needed.",
+      "Audio is optional; keep volume low.",
+      "Avoid flashing lights or rapid flicker; enable Reduced Motion if sensitive.",
+      "Keep volume low; avoid headphones at high volume; you can mute audio at any time."
+    ],
+    "safe_mode_clamps": {
+      "max_intensity": 0.62,
+      "max_temporal_feedback": 0.25,
+      "max_chroma": 0.35,
+      "max_contrast": 0.22,
+      "no_strobe": true,
+      "max_flash_hz": 3,
+      "max_luminance_delta_per_frame": 0.25,
+      "audio_ceiling_dbfs": -8,
+      "max_tremolo_rate_hz": 4,
+      "max_tremolo_depth": 0.15,
+      "max_noise_level": 0.08,
+      "max_feedback": 0.25,
+      "max_jitter": 0.06,
+      "max_pulse_depth": 0.16
+    },
+    "reduced_motion_policy": {
+      "disable_nodes": [
+        "temporal_smear",
+        "feedback_loop",
+        "pulse",
+        "focus_jitter"
+      ],
+      "note": "Reduced Motion removes time-based feedback/jitter nodes and keeps a calmer static overlay."
+    }
+  },
+  "ui": {
+    "controls": [
+      {
+        "id": "intensity",
+        "type": "slider",
+        "label": "Intensity",
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "id": "safe_mode",
+        "type": "toggle",
+        "label": "Safe Mode"
+      },
+      {
+        "id": "reduced_motion",
+        "type": "toggle",
+        "label": "Reduced Motion"
+      },
+      {
+        "id": "audio_enabled",
+        "type": "toggle",
+        "label": "Audio (optional)"
+      },
+      {
+        "id": "pulse_depth",
+        "type": "slider",
+        "label": "Wave Depth",
+        "min": 0,
+        "max": 0.18,
+        "step": 0.01,
+        "target": "video.pulse.depth"
+      },
+      {
+        "id": "pulse_rate",
+        "type": "slider",
+        "label": "Wave Rate",
+        "min": 0.6,
+        "max": 1.8,
+        "step": 0.01,
+        "target": "video.pulse.rate"
+      }
+    ]
+  },
+  "video_stack": [
+    {
+      "id": "pulse",
+      "node": "pulse",
+      "params": {
+        "depth": 0.09,
+        "rate": 1.0,
+        "smoothing": 0.9
+      }
+    },
+    {
+      "id": "vignette",
+      "node": "vignette",
+      "params": {
+        "amount": 0.22,
+        "softness": 0.8
+      }
+    },
+    {
+      "id": "blur",
+      "node": "soft_blur",
+      "params": {
+        "amount": 0.08
+      }
+    },
+    {
+      "id": "grain",
+      "node": "grain",
+      "params": {
+        "amount": 0.16,
+        "scale": 1.2,
+        "speed": 0.08
+      }
+    },
+    {
+      "id": "grade",
+      "node": "color_grade",
+      "params": {
+        "contrast": 0.06,
+        "saturation": -0.06,
+        "brightness": 0.0
+      }
+    }
+  ],
+  "audio_stack": {
+    "enabled": true,
+    "input": "synth",
+    "master": {
+      "volume": 0.2
+    },
+    "chain": [
+      {
+        "node": "noise_bed",
+        "params": {
+          "level": 0.02,
+          "color": "pink"
+        }
+      },
+      {
+        "node": "pulse_tone",
+        "params": {
+          "rate": 1.0,
+          "mix": 0.08,
+          "base_freq": 120
+        }
+      },
+      {
+        "node": "lowpass",
+        "params": {
+          "cutoff": 5200,
+          "q": 0.7
+        }
+      },
+      {
+        "node": "reverb",
+        "params": {
+          "mix": 0.05,
+          "decay": 1.3
+        }
+      },
+      {
+        "node": "compressor_limiter",
+        "params": {
+          "threshold": -22,
+          "ratio": 4,
+          "attack": 0.01,
+          "release": 0.22,
+          "ceiling": -8
+        }
+      }
+    ]
+  },
+  "reactive": {
+    "analyser_to_params": [
+      {
+        "source": "rms",
+        "target": "video.grain.amount",
+        "scale": 0.1,
+        "offset": 0.1,
+        "smoothing": {
+          "attack": 0.1,
+          "release": 0.3
+        },
+        "clamp": [
+          0.1,
+          0.26
+        ]
+      },
+      {
+        "source": "rms",
+        "target": "video.pulse.depth",
+        "scale": 0.1,
+        "offset": 0.02,
+        "smoothing": {
+          "attack": 0.1,
+          "release": 0.35
+        },
+        "clamp": [
+          0.02,
+          0.14
+        ]
+      },
+      {
+        "source": "rms",
+        "target": "video.vignette.amount",
+        "scale": 0.12,
+        "offset": 0.14,
+        "smoothing": {
+          "attack": 0.12,
+          "release": 0.4
+        },
+        "clamp": [
+          0.14,
+          0.32
+        ]
+      },
+      {
+        "source": "rms",
+        "target": "video.soft_blur.amount",
+        "scale": 0.1,
+        "offset": 0.04,
+        "smoothing": {
+          "attack": 0.12,
+          "release": 0.45
+        },
+        "clamp": [
+          0.04,
+          0.16
+        ]
+      },
+      {
+        "source": "rms",
+        "target": "audio.lowpass.cutoff",
+        "scale": -2500,
+        "offset": 7000,
+        "smoothing": {
+          "attack": 0.1,
+          "release": 0.35
+        },
+        "clamp": [
+          2200,
+          9000
+        ]
+      }
+    ]
+  },
+  "references": {
+    "dimensions": [
+      "docs/references/dimensions/panic_peaks.md",
+      "docs/references/dimensions/hyperarousal.md"
+    ]
+  }
+}
+

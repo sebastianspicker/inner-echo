@@ -1,0 +1,87 @@
+/**
+ * Phase 6: Vignette effect — darkens edges. Single pass, amount (and optional softness).
+ */
+
+import * as THREE from 'three'
+import type { VideoNode, VideoNodeParams } from './VideoNode'
+import { clamp, getSafeModeClampNumber, resolveNumberParam } from './paramUtils'
+
+const VERT = `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = vec4(position.xy, 0.0, 1.0);
+}
+`
+
+const FRAG = `
+uniform sampler2D u_map;
+uniform vec2 u_uvScale;
+uniform vec2 u_uvOffset;
+uniform float u_amount;
+uniform float u_softness;
+varying vec2 vUv;
+
+void main() {
+  vec2 uv = vUv * u_uvScale + u_uvOffset;
+  vec4 color = texture2D(u_map, uv);
+  vec2 c = vUv - 0.5;
+  float d = length(c) * 2.0;
+  float v = 1.0 - smoothstep(1.0 - u_softness, 1.0, d) * u_amount;
+  color.rgb *= v;
+  gl_FragColor = clamp(color, 0.0, 1.0);
+}
+`
+
+export class VignetteNode implements VideoNode {
+  private material: THREE.ShaderMaterial | null = null
+
+  setParams(params: VideoNodeParams): void {
+    if (!this.material) return
+    const intensity = clamp(params.intensity ?? 0, 0, 1)
+    let amount = resolveNumberParam(params, 'amount', 0) * intensity
+    const softness = resolveNumberParam(params, 'softness', 0.75)
+
+    // SSOT: vignette amount is capped for comfort.
+    amount = clamp(amount, 0, 0.6)
+    if (params.safeMode) {
+      const maxIntensity = getSafeModeClampNumber(params, 'max_intensity', 1)
+      amount = Math.min(amount, 0.6 * clamp(maxIntensity, 0, 1))
+    }
+    this.material.uniforms.u_amount.value = amount
+    this.material.uniforms.u_softness.value = clamp(softness, 0.01, 1)
+    if (params.uvScale) {
+      this.material.uniforms.u_uvScale.value.set(params.uvScale[0], params.uvScale[1])
+    }
+    if (params.uvOffset) {
+      this.material.uniforms.u_uvOffset.value.set(params.uvOffset[0], params.uvOffset[1])
+    }
+  }
+
+  getMaterial(
+    inputTexture: THREE.Texture,
+    _previousFrame?: THREE.Texture | null
+  ): THREE.Material {
+    if (this.material) return this.material
+    this.material = new THREE.ShaderMaterial({
+      uniforms: {
+        u_map: { value: inputTexture },
+        u_uvScale: { value: new THREE.Vector2(1, 1) },
+        u_uvOffset: { value: new THREE.Vector2(0, 0) },
+        u_amount: { value: 0.3 },
+        u_softness: { value: 0.75 },
+      },
+      vertexShader: VERT,
+      fragmentShader: FRAG,
+      depthWrite: false,
+    })
+    return this.material
+  }
+
+  dispose(): void {
+    if (this.material) {
+      this.material.dispose()
+      this.material = null
+    }
+  }
+}

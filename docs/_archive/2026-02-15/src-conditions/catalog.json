@@ -1,0 +1,102 @@
+{
+  "version": "0.1.0",
+  "project": "inner-echo",
+  "disclaimer": "Metaphorical AV overlays for understanding invisible inner experiences. Not a diagnostic or medical tool.",
+  "conditions": [
+    {
+      "id": "none",
+      "label": "None (Clean)",
+      "description": "No overlay. Baseline camera view.",
+      "tags": [
+        "baseline"
+      ],
+      "recommended": true
+    },
+    {
+      "id": "anxiety",
+      "label": "Anxiety (Generalized / Social)",
+      "description": "Metaphor of heightened baseline tension and increased threat-scanning attention (bounded, user-controlled).",
+      "tags": [
+        "hyperarousal",
+        "hypervigilance",
+        "rumination_loop",
+        "tension"
+      ]
+    },
+    {
+      "id": "panic",
+      "label": "Panic Disorder",
+      "description": "Metaphor of brief, clamped alarm waves (rise/fall), with strong safety controls.",
+      "tags": [
+        "hyperarousal",
+        "panic_peaks"
+      ]
+    },
+    {
+      "id": "depression",
+      "label": "Depressive Disorder",
+      "description": "Metaphor of reduced affective contrast and cognitive fog (subtle, non-stereotyped).",
+      "tags": [
+        "cognitive_fog",
+        "emotional_numbing",
+        "time_dilation"
+      ]
+    },
+    {
+      "id": "trauma_ptsd",
+      "label": "Trauma / PTSD (Hyperarousal + Intrusion)",
+      "description": "Metaphor of heightened readiness + monitoring, with abstract intrusion-like interference (non-graphic, opt-out).",
+      "tags": [
+        "hyperarousal",
+        "hypervigilance",
+        "intrusion"
+      ]
+    },
+    {
+      "id": "ocd",
+      "label": "OCD (Intrusion + Compulsive Loop)",
+      "description": "Metaphor of sticky loops + repeated-checking pressure (non-comedic), with gentle recursion and strong clamps.",
+      "tags": [
+        "compulsive_loop",
+        "intrusion",
+        "rumination_loop"
+      ]
+    },
+    {
+      "id": "dpdr",
+      "label": "Depersonalization / Derealization",
+      "description": "Metaphor of 'behind-glass' distance and subtle time drift (avoid disorientation; user-controlled).",
+      "tags": [
+        "depersonalization",
+        "derealization",
+        "time_dilation"
+      ]
+    },
+    {
+      "id": "dissociation",
+      "label": "Dissociation",
+      "description": "Metaphor of detachment and unreality via temporal smear and chromatic drift (user-controlled, Safe Mode limits feedback).",
+      "tags": [
+        "derealization",
+        "depersonalization",
+        "time_dilation"
+      ]
+    },
+    {
+      "id": "adhd",
+      "label": "ADHD (Attention Fragmentation / Overload)",
+      "description": "Metaphor of focus instability and sensory competition (comfort-first, Reduced Motion friendly).",
+      "tags": [
+        "attention_fragmentation",
+        "hyperarousal",
+        "sensory_overload"
+      ]
+    }
+  ],
+  "references": {
+    "dimensions_index": "docs/references/dimensions/index.md",
+    "evidence_matrix": "docs/references/EVIDENCE_MATRIX.md",
+    "disclaimer": "See docs for evidence-informed rationale; mappings remain metaphorical."
+  }
+}
+

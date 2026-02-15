@@ -1,0 +1,33 @@
+{
+  "name": "inner-echo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "docs:gen": "tsx scripts/gen-docs.ts",
+    "conditions:validate": "tsx scripts/conditions-validate.ts",
+    "composer:validate": "tsx scripts/composer-validate.ts",
+    "nodes:report": "tsx scripts/nodes-report.ts",
+    "references:audit": "tsx scripts/references-audit.ts",
+    "runtime:matrix": "tsx scripts/runtime-matrix.ts"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.182.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/three": "^0.182.0",
+    "@vitejs/plugin-react": "^4.3.3",
+    "playwright": "^1.58.2",
+    "tsx": "^4.19.2",
+    "typescript": "~5.6.2",
+    "vite": "^5.4.10"
+  }
+}
