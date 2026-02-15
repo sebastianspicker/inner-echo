@@ -292,11 +292,12 @@ export function CameraView() {
       safeMode,
       reducedMotion,
       audioEnabled,
-      micEnabled,
-      couplingStrength,
+      // Note: composition is profile-shaping only; mic + coupling are runtime concerns.
+      micEnabled: false,
+      couplingStrength: 0,
       maxFeedback,
       interactionAmount,
-      debugOverlay,
+      debugOverlay: false,
     }
     composeEffectiveProfile(selectedPresets, selectedDimensions, settings).then((res) => {
       if (cancelled) return
@@ -314,11 +315,8 @@ export function CameraView() {
     safeMode,
     reducedMotion,
     audioEnabled,
-    micEnabled,
-    couplingStrength,
     maxFeedback,
     interactionAmount,
-    debugOverlay,
     intensity,
   ])
 
@@ -375,6 +373,18 @@ export function CameraView() {
               },
               getOverrides: (() => {
                 const driver = createReactiveDriver(prof, { reducedMotion })
+                const baseAfterReactive: Record<string, number | boolean> = {}
+                const outVideo: Record<string, number> = {}
+                const outAudio: Record<string, number> = {}
+                const clear = (obj: Record<string, unknown>): void => {
+                  for (const k of Object.keys(obj)) delete obj[k]
+                }
+                const copy = (dst: Record<string, number | boolean>, src: Record<string, number | boolean>): void => {
+                  for (const k in src) dst[k] = src[k]
+                }
+                const mergeNum = (dst: Record<string, number>, src: Record<string, number>): void => {
+                  for (const k in src) dst[k] = src[k]
+                }
                 return (
                   delta: number,
                   audio: { rms: number; centroid: number; flux: number },
@@ -386,7 +396,9 @@ export function CameraView() {
                   const audioReactive = driver.getAudioOverrides(delta, audio.rms)
 
                   // Coupling layer (audio↔video)
-                  const baseAfterReactive = { ...baseControlValues, ...videoReactive }
+                  clear(baseAfterReactive)
+                  copy(baseAfterReactive, baseControlValues)
+                  mergeNum(baseAfterReactive as Record<string, number>, videoReactive)
                   // Ensure coupling uses the latest UI settings (sliders can change while loop runs).
                   couplingEngine.setSettings({
                     couplingStrength: couplingStrengthRef.current,
@@ -394,10 +406,15 @@ export function CameraView() {
                   })
                   const coupled = couplingEngine.step(delta, audio, video, baseAfterReactive)
 
-                  const audioOut = { ...audioReactive, ...coupled.audio }
+                  clear(outVideo)
+                  clear(outAudio)
+                  mergeNum(outVideo, videoReactive)
+                  mergeNum(outVideo, coupled.video)
+                  mergeNum(outAudio, audioReactive)
+                  mergeNum(outAudio, coupled.audio)
                   return {
-                    video: { ...videoReactive, ...coupled.video },
-                    audio: audioOut,
+                    video: outVideo,
+                    audio: outAudio,
                   }
                 }
               })(),

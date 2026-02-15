@@ -148,6 +148,29 @@ export function startWebGLOverlayLoop(
       currentParams.safetyContext = params.safetyContext ?? currentParams.safetyContext
     }
 
+    // Reuse objects to avoid per-frame allocations.
+    const mergedControlValues: Record<string, number | boolean> = {}
+    const baseParams: {
+      intensity: number
+      safeMode: boolean
+      safetyContext: VideoPipelineParams['safetyContext']
+      uvScale: [number, number]
+      uvOffset: [number, number]
+      controlValues: Record<string, number | boolean>
+      nodeIndex: number
+    } = {
+      intensity: 0.5,
+      safeMode: false,
+      safetyContext: undefined,
+      uvScale: [1, 1],
+      uvOffset: [0, 0],
+      controlValues: mergedControlValues,
+      nodeIndex: 0,
+    }
+    function clearRecord(obj: Record<string, unknown>): void {
+      for (const k of Object.keys(obj)) delete obj[k]
+    }
+
     // Chain RTs: one per node for output (next node's input). Temporal nodes need ping-pong.
     let chainRTs: THREE.WebGLRenderTarget[] = []
     const temporalPingPong: {
@@ -332,19 +355,16 @@ export function startWebGLOverlayLoop(
           reactiveOptions.applyAudioOverrides(audioOverrides)
         }
 
-        const controlValues = {
-          ...baseControlValues,
-          ...videoOverrides,
-        } as Record<string, number | boolean>
+        clearRecord(mergedControlValues)
+        for (const k in baseControlValues) mergedControlValues[k] = baseControlValues[k]
+        for (const k in videoOverrides) mergedControlValues[k] = videoOverrides[k]
 
-        const baseParams = {
-          intensity: currentParams.intensity,
-          safeMode: currentParams.safeMode,
-          safetyContext: currentParams.safetyContext,
-          uvScale,
-          uvOffset,
-          controlValues,
-        }
+        baseParams.intensity = currentParams.intensity
+        baseParams.safeMode = currentParams.safeMode
+        baseParams.safetyContext = currentParams.safetyContext
+        baseParams.uvScale = uvScale
+        baseParams.uvOffset = uvOffset
+        // baseParams.controlValues already points at mergedControlValues
 
         if (usePassthrough) {
           renderer.setRenderTarget(null)
@@ -355,12 +375,8 @@ export function startWebGLOverlayLoop(
 
           for (let i = 0; i < nodes.length; i++) {
             const node = nodes[i]
-            const nodeParams = {
-              ...baseParams,
-              nodeIndex: i,
-            }
-
-            node.setParams(nodeParams)
+            baseParams.nodeIndex = i
+            node.setParams(baseParams)
             const tickNode = node as { tick?: (d: number) => void }
             tickNode.tick?.(delta)
 
