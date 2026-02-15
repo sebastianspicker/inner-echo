@@ -57,6 +57,17 @@ type MotifClaimsFile = {
   claims: MotifClaim[]
 }
 
+type ScientificSource = {
+  /** Full citation line as present in the corpus (usually includes a doi.org link). */
+  citation: string
+  doi: string
+  doiUrl: string
+  /** Which corpus file it came from. */
+  corpusPath: string
+  /** Dimension section that contributed this source. */
+  dimensionId: string
+}
+
 function parseFirstJsonObject(text: string): unknown {
   const start = text.indexOf('{')
   if (start < 0) throw new Error('No JSON object start found')
@@ -172,6 +183,142 @@ function parseEvidenceMatrix(root: string): Map<string, EvidenceMatrixRow> {
   return out
 }
 
+function extractDois(text: string): string[] {
+  const dois = new Set<string>()
+  // Match either doi.org URLs or raw DOI tokens.
+  const re = /(https?:\/\/doi\.org\/(10\.\d{4,9}\/[-._;()/:A-Z0-9]+))|\b(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)\b/gi
+  let m: RegExpExecArray | null
+  while ((m = re.exec(text))) {
+    const doi = (m[2] ?? m[3] ?? '').trim()
+    if (doi) dois.add(doi)
+  }
+  return Array.from(dois)
+}
+
+function parseCorpusSourcesByDimension(root: string): Map<string, ScientificSource[]> {
+  const corpusPaths = [
+    'docs/references/reports/deep-research-report.md',
+    'docs/references/reports/deep-research-report-2.md',
+  ]
+  const out = new Map<string, ScientificSource[]>()
+
+  for (const corpusPath of corpusPaths) {
+    const filePath = path.join(root, corpusPath)
+    if (!fs.existsSync(filePath)) continue
+    const lines = fs.readFileSync(filePath, 'utf-8').split('\n')
+
+    let currentDim: string | null = null
+    let inBib = false
+    let pendingCitation: { line: string; dois: string[] } | null = null
+    let inMarkdownBlock = false
+
+    const flushPending = () => {
+      if (!currentDim || !pendingCitation) return
+      const [doi] = pendingCitation.dois
+      if (!doi) return
+      const list = out.get(currentDim) ?? []
+      list.push({
+        citation: pendingCitation.line,
+        doi,
+        doiUrl: `https://doi.org/${doi}`,
+        corpusPath,
+        dimensionId: currentDim,
+      })
+      out.set(currentDim, list)
+      pendingCitation = null
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i] ?? ''
+
+      // Track markdown code blocks that embed the repo-ready dimension docs.
+      if (line.trimStart().startsWith('```')) {
+        const fence = line.trim()
+        if (!inMarkdownBlock && fence.toLowerCase().startsWith('```markdown')) {
+          inMarkdownBlock = true
+        } else if (inMarkdownBlock) {
+          // close current code block
+          flushPending()
+          inMarkdownBlock = false
+          inBib = false
+          // do not clear currentDim; it may continue with another file, but we’ll reset on next heading
+        }
+        continue
+      }
+
+      // Dimension identity can appear either as a repo section header (File for ...) or as the H1 in a markdown block.
+      const fileFor = line.match(/^##\s+File\s+for\s+([a-z0-9_]+)\s*$/i)
+      if (fileFor?.[1]) {
+        // New dimension section begins.
+        flushPending()
+        currentDim = fileFor[1].toLowerCase()
+        inBib = false
+        continue
+      }
+
+      const h1 = inMarkdownBlock ? line.match(/^#\s+([a-z0-9_]+)\s*$/i) : null
+      if (h1?.[1]) {
+        flushPending()
+        currentDim = h1[1].toLowerCase()
+        inBib = false
+        continue
+      }
+
+      if (!currentDim) continue
+
+      if (/^##\s+Bibliography\b/i.test(line)) {
+        flushPending()
+        inBib = true
+        continue
+      }
+
+      // Bibliography ends at the next top-level section header.
+      if (inBib && /^##\s+/.test(line) && !/^##\s+Bibliography\b/i.test(line)) {
+        flushPending()
+        inBib = false
+        continue
+      }
+
+      if (!inBib) continue
+
+      if (line.startsWith('- ')) {
+        flushPending()
+        const citationLine = line.slice(2).trim()
+        const dois = extractDois(citationLine)
+        if (dois.length) {
+          pendingCitation = { line: citationLine, dois }
+        } else {
+          pendingCitation = null
+        }
+        continue
+      }
+
+      // Some entries have a second line like "DOI: 10...."
+      if (pendingCitation && /^\s*DOI:\s*/i.test(line)) {
+        const doi = extractDois(line)[0]
+        if (doi && !pendingCitation.dois.includes(doi)) pendingCitation.dois.unshift(doi)
+        continue
+      }
+    }
+
+    flushPending()
+  }
+
+  // Deduplicate per dimension by DOI.
+  for (const [dim, list] of out.entries()) {
+    const seen = new Set<string>()
+    const uniq: ScientificSource[] = []
+    for (const s of list) {
+      if (seen.has(s.doi)) continue
+      seen.add(s.doi)
+      uniq.push(s)
+    }
+    out.set(dim, uniq)
+  }
+
+  return out
+}
+
 function parseMotifClaims(root: string): Map<string, MotifClaim> {
   const filePath = path.join(root, 'docs/references/MOTIF_CLAIMS.json')
   if (!fs.existsSync(filePath)) return new Map()
@@ -223,7 +370,8 @@ function motifPage(
   usedByDims: Array<{ id: string; label: string; strength: string; doc: string }>,
   usedByConditions: Array<{ id: string; label: string; doc: string }>,
   matrixByDim: Map<string, EvidenceMatrixRow>,
-  claimsByKey: Map<string, MotifClaim>
+  claimsByKey: Map<string, MotifClaim>,
+  sourcesByDim: Map<string, ScientificSource[]>
 ): string {
   const dimsList = usedByDims
     .slice()
@@ -244,6 +392,24 @@ function motifPage(
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((c) => `- **${c.label}** (\`${c.id}\`) — \`${c.doc}\``)
     .join('\n')
+
+  // Aggregate scientific sources for all dimensions that use this motif.
+  const sources: ScientificSource[] = []
+  const seen = new Set<string>()
+  for (const d of usedByDims) {
+    for (const s of sourcesByDim.get(d.id) ?? []) {
+      if (seen.has(s.doi)) continue
+      seen.add(s.doi)
+      sources.push(s)
+    }
+  }
+  sources.sort((a, b) => a.doi.localeCompare(b.doi))
+
+  const sourcesMd = sources.length
+    ? sources
+        .map((s) => `- ${s.citation}\n  DOI: ${s.doiUrl} (\`${s.doi}\`) — from \`${s.corpusPath}\``)
+        .join('\n')
+    : '_No DOI sources were extracted for the dimensions currently using this motif._'
 
   return `# \`${motif}\` — motif evidence
 
@@ -268,6 +434,20 @@ ${dimsList || '_Not currently referenced by any dimension._'}
 ### Used by condition presets
 
 ${condList || '_Not currently referenced by any condition preset._'}
+
+## Scientific sources (peer-reviewed; from in-repo corpus)
+
+These sources come from the **evidence corpus** sections for the dimensions that currently use this motif.
+
+> Important: these papers support the **phenomena** described by the dimensions; they do not claim that this specific node is a biomarker or uniquely “correct”.
+
+${sourcesMd}
+
+## Safety notes (implementation constraints)
+
+- Keep outputs bounded: no strobe, no harsh audio spikes, no runaway feedback.
+- Respect Safe Mode and Reduced Motion (temporal nodes should be disabled/reduced).
+- Provide “Stop Everything” and keep the motif user-controlled.
 
 ## Sources (in-repo)
 
@@ -429,6 +609,7 @@ function main(): void {
   const dimsById = new Map(dims.map((d) => [d.id, d]))
   const matrixByDim = parseEvidenceMatrix(root)
   const claimsByKey = parseMotifClaims(root)
+  const sourcesByDim = parseCorpusSourcesByDimension(root)
 
   const outDimsDir = path.join(root, 'docs/references/dimensions')
   ensureDir(outDimsDir)
@@ -489,7 +670,10 @@ function main(): void {
       const any = c.dims.some((d) => usedByDims.some((u) => u.id === d))
       if (any) usedByConditions.push({ id: c.id, label: c.label, doc: `docs/references/conditions/${c.id}.md` })
     }
-    writeFileIfChanged(path.join(outMotifsDir, `${motif}.md`), motifPage(motif, usedByDims, usedByConditions, matrixByDim, claimsByKey))
+    writeFileIfChanged(
+      path.join(outMotifsDir, `${motif}.md`),
+      motifPage(motif, usedByDims, usedByConditions, matrixByDim, claimsByKey, sourcesByDim)
+    )
   }
 
   console.log(
