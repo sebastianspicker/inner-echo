@@ -16,15 +16,15 @@ Darkens edges to narrow the frame (static or gently modulated).
 
 ### Used by dimensions
 
-- **Compulsive Loop** (`compulsive_loop`) — Evidence (dimension): **High** — `docs/references/dimensions/compulsive_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Depersonalization** (`depersonalization`) — Evidence (dimension): **Medium** — `docs/references/dimensions/depersonalization.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Emotional Numbing** (`emotional_numbing`) — Evidence (dimension): **Medium** — `docs/references/dimensions/emotional_numbing.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Hyperarousal** (`hyperarousal`) — Evidence (dimension): **High** — `docs/references/dimensions/hyperarousal.md` — corpus: `docs/references/reports/deep-research-report.md`
-- **Hypervigilance** (`hypervigilance`) — Evidence (dimension): **Medium** — `docs/references/dimensions/hypervigilance.md` — corpus: `docs/references/reports/deep-research-report.md`
-- **Intrusion** (`intrusion`) — Evidence (dimension): **Medium** — `docs/references/dimensions/intrusion.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Panic Peaks** (`panic_peaks`) — Evidence (dimension): **High** — `docs/references/dimensions/panic_peaks.md` — corpus: `docs/references/reports/deep-research-report.md`
-- **Rumination Loop** (`rumination_loop`) — Evidence (dimension): **High** — `docs/references/dimensions/rumination_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Sensory Overload** (`sensory_overload`) — Evidence (dimension): **Medium** — `docs/references/dimensions/sensory_overload.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Compulsive Loop** (`compulsive_loop`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/compulsive_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Depersonalization** (`depersonalization`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/depersonalization.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Emotional Numbing** (`emotional_numbing`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/emotional_numbing.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Hyperarousal** (`hyperarousal`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/hyperarousal.md` — corpus: `docs/references/reports/deep-research-report.md`
+- **Hypervigilance** (`hypervigilance`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/hypervigilance.md` — corpus: `docs/references/reports/deep-research-report.md`
+- **Intrusion** (`intrusion`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/intrusion.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Panic Peaks** (`panic_peaks`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/panic_peaks.md` — corpus: `docs/references/reports/deep-research-report.md`
+- **Rumination Loop** (`rumination_loop`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/rumination_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Sensory Overload** (`sensory_overload`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/sensory_overload.md` — corpus: `docs/references/reports/deep-research-report-2.md`
 
 ### Used by condition presets
 

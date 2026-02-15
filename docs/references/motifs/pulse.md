@@ -16,8 +16,8 @@ Slow, bounded envelope modulation (no strobe).
 
 ### Used by dimensions
 
-- **Panic Peaks** (`panic_peaks`) — Evidence (dimension): **High** — `docs/references/dimensions/panic_peaks.md` — corpus: `docs/references/reports/deep-research-report.md`
-- **Time Dilation** (`time_dilation`) — Evidence (dimension): **Medium** — `docs/references/dimensions/time_dilation.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Panic Peaks** (`panic_peaks`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/panic_peaks.md` — corpus: `docs/references/reports/deep-research-report.md`
+- **Time Dilation** (`time_dilation`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/time_dilation.md` — corpus: `docs/references/reports/deep-research-report-2.md`
 
 ### Used by condition presets
 

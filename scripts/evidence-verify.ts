@@ -17,6 +17,9 @@ type ExperienceDimensionDef = { id: string; rationale_doc?: string }
 type ExperienceDimensionsFile = { dimensions: ExperienceDimensionDef[] }
 type DimensionToSignalMappingFile = { mapping: Record<string, { rationale_doc?: string }> }
 type Profile = { id: string }
+type MotifClaimsFile = {
+  claims?: Array<{ dimensionId?: string; motif?: string; label?: string; sources?: string[] }>
+}
 
 function parseFirstJsonObject(text: string): unknown {
   const start = text.indexOf('{')
@@ -96,6 +99,24 @@ function main(): void {
   for (const [dimId, entry] of Object.entries(mapFile.mapping ?? {})) {
     if (!entry?.rationale_doc) continue
     if (!exists(root, entry.rationale_doc)) errors.push(`Mapping "${dimId}" rationale_doc not found: ${entry.rationale_doc}`)
+  }
+
+  // Motif claim labels file validation (exists + sources exist).
+  const claimsPath = path.join(root, 'docs/references/MOTIF_CLAIMS.json')
+  if (!fs.existsSync(claimsPath)) {
+    errors.push('Missing motif claims file: docs/references/MOTIF_CLAIMS.json')
+  } else {
+    try {
+      const data = JSON.parse(fs.readFileSync(claimsPath, 'utf-8')) as MotifClaimsFile
+      for (const c of data.claims ?? []) {
+        const sources = c.sources ?? []
+        for (const s of sources) {
+          if (!exists(root, s)) errors.push(`Motif claim source missing (${c.dimensionId}|${c.motif}): ${s}`)
+        }
+      }
+    } catch (e) {
+      errors.push(`Invalid JSON in docs/references/MOTIF_CLAIMS.json: ${e instanceof Error ? e.message : String(e)}`)
+    }
   }
 
   const profilesDir = path.join(root, 'src/conditions/profiles')

@@ -26,7 +26,7 @@ Each motif below includes:
 | Motif (node) | What it does in the simulation | Claim label | Likelihood label | Sources |
 |---|---|---|---|---|
 | `feedback_loop` | Low-feedback image recurrence (bounded; reduced-motion disables). | **Mixed** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/feedback_loop.md` |
-| `grid_hint` | Subtle grid overlay hint (very low contrast). | **Mixed** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grid_hint.md` |
+| `grid_hint` | Subtle grid overlay hint (very low contrast). | **Artistic** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grid_hint.md`, `docs/references/CONTRIBUTIONS_AND_LIMITS.md` |
 | `vignette` | Darkens edges to narrow the frame (static or gently modulated). | **Mixed** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/vignette.md` |
 | `grain` | Adds fine noise texture (clamped). | **Mixed** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
 | `delay` | Short echo with low feedback/mix (clamped). | **Mixed** | **High** | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/delay.md` |

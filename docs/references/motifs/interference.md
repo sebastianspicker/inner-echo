@@ -16,8 +16,8 @@ Adds gentle distortion artifacts (clamped; no strobe).
 
 ### Used by dimensions
 
-- **Intrusion** (`intrusion`) — Evidence (dimension): **Medium** — `docs/references/dimensions/intrusion.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Sensory Overload** (`sensory_overload`) — Evidence (dimension): **Medium** — `docs/references/dimensions/sensory_overload.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Intrusion** (`intrusion`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/intrusion.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Sensory Overload** (`sensory_overload`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/sensory_overload.md` — corpus: `docs/references/reports/deep-research-report-2.md`
 
 ### Used by condition presets
 

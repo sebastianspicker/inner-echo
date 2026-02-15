@@ -16,7 +16,7 @@ Adds a soft tone pulse (level clamped).
 
 ### Used by dimensions
 
-- **Panic Peaks** (`panic_peaks`) — Evidence (dimension): **High** — `docs/references/dimensions/panic_peaks.md` — corpus: `docs/references/reports/deep-research-report.md`
+- **Panic Peaks** (`panic_peaks`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/panic_peaks.md` — corpus: `docs/references/reports/deep-research-report.md`
 
 ### Used by condition presets
 

@@ -16,8 +16,8 @@ Low-feedback image recurrence (bounded; reduced-motion disables).
 
 ### Used by dimensions
 
-- **Compulsive Loop** (`compulsive_loop`) — Evidence (dimension): **High** — `docs/references/dimensions/compulsive_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Rumination Loop** (`rumination_loop`) — Evidence (dimension): **High** — `docs/references/dimensions/rumination_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Compulsive Loop** (`compulsive_loop`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/compulsive_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Rumination Loop** (`rumination_loop`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/rumination_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
 
 ### Used by condition presets
 

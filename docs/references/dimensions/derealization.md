@@ -26,7 +26,7 @@ Each motif below includes:
 | Motif (node) | What it does in the simulation | Claim label | Likelihood label | Sources |
 |---|---|---|---|---|
 | `haze` | Adds soft fog/veil (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/haze.md` |
-| `chroma_aberration` | Minor RGB channel offset near edges (very low). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/chroma_aberration.md` |
+| `chroma_aberration` | Minor RGB channel offset near edges (very low). | **Artistic** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/chroma_aberration.md`, `docs/references/CONTRIBUTIONS_AND_LIMITS.md` |
 | `temporal_smear` | Blends previous frames for persistence/smear (feedback clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/temporal_smear.md` |
 | `color_grade` | Adjusts saturation/contrast/tonal balance (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/color_grade.md` |
 | `flutter` | Low-depth pitch/phase wobble (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/flutter.md` |

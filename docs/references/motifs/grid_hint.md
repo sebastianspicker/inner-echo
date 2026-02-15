@@ -16,7 +16,7 @@ Subtle grid overlay hint (very low contrast).
 
 ### Used by dimensions
 
-- **Compulsive Loop** (`compulsive_loop`) — Evidence (dimension): **High** — `docs/references/dimensions/compulsive_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Compulsive Loop** (`compulsive_loop`) — Evidence (dimension): **High** — Claim: **Artistic** — `docs/references/dimensions/compulsive_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md` — claim sources: `docs/references/CONTRIBUTIONS_AND_LIMITS.md`
 
 ### Used by condition presets
 

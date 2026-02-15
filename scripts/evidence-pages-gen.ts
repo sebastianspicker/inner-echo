@@ -43,6 +43,20 @@ type EvidenceMatrixRow = {
   corpusLink?: string
 }
 
+type MotifClaimLabel = 'supported' | 'mixed' | 'artistic' | 'hypothesis'
+type MotifClaim = {
+  dimensionId: string
+  motif: string
+  label: MotifClaimLabel
+  why?: string
+  sources: string[]
+}
+type MotifClaimsFile = {
+  version?: string
+  note?: string
+  claims: MotifClaim[]
+}
+
 function parseFirstJsonObject(text: string): unknown {
   const start = text.indexOf('{')
   if (start < 0) throw new Error('No JSON object start found')
@@ -158,6 +172,33 @@ function parseEvidenceMatrix(root: string): Map<string, EvidenceMatrixRow> {
   return out
 }
 
+function parseMotifClaims(root: string): Map<string, MotifClaim> {
+  const filePath = path.join(root, 'docs/references/MOTIF_CLAIMS.json')
+  if (!fs.existsSync(filePath)) return new Map()
+  const data = JSON.parse(fs.readFileSync(filePath, 'utf-8')) as MotifClaimsFile
+  const out = new Map<string, MotifClaim>()
+  for (const c of data?.claims ?? []) {
+    const dim = String(c.dimensionId ?? '').trim()
+    const motif = String(c.motif ?? '').trim()
+    if (!dim || !motif) continue
+    out.set(`${dim}|${motif}`, {
+      dimensionId: dim,
+      motif,
+      label: c.label,
+      why: c.why,
+      sources: Array.isArray(c.sources) ? c.sources.map(String) : [],
+    })
+  }
+  return out
+}
+
+function claimLabelTitle(label: MotifClaimLabel): string {
+  if (label === 'supported') return 'Supported'
+  if (label === 'mixed') return 'Mixed'
+  if (label === 'artistic') return 'Artistic'
+  return 'Hypothesis'
+}
+
 function motifIndexPage(motifs: string[]): string {
   const items = motifs
     .slice()
@@ -181,7 +222,8 @@ function motifPage(
   motif: string,
   usedByDims: Array<{ id: string; label: string; strength: string; doc: string }>,
   usedByConditions: Array<{ id: string; label: string; doc: string }>,
-  matrixByDim: Map<string, EvidenceMatrixRow>
+  matrixByDim: Map<string, EvidenceMatrixRow>,
+  claimsByKey: Map<string, MotifClaim>
 ): string {
   const dimsList = usedByDims
     .slice()
@@ -189,7 +231,11 @@ function motifPage(
     .map((d) => {
       const corpus = matrixByDim.get(d.id)?.corpusLink
       const corpusPart = corpus ? ` — corpus: \`${corpus}\`` : ''
-      return `- **${d.label}** (\`${d.id}\`) — Evidence (dimension): **${d.strength}** — \`${d.doc}\`${corpusPart}`
+      const claim = claimsByKey.get(`${d.id}|${motif}`)?.label ?? 'mixed'
+      const claimTitle = claimLabelTitle(claim)
+      const claimSources = claimsByKey.get(`${d.id}|${motif}`)?.sources ?? []
+      const claimSrcPart = claimSources.length ? ` — claim sources: ${claimSources.map((s) => `\`${s}\``).join(', ')}` : ''
+      return `- **${d.label}** (\`${d.id}\`) — Evidence (dimension): **${d.strength}** — Claim: **${claimTitle}** — \`${d.doc}\`${corpusPart}${claimSrcPart}`
     })
     .join('\n')
 
@@ -232,7 +278,7 @@ ${condList || '_Not currently referenced by any condition preset._'}
 `
 }
 
-function dimPage(dim: ExperienceDimensionDef): string {
+function dimPage(dim: ExperienceDimensionDef, claimsByKey: Map<string, MotifClaim>): string {
   const video = dim.motif_summary?.video_nodes ?? []
   const audio = dim.motif_summary?.audio_nodes ?? []
   const strength = strengthLabel(dim.evidence_strength)
@@ -269,10 +315,17 @@ Each motif below includes:
 | Motif (node) | What it does in the simulation | Claim label | Likelihood label | Sources |
 |---|---|---|---|---|
 ${motifs.length ? motifs.map((m) => {
-  const claim = String(dim.evidence_strength ?? '').toLowerCase() === 'hypothesis' ? 'Hypothesis' : 'Mixed'
+  const isHyp = String(dim.evidence_strength ?? '').toLowerCase() === 'hypothesis'
   const likelihood = strengthLabel(dim.evidence_strength)
   const motifDoc = `docs/references/motifs/${m.node}.md`
-  return `| \`${m.node}\` | ${nodeSimulationSummary(m.node)} | **${claim}** | **${likelihood}** | \`${rationale}\`, \`docs/references/EVIDENCE_MATRIX.md\`, \`${motifDoc}\` |`
+  // claim label comes from curated map; default to Mixed unless dimension is hypothesis.
+  const key = `${dim.id}|${m.node}`
+  const curated = claimsByKey.get(key)
+  const label: MotifClaimLabel = isHyp ? 'hypothesis' : (curated?.label ?? 'mixed')
+  const claim = claimLabelTitle(label)
+  const claimSources = curated?.sources?.length ? curated.sources.map((s) => `\`${s}\``).join(', ') : ''
+  const sources = [ `\`${rationale}\``, '`docs/references/EVIDENCE_MATRIX.md`', `\`${motifDoc}\`` ].concat(claimSources ? [claimSources] : []).join(', ')
+  return `| \`${m.node}\` | ${nodeSimulationSummary(m.node)} | **${claim}** | **${likelihood}** | ${sources} |`
 }).join('\n') : '| _none_ | _n/a_ | _n/a_ | _n/a_ | _n/a_ |'}
 
 ## Evidence links (in-repo)
@@ -375,13 +428,14 @@ function main(): void {
   const dims = (dimsFile.dimensions ?? []).slice()
   const dimsById = new Map(dims.map((d) => [d.id, d]))
   const matrixByDim = parseEvidenceMatrix(root)
+  const claimsByKey = parseMotifClaims(root)
 
   const outDimsDir = path.join(root, 'docs/references/dimensions')
   ensureDir(outDimsDir)
 
   for (const dim of dims) {
     const filePath = path.join(outDimsDir, `${dim.id}.md`)
-    writeFileIfChanged(filePath, dimPage(dim))
+    writeFileIfChanged(filePath, dimPage(dim, claimsByKey))
   }
 
   const profilesDir = path.join(root, 'src/conditions/profiles')
@@ -435,7 +489,7 @@ function main(): void {
       const any = c.dims.some((d) => usedByDims.some((u) => u.id === d))
       if (any) usedByConditions.push({ id: c.id, label: c.label, doc: `docs/references/conditions/${c.id}.md` })
     }
-    writeFileIfChanged(path.join(outMotifsDir, `${motif}.md`), motifPage(motif, usedByDims, usedByConditions, matrixByDim))
+    writeFileIfChanged(path.join(outMotifsDir, `${motif}.md`), motifPage(motif, usedByDims, usedByConditions, matrixByDim, claimsByKey))
   }
 
   console.log(

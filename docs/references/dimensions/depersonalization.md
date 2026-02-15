@@ -27,7 +27,7 @@ Each motif below includes:
 |---|---|---|---|---|
 | `vignette` | Darkens edges to narrow the frame (static or gently modulated). | **Mixed** | **Medium** | `docs/references/dimensions/depersonalization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/vignette.md` |
 | `soft_blur` | Applies mild blur to reduce sharp detail (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/depersonalization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/soft_blur.md` |
-| `chroma_aberration` | Minor RGB channel offset near edges (very low). | **Mixed** | **Medium** | `docs/references/dimensions/depersonalization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/chroma_aberration.md` |
+| `chroma_aberration` | Minor RGB channel offset near edges (very low). | **Artistic** | **Medium** | `docs/references/dimensions/depersonalization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/chroma_aberration.md`, `docs/references/CONTRIBUTIONS_AND_LIMITS.md` |
 | `color_grade` | Adjusts saturation/contrast/tonal balance (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/depersonalization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/color_grade.md` |
 | `reverb` | Adds gentle space/decay (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/depersonalization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/reverb.md` |
 | `lowpass` | Attenuates high frequencies above cutoff (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/depersonalization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |

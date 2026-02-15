@@ -16,9 +16,9 @@ Attenuates low frequencies below cutoff (clamped).
 
 ### Used by dimensions
 
-- **Attention Fragmentation** (`attention_fragmentation`) — Evidence (dimension): **Medium** — `docs/references/dimensions/attention_fragmentation.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Hyperarousal** (`hyperarousal`) — Evidence (dimension): **High** — `docs/references/dimensions/hyperarousal.md` — corpus: `docs/references/reports/deep-research-report.md`
-- **Hypervigilance** (`hypervigilance`) — Evidence (dimension): **Medium** — `docs/references/dimensions/hypervigilance.md` — corpus: `docs/references/reports/deep-research-report.md`
+- **Attention Fragmentation** (`attention_fragmentation`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/attention_fragmentation.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Hyperarousal** (`hyperarousal`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/hyperarousal.md` — corpus: `docs/references/reports/deep-research-report.md`
+- **Hypervigilance** (`hypervigilance`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/hypervigilance.md` — corpus: `docs/references/reports/deep-research-report.md`
 
 ### Used by condition presets
 

@@ -16,8 +16,8 @@ Blends previous frames for persistence/smear (feedback clamped).
 
 ### Used by dimensions
 
-- **Derealization** (`derealization`) — Evidence (dimension): **Medium** — `docs/references/dimensions/derealization.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Time Dilation** (`time_dilation`) — Evidence (dimension): **Medium** — `docs/references/dimensions/time_dilation.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Derealization** (`derealization`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/derealization.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Time Dilation** (`time_dilation`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/time_dilation.md` — corpus: `docs/references/reports/deep-research-report-2.md`
 
 ### Used by condition presets
 

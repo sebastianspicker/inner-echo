@@ -16,8 +16,8 @@ Slow amplitude modulation (rate/depth clamped).
 
 ### Used by dimensions
 
-- **Attention Fragmentation** (`attention_fragmentation`) — Evidence (dimension): **Medium** — `docs/references/dimensions/attention_fragmentation.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Rumination Loop** (`rumination_loop`) — Evidence (dimension): **High** — `docs/references/dimensions/rumination_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Attention Fragmentation** (`attention_fragmentation`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/attention_fragmentation.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Rumination Loop** (`rumination_loop`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/rumination_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
 
 ### Used by condition presets
 

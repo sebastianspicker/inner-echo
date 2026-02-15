@@ -16,12 +16,12 @@ Adds quiet broadband noise floor (clamped).
 
 ### Used by dimensions
 
-- **Cognitive Fog** (`cognitive_fog`) — Evidence (dimension): **Medium** — `docs/references/dimensions/cognitive_fog.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Emotional Numbing** (`emotional_numbing`) — Evidence (dimension): **Medium** — `docs/references/dimensions/emotional_numbing.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Hyperarousal** (`hyperarousal`) — Evidence (dimension): **High** — `docs/references/dimensions/hyperarousal.md` — corpus: `docs/references/reports/deep-research-report.md`
-- **Hypervigilance** (`hypervigilance`) — Evidence (dimension): **Medium** — `docs/references/dimensions/hypervigilance.md` — corpus: `docs/references/reports/deep-research-report.md`
-- **Intrusion** (`intrusion`) — Evidence (dimension): **Medium** — `docs/references/dimensions/intrusion.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Sensory Overload** (`sensory_overload`) — Evidence (dimension): **Medium** — `docs/references/dimensions/sensory_overload.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Cognitive Fog** (`cognitive_fog`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/cognitive_fog.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Emotional Numbing** (`emotional_numbing`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/emotional_numbing.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Hyperarousal** (`hyperarousal`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/hyperarousal.md` — corpus: `docs/references/reports/deep-research-report.md`
+- **Hypervigilance** (`hypervigilance`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/hypervigilance.md` — corpus: `docs/references/reports/deep-research-report.md`
+- **Intrusion** (`intrusion`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/intrusion.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Sensory Overload** (`sensory_overload`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/sensory_overload.md` — corpus: `docs/references/reports/deep-research-report-2.md`
 
 ### Used by condition presets
 

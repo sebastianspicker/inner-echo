@@ -16,8 +16,8 @@ Minor RGB channel offset near edges (very low).
 
 ### Used by dimensions
 
-- **Depersonalization** (`depersonalization`) — Evidence (dimension): **Medium** — `docs/references/dimensions/depersonalization.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Derealization** (`derealization`) — Evidence (dimension): **Medium** — `docs/references/dimensions/derealization.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Depersonalization** (`depersonalization`) — Evidence (dimension): **Medium** — Claim: **Artistic** — `docs/references/dimensions/depersonalization.md` — corpus: `docs/references/reports/deep-research-report-2.md` — claim sources: `docs/references/CONTRIBUTIONS_AND_LIMITS.md`
+- **Derealization** (`derealization`) — Evidence (dimension): **Medium** — Claim: **Artistic** — `docs/references/dimensions/derealization.md` — corpus: `docs/references/reports/deep-research-report-2.md` — claim sources: `docs/references/CONTRIBUTIONS_AND_LIMITS.md`
 
 ### Used by condition presets
 

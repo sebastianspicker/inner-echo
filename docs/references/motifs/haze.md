@@ -16,8 +16,8 @@ Adds soft fog/veil (clamped).
 
 ### Used by dimensions
 
-- **Cognitive Fog** (`cognitive_fog`) — Evidence (dimension): **Medium** — `docs/references/dimensions/cognitive_fog.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Derealization** (`derealization`) — Evidence (dimension): **Medium** — `docs/references/dimensions/derealization.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Cognitive Fog** (`cognitive_fog`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/cognitive_fog.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Derealization** (`derealization`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/derealization.md` — corpus: `docs/references/reports/deep-research-report-2.md`
 
 ### Used by condition presets
 

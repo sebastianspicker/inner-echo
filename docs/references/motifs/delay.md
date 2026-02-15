@@ -16,10 +16,10 @@ Short echo with low feedback/mix (clamped).
 
 ### Used by dimensions
 
-- **Compulsive Loop** (`compulsive_loop`) — Evidence (dimension): **High** — `docs/references/dimensions/compulsive_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Intrusion** (`intrusion`) — Evidence (dimension): **Medium** — `docs/references/dimensions/intrusion.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Rumination Loop** (`rumination_loop`) — Evidence (dimension): **High** — `docs/references/dimensions/rumination_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
-- **Time Dilation** (`time_dilation`) — Evidence (dimension): **Medium** — `docs/references/dimensions/time_dilation.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Compulsive Loop** (`compulsive_loop`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/compulsive_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Intrusion** (`intrusion`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/intrusion.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Rumination Loop** (`rumination_loop`) — Evidence (dimension): **High** — Claim: **Mixed** — `docs/references/dimensions/rumination_loop.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- **Time Dilation** (`time_dilation`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/time_dilation.md` — corpus: `docs/references/reports/deep-research-report-2.md`
 
 ### Used by condition presets
 
