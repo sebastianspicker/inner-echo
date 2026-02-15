@@ -1,6 +1,7 @@
 import type { Profile, VideoStackNodeDef, AudioStackConfig, AnalyserToParamDef } from '../conditions/schema'
 import type { ComposerSettings, SelectedDimension, SelectedPreset } from './types'
 import { clamp01 } from './types'
+import { getInteractionGain } from './interactionMatrix'
 
 export type MissingNodesReport = {
   video: string[]
@@ -381,6 +382,23 @@ export async function composeEffectiveProfileCore(
     .filter((d) => d.dimensionId && d.weight > 0)
     .sort((a, b) => a.dimensionId.localeCompare(b.dimensionId))
 
+  // Optional nonlinear interactions: conservative amplification of co-selected dimensions.
+  // This is intentionally bounded and only affects how dimension motifs contribute to the composed stack.
+  const effectiveDimWeight = new Map<string, number>()
+  if (cleanedDims.length >= 2 && clamp01(settings.interactionAmount) > 0) {
+    for (const a of cleanedDims) {
+      let sumGain = 0
+      for (const b of cleanedDims) {
+        if (a.dimensionId === b.dimensionId) continue
+        sumGain += getInteractionGain(a.dimensionId, b.dimensionId, settings.interactionAmount)
+      }
+      // Bounded: boost small weights a bit, but never exceed 1.
+      effectiveDimWeight.set(a.dimensionId, clamp01(a.weight * (1 + sumGain)))
+    }
+  } else {
+    for (const d of cleanedDims) effectiveDimWeight.set(d.dimensionId, d.weight)
+  }
+
   const loadedProfiles: Array<{ preset: SelectedPreset; profile: Profile }> = []
   for (const p of cleanedPresets) {
     const prof = await sources.loadPresetProfile(p.profileId)
@@ -464,7 +482,7 @@ export async function composeEffectiveProfileCore(
         continue
       }
       const key = makeIdForNode(def) || node
-      const strength = clamp01(d.weight)
+      const strength = clamp01(effectiveDimWeight.get(d.dimensionId) ?? d.weight)
       const scaledParams: Record<string, unknown> = {}
       for (const [k, v] of Object.entries((def.params ?? {}) as Record<string, unknown>)) {
         if (typeof v === 'number') scaledParams[k] = v * strength
@@ -472,7 +490,7 @@ export async function composeEffectiveProfileCore(
       }
       const e = videoByKey.get(key) ?? { node, id: key, contribs: [], minIndex: 1000 + i }
       e.minIndex = Math.min(e.minIndex, 1000 + i)
-      e.contribs.push({ w: d.weight, params: scaledParams, source: `dim:${d.dimensionId}`, index: 1000 + i, node, id: key })
+      e.contribs.push({ w: strength, params: scaledParams, source: `dim:${d.dimensionId}`, index: 1000 + i, node, id: key })
       videoByKey.set(key, e)
     }
   }
@@ -529,7 +547,7 @@ export async function composeEffectiveProfileCore(
         continue
       }
       const key = node
-      const strength = clamp01(d.weight)
+      const strength = clamp01(effectiveDimWeight.get(d.dimensionId) ?? d.weight)
       const scaledParams: Record<string, unknown> = {}
       for (const [k, v] of Object.entries(def.params)) {
         if (typeof v === 'number') scaledParams[k] = v * strength
@@ -537,7 +555,7 @@ export async function composeEffectiveProfileCore(
       }
       const e = audioByKey.get(key) ?? { node, contribs: [], minIndex: 1000 + i }
       e.minIndex = Math.min(e.minIndex, 1000 + i)
-      e.contribs.push({ w: d.weight, params: scaledParams, source: `dim:${d.dimensionId}`, index: 1000 + i })
+      e.contribs.push({ w: strength, params: scaledParams, source: `dim:${d.dimensionId}`, index: 1000 + i })
       audioByKey.set(key, e)
     }
   }
