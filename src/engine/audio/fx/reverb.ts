@@ -3,6 +3,7 @@
  */
 
 import type { AudioModule } from '../types'
+import { clamp } from '../../../utils/numeric'
 
 export interface ReverbParams {
   /** Wet mix 0..1 (keep low). */
@@ -13,10 +14,6 @@ export interface ReverbParams {
 
 const DEFAULT_MIX = 0.05
 const DEFAULT_DECAY = 1.3
-
-function clamp(v: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, v))
-}
 
 function makeImpulse(context: BaseAudioContext, decaySeconds: number): AudioBuffer {
   const sr = context.sampleRate

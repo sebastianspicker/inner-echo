@@ -1,6 +1,10 @@
 /**
- * Phase 7: Build audio FX chain from profile audio_stack.
- * Unknown node types are skipped with a warning.
+ * Audio Graph Builder
+ * 
+ * This module is responsible for parsing a condition's profile (`audio_stack.chain`)
+ * and transforming it into real Web Audio API nodes (`AudioModule`).
+ * 
+ * Unknown node types in the configuration are safely skipped, and warnings are logged.
  */
 
 import type { AudioModule } from './types'
@@ -43,9 +47,17 @@ const FX_FACTORY: Record<string, NodeFactory> = {
     createCompressor(ctx, p as { threshold?: number; ratio?: number; attack?: number; release?: number; ceiling?: number }),
 }
 
+export function isKnownAudioNodeType(nodeType: string): boolean {
+  return Object.prototype.hasOwnProperty.call(FX_FACTORY, String(nodeType).toLowerCase())
+}
+
 /**
- * Build an array of AudioModules from profile audio_stack.chain.
- * Only known node types are instantiated; others are skipped with a warning.
+ * Builds an array of `AudioModule`s based on the `audio_stack.chain` array defined in a profile.
+ * It uses the factory map `FX_FACTORY` to instantiate the corresponding Web Audio nodes.
+ * 
+ * @param context The active `BaseAudioContext`.
+ * @param config The `AudioStackConfig` parsed from a JSON profile.
+ * @returns An array of instantiated `AudioModule`s ready to be connected.
  */
 export function buildAudioChain(
   context: BaseAudioContext,
@@ -61,7 +73,8 @@ export function buildAudioChain(
       console.warn('[audio] chain entry missing "node":', def)
       continue
     }
-    const factory = FX_FACTORY[nodeType]
+    const nodeKey = nodeType.toLowerCase()
+    const factory = FX_FACTORY[nodeKey]
     if (!factory) {
       console.warn('[audio] Unknown audio node type, skipping:', nodeType)
       continue
@@ -73,7 +86,13 @@ export function buildAudioChain(
 }
 
 /**
- * Connect source -> chain[0] -> ... -> chain[n] -> destination.
+ * Connects an array of instantiated `AudioModule`s sequentially in a daisy-chain setup.
+ * 
+ * Signal flow: `source -> chain[0] -> chain[1] -> ... -> chain[n] -> destination`.
+ * 
+ * @param source The starting node (e.g., a GainNode from a synthesizer or microphone).
+ * @param chain The array of effect modules to apply.
+ * @param destination The final output node (e.g., an AnalyserNode or the Context Destination).
  */
 export function connectAudioChain(
   source: AudioNode,

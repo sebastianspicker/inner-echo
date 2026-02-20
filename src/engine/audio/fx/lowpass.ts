@@ -3,6 +3,7 @@
  */
 
 import type { AudioModule } from '../types'
+import { clamp } from '../../../utils/numeric'
 
 export interface LowpassParams {
   cutoff?: number
@@ -11,9 +12,6 @@ export interface LowpassParams {
 
 const DEFAULT_CUTOFF = 800
 const DEFAULT_Q = 0.7
-function clamp(v: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, v))
-}
 
 export function createLowpass(context: BaseAudioContext, params: LowpassParams = {}): AudioModule {
   const filter = context.createBiquadFilter()

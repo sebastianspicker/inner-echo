@@ -26,7 +26,8 @@ export async function loadEvidenceDoc(docPath: EvidenceDocPath): Promise<string 
   if (!loader) return null
   try {
     return await loader()
-  } catch {
+  } catch (err) {
+    console.warn('loadEvidenceDoc failed', docPath, err)
     return null
   }
 }

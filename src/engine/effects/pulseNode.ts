@@ -6,6 +6,7 @@
 import * as THREE from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
+  applyUvParams,
   clamp,
   getGlobalClampNumber,
   getSafeModeClampNumber,
@@ -71,12 +72,7 @@ export class PulseNode implements VideoNode {
     this.material.uniforms.u_depth.value = depth
     this.material.uniforms.u_pulse.value = this.smoothed
 
-    if (params.uvScale) {
-      this.material.uniforms.u_uvScale.value.set(params.uvScale[0], params.uvScale[1])
-    }
-    if (params.uvOffset) {
-      this.material.uniforms.u_uvOffset.value.set(params.uvOffset[0], params.uvOffset[1])
-    }
+    applyUvParams(this.material, params)
 
     this.rateHz = rate
     this.smoothing = smoothing

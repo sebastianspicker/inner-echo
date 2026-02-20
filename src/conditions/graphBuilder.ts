@@ -1,6 +1,14 @@
 /**
- * Phase 5/6: Map profile video_stack to engine VideoNode instances.
- * Unknown node types → console.warn + skip (do not crash).
+ * Condition Graph Builder
+ * 
+ * This module bridges the gap between the static JSON profiles and the live WebGL/Audio engines.
+ * Its main job is to read the `video_stack` array from a profile and instantiate the
+ * correct TypeScript `VideoNode` objects (e.g. turning `"node": "grain"` in JSON into `new GrainNode()`).
+ * 
+ * Features:
+ * - Safely skips unrecognized nodes (instead of crashing).
+ * - Implements logic for the "Reduced Motion" accessibility setting, skipping
+ *   temporal/motion-heavy nodes like `temporal_smear` if requested.
  */
 
 import type { VideoNode } from '../engine/effects/VideoNode'
@@ -61,9 +69,15 @@ function shouldSkipNode(
 }
 
 /**
- * Build an array of VideoNodes from a profile's video_stack.
- * Only known node types are instantiated; others are skipped with a warning.
- * Phase 10: When reducedMotion is true, temporal nodes are excluded.
+ * Builds an array of live `VideoNode` objects based on a profile's `video_stack` definition.
+ * 
+ * - Only known node types (listed in `NODE_FACTORY`) are instantiated.
+ * - Unknown types are logged to the console and safely skipped.
+ * - If `options.reducedMotion` is true, temporal/strobe-heavy nodes are skipped.
+ * 
+ * @param profile The parsed active condition profile.
+ * @param options Accessibility options like Reduced Motion.
+ * @returns Array of instantiated VideoNodes ready for the WebGL pipeline.
  */
 export function buildVideoNodes(
   profile: Profile,

@@ -1,6 +1,12 @@
 /**
- * Phase 5: Zod schemas for condition catalog and profile validation.
- * Required fields: id, label, video_stack. Unknown node types are skipped at build time (see graphBuilder).
+ * JSON Schema Validation (Zod)
+ * 
+ * This file defines the explicit shape and typing of all `.json` Condition Profiles
+ * stored in the `public/profiles/` directory, as well as the main `catalog.json`.
+ * 
+ * It uses Zod to ensure that when we fetch a profile at runtime, it actually has
+ * the required fields (like `id`, `label`, and a `video_stack` array). It helps
+ * fail fast if someone writes invalid JSON or forgets a required property.
  */
 
 import { z } from 'zod'

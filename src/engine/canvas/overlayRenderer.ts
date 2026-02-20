@@ -1,7 +1,11 @@
 /**
- * Phase 2: Canvas 2D overlay baseline.
- * Renders the video into a canvas exactly over the video element (fallback renderer).
- * No WebGL; clean lifecycle: start when active, stop when stopped.
+ * Canvas 2D Overlay Renderer (Fallback)
+ * 
+ * This module represents a simple 2D canvas renderer. It is primarily used as a fallback
+ * or a baseline utility to draw the raw HTML `<video>` element feed directly onto a `<canvas>`
+ * with CSS `object-fit: cover` logic applied in JavaScript.
+ * 
+ * In standard operation, the application uses `webglPipeline.ts` instead for complex shader effects.
  */
 
 /**
@@ -59,7 +63,7 @@ export function startOverlayLoop(
   canvas: HTMLCanvasElement | null,
   container: HTMLElement | null
 ): () => void {
-  if (!video || !canvas || !container) return () => {}
+  if (!video || !canvas || !container) return () => { }
 
   let rafId: number | null = null
   let stopped = false

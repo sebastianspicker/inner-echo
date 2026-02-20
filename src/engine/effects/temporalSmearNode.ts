@@ -6,6 +6,7 @@
 import * as THREE from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
+  applyUvParams,
   clamp,
   getGlobalClampNumber,
   getSafeModeClampNumber,
@@ -26,6 +27,7 @@ uniform sampler2D u_prev;
 uniform vec2 u_uvScale;
 uniform vec2 u_uvOffset;
 uniform float u_feedback;
+uniform float u_decay;
 uniform vec2 u_jitter;
 varying vec2 vUv;
 
@@ -34,7 +36,8 @@ void main() {
   vec2 juv = uv + u_jitter;
   vec4 curr = texture2D(u_map, uv);
   vec4 prev = texture2D(u_prev, juv);
-  vec4 color = mix(curr, prev, u_feedback);
+  float w = clamp(u_feedback * u_decay, 0.0, 1.0);
+  vec4 color = mix(curr, prev, w);
   gl_FragColor = clamp(color, 0.0, 1.0);
 }
 `
@@ -49,6 +52,7 @@ export class TemporalSmearNode implements VideoNode {
     const intensity = clamp(params.intensity ?? 0, 0, 1)
     let feedback = resolveNumberParam(params, 'feedback', 0) * intensity
     let jitter = resolveNumberParam(params, 'jitter', 0) * intensity
+    const decay = clamp(resolveNumberParam(params, 'decay', 0.94), 0.85, 0.99)
 
     const globalMaxFeedback = getGlobalClampNumber(params, 'max_feedback', 0.18)
     const globalMaxJitter = getGlobalClampNumber(params, 'max_jitter', 0.06)
@@ -62,15 +66,11 @@ export class TemporalSmearNode implements VideoNode {
       jitter = Math.min(jitter, clamp(maxJitter, 0, 0.25))
     }
     this.material.uniforms.u_feedback.value = feedback
+    this.material.uniforms.u_decay.value = decay
     const jx = (Math.sin(this.time * 12.3) * 0.5 + 0.5) * jitter
     const jy = (Math.sin(this.time * 7.7) * 0.5 + 0.5) * jitter
     this.material.uniforms.u_jitter.value.set(jx, jy)
-    if (params.uvScale) {
-      this.material.uniforms.u_uvScale.value.set(params.uvScale[0], params.uvScale[1])
-    }
-    if (params.uvOffset) {
-      this.material.uniforms.u_uvOffset.value.set(params.uvOffset[0], params.uvOffset[1])
-    }
+    applyUvParams(this.material, params)
   }
 
   getMaterial(
@@ -89,6 +89,7 @@ export class TemporalSmearNode implements VideoNode {
         u_uvScale: { value: new THREE.Vector2(1, 1) },
         u_uvOffset: { value: new THREE.Vector2(0, 0) },
         u_feedback: { value: 0.5 },
+        u_decay: { value: 0.94 },
         u_jitter: { value: new THREE.Vector2(0, 0) },
       },
       vertexShader: VERT,

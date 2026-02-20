@@ -8,6 +8,7 @@
  */
 
 import type { AudioModule } from '../types'
+import { clamp } from '../../../utils/numeric'
 
 export interface PulseToneParams {
   rate?: number
@@ -18,10 +19,6 @@ export interface PulseToneParams {
 const DEFAULT_RATE = 1.0
 const DEFAULT_MIX = 0.06
 const DEFAULT_FREQ = 120
-
-function clamp(v: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, v))
-}
 
 export function createPulseTone(context: BaseAudioContext, params: PulseToneParams = {}): AudioModule {
   const input = context.createGain()

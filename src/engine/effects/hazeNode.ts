@@ -4,7 +4,7 @@
 
 import * as THREE from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
-import { clamp, resolveNumberParam } from './paramUtils'
+import { applyUvParams, clamp, resolveNumberParam } from './paramUtils'
 
 const VERT = `
 varying vec2 vUv;
@@ -47,12 +47,7 @@ export class HazeNode implements VideoNode {
     let amount = resolveNumberParam(params, 'amount', 0) * intensity
     amount = clamp(amount, 0, 0.25)
     this.material.uniforms.u_amount.value = amount
-    if (params.uvScale) {
-      this.material.uniforms.u_uvScale.value.set(params.uvScale[0], params.uvScale[1])
-    }
-    if (params.uvOffset) {
-      this.material.uniforms.u_uvOffset.value.set(params.uvOffset[0], params.uvOffset[1])
-    }
+    applyUvParams(this.material, params)
   }
 
   getMaterial(inputTexture: THREE.Texture): THREE.Material {

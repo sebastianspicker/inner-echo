@@ -1,6 +1,9 @@
 /**
- * Phase 7: Simple synth — oscillators + gain, optional noise bed.
- * No mic; used as audio_stack input source.
+ * Audio Synthesizer
+ * 
+ * This module provides a simple, built-in dual-oscillator synthesizer (with an optional noise bed).
+ * It acts as the default audio source when the microphone is disabled.
+ * The output is a single Web Audio `GainNode` that gets piped into the `AudioEngine`'s effects chain.
  */
 
 import type { AudioModule } from './types'

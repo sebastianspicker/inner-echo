@@ -3,6 +3,7 @@
  */
 
 import type { AudioModule } from '../types'
+import { clamp } from '../../../utils/numeric'
 
 export interface CompressorParams {
   threshold?: number
@@ -17,10 +18,6 @@ const DEFAULT_RATIO = 3
 const DEFAULT_ATTACK = 0.02
 const DEFAULT_RELEASE = 0.25
 const DEFAULT_CEILING = -6
-
-function clamp(v: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, v))
-}
 
 export function createCompressor(
   context: BaseAudioContext,

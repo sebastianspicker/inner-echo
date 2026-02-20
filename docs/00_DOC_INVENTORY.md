@@ -104,10 +104,26 @@ Purpose: list documentation files and classify them (canonical / duplicate / out
 
 ---
 
+## Removed in repo cleanup (2026-02)
+
+| File | Reason |
+|------|--------|
+| **PROGRESS.md** (root) | Ralph audit loop log; temporary artifact. |
+| **docs/DEBUG_BACKLOG.md**, **docs/DEBUG_BASELINE.md** | Completed debug backlog; baseline snapshot. |
+| **docs/UI_DEBUG_BACKLOG.md**, **docs/UI_DEBUG_BASELINE.md** | Phase A UI debug backlog/baseline; temporary. |
+| **docs/INSPECTION_REPORT.md**, **docs/UI_INSPECTION_REPORT.md** | One-off inspection reports. |
+| **docs/BUGFIX_IMPLEMENTATION_2026-02-16.md** | Single bugfix note; content in CHANGELOG where relevant. |
+| **docs/AGENTS.md** | Duplicate of root AGENTS.md (removed in this cleanup). |
+| **docs/PLANS.md**, **docs/PRODUCT_SENSE.md**, **docs/QUALITY_SCORE.md** | Stub placeholders (removed in this cleanup). |
+| **docs/00_FINAL_OUTPUT.md** | Structure output; redundant. |
+| **docs/PHASE_09_MIC_OPTIONAL_SAFETY.md** | Phase implementation note; behaviour in 20_ARCHITECTURE, RELIABILITY. |
+| **docs/_archive/** (incl. 2026-02-15 snapshot) | Temporary archive; fully removed in GitHub polish. |
+| **.codex/ralph-audit/** | Audit WIP artifacts; removed; `.codex/` added to .gitignore. |
+
+---
+
 ## Summary counts
 
 - **canonical:** 28 (root AGENTS; docs references + dimensions; Scientific/; src/conditions; consolidated 00–40).
-- **duplicate:** 3 (root ARCHITECTURE vs docs/ARCHITECTURE; docs/AGENTS vs root AGENTS; docs/scientific/docs/references vs docs/references).
-- **outdated:** 1 (design-docs/index).
-- **temp:** 3 (PLANS, PRODUCT_SENSE, QUALITY_SCORE).
-- **removed:** PHASE_*.md, design-docs, docs/AGENTS.md, docs/PLANS.md, docs/PRODUCT_SENSE.md, docs/QUALITY_SCORE.md, docs/scientific/docs/; docs/_archive/ deleted.
+- **duplicate/outdated/temp:** As above; removed files no longer present in repo.
+- **removed:** PHASE_*.md, design-docs, docs/AGENTS.md, docs/PLANS.md, docs/PRODUCT_SENSE.md, docs/QUALITY_SCORE.md, docs/scientific/docs/, docs/_archive/; plus PROGRESS.md, DEBUG_*, UI_DEBUG_*, *INSPECTION_REPORT*, BUGFIX_IMPLEMENTATION_*, 00_FINAL_OUTPUT (see table above).

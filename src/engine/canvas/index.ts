@@ -12,6 +12,7 @@ import {
 } from './overlayRenderer'
 import {
   startWebGLOverlayLoop,
+  type WebGLOverlayCallbacks,
   type VideoPipelineParams,
   type ReactiveLoopOptions,
 } from './webglPipeline'
@@ -24,7 +25,15 @@ export type { VideoMetrics } from './videoMetrics'
 export interface OverlayDiagnostics {
   rendererMode: 'webgl' | '2d'
   fps: number | null
+  frameTimeMs: number | null
   renderScale: number
+  resourceCounts: {
+    renderTargets: number
+    temporalPairs: number
+    estimatedTextures: number
+    estimatedFramebuffers: number
+  } | null
+  activeVideoNodes: string[]
 }
 
 /** When true, use Three.js WebGL pipeline; when false or when WebGL init fails, use 2D drawImage. */
@@ -52,36 +61,63 @@ export function startOverlayLoop(
   reactiveOptions?: ReactiveLoopOptions | null
 ): OverlayControl {
   const noOpSetParams: OverlayControl['setParams'] = () => {}
+  const get2dDiagnostics = (): OverlayDiagnostics => ({
+    rendererMode: '2d',
+    fps: null,
+    frameTimeMs: null,
+    renderScale: 1,
+    resourceCounts: null,
+    activeVideoNodes: [],
+  })
 
   if (!video || !canvas || !container) {
     return { stop: () => {}, setParams: noOpSetParams }
   }
 
+  let delegateStop: OverlayControl['stop'] = () => {}
+  let delegateSetParams: OverlayControl['setParams'] = noOpSetParams
+  let delegateGetDiagnostics: NonNullable<OverlayControl['getDiagnostics']> = get2dDiagnostics
+
+  const install2dFallback = (): void => {
+    const stop2d = start2DOverlayLoop(video, canvas, container)
+    delegateStop = stop2d
+    delegateSetParams = noOpSetParams
+    delegateGetDiagnostics = get2dDiagnostics
+  }
+
   if (USE_WEBGL) {
+    let switchedTo2d = false
+    const callbacks: WebGLOverlayCallbacks = {
+      onFatalRuntimeError() {
+        if (switchedTo2d) return
+        switchedTo2d = true
+        install2dFallback()
+      },
+    }
     const control = startWebGLOverlayLoop(
       video,
       canvas,
       container,
       nodes,
-      reactiveOptions ?? undefined
+      reactiveOptions ?? undefined,
+      callbacks
     )
     if (control) {
+      delegateStop = () => control.stop()
+      delegateSetParams = (params) => control.setParams(params)
+      delegateGetDiagnostics = () => control.getDiagnostics()
       return {
-        stop: control.stop,
-        setParams: control.setParams,
-        getDiagnostics: () => control.getDiagnostics(),
+        stop: () => delegateStop(),
+        setParams: (params) => delegateSetParams(params),
+        getDiagnostics: () => delegateGetDiagnostics(),
       }
     }
   }
 
-  const stop = start2DOverlayLoop(video, canvas, container)
+  install2dFallback()
   return {
-    stop,
-    setParams: noOpSetParams,
-    getDiagnostics: () => ({
-      rendererMode: '2d',
-      fps: null,
-      renderScale: 1,
-    }),
+    stop: () => delegateStop(),
+    setParams: (params) => delegateSetParams(params),
+    getDiagnostics: () => delegateGetDiagnostics(),
   }
 }

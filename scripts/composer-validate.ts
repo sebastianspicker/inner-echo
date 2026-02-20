@@ -15,37 +15,15 @@ import { join } from 'path'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 import { profileSchema, type Profile } from '../src/conditions/schema'
-import { composeEffectiveProfileCore } from '../src/composer/composeCore'
+import {
+  composeEffectiveProfileCore,
+  type DimensionSignalMappingEntry,
+  type ExperienceDimensionDef,
+} from '../src/composer/composeCore'
+import { parseFirstJsonObject } from '../src/utils/jsonObjectParser'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
-
-function parseFirstJsonObject(text: string): unknown {
-  const start = text.indexOf('{')
-  if (start < 0) throw new Error('No JSON object start found')
-  let depth = 0
-  let inString = false
-  let escape = false
-  for (let i = start; i < text.length; i++) {
-    const ch = text[i]
-    if (inString) {
-      if (escape) escape = false
-      else if (ch === '\\') escape = true
-      else if (ch === '"') inString = false
-      continue
-    }
-    if (ch === '"') {
-      inString = true
-      continue
-    }
-    if (ch === '{') depth++
-    if (ch === '}') {
-      depth--
-      if (depth === 0) return JSON.parse(text.slice(start, i + 1))
-    }
-  }
-  throw new Error('Unterminated JSON object')
-}
 
 function loadText(pathFromRoot: string): string {
   return readFileSync(join(ROOT, pathFromRoot), 'utf-8')
@@ -61,15 +39,27 @@ async function loadPresetProfile(profileId: string): Promise<Profile | null> {
   }
 }
 
-const dimensionMappingFile = parseFirstJsonObject(loadText('src/conditions/dimension-to-signal-mapping.json')) as {
-  mapping: Record<string, unknown>
-}
-const experienceDimsFile = parseFirstJsonObject(loadText('src/conditions/experience-dimensions.json')) as {
-  dimensions: Array<{ id: string; evidence_strength?: string; rationale_doc?: string }>
-}
+const dimensionMappingFile = parseFirstJsonObject<{
+  mapping: Record<string, DimensionSignalMappingEntry>
+}>(loadText('src/conditions/dimension-to-signal-mapping.json'), {
+  predicate(value) {
+    const mapping = (value as { mapping?: unknown }).mapping
+    return mapping != null && typeof mapping === 'object' && !Array.isArray(mapping)
+  },
+})
+const experienceDimsFile = parseFirstJsonObject<{
+  dimensions: ExperienceDimensionDef[]
+}>(loadText('src/conditions/experience-dimensions.json'), {
+  predicate(value) {
+    const dimensions = (value as { dimensions?: unknown }).dimensions
+    return Array.isArray(dimensions)
+  },
+})
 
-function getDimensionMappingEntry(dimensionId: string) {
-  return (dimensionMappingFile.mapping?.[dimensionId] as any) ?? null
+function getDimensionMappingEntry(
+  dimensionId: string
+): DimensionSignalMappingEntry | null {
+  return dimensionMappingFile.mapping?.[dimensionId] ?? null
 }
 
 function getExperienceDimensions() {
@@ -214,4 +204,3 @@ async function main(): Promise<void> {
 }
 
 void main()
-

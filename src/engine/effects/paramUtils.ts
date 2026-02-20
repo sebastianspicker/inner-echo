@@ -1,7 +1,31 @@
+import { clamp } from '../../utils/numeric'
 import type { VideoNodeParams } from './VideoNode'
 
-export function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
+export { clamp }
+
+/** Material with optional UV uniforms (u_uvScale, u_uvOffset as Vector2-like). */
+interface MaterialWithUvUniforms {
+  uniforms: {
+    u_uvScale?: { value: { set: (x: number, y: number) => void } }
+    u_uvOffset?: { value: { set: (x: number, y: number) => void } }
+  }
+}
+
+/** Apply uvScale and uvOffset from params to material uniforms when present and valid. */
+export function applyUvParams(material: MaterialWithUvUniforms, params: VideoNodeParams): void {
+  if (Array.isArray(params.uvScale) && params.uvScale.length >= 2) {
+    material.uniforms.u_uvScale?.value?.set(params.uvScale[0], params.uvScale[1])
+  }
+  if (Array.isArray(params.uvOffset) && params.uvOffset.length >= 2) {
+    material.uniforms.u_uvOffset?.value?.set(params.uvOffset[0], params.uvOffset[1])
+  }
+}
+
+/** Read a finite number from an unknown record-like object; avoids unsafe casts at call sites. */
+function getNumberFromRecord(obj: unknown, key: string): number | undefined {
+  if (obj == null || typeof obj !== 'object') return undefined
+  const v = (obj as Record<string, unknown>)[key]
+  return typeof v === 'number' && Number.isFinite(v) ? v : undefined
 }
 
 export function resolveNumberParam(
@@ -39,8 +63,7 @@ export function getGlobalClampNumber(
   key: string,
   fallback: number
 ): number {
-  const v = (params.safetyContext?.global as Record<string, unknown> | undefined)?.[key]
-  return typeof v === 'number' && Number.isFinite(v) ? v : fallback
+  return getNumberFromRecord(params.safetyContext?.global, key) ?? fallback
 }
 
 export function getSafeModeClampNumber(
@@ -48,7 +71,6 @@ export function getSafeModeClampNumber(
   key: string,
   fallback: number
 ): number {
-  const v = (params.safetyContext?.safeMode as Record<string, unknown> | undefined)?.[key]
-  return typeof v === 'number' && Number.isFinite(v) ? v : fallback
+  return getNumberFromRecord(params.safetyContext?.safeMode, key) ?? fallback
 }
 

@@ -15,10 +15,7 @@ export interface VideoMetricsTracker {
   dispose(): void
 }
 
-function clamp01(x: number): number {
-  if (!Number.isFinite(x)) return 0
-  return Math.max(0, Math.min(1, x))
-}
+import { clamp01 } from '../../utils/numeric'
 
 function smoothStep(current: number, target: number, dt: number, attack: number, release: number): number {
   const tau = target > current ? attack : release
@@ -45,6 +42,19 @@ export function createVideoMetricsTracker(options?: {
   off.width = size
   off.height = size
   const ctx = off.getContext('2d', { willReadFrequently: true })
+
+  if (!ctx) {
+    const noopMetrics: VideoMetrics = { motion: 0, luminance: 0, edge: 0, instability: 0 }
+    return {
+      stepFromCanvas() {
+        return noopMetrics
+      },
+      getLast() {
+        return noopMetrics
+      },
+      dispose() {},
+    }
+  }
 
   let frame = 0
   let prevLuma: Float32Array | null = null

@@ -3,7 +3,7 @@
  * target "intensity" -> global intensity; "video.<nodeId>.<param>" -> nodeIndex.param.
  */
 
-import type { Profile, UIControl, VideoStackNodeDef } from './schema'
+import type { Profile, UIControl } from './schema'
 
 export interface ResolvedControl {
   control: UIControl
@@ -24,7 +24,7 @@ export function resolveControl(
 ): ResolvedControl | null {
   const target = (control.target ?? control.id ?? '').toLowerCase()
   if (target === 'intensity' || (control.id === 'intensity' && !control.target)) {
-    const def = (profile as { safety?: { intensity_default?: number } }).safety
+    const def = profile.safety
       ?.intensity_default
     return {
       control,
@@ -69,7 +69,7 @@ export function resolveControl(
     if (dot === -1) return null
     const nodeId = rest.slice(0, dot)
     const param = rest.slice(dot + 1)
-    const stack = profile.video_stack as VideoStackNodeDef[]
+    const stack = Array.isArray(profile.video_stack) ? profile.video_stack : []
     const nodeIndex = stack.findIndex(
       (n) =>
         (n.id ?? n.node ?? '').toLowerCase() === nodeId ||
@@ -77,7 +77,7 @@ export function resolveControl(
     )
     if (nodeIndex === -1) return null
     const entry = stack[nodeIndex]
-    const params = entry?.params as Record<string, unknown> | undefined
+    const params = entry?.params
     const defaultValue =
       params && typeof params[param] === 'number'
         ? (params[param] as number)
@@ -100,7 +100,7 @@ export function resolveControl(
  */
 export function getDefaultControlValues(profile: Profile): Record<string, number | boolean> {
   const out: Record<string, number | boolean> = {}
-  const safety = (profile as { safety?: { intensity_default?: number } }).safety
+  const safety = profile.safety
   out.intensity = typeof safety?.intensity_default === 'number' ? safety.intensity_default : 0.5
   out.safeMode = false
   out.reducedMotion = false

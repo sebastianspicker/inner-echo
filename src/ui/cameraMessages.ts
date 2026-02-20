@@ -23,7 +23,7 @@ export function getCameraErrorMessage(error: DOMException): string {
   switch (error.name) {
     case 'NotAllowedError':
     case 'PermissionDeniedError':
-      return 'Kamerazugriff wurde abgelehnt. Bitte erlauben Sie den Zugriff in den Browsereinstellungen oder beim Abfrage-Dialog.'
+      return 'Kamerazugriff wurde abgelehnt. Bitte erlauben Sie den Zugriff in den Browsereinstellungen oder beim Abfrage-Dialog. Seite neu laden und erneut versuchen, oder Berechtigung in den Browsereinstellungen prüfen.'
     case 'NotFoundError':
       return 'Keine Kamera gefunden. Bitte prüfen Sie, ob eine Kamera angeschlossen und freigegeben ist.'
     case 'NotReadableError':

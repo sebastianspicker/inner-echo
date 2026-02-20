@@ -1,6 +1,12 @@
 /**
- * Phase 4/6: Video effect node interface.
- * Single-pass or temporal (ping-pong). Pipeline chains nodes and manages RenderTargets.
+ * Video Effect Node Interface
+ * 
+ * In Inner Echo, a "VideoNode" represents a single distinct visual effect 
+ * (like Vignette, Grain, Blur, or Color Grading). 
+ * 
+ * These nodes are intended to be chained together sequentially by the `webglPipeline.ts`.
+ * Each node provides a Three.js `Material` (a shader) which reads an input texture, 
+ * applies its mathematical effect, and then the pipeline renders it to an output texture.
  */
 
 import type * as THREE from 'three'

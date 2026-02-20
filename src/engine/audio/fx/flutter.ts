@@ -7,6 +7,7 @@
  */
 
 import type { AudioModule } from '../types'
+import { clamp } from '../../../utils/numeric'
 
 export interface FlutterParams {
   rate?: number
@@ -15,10 +16,6 @@ export interface FlutterParams {
 
 const DEFAULT_RATE = 0.55
 const DEFAULT_DEPTH = 0.05
-
-function clamp(v: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, v))
-}
 
 export function createFlutter(context: BaseAudioContext, params: FlutterParams = {}): AudioModule {
   const input = context.createGain()

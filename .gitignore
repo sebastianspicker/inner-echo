@@ -3,4 +3,10 @@ dist/
 .DS_Store
 *.log
 tsconfig.tsbuildinfo
+reports/
 
+# Local / WIP artifacts (audit runs, progress logs)
+.codex/
+.cursor/
+
+docs/references/reports/

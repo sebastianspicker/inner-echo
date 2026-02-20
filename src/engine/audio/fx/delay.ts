@@ -3,6 +3,7 @@
  */
 
 import type { AudioModule } from '../types'
+import { clamp } from '../../../utils/numeric'
 
 export interface DelayParams {
   /** Delay time in seconds. */
@@ -16,10 +17,6 @@ export interface DelayParams {
 const DEFAULT_TIME = 0.14
 const DEFAULT_FEEDBACK = 0.06
 const DEFAULT_MIX = 0.03
-
-function clamp(v: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, v))
-}
 
 export function createDelay(context: BaseAudioContext, params: DelayParams = {}): AudioModule {
   const input = context.createGain()

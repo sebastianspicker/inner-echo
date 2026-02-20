@@ -6,6 +6,7 @@
 import * as THREE from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
+  applyUvParams,
   clamp,
   getGlobalClampNumber,
   getSafeModeClampNumber,
@@ -42,12 +43,7 @@ export class FocusJitterNode implements VideoNode {
     this.material.uniforms.u_offset.value.set(this.currentX, this.currentY)
     this.material.uniforms.u_smoothing.value = smoothing
 
-    if (params.uvScale) {
-      this.material.uniforms.u_uvScale.value.set(params.uvScale[0], params.uvScale[1])
-    }
-    if (params.uvOffset) {
-      this.material.uniforms.u_uvOffset.value.set(params.uvOffset[0], params.uvOffset[1])
-    }
+    applyUvParams(this.material, params)
   }
 
   tick(delta: number): void {

@@ -1,7 +1,12 @@
 /**
- * Phase 7: Audio engine (no mic). User gesture → AudioContext; synth + FX chain from profile.
- * Phase 8: AnalyserNode tap post-chain for RMS → video modulation.
- * Phase 9: Optional mic (getUserMedia), permission-separate, safety gain + limiter, routing (synth/mic/mix).
+ * Audio Engine
+ * 
+ * This module is the core orchestrator for all Web Audio API operations.
+ * It manages:
+ * 1. The main synthesizer and effect chain (driven by the current active profile).
+ * 2. An `AnalyserNode` to tap into the audio stream and calculate RMS/spectral data for the reactive video layer.
+ * 3. An optional microphone input (`getUserMedia`), complete with a safety noise-gate and limiter.
+ * 4. Audio routing options (synth only, mic only, or mixed).
  */
 
 import { getAudioContext, startAudioContext, closeAudioContext, addAudioContextListener } from './contextManager'
@@ -13,9 +18,11 @@ import { createCompressor } from './fx'
 import {
   buildAudioChain,
   connectAudioChain,
+  isKnownAudioNodeType,
   rampGain,
 } from './audioGraphBuilder'
 import type { AudioMetrics } from './types'
+import { clamp01 } from '../../utils/numeric'
 
 const RAMP_MS = 25
 const ANALYSER_FFT_SIZE = 2048
@@ -45,11 +52,6 @@ function computeRms(analyser: AnalyserNode, scratchTime: Float32Array): { rms: n
     sum += x * x
   }
   return { rms: data.length > 0 ? Math.sqrt(sum / data.length) : 0, scratch: data }
-}
-
-function clamp01(x: number): number {
-  if (!Number.isFinite(x)) return 0
-  return Math.max(0, Math.min(1, x))
 }
 
 /**
@@ -128,6 +130,15 @@ export interface AudioEngineCallbacks {
   onMicStatusChange?(status: MicStatus, error?: string): void
 }
 
+export interface AudioEngineDebugState {
+  activeNodes: string[]
+  inputMode: AudioInputMode
+  micEnabled: boolean
+  micSensitivity: number
+  micGate: number
+  micGateGain: number | null
+}
+
 export interface AudioEngineControl {
   /** Set master volume 0..1. */
   setMasterVolume(value: number): void
@@ -149,13 +160,22 @@ export interface AudioEngineControl {
   setMicSensitivity(value: number): void
   /** Phase 14: Set soft noise gate threshold (0..1). Higher = stronger gating. */
   setMicGate(value: number): void
+  /** Debug-only runtime snapshot (cheap and side-effect free). */
+  getDebugState(): AudioEngineDebugState
   /** Suspend audio (e.g. Stop Everything). */
   stop(): void
 }
 
 /**
- * Create and run the audio engine. Call only after user gesture (e.g. from "Enable audio" click).
- * Returns control object and starts with optional initial profile audio_stack.
+ * Creates and starts the main AudioEngine instance.
+ * 
+ * **IMPORTANT**: Call this only after a user gesture (e.g. from an "Enable audio" click event).
+ * This function handles building the internal routing graph, connecting synthesizers, 
+ * microphones, and effect chains.
+ * 
+ * @param initialAudioStack The configuration for the audio effects chain from the current condition profile.
+ * @param callbacks Event listeners for when the audio or mic status changes.
+ * @returns An `AudioEngineControl` object allowing the UI to interact with the running engine.
  */
 export function createAudioEngine(
   initialAudioStack: AudioStackConfig | null | undefined,
@@ -188,7 +208,13 @@ export function createAudioEngine(
   let micGate = 0.25
   let micGateSmoothed = 1
   let lastMetricsTimeMs: number | null = null
+  let micGateIntervalId: ReturnType<typeof setInterval> | null = null
+  let lastMicGateTickMs: number | null = null
   let inputMode: AudioInputMode = 'synth'
+  let activeChainNodes: string[] = []
+  let disposed = false
+  let micRequestSeq = 0
+  let desiredAudioStack: AudioStackConfig | null | undefined = initialAudioStack
 
   function getCtx(): AudioContext | null {
     return getAudioContext()
@@ -204,9 +230,63 @@ export function createAudioEngine(
     micGain?.gain.setValueAtTime(mic, now)
   }
 
+  function applyMicGateEnvelope(micRms: number, dtSec: number): void {
+    if (!micGateGain) return
+    const threshold = clamp01(micGate) * 0.08
+    const knee = 0.02
+    const raw = clamp01((micRms - threshold) / knee)
+    const target = raw * raw // softer near threshold
+    micGateSmoothed = smoothStep(micGateSmoothed, target, dtSec, 0.04, 0.18)
+    micGateGain.gain.setValueAtTime(clamp01(micGateSmoothed), getCtx()?.currentTime ?? 0)
+  }
+
+  function stopMicGateLoop(): void {
+    if (micGateIntervalId) {
+      clearInterval(micGateIntervalId)
+      micGateIntervalId = null
+    }
+    lastMicGateTickMs = null
+  }
+
+  function startMicGateLoop(): void {
+    if (micGateIntervalId) return
+    lastMicGateTickMs = typeof performance !== 'undefined' ? performance.now() : Date.now()
+    micGateIntervalId = setInterval(() => {
+      if (disposed || !micAnalyserNode || !micGateGain) return
+      const nowMs = typeof performance !== 'undefined' ? performance.now() : Date.now()
+      const dtSec =
+        lastMicGateTickMs != null
+          ? Math.max(0.001, (nowMs - lastMicGateTickMs) / 1000)
+          : 1 / 30
+      lastMicGateTickMs = nowMs
+      const micRes = computeRms(micAnalyserNode, scratchMicTime)
+      scratchMicTime = micRes.scratch
+      applyMicGateEnvelope(micRes.rms, dtSec)
+    }, 50)
+  }
+
   function buildAndConnect(audioStack: AudioStackConfig | null | undefined): void {
     const ctx = getCtx()
     if (!ctx || !masterGain || !mixer || !synthGain) return
+
+    // Disconnect previous routing before rebuilding to avoid stacked parallel connections.
+    try {
+      synthGain.disconnect()
+    } catch {
+      // ignore
+    }
+    try {
+      mixer.disconnect()
+    } catch {
+      // ignore
+    }
+    if (analyserNode) {
+      try {
+        analyserNode.disconnect()
+      } catch {
+        // ignore
+      }
+    }
 
     for (const m of chain) m.dispose()
     chain = []
@@ -217,6 +297,11 @@ export function createAudioEngine(
     }
 
     const enabled = audioStack?.enabled === true
+    activeChainNodes = enabled
+      ? (audioStack?.chain ?? [])
+        .map((def) => String(def.node ?? '').toLowerCase())
+        .filter((nodeType) => isKnownAudioNodeType(nodeType))
+      : []
     if (enabled) {
       synthModule = createSynth(ctx, {})
       synthModule.getInput().connect(synthGain)
@@ -250,6 +335,8 @@ export function createAudioEngine(
   }
 
   function setConditionAudio(audioStack: AudioStackConfig | null | undefined): void {
+    if (disposed) return
+    desiredAudioStack = audioStack
     const ctx = getCtx()
     if (!ctx || !masterGain) return
 
@@ -261,12 +348,14 @@ export function createAudioEngine(
     const rampSec = RAMP_MS / 1000
     rampGain(masterGain, 0, rampSec)
 
-    const nextStack = audioStack
+    const nextStack = desiredAudioStack
     switchTimeoutId = setTimeout(() => {
+      if (disposed) return
       switchTimeoutId = null
       buildAndConnect(nextStack)
       if (masterGain) {
-        const targetVol = nextStack?.master?.volume ?? 0.22
+        const nextEnabled = nextStack?.enabled === true
+        const targetVol = nextEnabled ? (nextStack?.master?.volume ?? 0.22) : 0
         const now = getCtx()?.currentTime ?? 0
         masterGain.gain.setValueAtTime(0, now)
         masterGain.gain.linearRampToValueAtTime(targetVol, now + rampSec)
@@ -275,6 +364,8 @@ export function createAudioEngine(
   }
 
   function stopMic(): void {
+    micRequestSeq++
+    stopMicGateLoop()
     if (micStream) {
       micStream.getTracks().forEach((t) => t.stop())
       micStream = null
@@ -324,20 +415,33 @@ export function createAudioEngine(
       micGain = null
     }
     prevMicSpectrumMag = null
+    micGateSmoothed = 1
     callbacks.onMicStatusChange?.('off')
   }
 
   async function requestMic(): Promise<void> {
-    const ctx = getCtx()
-    if (!ctx || !mixer) {
+    if (disposed) return
+    if (!getCtx() || !mixer) {
       callbacks.onMicStatusChange?.('error', 'Audio not ready')
       return
     }
     // If already active, stop existing mic path before re-requesting.
     if (micStream) stopMic()
+    const requestSeq = ++micRequestSeq
     callbacks.onMicStatusChange?.('requesting')
+    let stream: MediaStream | null = null
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      if (disposed || requestSeq !== micRequestSeq) {
+        stream.getTracks().forEach((t) => t.stop())
+        return
+      }
+      const ctx = getCtx()
+      if (!ctx || !mixer) {
+        stream.getTracks().forEach((t) => t.stop())
+        callbacks.onMicStatusChange?.('error', 'Audio not ready')
+        return
+      }
       micStream = stream
       micSource = ctx.createMediaStreamSource(stream)
       micPreGain = ctx.createGain()
@@ -365,8 +469,13 @@ export function createAudioEngine(
       micGain.connect(mixer)
 
       applyInputMode()
+      startMicGateLoop()
       callbacks.onMicStatusChange?.('on')
     } catch (err) {
+      if (stream && stream !== micStream) {
+        stream.getTracks().forEach((t) => t.stop())
+      }
+      if (disposed || requestSeq !== micRequestSeq) return
       const isDenied =
         err instanceof DOMException &&
         (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')
@@ -378,13 +487,14 @@ export function createAudioEngine(
 
   async function init(): Promise<void> {
     const status = await startAudioContext()
+    if (disposed) return
     if (status !== 'on') return
 
     const ctx = getCtx()
     if (!ctx) return
 
     masterGain = ctx.createGain()
-    masterGain.gain.value = initialAudioStack?.master?.volume ?? 0.22
+    masterGain.gain.value = desiredAudioStack?.master?.volume ?? 0.22
     masterGain.connect(ctx.destination)
 
     mixer = ctx.createGain()
@@ -392,11 +502,13 @@ export function createAudioEngine(
     synthGain = ctx.createGain()
     synthGain.gain.value = 1
 
-    buildAndConnect(initialAudioStack)
+    buildAndConnect(desiredAudioStack)
     unsubscribe = addAudioContextListener((s, err) => callbacks.onStatusChange?.(s, err))
   }
 
-  init()
+  init().catch((err) => {
+    callbacks.onStatusChange?.('error', err instanceof Error ? err.message : String(err))
+  })
 
   return {
     setMasterVolume(value: number) {
@@ -445,13 +557,7 @@ export function createAudioEngine(
         micMid = mic.mid
         micHigh = mic.high
 
-        // Soft noise gate: threshold is in RMS domain; keep conservative.
-        const threshold = clamp01(micGate) * 0.08
-        const knee = 0.02
-        const raw = clamp01(((micRms ?? 0) - threshold) / knee)
-        const target = raw * raw // softer near threshold
-        micGateSmoothed = smoothStep(micGateSmoothed, target, dt, 0.04, 0.18)
-        micGateGain.gain.setValueAtTime(clamp01(micGateSmoothed), analyserNode.context.currentTime)
+        applyMicGateEnvelope(micRms ?? 0, dt)
       }
 
       return {
@@ -502,23 +608,41 @@ export function createAudioEngine(
     setMicGate(value: number) {
       micGate = clamp01(value)
     },
+    getDebugState(): AudioEngineDebugState {
+      const gate = micGateGain?.gain?.value
+      return {
+        activeNodes: activeChainNodes.slice(),
+        inputMode,
+        micEnabled: micStream != null,
+        micSensitivity,
+        micGate,
+        micGateGain: typeof gate === 'number' && Number.isFinite(gate) ? gate : null,
+      }
+    },
     stop() {
+      if (disposed) return
+      disposed = true
+      micRequestSeq++
       if (switchTimeoutId) {
         clearTimeout(switchTimeoutId)
         switchTimeoutId = null
       }
+      stopMicGateLoop()
       stopMic()
       unsubscribe?.()
       unsubscribe = null
       for (const m of chain) m.dispose()
       chain = []
+      activeChainNodes = []
       synthModule?.dispose()
       synthModule = null
       analyserNode = null
       mixer = null
       synthGain = null
       masterGain = null
-      closeAudioContext()
+      void closeAudioContext().catch((err) => {
+        console.warn('closeAudioContext failed', err)
+      })
     },
   }
 }

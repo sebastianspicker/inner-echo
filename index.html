@@ -1,12 +1,26 @@
 <!doctype html>
 <html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Inner Echo</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- viewport-fit=cover allows the app to draw into mobile safe areas (like the iOS notch) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- Strict Content-Security-Policy: Only allows scripts, styles, and data from 'self' (localhost/same domain) to mitigate XSS risks -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <title>Inner Echo</title>
+</head>
+
+<body>
+  <!-- Fallback for users/environments where JavaScript is strictly disabled -->
+  <noscript>
+    <strong>We're sorry but Inner Echo doesn't work properly without JavaScript enabled. Please enable it to
+      continue.</strong>
+  </noscript>
+  <!-- Main mounting point for the React application -->
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Verify JSON-runtime contracts
+        run: npm run verify:contracts
+
+      - name: Debug inspect harness
+        run: npm run debug:inspect
+
+      - name: Upload contract reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-verification-reports
+          path: reports/contract-verification.*
+
+      - name: Upload inspect report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inspect-report
+          path: reports/inspect.json

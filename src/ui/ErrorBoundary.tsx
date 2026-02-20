@@ -1,5 +1,15 @@
 /**
- * Phase 12: React error boundary. Catches UI crashes and shows a "Reset App" button.
+ * ErrorBoundary Component
+ * 
+ * In React, standard try/catch blocks don't work for catching errors inside component rendering,
+ * lifecycle methods, or child component constructors. Instead, React uses "Error Boundaries".
+ * 
+ * An Error Boundary is a special class component that catches JavaScript errors anywhere in its 
+ * child component tree, logs those errors, and displays a fallback UI instead of crashing the 
+ * whole application.
+ * 
+ * This component wraps the main application to ensure that if a fatal UI error occurs,
+ * the user gets a friendly "Reset App" button rather than a blank white screen.
  */
 
 import { Component, type ErrorInfo, type ReactNode } from 'react'
@@ -8,6 +18,8 @@ export interface ErrorBoundaryProps {
   children: ReactNode
   /** Optional fallback; default shows message + Reset App button. */
   fallback?: ReactNode
+  /** Optional reset handler to clear parent state or perform side effects before error state clears. */
+  onReset?: () => void
 }
 
 interface ErrorBoundaryState {
@@ -16,29 +28,47 @@ interface ErrorBoundaryState {
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  // Initial state: no errors.
   state: ErrorBoundaryState = {
     hasError: false,
     error: null,
   }
 
+  /**
+   * Called automatically by React when a child component throws an error.
+   * We return the new state object here so the next render shows the fallback UI.
+   */
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return { hasError: true, error }
   }
 
+  /**
+   * Called automatically by React after an error has been thrown.
+   * This is the ideal place to log the error to a reporting service.
+   */
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log without sensitive data (no stack in prod if desired; stack is not user data here)
+    // We only log the error stack to the console in development mode.
+    // In production, we avoid exposing raw stack traces to the user.
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.error('[inner-echo] ErrorBoundary caught:', error.message, errorInfo.componentStack)
     }
   }
 
+  /**
+   * Resets the error state, allowing the application to attempt to re-render 
+   * the component tree from scratch. 
+   */
   handleReset = (): void => {
+    if (this.props.onReset) {
+      this.props.onReset()
+    }
+    // Clearing the error state forces the boundary to render `this.props.children` again.
     this.setState({ hasError: false, error: null })
-    window.location.reload()
   }
 
   render(): ReactNode {
+    // If an error occurred, render the fallback UI instead of the broken children.
     if (this.state.hasError && this.state.error) {
       if (this.props.fallback) return this.props.fallback
       return (

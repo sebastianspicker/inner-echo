@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { EvidenceDocPath } from '../evidence/docs'
 import { listEvidenceDocPaths, loadEvidenceDoc } from '../evidence/docs'
 import { renderEvidenceMarkdown } from '../evidence/markdown'
+import { useAsyncEffect } from './hooks/useAsyncEffect'
+import { resolveEvidenceHref } from './evidenceHref'
 import './EvidenceDrawer.css'
 
 export interface EvidenceDrawerProps {
@@ -18,29 +20,6 @@ type DocState =
 
 function isIndexLike(p: EvidenceDocPath): boolean {
   return p.endsWith('/INDEX.md') || p.endsWith('/README.md') || p.endsWith('/EVIDENCE_MATRIX.md')
-}
-
-function resolveEvidenceHref(current: EvidenceDocPath, href: string): EvidenceDocPath | null {
-  const h = href.trim()
-  if (!h) return null
-  if (h.startsWith('#')) return current
-  if (h.startsWith('docs/')) {
-    return (h.endsWith('.md') ? h : `${h}.md`) as EvidenceDocPath
-  }
-  if (h.startsWith('./') || h.startsWith('../')) {
-    // Resolve against current doc directory.
-    const baseDir = current.slice(0, current.lastIndexOf('/') + 1)
-    const baseUrl = `https://evidence.local/${baseDir}`
-    try {
-      const u = new URL(h, baseUrl)
-      const p = u.pathname.replace(/^\//, '')
-      if (p.startsWith('docs/') && p.endsWith('.md')) return p as EvidenceDocPath
-      return null
-    } catch {
-      return null
-    }
-  }
-  return null
 }
 
 export function EvidenceDrawer(props: EvidenceDrawerProps) {
@@ -71,23 +50,27 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     return out
   }, [])
 
-  useEffect(() => {
-    if (!props.open) return
-    let cancelled = false
-    setState({ status: 'loading' })
-    loadEvidenceDoc(props.docPath).then((md) => {
-      if (cancelled) return
-      if (!md) {
-        setState({ status: 'error', message: `Evidence doc not found: ${props.docPath}` })
-        return
+  useAsyncEffect(
+    async (ctx) => {
+      if (!props.open) return
+      setState({ status: 'loading' })
+      try {
+        const md = await loadEvidenceDoc(props.docPath)
+        if (ctx.cancelled) return
+        if (!md) {
+          setState({ status: 'error', message: `Evidence doc not found: ${props.docPath}` })
+          return
+        }
+        const { html, title } = renderEvidenceMarkdown(md)
+        setState({ status: 'ready', html, title, raw: md })
+      } catch (err) {
+        if (!ctx.cancelled) {
+          setState({ status: 'error', message: err instanceof Error ? err.message : String(err) })
+        }
       }
-      const { html, title } = renderEvidenceMarkdown(md)
-      setState({ status: 'ready', html, title, raw: md })
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [props.open, props.docPath])
+    },
+    [props.open, props.docPath]
+  )
 
   // Escape to close
   useEffect(() => {
@@ -174,4 +157,3 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     </div>
   )
 }
-

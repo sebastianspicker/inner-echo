@@ -1,4 +1,20 @@
+/**
+ * Coupling Engine
+ * 
+ * This module manages "cross-domain coupling", meaning it allows the Video to affect the Audio,
+ * and the Audio to affect the Video in subtle, complex feedback loops.
+ * 
+ * Example:
+ * - If the user is speaking loudly (High Audio RMS), the video might become more grainy or vignette heavily.
+ * - If the video is highly unstable (High Motion metrics), the audio might develop a tremolo effect or
+ *   the lowpass filter might open up.
+ * 
+ * It runs every frame within the main WebGL render loop, taking both AudioMetrics and VideoMetrics
+ * to produce real-time smoothed parameter overrides.
+ */
+
 import type { Profile } from '../../conditions/schema'
+import { getProfileEntryForBuiltIndex } from '../../conditions/graphBuilder'
 import type { AudioMetrics } from '../audio'
 import type { VideoMetrics } from '../canvas'
 import { resolveAnalyserTarget } from './analyserToParamsResolver'
@@ -15,14 +31,7 @@ export interface CouplingStepResult {
   audio: Record<string, number>
 }
 
-function clamp01(x: number): number {
-  if (!Number.isFinite(x)) return 0
-  return Math.max(0, Math.min(1, x))
-}
-
-function clamp(x: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, x))
-}
+import { clamp, clamp01 } from '../../utils/numeric'
 
 function smoothStep(current: number, target: number, dt: number, attack: number, release: number): number {
   const tau = target > current ? attack : release
@@ -61,11 +70,10 @@ function getProfileVideoBase(profile: Profile, key: string, reducedMotion: boole
   const builtIndex = Number(key.slice(0, dot))
   const param = key.slice(dot + 1)
   if (!Number.isFinite(builtIndex) || !param) return 0
-  // We avoid importing getProfileEntryForBuiltIndex here to keep coupling decoupled.
-  // Instead, approximate base as 0 unless UI already provides a value.
-  void profile
-  void reducedMotion
-  return 0
+  const entry = getProfileEntryForBuiltIndex(profile, builtIndex, { reducedMotion })
+  const params = entry?.params as Record<string, unknown> | undefined
+  const v = params?.[param]
+  return typeof v === 'number' && Number.isFinite(v) ? v : 0
 }
 
 function getProfileAudioBase(profile: Profile, key: string): number {
@@ -92,13 +100,24 @@ function resolveAudioKey(profile: Profile, nodeId: string, param: string): strin
   return res?.kind === 'audio' ? res.paramKey : null
 }
 
+/**
+ * Creates a coupling engine instance for the given profile and UI settings.
+ * 
+ * It pre-calculates which specific audio/video parameters exist in the current profile 
+ * (e.g., checking if the 'noise_bed' or 'pulse' nodes actually exist in the stack). 
+ * If they don't, it skips coupling them to save CPU cycles.
+ * 
+ * @param profile The active condition profile.
+ * @param settings The user's current UI slider settings (Coupling Strength, Safe Mode, etc.)
+ */
 export function createCouplingEngine(profile: Profile, settings: CouplingSettings): {
-  setSettings: (next: Pick<CouplingSettings, 'couplingStrength' | 'maxFeedback'>) => void
+  setSettings: (next: Pick<CouplingSettings, 'couplingStrength' | 'maxFeedback' | 'safeMode'>) => void
   step: (deltaSec: number, audio: AudioMetrics, video: VideoMetrics, baseControlValues: Record<string, number | boolean>) => CouplingStepResult
 } {
   const reducedMotion = settings.reducedMotion
   let couplingStrength = clamp01(settings.couplingStrength)
   let maxFeedback = clamp01(settings.maxFeedback)
+  let safeMode = settings.safeMode === true
 
   const videoGrainAmount = resolveVideoKey(profile, 'video.grain.amount', reducedMotion)
   const videoVignetteAmount = resolveVideoKey(profile, 'video.vignette.amount', reducedMotion)
@@ -268,9 +287,11 @@ export function createCouplingEngine(profile: Profile, settings: CouplingSetting
     setSettings(next) {
       couplingStrength = clamp01(next.couplingStrength)
       maxFeedback = clamp01(next.maxFeedback)
+      safeMode = next.safeMode === true
     },
     step(deltaSec, audio, video, baseControlValues) {
-      const strength = couplingStrength * maxFeedback
+      const safetyDamping = safeMode ? 0.6 : 1
+      const strength = couplingStrength * maxFeedback * safetyDamping
       clear(outVideo)
       clear(outAudio)
 
@@ -295,4 +316,3 @@ export function createCouplingEngine(profile: Profile, settings: CouplingSetting
     },
   }
 }
-

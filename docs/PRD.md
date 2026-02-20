@@ -76,3 +76,17 @@ A web app that layers **metaphorical** audio-visual overlays on top of a user's 
 - Users understand the “metaphor” framing and feel informed rather than alarmed
 - The app feels safe and controllable
 - New conditions can be added mostly by editing preset files
+
+---
+
+## Ralph Audit Loop Story Status
+
+- [ ] AUDIT-001: UI Runtime State Audit
+- [ ] AUDIT-002: Render/Audio Engine Lifecycle Audit
+- [ ] AUDIT-003: Evidence & Accessibility Flow Audit
+- [ ] LINT-001: Static Quality Run
+- [ ] LINT-002: UI E2E Matrix Run
+- [ ] LINT-003: Contract & Validation Run
+- [ ] FIX-001: Fix Critical Audit Findings
+- [ ] FIX-002: Fix Linting/CI Breakages
+- [ ] FIX-003: Final Stabilization & Artifacts

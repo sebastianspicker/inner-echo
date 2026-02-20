@@ -6,6 +6,7 @@
 import * as THREE from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
+  applyUvParams,
   clamp,
   getGlobalClampNumber,
   getSafeModeClampNumber,
@@ -72,12 +73,7 @@ export class FeedbackLoopNode implements VideoNode {
     const jy = (Math.sin(this.time * 6.4) * 0.5 + 0.5) * jitter
     this.material.uniforms.u_jitter.value.set(jx, jy)
 
-    if (params.uvScale) {
-      this.material.uniforms.u_uvScale.value.set(params.uvScale[0], params.uvScale[1])
-    }
-    if (params.uvOffset) {
-      this.material.uniforms.u_uvOffset.value.set(params.uvOffset[0], params.uvOffset[1])
-    }
+    applyUvParams(this.material, params)
   }
 
   getMaterial(inputTexture: THREE.Texture, previousFrameTexture?: THREE.Texture | null): THREE.Material {

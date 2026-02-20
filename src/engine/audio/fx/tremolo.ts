@@ -3,6 +3,7 @@
  */
 
 import type { AudioModule } from '../types'
+import { clamp } from '../../../utils/numeric'
 
 export interface TremoloParams {
   /** LFO rate in Hz. */
@@ -16,10 +17,6 @@ const DEFAULT_DEPTH = 0.15
 // SSOT safety clamps
 const MAX_RATE_HZ = 4
 const MAX_DEPTH = 0.15
-
-function clamp(v: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, v))
-}
 
 export function createTremolo(context: BaseAudioContext, params: TremoloParams = {}): AudioModule {
   const rate = clamp(params.rate ?? DEFAULT_RATE, 0.1, MAX_RATE_HZ)

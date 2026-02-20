@@ -1,8 +1,14 @@
 /**
- * Phase 12: Consistent logging strategy (dev vs prod).
- * - Dev: log debug/info/warn/error to console.
- * - Prod: no debug/info; warn/error only (no sensitive data in any case).
- * Never log device IDs, media content, user identifiers, or stream/track details.
+ * Application Logger
+ * 
+ * A simple wrapper around `console` methods that ensures debug information
+ * is ONLY printed when the application is running in Development mode.
+ * 
+ * In Production mode:
+ * - `debug`, `info`, and `warn` are silenced.
+ * - `error` is always logged.
+ * 
+ * Critical security note: Never log sensitive user data, media streams, or device IDs.
  */
 
 const isDev = import.meta.env.DEV

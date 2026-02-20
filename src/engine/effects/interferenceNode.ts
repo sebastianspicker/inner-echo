@@ -13,6 +13,7 @@
 import * as THREE from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
+  applyUvParams,
   clamp,
   getGlobalClampNumber,
   getSafeModeClampNumber,
@@ -107,12 +108,7 @@ export class InterferenceNode implements VideoNode {
     this.burstDuration = clamp(burstDurationMs / 1000, 0.12, 0.5)
     this.burstMinGap = clamp(burstMinGapMs / 1000, 0.35, 3)
 
-    if (params.uvScale) {
-      this.material.uniforms.u_uvScale.value.set(params.uvScale[0], params.uvScale[1])
-    }
-    if (params.uvOffset) {
-      this.material.uniforms.u_uvOffset.value.set(params.uvOffset[0], params.uvOffset[1])
-    }
+    applyUvParams(this.material, params)
   }
 
   tick(delta: number): void {

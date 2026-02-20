@@ -138,20 +138,32 @@ async function runFlow(page: Page, baseUrl: string): Promise<void> {
   await page.getByText('Kamera läuft', { exact: false }).waitFor({ timeout: 20_000 })
 
   // Enable audio
+  const audioDetails = page.locator('details').filter({ hasText: 'Audio & microphone' }).first()
+  if (await audioDetails.isVisible().catch(() => false)) {
+    const isOpen = await audioDetails.evaluate((el) => (el as HTMLDetailsElement).open)
+    if (!isOpen) {
+      await audioDetails.locator('summary').first().click()
+    }
+  }
+  const audioGroup = page.getByRole('group', { name: 'Audio' })
+  const audioStatus = audioGroup.getByRole('status').first()
   let audioIsOn = false
-  const enableAudio = page.getByRole('button', { name: /Enable audio/i })
-  if (await enableAudio.isVisible().catch(() => false)) {
-    await enableAudio.click()
-    const audioStatus = page.getByRole('group', { name: 'Audio' }).getByRole('status')
+  let statusText = (await audioStatus.textContent().catch(() => null)) ?? ''
+  audioIsOn = /Audio:\s*on/i.test(statusText)
+  if (!audioIsOn) {
+    const enableAudio = audioGroup.getByRole('button', { name: /Enable audio/i })
+    if (await enableAudio.isVisible().catch(() => false)) {
+      await enableAudio.click()
+    }
     try {
       await audioStatus
         .filter({ hasText: /Audio:\s*(on|error)/i })
         .first()
         .waitFor({ timeout: 20_000 })
-      const statusText = (await audioStatus.first().textContent()) ?? ''
+      statusText = (await audioStatus.textContent()) ?? ''
       audioIsOn = /Audio:\s*on/i.test(statusText)
       if (!audioIsOn) {
-        const alertText = await page.getByRole('group', { name: 'Audio' }).getByRole('alert').textContent().catch(() => null)
+        const alertText = await audioGroup.getByRole('alert').textContent().catch(() => null)
         const detail = alertText ? ` (${alertText.trim()})` : ''
         if (REQUIRE_AUDIO) throw new Error(`Audio failed to start${detail}`)
         console.warn(`[runtime-matrix] WARN: audio not on${detail}`)
@@ -231,4 +243,3 @@ async function main(): Promise<void> {
 }
 
 void main()
-

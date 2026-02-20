@@ -72,8 +72,5 @@ export const DEFAULT_COMPOSER_SETTINGS: ComposerSettings = {
   debugOverlay: false,
 }
 
-export function clamp01(x: number): number {
-  if (!Number.isFinite(x)) return 0
-  return Math.max(0, Math.min(1, x))
-}
+export { clamp01 } from '../utils/numeric'
 

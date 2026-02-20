@@ -5,6 +5,7 @@
 import * as THREE from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
+  applyUvParams,
   clamp,
   getSafeModeClampNumber,
   resolveNumberParam,
@@ -68,19 +69,17 @@ export class GrainNode implements VideoNode {
     this.material.uniforms.u_amount.value = amount
     this.material.uniforms.u_time.value = this.time * speed
     this.material.uniforms.u_scale.value = scale
-    if (params.uvScale) {
-      this.material.uniforms.u_uvScale.value.set(params.uvScale[0], params.uvScale[1])
-    }
-    if (params.uvOffset) {
-      this.material.uniforms.u_uvOffset.value.set(params.uvOffset[0], params.uvOffset[1])
-    }
+    applyUvParams(this.material, params)
   }
 
   getMaterial(
     inputTexture: THREE.Texture,
     _previousFrameTexture?: THREE.Texture | null
   ): THREE.Material {
-    if (this.material) return this.material
+    if (this.material) {
+      this.material.uniforms.u_map.value = inputTexture
+      return this.material
+    }
     this.material = new THREE.ShaderMaterial({
       uniforms: {
         u_map: { value: inputTexture },

@@ -38,7 +38,7 @@ export function ConditionPicker({
       >
         {options.map((entry) => (
           <option key={entry.id} value={entry.id} title={entry.description ?? entry.label}>
-            {entry.label}
+            {entry.recommended ? `${entry.label} (empfohlen)` : entry.label}
           </option>
         ))}
       </select>

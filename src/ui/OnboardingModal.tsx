@@ -21,8 +21,8 @@ export function getOnboardingAccepted(): boolean {
 export function setOnboardingAccepted(): void {
   try {
     localStorage.setItem(STORAGE_KEY, 'true')
-  } catch {
-    // ignore
+  } catch (err) {
+    console.warn('setOnboardingAccepted failed', err)
   }
 }
 
@@ -58,6 +58,7 @@ export function OnboardingModal({ onAccept }: OnboardingModalProps) {
         const focusable = wrapper.querySelectorAll<HTMLElement>(
           'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
         )
+        if (focusable.length === 0) return
         const first = focusable[0]
         const last = focusable[focusable.length - 1]
         if (e.shiftKey) {

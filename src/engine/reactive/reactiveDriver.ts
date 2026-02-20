@@ -1,6 +1,14 @@
 /**
- * Phase 8: Reactive driver — RMS → smoothed, scaled, clamped overrides for video params.
- * One stateful driver per profile; call update(delta, rms) each frame to get param overrides.
+ * Reactive Driver Engine
+ * 
+ * This module is responsible for the "reactive" nature of the application.
+ * It takes incoming live audio data (RMS amplitude) and maps it to specific video shader parameters.
+ * 
+ * How it works:
+ * 1. It reads the current condition profile (`profile.reactive.analyser_to_params`).
+ * 2. It tracks stateful smoothing envelopes (attack/release) for each mapped parameter.
+ * 3. The main `CameraView` loop calls `getVideoOverrides()` and `getAudioOverrides()` every 
+ *    frame (60fps), which returns the calculated, smoothed, and clamped parameter overrides.
  */
 
 import type { Profile, AnalyserToParamDef } from '../../conditions/schema'
@@ -9,6 +17,7 @@ import {
   resolveAnalyserTarget,
   type ResolvedMapping,
 } from './analyserToParamsResolver'
+import { clamp } from '../../utils/numeric'
 
 interface MappingState extends ResolvedMapping {
   smoothed: number
@@ -31,14 +40,29 @@ function smoothStep(
   return current + (target - current) * t
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
+function normalizeClampRange(
+  range: [number, number] | undefined
+): { min: number; max: number } {
+  const a = range?.[0]
+  const b = range?.[1]
+  if (typeof a !== 'number' || typeof b !== 'number') {
+    return { min: 0, max: 1 }
+  }
+  return {
+    min: Math.min(a, b),
+    max: Math.max(a, b),
+  }
 }
 
 /**
- * Create a reactive driver from profile.reactive.analyser_to_params.
- * Invalid or unknown targets are skipped with a console warning.
- * Returns a function (delta, rms) => Record<paramKey, number> to merge into controlValues.
+ * Initializes a new reactive driver based on a given condition profile.
+ * 
+ * The driver sets up all internal state (current values, target values, smoothing speeds)
+ * for every parameter that the profile wants to react to audio RMS.
+ * 
+ * @param profile The current active condition profile.
+ * @param options Optional configuration (e.g., whether Reduced Motion is forcing temporal nodes off).
+ * @returns An object containing `getVideoOverrides` and `getAudioOverrides` functions to be called per-frame.
  */
 export function createReactiveDriver(
   profile: Profile,
@@ -85,7 +109,9 @@ export function createReactiveDriver(
       const params = chain[chainIndex]?.params
       baseValue = params && typeof params[paramName] === 'number' ? (params[paramName] as number) : 0
     }
-    const [clampMin = 0, clampMax = 1] = def.clamp ?? [0, 1]
+    const clampRange = normalizeClampRange(def.clamp)
+    const clampMin = clampRange.min
+    const clampMax = clampRange.max
     const initialSmoothed = clamp(baseValue, clampMin, clampMax)
     mappings.push({
       kind: resolved.kind,

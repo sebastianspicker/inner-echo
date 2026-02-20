@@ -1,17 +1,43 @@
+/**
+ * CameraView Component
+ * 
+ * Architecture Overview:
+ * This component is the primary orchestrator of the entire Inner Echo application.
+ * It strictly acts as a conductor, bridging four distinct technological layers:
+ * 
+ * 1. UI State (React): Manages the panels, buttons, and user preferences (e.g., intensity, safe mode).
+ * 2. Video Capture (WebRTC): Solicits and maintains the raw camera feed (`requestVideoStream`).
+ * 3. Audio Engine (Web Audio API): Manages background audio, microphone inputs, and volume (`contextManager.ts`).
+ * 4. Visual Engine (WebGL): Feeds the raw video into WebGL shaders for pixel manipulation (`startOverlayLoop`).
+ * 
+ * Note on Performance:
+ * To avoid freezing the UI when heavy WebGL calculations occur, `CameraView` heavily utilizes
+ * `useRef` to pass real-time config values (like slider values) into the WebGL requestAnimationFrame loop
+ * without triggering full React re-renders.
+ */
+
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { loadCatalog, loadProfile } from '../conditions/loader'
-import { buildVideoNodes, profileHasTemporalNodes } from '../conditions/graphBuilder'
+import { useCatalog } from './hooks/useCatalog'
+import { useProfileLoad } from './hooks/useProfileLoad'
 import {
-  getDefaultControlValues,
-  resolveControl,
-  type ResolvedControl,
-} from '../conditions/controlTargets'
+  buildVideoNodes,
+  profileHasTemporalNodes,
+  TEMPORAL_NODE_TYPES,
+} from '../conditions/graphBuilder'
+import { CameraHeader } from './CameraHeader'
+import { CameraStage } from './CameraStage'
+import { AudioMicControls } from './AudioMicControls'
+import { EffectControls } from './EffectControls'
+
 import type { CatalogEntry, Profile } from '../conditions/schema'
 import { createReactiveDriver } from '../engine/reactive'
 import { createCouplingEngine } from '../engine/reactive'
 import { startOverlayLoop, type OverlayControl } from '../engine/canvas'
-import { clampIntensity, getSafetyContext } from '../conditions/normalize'
-import { composeEffectiveProfile, type ComposeReport } from '../composer'
+import {
+  clampIntensity,
+  getReducedMotionDisableNodes,
+  getSafetyContext,
+} from '../conditions/normalize'
 import {
   requestVideoStream,
   stopVideoStream,
@@ -24,7 +50,7 @@ import {
   type MicStatus,
   type AudioInputMode,
 } from '../engine/audio'
-import { getCameraErrorMessage, getCameraStateLabel } from './cameraMessages'
+import { getCameraErrorMessage } from './cameraMessages'
 import { ConditionComposerPanel } from './ConditionComposerPanel'
 import {
   OnboardingModal,
@@ -60,20 +86,48 @@ const DEFAULT_PICKER_OPTIONS: CatalogEntry[] = [
   { id: 'none', label: 'None (Clean)', description: 'No overlay. Baseline camera view.' },
   { id: 'anxiety', label: 'Anxiety', description: 'Metaphor of heightened tension; grain overlay.' },
 ]
+const CAMERA_STREAM_INTERRUPTED_MESSAGE =
+  'Kamerasignal wurde unterbrochen. Bitte starten Sie die Kamera erneut.'
+const CAMERA_DEVICE_DISCONNECTED_MESSAGE =
+  'Kamera wurde getrennt. Bitte starten Sie die Kamera erneut.'
+
+function getActiveVideoNodeIds(
+  profile: Profile | null,
+  reducedMotion: boolean
+): string[] {
+  if (!profile) return []
+  const disabled = getReducedMotionDisableNodes(profile)
+  const active: string[] = []
+  for (const def of profile.video_stack) {
+    const node = String(def.node ?? '').toLowerCase()
+    if (!node) continue
+    const blocked = reducedMotion && (TEMPORAL_NODE_TYPES.has(node) || disabled.has(node))
+    if (!blocked) active.push(node)
+  }
+  return active
+}
+
+function hasLiveVideoTrack(stream: MediaStream): boolean {
+  return stream.getVideoTracks().some((track) => track.readyState === 'live')
+}
+
+function clearVideoTrackEndHandlers(stream: MediaStream | null | undefined): void {
+  if (!stream) return
+  for (const track of stream.getVideoTracks()) {
+    track.onended = null
+  }
+}
 
 export function CameraView() {
-  const [catalog, setCatalog] = useState<CatalogEntry[] | null>(null)
+  const catalog = useCatalog()
   const [conditionId, setConditionId] = useState(DEFAULT_CONDITION_ID)
   const [composerMode, setComposerMode] = useState<ComposerMode>('preset')
   const [selectedPresets, setSelectedPresets] = useState<SelectedPreset[]>([])
   const [selectedDimensions, setSelectedDimensions] = useState<SelectedDimension[]>([])
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [composeReport, setComposeReport] = useState<ComposeReport | null>(null)
   const [cameraState, setCameraState] = useState<CameraState>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [intensity, setIntensity] = useState(DEFAULT_INTENSITY)
   const [safeMode, setSafeMode] = useState(false)
-  const [controlValues, setControlValues] = useState<Record<string, number | boolean>>({})
   const [stressMode, setStressMode] = useState(false)
   const [audioStatus, setAudioStatus] = useState<AudioContextStatus>('off')
   const [audioError, setAudioError] = useState<string | null>(null)
@@ -93,9 +147,32 @@ export function CameraView() {
   const [debugOverlay, setDebugOverlay] = useState(false)
   const [evidenceOpen, setEvidenceOpen] = useState(false)
   const [evidenceDocPath, setEvidenceDocPath] = useState<EvidenceDocPath>('docs/references/README.md')
+  const [isIdle, setIsIdle] = useState(false)
+
+  const { profile, composeReport, controlValues, setControlValues, isProfileLoading } = useProfileLoad({
+    conditionId,
+    composerMode,
+    selectedPresets,
+    selectedDimensions,
+    setIntensity,
+    setAudioEnabled,
+    intensity,
+    safeMode,
+    reducedMotion,
+    audioEnabled,
+    maxFeedback,
+    interactionAmount,
+  })
+
   // Render-loop consumers should read settings from refs to avoid stale captures.
+  // By using mutable refs, the WebGL render loop running at 60fps can read the latest UI slider
+  // values immediately without needing React to re-render the whole `CameraView` component tree.
   const couplingStrengthRef = useRef(couplingStrength)
   const maxFeedbackRef = useRef(maxFeedback)
+  const safeModeRef = useRef(safeMode)
+  const intensityRef = useRef(intensity)
+  const controlValuesRef = useRef(controlValues)
+  const stressModeRef = useRef(stressMode)
   const streamRef = useRef<MediaStream | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -104,13 +181,19 @@ export function CameraView() {
   const audioEngineControlRef = useRef<ReturnType<typeof createAudioEngine> | null>(null)
   const rmsDebugRef = useRef<HTMLSpanElement | null>(null)
   const videoMetricsRef = useRef<VideoMetrics | null>(null)
+  const cameraRequestSeqRef = useRef(0)
+  const audioRequestSeqRef = useRef(0)
+  const reducedMotionPrevRef = useRef(reducedMotion)
+  const profilePrevRef = useRef<Profile | null>(null)
+  const cameraStateRef = useRef<CameraState>(cameraState)
 
-  useEffect(() => {
-    couplingStrengthRef.current = couplingStrength
-  }, [couplingStrength])
-  useEffect(() => {
-    maxFeedbackRef.current = maxFeedback
-  }, [maxFeedback])
+  couplingStrengthRef.current = couplingStrength
+  maxFeedbackRef.current = maxFeedback
+  safeModeRef.current = safeMode
+  intensityRef.current = intensity
+  controlValuesRef.current = controlValues
+  stressModeRef.current = stressMode
+  cameraStateRef.current = cameraState
 
   const openEvidence = useCallback((docPath: EvidenceDocPath) => {
     setEvidenceDocPath(docPath)
@@ -122,19 +205,85 @@ export function CameraView() {
     []
   )
 
+  const getAudioDebugState = useCallback(
+    () => audioEngineControlRef.current?.getDebugState?.(),
+    []
+  )
+
+  const getAppliedClamps = useCallback(() => {
+    if (!profile) return undefined
+    const safeModeNow = safeModeRef.current
+    const inputIntensity = intensityRef.current
+    const effectiveIntensity = clampIntensity(profile, inputIntensity, safeModeNow)
+    const safeModeClampKeys = Object.keys(profile.safety.safe_mode_clamps ?? {}).sort((a, b) =>
+      a.localeCompare(b)
+    )
+    const reducedMotionDisabledNodes = Array.from(getReducedMotionDisableNodes(profile)).sort((a, b) =>
+      a.localeCompare(b)
+    )
+    return {
+      intensityInput: inputIntensity,
+      intensityEffective: effectiveIntensity,
+      safeMode: safeModeNow,
+      reducedMotion,
+      safeModeClampKeys,
+      reducedMotionDisabledNodes,
+    }
+  }, [profile, reducedMotion])
+
+  const handleCameraStreamInterrupted = useCallback(
+    (stream: MediaStream | null | undefined, message: string) => {
+      if (!stream) return
+      if (cameraStateRef.current !== 'active') return
+      if (streamRef.current !== stream) return
+      if (overlayControlRef.current) {
+        overlayControlRef.current.stop()
+        overlayControlRef.current = null
+      }
+      clearVideoTrackEndHandlers(stream)
+      stopVideoStream(stream)
+      streamRef.current = null
+      const video = videoRef.current
+      if (video) video.srcObject = null
+      setCameraState('error')
+      setErrorMessage(message)
+    },
+    []
+  )
+
+  /**
+   * Primary entry point to turn the camera on.
+   * Prompts the user for device permissions via WebRTC `getUserMedia`.
+   */
   const handleStart = useCallback(async () => {
+    const requestSeq = ++cameraRequestSeqRef.current
     setErrorMessage(null)
     setCameraState('requesting')
 
     const result = await requestVideoStream()
+    if (requestSeq !== cameraRequestSeqRef.current) {
+      if (result.ok) stopVideoStream(result.stream)
+      return
+    }
 
     if (result.ok) {
       streamRef.current = result.stream
+      const stream = result.stream
+      for (const track of stream.getVideoTracks()) {
+        track.onended = () => {
+          handleCameraStreamInterrupted(stream, CAMERA_STREAM_INTERRUPTED_MESSAGE)
+        }
+      }
       const video = videoRef.current
       if (video) {
-        video.srcObject = result.stream
-        video.play().catch(() => {
+        video.srcObject = stream
+        video.play().catch((err) => {
           // Autoplay may be restricted; playsInline + srcObject often still shows first frame
+          if (import.meta.env?.DEV) {
+            console.warn('video.play failed', err)
+          }
+          setCameraState('error')
+          setErrorMessage('Playback error. Please interact with the page or restart the camera.')
         })
       }
       setCameraState('active')
@@ -146,9 +295,42 @@ export function CameraView() {
       setCameraState(isDenied ? 'denied' : 'error')
       setErrorMessage(getCameraErrorMessage(result.error))
     }
-  }, [])
+  }, [handleCameraStreamInterrupted])
+
+  useEffect(() => {
+    const mediaDevices = navigator.mediaDevices
+    if (!mediaDevices?.addEventListener) return
+    const onDeviceChange = (): void => {
+      if (cameraStateRef.current !== 'active') return
+      const stream = streamRef.current
+      if (!stream) return
+      if (hasLiveVideoTrack(stream)) return
+      handleCameraStreamInterrupted(stream, CAMERA_DEVICE_DISCONNECTED_MESSAGE)
+    }
+    mediaDevices.addEventListener('devicechange', onDeviceChange)
+    return () => {
+      mediaDevices.removeEventListener('devicechange', onDeviceChange)
+    }
+  }, [handleCameraStreamInterrupted])
+
+  useEffect(() => {
+    if (cameraState !== 'active') return
+    const timer = window.setInterval(() => {
+      const stream = streamRef.current
+      if (!stream) return
+      if (hasLiveVideoTrack(stream)) return
+      handleCameraStreamInterrupted(stream, CAMERA_STREAM_INTERRUPTED_MESSAGE)
+    }, 250)
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [cameraState, handleCameraStreamInterrupted])
 
   const handleStop = useCallback(() => {
+    // Invalidate any in-flight camera request; stale streams are closed when they resolve.
+    cameraRequestSeqRef.current += 1
+    // Invalidate any in-flight audio start request.
+    audioRequestSeqRef.current += 1
     if (overlayControlRef.current) {
       overlayControlRef.current.stop()
       overlayControlRef.current = null
@@ -160,6 +342,7 @@ export function CameraView() {
     setMicStatus('off')
     setMicError(null)
     setMicEnabled(false)
+    clearVideoTrackEndHandlers(streamRef.current)
     stopVideoStream(streamRef.current ?? undefined)
     streamRef.current = null
     const video = videoRef.current
@@ -175,30 +358,76 @@ export function CameraView() {
     setErrorMessage(null)
   }, [])
 
+  // Ensure all runtime resources are released even if the view unmounts unexpectedly.
+  useEffect(() => {
+    return () => {
+      cameraRequestSeqRef.current += 1
+      audioRequestSeqRef.current += 1
+      overlayControlRef.current?.stop()
+      overlayControlRef.current = null
+      audioEngineControlRef.current?.stop()
+      audioEngineControlRef.current = null
+      clearVideoTrackEndHandlers(streamRef.current)
+      stopVideoStream(streamRef.current ?? undefined)
+      streamRef.current = null
+      const video = videoRef.current
+      if (video) video.srcObject = null
+    }
+  }, [])
+
   const handleEnableAudio = useCallback(() => {
+    const requestSeq = ++audioRequestSeqRef.current
     setAudioError(null)
     setAudioStatus('starting')
-    startAudioContext().then((status) => {
-      if (status === 'on') {
-        const audioStack = audioEnabled ? (profile?.audio_stack ?? null) : { enabled: false }
-        const control = createAudioEngine(audioStack, {
-          onStatusChange(s, err) {
-            setAudioStatus(s)
-            setAudioError(err ?? null)
-          },
-          onMicStatusChange(s, err) {
-            setMicStatus(s)
-            setMicError(err ?? null)
-          },
-        })
-        audioEngineControlRef.current = control
-        const vol = audioEnabled ? (profile?.audio_stack?.master?.volume ?? 0.22) : 0
-        setMasterVolume(vol)
-      } else {
-        setAudioStatus(status)
-      }
-    })
-  }, [profile?.audio_stack, audioEnabled])
+    startAudioContext()
+      .then((status) => {
+        if (requestSeq !== audioRequestSeqRef.current) return
+        if (status === 'on') {
+          if (audioEngineControlRef.current) {
+            audioEngineControlRef.current.stop()
+            audioEngineControlRef.current = null
+          }
+          const profileHasAudio = !!(profile?.audio_stack && (profile.audio_stack as { enabled?: boolean }).enabled)
+          const audioStack =
+            profileHasAudio
+              ? (profile?.audio_stack ?? { enabled: false })
+              : (audioEnabled ? (profile?.audio_stack ?? null) : { enabled: false })
+          if (profileHasAudio) setAudioEnabled(true)
+          const control = createAudioEngine(audioStack, {
+            onStatusChange(s, err) {
+              setAudioStatus(s)
+              setAudioError(err ?? null)
+            },
+            onMicStatusChange(s, err) {
+              setMicStatus(s)
+              setMicError(err ?? null)
+              if (s === 'on') setMicEnabled(true)
+              else if (s === 'off' || s === 'denied' || s === 'error') setMicEnabled(false)
+            },
+          })
+          if (requestSeq !== audioRequestSeqRef.current) {
+            control.stop()
+            return
+          }
+          audioEngineControlRef.current = control
+          setAudioStatus('on')
+          const vol = profileHasAudio || audioEnabled ? (profile?.audio_stack?.master?.volume ?? 0.22) : 0
+          control.setMasterVolume(vol)
+          control.setInputMode(inputMode)
+          control.setMicSensitivity(micSensitivity)
+          control.setMicGate(micGate)
+          setMasterVolume(vol)
+        } else {
+          setAudioStatus(status)
+        }
+      })
+      .catch((err) => {
+        if (requestSeq === audioRequestSeqRef.current) {
+          setAudioStatus('error')
+          setAudioError(err instanceof Error ? err.message : String(err))
+        }
+      })
+  }, [profile?.audio_stack, profile?.id, audioEnabled, inputMode, micSensitivity, micGate])
 
   const handleMasterVolumeChange = useCallback((value: number) => {
     setMasterVolume(value)
@@ -207,22 +436,30 @@ export function CameraView() {
 
   const handleEnableMic = useCallback(() => {
     setMicError(null)
+    setMicEnabled(true)
     audioEngineControlRef.current?.requestMic()
   }, [])
 
   const handleDisableMic = useCallback(() => {
     audioEngineControlRef.current?.stopMic()
+    if (inputMode === 'mic') {
+      setInputMode('synth')
+      audioEngineControlRef.current?.setInputMode('synth')
+    }
+    setMicEnabled(false)
     setMicStatus('off')
     setMicError(null)
-  }, [])
+  }, [inputMode])
 
   const handleMicEnabledChange = useCallback(
     (enabled: boolean) => {
-      setMicEnabled(enabled)
       if (audioStatus !== 'on') {
+        setMicEnabled(false)
         if (enabled) setMicError('Enable audio first, then enable microphone (optional).')
+        else setMicError(null)
         return
       }
+      setMicEnabled(enabled)
       if (enabled) handleEnableMic()
       else handleDisableMic()
     },
@@ -257,68 +494,17 @@ export function CameraView() {
     audioEngineControlRef.current?.setInputMode(mode)
   }, [])
 
-  // Load catalog once on mount (for condition picker).
   useEffect(() => {
-    loadCatalog().then((c) => {
-      if (c?.conditions?.length) setCatalog(c.conditions)
-    })
-  }, [])
+    if (micStatus === 'on') return
+    if (inputMode !== 'mic') return
+    setInputMode('synth')
+    audioEngineControlRef.current?.setInputMode('synth')
+  }, [micStatus, inputMode])
 
-  // Load profile when condition changes; set defaults for intensity and control values.
   useEffect(() => {
-    if (composerMode !== 'preset') return
-    if (!conditionId) return
-    loadProfile(conditionId).then((p) => {
-      const prof = p ?? FALLBACK_PROFILE
-      setProfile(prof)
-      setComposeReport(null)
-      const defaults = getDefaultControlValues(prof)
-      setControlValues(defaults)
-      const safe = (prof as { safety?: { intensity_default?: number } }).safety
-      if (typeof safe?.intensity_default === 'number') {
-        setIntensity(safe.intensity_default)
-      }
-      // Audio is always optional in SSOT; default off.
-      setAudioEnabled(false)
-    })
-  }, [conditionId, composerMode])
-
-  // Compose profile when in multimorbid or symptom-first modes.
-  useEffect(() => {
-    if (composerMode === 'preset') return
-    let cancelled = false
-    const settings = {
-      intensity,
-      safeMode,
-      reducedMotion,
-      audioEnabled,
-      // Note: composition is profile-shaping only; mic + coupling are runtime concerns.
-      micEnabled: false,
-      couplingStrength: 0,
-      maxFeedback,
-      interactionAmount,
-      debugOverlay: false,
-    }
-    composeEffectiveProfile(selectedPresets, selectedDimensions, settings).then((res) => {
-      if (cancelled) return
-      setProfile(res.profile)
-      setComposeReport(res.report)
-      setControlValues({})
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [
-    composerMode,
-    selectedPresets,
-    selectedDimensions,
-    safeMode,
-    reducedMotion,
-    audioEnabled,
-    maxFeedback,
-    interactionAmount,
-    intensity,
-  ])
+    reducedMotionPrevRef.current = reducedMotion
+    profilePrevRef.current = profile
+  }, [profile, reducedMotion])
 
   // Seed multimorbid preset stack from current preset for convenience.
   useEffect(() => {
@@ -352,89 +538,86 @@ export function CameraView() {
       if (overlayControlRef.current) return
       const prof = profile ?? FALLBACK_PROFILE
       const nodes = buildVideoNodes(prof, { reducedMotion })
-      const reactiveList = (prof as { reactive?: { analyser_to_params?: unknown[] } }).reactive
-        ?.analyser_to_params
       const couplingEngine = createCouplingEngine(prof, {
         couplingStrength: couplingStrengthRef.current,
         maxFeedback: maxFeedbackRef.current,
         reducedMotion,
-        safeMode,
+        safeMode: safeModeRef.current,
       })
-      const reactiveOptions =
-        (reactiveList?.length ?? 0) > 0 || couplingStrength > 0
-          ? {
-              getAudioMetrics: () => audioEngineControlRef.current?.getMetrics?.() ?? { rms: 0, centroid: 0, flux: 0 },
-              getRms: () => audioEngineControlRef.current?.getRms?.() ?? 0, // back-compat
-              applyAudioOverrides: (overrides: Record<string, number>) => {
-                audioEngineControlRef.current?.applyReactiveParams?.(overrides)
-              },
-              onVideoMetrics: (m: VideoMetrics) => {
-                videoMetricsRef.current = m
-              },
-              getOverrides: (() => {
-                const driver = createReactiveDriver(prof, { reducedMotion })
-                const baseAfterReactive: Record<string, number | boolean> = {}
-                const outVideo: Record<string, number> = {}
-                const outAudio: Record<string, number> = {}
-                const clear = (obj: Record<string, unknown>): void => {
-                  for (const k of Object.keys(obj)) delete obj[k]
-                }
-                const copy = (dst: Record<string, number | boolean>, src: Record<string, number | boolean>): void => {
-                  for (const k in src) dst[k] = src[k]
-                }
-                const mergeNum = (dst: Record<string, number>, src: Record<string, number>): void => {
-                  for (const k in src) dst[k] = src[k]
-                }
-                return (
-                  delta: number,
-                  audio: { rms: number; centroid: number; flux: number },
-                  video: { motion: number; luminance: number; edge: number; instability: number },
-                  baseControlValues: Record<string, number | boolean>
-                ) => {
-                  // Existing SSOT reactive (RMS-only)
-                  const videoReactive = driver.getVideoOverrides(delta, audio.rms)
-                  const audioReactive = driver.getAudioOverrides(delta, audio.rms)
+      const reactiveOptions = {
+        getAudioMetrics: () => audioEngineControlRef.current?.getMetrics?.() ?? { rms: 0, centroid: 0, flux: 0 },
+        getRms: () => audioEngineControlRef.current?.getRms?.() ?? 0, // back-compat
+        applyAudioOverrides: (overrides: Record<string, number>) => {
+          audioEngineControlRef.current?.applyReactiveParams?.(overrides)
+        },
+        onVideoMetrics: (m: VideoMetrics) => {
+          videoMetricsRef.current = m
+        },
+        getOverrides: (() => {
+          const driver = createReactiveDriver(prof, { reducedMotion })
+          const baseAfterReactive: Record<string, number | boolean> = {}
+          const outVideo: Record<string, number> = {}
+          const outAudio: Record<string, number> = {}
+          const clear = (obj: Record<string, unknown>): void => {
+            for (const k of Object.keys(obj)) delete obj[k]
+          }
+          const copy = (dst: Record<string, number | boolean>, src: Record<string, number | boolean>): void => {
+            for (const k in src) dst[k] = src[k]
+          }
+          const mergeNum = (dst: Record<string, number>, src: Record<string, number>): void => {
+            for (const k in src) dst[k] = src[k]
+          }
+          return (
+            delta: number,
+            audio: { rms: number; centroid: number; flux: number },
+            video: { motion: number; luminance: number; edge: number; instability: number },
+            baseControlValues: Record<string, number | boolean>
+          ) => {
+            // Existing SSOT reactive (RMS-only)
+            const videoReactive = driver.getVideoOverrides(delta, audio.rms)
+            const audioReactive = driver.getAudioOverrides(delta, audio.rms)
 
-                  // Coupling layer (audio↔video)
-                  clear(baseAfterReactive)
-                  copy(baseAfterReactive, baseControlValues)
-                  mergeNum(baseAfterReactive as Record<string, number>, videoReactive)
-                  // Ensure coupling uses the latest UI settings (sliders can change while loop runs).
-                  couplingEngine.setSettings({
-                    couplingStrength: couplingStrengthRef.current,
-                    maxFeedback: maxFeedbackRef.current,
-                  })
-                  const coupled = couplingEngine.step(delta, audio, video, baseAfterReactive)
+            // Coupling layer (audio↔video)
+            clear(baseAfterReactive)
+            copy(baseAfterReactive, baseControlValues)
+            mergeNum(baseAfterReactive as Record<string, number>, videoReactive)
+            // Ensure coupling uses the latest UI settings (sliders can change while loop runs).
+            couplingEngine.setSettings({
+              couplingStrength: couplingStrengthRef.current,
+              maxFeedback: maxFeedbackRef.current,
+              safeMode: safeModeRef.current,
+            })
+            const coupled = couplingEngine.step(delta, audio, video, baseAfterReactive)
 
-                  clear(outVideo)
-                  clear(outAudio)
-                  mergeNum(outVideo, videoReactive)
-                  mergeNum(outVideo, coupled.video)
-                  mergeNum(outAudio, audioReactive)
-                  mergeNum(outAudio, coupled.audio)
-                  return {
-                    video: outVideo,
-                    audio: outAudio,
-                  }
-                }
-              })(),
+            clear(outVideo)
+            clear(outAudio)
+            mergeNum(outVideo, videoReactive)
+            mergeNum(outVideo, coupled.video)
+            mergeNum(outAudio, audioReactive)
+            mergeNum(outAudio, coupled.audio)
+            return {
+              video: outVideo,
+              audio: outAudio,
             }
-          : undefined
+          }
+        })(),
+      }
       const control = startOverlayLoop(
         video,
         canvas,
         container,
         nodes,
-        reactiveOptions ?? undefined
+        reactiveOptions
       )
       overlayControlRef.current = control
       const safetyCtx = getSafetyContext(prof)
-      const clampedIntensity = clampIntensity(prof, intensity, safeMode)
+      const safeModeNow = safeModeRef.current
+      const clampedIntensity = clampIntensity(prof, intensityRef.current, safeModeNow)
       control.setParams({
         intensity: clampedIntensity,
-        safeMode,
-        controlValues: { ...controlValues, intensity: clampedIntensity, safeMode },
-        stressMode,
+        safeMode: safeModeNow,
+        controlValues: { ...controlValuesRef.current, intensity: clampedIntensity, safeMode: safeModeNow },
+        stressMode: stressModeRef.current,
         safetyContext: safetyCtx,
       })
     }
@@ -443,7 +626,9 @@ export function CameraView() {
       startLoop()
     } else {
       listener = (): void => {
-        video.removeEventListener('loadedmetadata', listener!)
+        if (listener) {
+          video.removeEventListener('loadedmetadata', listener)
+        }
         listener = null
         startLoop()
       }
@@ -451,13 +636,13 @@ export function CameraView() {
     }
 
     return () => {
-      if (listener) video.removeEventListener('loadedmetadata', listener)
+      if (listener && video) video.removeEventListener('loadedmetadata', listener)
       if (overlayControlRef.current) {
         overlayControlRef.current.stop()
         overlayControlRef.current = null
       }
     }
-  }, [cameraState, conditionId, reducedMotion, profile, controlValues, intensity, safeMode, stressMode])
+  }, [cameraState, reducedMotion, profile])
 
   // Push params to the overlay when they change (only has effect when WebGL is active).
   useEffect(() => {
@@ -480,6 +665,7 @@ export function CameraView() {
     audioEngineControlRef.current.setConditionAudio(audioStack)
     const vol = audioEnabled ? (profile?.audio_stack?.master?.volume ?? 0.22) : 0
     setMasterVolume(vol)
+    audioEngineControlRef.current.setMasterVolume(vol)
   }, [conditionId, profile?.audio_stack, audioStatus, audioEnabled, composerMode])
 
   // Phase 8: Dev-only live RMS display (no React state to avoid re-renders every frame).
@@ -499,72 +685,59 @@ export function CameraView() {
     }
   }, [audioStatus, debugOverlay])
 
+  // Phase 3 QoL: Immersive Mode (Auto-hide UI when idle and camera is active)
+  useEffect(() => {
+    if (cameraState !== 'active') {
+      setIsIdle(false)
+      return
+    }
+    let timeoutId: number
+    const handleActivity = () => {
+      setIsIdle(false)
+      window.clearTimeout(timeoutId)
+      timeoutId = window.setTimeout(() => setIsIdle(true), 4500)
+    }
+    window.addEventListener('mousemove', handleActivity)
+    window.addEventListener('keydown', handleActivity)
+    window.addEventListener('touchstart', handleActivity)
+    handleActivity() // start initial timer
+    return () => {
+      window.clearTimeout(timeoutId)
+      window.removeEventListener('mousemove', handleActivity)
+      window.removeEventListener('keydown', handleActivity)
+      window.removeEventListener('touchstart', handleActivity)
+    }
+  }, [cameraState])
+
   const isRequesting = cameraState === 'requesting'
   const isActive = cameraState === 'active'
+  const canStop = isRequesting || isActive || audioStatus !== 'off' || micStatus !== 'off'
 
   const warnings: string[] =
-    (profile as { safety?: { warnings?: string[] } })?.safety?.warnings ?? []
+    profile?.safety?.warnings ?? []
   const showReducedMotionHint =
     reducedMotion && profile != null && profileHasTemporalNodes(profile)
+  const activeVideoNodeIds = getActiveVideoNodeIds(profile, reducedMotion)
   const profileDefinesReducedMotionControl =
     (profile?.ui?.controls ?? []).some((c) => c.id === 'reduced_motion')
 
   return (
-    <section className="ie-shell" aria-label="Inner Echo — camera and controls">
+    <section className={`ie-shell ${isIdle ? 'ie-shell--idle' : ''}`} aria-label="Inner Echo — camera and controls">
       {!onboardingAccepted && (
         <OnboardingModal onAccept={() => setOnboardingAccepted(true)} />
       )}
 
-      <header className="ie-header" role="banner">
-        <div className="ie-brand" aria-label="Inner Echo">
-          <div className="ie-title">Inner Echo</div>
-          <div className="ie-subtitle">Local-only AV overlay • calm, minimal, safety-first</div>
-        </div>
-
-        <div className="ie-headerRight">
-          <div className="ie-statusRow" role="status" aria-live="polite" aria-label="Runtime status">
-            <span className="ie-pill">
-              <span className="ie-pillKey">Camera</span>
-              <span className="ie-pillVal">{getCameraStateLabel(cameraState)}</span>
-            </span>
-            <span className="ie-pill">
-              <span className="ie-pillKey">Audio</span>
-              <span className="ie-pillVal">{audioStatus}</span>
-            </span>
-            <button
-              type="button"
-              className="ie-btn"
-              onClick={() => openEvidence('docs/references/README.md')}
-              aria-label="Open Evidence & Method"
-              title="Evidence & Method"
-            >
-              Evidence
-            </button>
-          </div>
-
-          <div className="ie-actions">
-            <button
-              type="button"
-              className="ie-btn"
-              onClick={handleStart}
-              disabled={!onboardingAccepted || isRequesting || isActive}
-              aria-busy={isRequesting}
-              aria-describedby={!onboardingAccepted ? 'onboarding-required-desc' : undefined}
-            >
-              {isRequesting ? 'Requesting…' : 'Start camera'}
-            </button>
-            <button
-              type="button"
-              className="ie-btn ie-btn--danger"
-              onClick={handleStop}
-              disabled={!isActive}
-              aria-label="Stop Everything — stop camera, audio, microphone, and all effects"
-            >
-              Stop Everything
-            </button>
-          </div>
-        </div>
-      </header>
+      <CameraHeader
+        cameraState={cameraState}
+        audioStatus={audioStatus}
+        isRequesting={isRequesting}
+        isActive={isActive}
+        canStop={canStop}
+        onboardingAccepted={onboardingAccepted}
+        onOpenEvidence={openEvidence}
+        onStart={handleStart}
+        onStop={handleStop}
+      />
 
       {errorMessage && (
         <div className="ie-callout ie-callout--error" role="alert" aria-label="Camera error">
@@ -585,14 +758,15 @@ export function CameraView() {
       )}
 
       <div className="ie-layout" aria-label="Main layout">
-        <div ref={containerRef} className="ie-stage" aria-label="Camera stage">
-          <video ref={videoRef} className="ie-video" playsInline muted aria-label="Camera feed" />
-          <canvas ref={canvasRef} className="ie-canvas" aria-hidden="true" />
-          {import.meta.env.DEV && debugOverlay && audioStatus === 'on' && (
-            <span ref={rmsDebugRef} className="ie-debugChip" data-phase="reactive" aria-hidden="true" />
-          )}
-          {!isActive && <div className="ie-placeholder" aria-hidden="true">No image</div>}
-        </div>
+        <CameraStage
+          containerRef={containerRef}
+          videoRef={videoRef}
+          canvasRef={canvasRef}
+          rmsDebugRef={rmsDebugRef}
+          isActive={isActive}
+          audioStatus={audioStatus}
+          debugOverlay={debugOverlay}
+        />
 
         <aside className="ie-panel" aria-label="Controls panel">
           <div className="ie-panelScroll">
@@ -603,6 +777,11 @@ export function CameraView() {
             )}
 
             <div className="ie-panelSection" aria-label="Condition and settings">
+              {isProfileLoading && (
+                <p className="ie-hint" role="status" aria-live="polite">
+                  Loading condition…
+                </p>
+              )}
               <ConditionComposerPanel
                 catalog={catalog ?? DEFAULT_PICKER_OPTIONS}
                 mode={composerMode}
@@ -623,6 +802,8 @@ export function CameraView() {
                 onAudioEnabledChange={setAudioEnabled}
                 micEnabled={micEnabled}
                 onMicEnabledChange={handleMicEnabledChange}
+                micRequiresAudio={audioStatus !== 'on'}
+                micRequiresAudioHint="Enable audio first to enable microphone (optional)."
                 couplingStrength={couplingStrength}
                 onCouplingStrengthChange={setCouplingStrength}
                 maxFeedback={maxFeedback}
@@ -642,312 +823,119 @@ export function CameraView() {
               )}
             </div>
 
-            {import.meta.env.DEV && composerMode !== 'preset' && composeReport && (
+            {import.meta.env.DEV && (
               <details className="ie-panelSection">
                 <summary className="ie-summary">Composer report (dev)</summary>
                 <div className="ie-panelBody">
-                  {composeReport.missingPresets.length > 0 && (
-                    <>
-                      <div className="ie-subsectionTitle">Missing presets</div>
-                      <ul className="ie-codeList">
-                        {composeReport.missingPresets.map((id) => (
-                          <li key={id}>
-                            <code>{id}</code>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
+                  {composerMode === 'preset' && (
+                    <p className="ie-hint">Only shown in Multimorbid or Symptom-first mode. In Preset mode a single condition is loaded; no composition report.</p>
                   )}
-                  {(composeReport.missingNodes.video.length > 0 || composeReport.missingNodes.audio.length > 0) && (
+                  {composerMode !== 'preset' && composeReport && (
                     <>
-                      <div className="ie-subsectionTitle">Missing nodes (not applied)</div>
-                      <ul className="ie-codeList">
-                        {composeReport.missingNodes.video.map((n) => (
-                          <li key={`v-${n}`}>
-                            video: <code>{n}</code>
-                          </li>
-                        ))}
-                        {composeReport.missingNodes.audio.map((n) => (
-                          <li key={`a-${n}`}>
-                            audio: <code>{n}</code>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                  {composeReport.evidence.gaps.length > 0 && (
-                    <>
-                      <div className="ie-subsectionTitle">Evidence gaps</div>
-                      <ul className="ie-codeList">
-                        {composeReport.evidence.gaps.map((g) => (
-                          <li key={`${g.dimensionId}-${g.reason}`}>
-                            <code>{g.dimensionId}</code>: {g.reason}
-                          </li>
-                        ))}
-                      </ul>
+                      {composeReport.missingPresets.length > 0 && (
+                        <>
+                          <div className="ie-subsectionTitle">Missing presets</div>
+                          <ul className="ie-codeList">
+                            {composeReport.missingPresets.map((id) => (
+                              <li key={id}>
+                                <code>{id}</code>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                      {(composeReport.missingNodes.video.length > 0 || composeReport.missingNodes.audio.length > 0) && (
+                        <>
+                          <div className="ie-subsectionTitle">Missing nodes (not applied)</div>
+                          <ul className="ie-codeList">
+                            {composeReport.missingNodes.video.map((n) => (
+                              <li key={`v-${n}`}>
+                                video: <code>{n}</code>
+                              </li>
+                            ))}
+                            {composeReport.missingNodes.audio.map((n) => (
+                              <li key={`a-${n}`}>
+                                audio: <code>{n}</code>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                      {composeReport.evidence.gaps.length > 0 && (
+                        <>
+                          <div className="ie-subsectionTitle">Evidence gaps</div>
+                          <ul className="ie-codeList">
+                            {composeReport.evidence.gaps.map((g) => (
+                              <li key={`${g.dimensionId}-${g.reason}`}>
+                                <code>{g.dimensionId}</code>: {g.reason}
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                      {composeReport.missingPresets.length === 0 &&
+                        composeReport.missingNodes.video.length === 0 &&
+                        composeReport.missingNodes.audio.length === 0 &&
+                        (composeReport.evidence.gaps?.length ?? 0) === 0 && (
+                          <p className="ie-hint">Composition applied. No missing presets or nodes.</p>
+                        )}
                     </>
                   )}
                 </div>
               </details>
             )}
 
-            <details className="ie-panelSection">
-              <summary className="ie-summary">Audio & microphone</summary>
-              <div className="ie-panelBody">
-                <div className="camera-view__audio" role="group" aria-label="Audio">
-                  <div className="camera-view__audio-status" role="status" aria-live="polite">
-                    Audio: {audioStatus === 'off' && 'off'}
-                    {audioStatus === 'starting' && 'starting…'}
-                    {audioStatus === 'on' && 'on'}
-                    {audioStatus === 'error' && 'error'}
-                  </div>
-                  {audioError && (
-                    <p className="camera-view__error" role="alert">
-                      {audioError}
-                    </p>
-                  )}
-                  {audioStatus === 'off' && (
-                    <button
-                      type="button"
-                      className="camera-view__btn camera-view__btn--audio"
-                      onClick={handleEnableAudio}
-                      aria-label="Enable audio"
-                    >
-                      Enable audio
-                    </button>
-                  )}
-                  {audioStatus === 'on' && (
-                    <label className="camera-view__control">
-                      <span className="camera-view__control-label">Master volume</span>
-                      <input
-                        type="range"
-                        min={0}
-                        max={100}
-                        value={Math.round(masterVolume * 100)}
-                        onChange={(e) => handleMasterVolumeChange(Number(e.target.value) / 100)}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-valuenow={Math.round(masterVolume * 100)}
-                        aria-valuetext={`${Math.round(masterVolume * 100)}%`}
-                      />
-                    </label>
-                  )}
-
-                  {audioStatus === 'on' && (
-                    <div className="camera-view__mic" role="group" aria-label="Microphone (optional)">
-                      <p className="camera-view__mic-desc">
-                        Microphone is optional, local-only, and can be turned off anytime. Not recorded or sent anywhere.
-                      </p>
-                      <div className="camera-view__mic-status" role="status" aria-live="polite">
-                        Mic: {micStatus === 'off' && 'off'}
-                        {micStatus === 'requesting' && 'requesting…'}
-                        {micStatus === 'on' && 'on'}
-                        {micStatus === 'denied' && 'denied'}
-                        {micStatus === 'error' && 'error'}
-                      </div>
-                      {micError && (
-                        <p className="camera-view__error" role="alert">
-                          {micError}
-                        </p>
-                      )}
-                      {micStatus !== 'on' && micStatus !== 'requesting' && (
-                        <button
-                          type="button"
-                          className="camera-view__btn camera-view__btn--mic"
-                          onClick={handleEnableMic}
-                          aria-label="Enable microphone (optional)"
-                        >
-                          Enable microphone (optional)
-                        </button>
-                      )}
-                      {micStatus === 'on' && (
-                        <>
-                          <button
-                            type="button"
-                            className="camera-view__btn camera-view__btn--mic-off"
-                            onClick={handleDisableMic}
-                            aria-label="Disable microphone"
-                          >
-                            Disable microphone
-                          </button>
-                          <label className="camera-view__control">
-                            <span className="camera-view__control-label">Mic sensitivity</span>
-                            <input
-                              type="range"
-                              min={0}
-                              max={100}
-                              value={Math.round(micSensitivity * 100)}
-                              onChange={(e) => {
-                                const v = Number(e.target.value) / 100
-                                setMicSensitivity(v)
-                                audioEngineControlRef.current?.setMicSensitivity?.(v)
-                              }}
-                              aria-valuemin={0}
-                              aria-valuemax={100}
-                              aria-valuenow={Math.round(micSensitivity * 100)}
-                              aria-valuetext={`${Math.round(micSensitivity * 100)}%`}
-                            />
-                          </label>
-                          <label className="camera-view__control">
-                            <span className="camera-view__control-label">Noise gate</span>
-                            <input
-                              type="range"
-                              min={0}
-                              max={100}
-                              value={Math.round(micGate * 100)}
-                              onChange={(e) => {
-                                const v = Number(e.target.value) / 100
-                                setMicGate(v)
-                                audioEngineControlRef.current?.setMicGate?.(v)
-                              }}
-                              aria-valuemin={0}
-                              aria-valuemax={100}
-                              aria-valuenow={Math.round(micGate * 100)}
-                              aria-valuetext={`${Math.round(micGate * 100)}%`}
-                            />
-                          </label>
-                          <div className="camera-view__input-mode" role="group" aria-label="Audio input">
-                            <span className="camera-view__control-label">Input</span>
-                            <div className="camera-view__input-mode-options">
-                              {(['synth', 'mic', 'mix'] as const).map((mode) => (
-                                <label key={mode} className="camera-view__control camera-view__control--toggle">
-                                  <input
-                                    type="radio"
-                                    name="audio-input-mode"
-                                    checked={inputMode === mode}
-                                    onChange={() => handleInputModeChange(mode)}
-                                    aria-label={mode === 'synth' ? 'Synth only' : mode === 'mic' ? 'Mic only' : 'Mix'}
-                                  />
-                                  <span>{mode === 'synth' ? 'Synth only' : mode === 'mic' ? 'Mic only' : 'Mix'}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </details>
+            <AudioMicControls
+              audioStatus={audioStatus}
+              audioError={audioError}
+              masterVolume={masterVolume}
+              micStatus={micStatus}
+              micError={micError}
+              micSensitivity={micSensitivity}
+              micGate={micGate}
+              inputMode={inputMode}
+              onEnableAudio={handleEnableAudio}
+              onEnableMic={handleEnableMic}
+              onDisableMic={handleDisableMic}
+              onMasterVolumeChange={handleMasterVolumeChange}
+              onMicSensitivityChange={(v) => {
+                setMicSensitivity(v)
+                audioEngineControlRef.current?.setMicSensitivity?.(v)
+              }}
+              onMicGateChange={(v) => {
+                setMicGate(v)
+                audioEngineControlRef.current?.setMicGate?.(v)
+              }}
+              onInputModeChange={handleInputModeChange}
+            />
 
             {isActive && (
-              <details className="ie-panelSection">
-                <summary className="ie-summary">Controls</summary>
-                <div className="ie-panelBody">
-                  <div className="camera-view__controls" role="group" aria-label="Effect controls">
-                    {profile?.ui?.controls?.length
-                      ? (() => {
-                          const resolved: ResolvedControl[] = []
-                          for (const c of profile.ui!.controls!) {
-                            const r = resolveControl(c, profile)
-                            if (r) resolved.push(r)
-                          }
-                          return resolved.map((r) => {
-                            const value =
-                              r.kind === 'intensity'
-                                ? intensity
-                                : r.kind === 'safeMode'
-                                  ? safeMode
-                              : r.kind === 'reducedMotion'
-                                ? reducedMotion
-                              : r.kind === 'audioEnabled'
-                                ? audioEnabled
-                                  : (controlValues[r.paramKey] ?? r.defaultValue) as number | boolean
-                            const onChange = (v: number | boolean) => {
-                              if (r.kind === 'intensity') setIntensity(v as number)
-                              else if (r.kind === 'safeMode') setSafeMode(v as boolean)
-                              else if (r.kind === 'reducedMotion') setReducedMotion(v as boolean)
-                              else if (r.kind === 'audioEnabled') setAudioEnabled(v as boolean)
-                              else setControlValues((prev) => ({ ...prev, [r.paramKey]: v }))
-                            }
-                            if (r.control.type === 'slider') {
-                              const num = typeof value === 'number' ? value : 0
-                              const min = r.control.min ?? 0
-                              const max = r.control.max ?? 1
-                              const step = r.control.step ?? 0.01
-                              return (
-                                <label key={r.control.id} className="camera-view__control">
-                                  <span className="camera-view__control-label">{r.control.label ?? r.control.id}</span>
-                                  <input
-                                    type="range"
-                                    min={min}
-                                    max={max}
-                                    step={step}
-                                    value={num}
-                                    onChange={(e) => onChange(Number(e.target.value))}
-                                    aria-valuemin={min}
-                                    aria-valuemax={max}
-                                    aria-valuenow={num}
-                                    aria-valuetext={`${Math.round(num * 100)}%`}
-                                  />
-                                </label>
-                              )
-                            }
-                            return (
-                              <label key={r.control.id} className="camera-view__control camera-view__control--toggle">
-                                <input
-                                  type="checkbox"
-                                  checked={value === true}
-                                  onChange={(e) => onChange(e.target.checked)}
-                                  aria-describedby={r.kind === 'safeMode' ? 'safe-mode-desc' : undefined}
-                                />
-                                <span>{r.control.label ?? r.control.id}</span>
-                              </label>
-                            )
-                          })
-                        })()
-                      : (
-                        <>
-                          <label className="camera-view__control">
-                            <span className="camera-view__control-label">Intensity</span>
-                            <input
-                              type="range"
-                              min={0}
-                              max={100}
-                              value={Math.round(intensity * 100)}
-                              onChange={(e) => setIntensity(Number(e.target.value) / 100)}
-                              aria-valuemin={0}
-                              aria-valuemax={100}
-                              aria-valuenow={Math.round(intensity * 100)}
-                              aria-valuetext={`${Math.round(intensity * 100)}%`}
-                            />
-                          </label>
-                          <label className="camera-view__control camera-view__control--toggle">
-                            <input
-                              type="checkbox"
-                              checked={safeMode}
-                              onChange={(e) => setSafeMode(e.target.checked)}
-                              aria-describedby="safe-mode-desc"
-                            />
-                            <span>Safe Mode</span>
-                          </label>
-                        </>
-                      )}
-                    <label className="camera-view__control camera-view__control--toggle">
-                      <input
-                        type="checkbox"
-                        checked={stressMode}
-                        onChange={(e) => setStressMode(e.target.checked)}
-                        aria-describedby="stress-mode-desc"
-                      />
-                      <span>Stress Mode (test FPS guard)</span>
-                    </label>
-                    <p id="safe-mode-desc" className="camera-view__control-hint">
-                      Limits effect strength so it stays comfortable.
-                    </p>
-                    <p id="stress-mode-desc" className="camera-view__control-hint">
-                      Simulates load to trigger resolution scale-down when FPS &lt; 30.
-                    </p>
-                  </div>
-                </div>
-              </details>
+              <EffectControls
+                profile={profile}
+                intensity={intensity}
+                safeMode={safeMode}
+                stressMode={stressMode}
+                reducedMotion={reducedMotion}
+                audioEnabled={audioEnabled}
+                controlValues={controlValues}
+                onIntensityChange={setIntensity}
+                onSafeModeChange={setSafeMode}
+                onStressModeChange={setStressMode}
+                onReducedMotionChange={setReducedMotion}
+                onAudioEnabledChange={setAudioEnabled}
+                onControlValuesChange={setControlValues}
+              />
             )}
 
             {import.meta.env.DEV && (
               <div className="ie-panelSection" role="group" aria-label="Debug (development only)">
                 <label className="ie-toggle">
-                  <input type="checkbox" checked={debugOverlay} onChange={(e) => setDebugOverlay(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    aria-label="Debug overlay (dev)"
+                    checked={debugOverlay}
+                    onChange={(e) => setDebugOverlay(e.target.checked)}
+                  />
                   <span>Debug overlay (dev)</span>
                 </label>
                 {debugOverlay && (
@@ -958,11 +946,18 @@ export function CameraView() {
                     lastError={errorMessage ?? audioError ?? micError}
                     getAudioMetrics={() => audioEngineControlRef.current?.getMetrics?.()}
                     getVideoMetrics={() => videoMetricsRef.current ?? undefined}
+                    getAudioDebugState={getAudioDebugState}
+                    getAppliedClamps={getAppliedClamps}
                     couplingStrength={couplingStrength}
                     maxFeedback={maxFeedback}
                     micSensitivity={micSensitivity}
                     micGate={micGate}
                   />
+                )}
+                {debugOverlay && activeVideoNodeIds.length > 0 && (
+                  <p className="ie-hint" role="status">
+                    Active video nodes: {activeVideoNodeIds.join(', ')}
+                  </p>
                 )}
               </div>
             )}

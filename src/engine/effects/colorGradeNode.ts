@@ -6,6 +6,7 @@
 import * as THREE from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
+  applyUvParams,
   clamp,
   getGlobalClampNumber,
   getSafeModeClampNumber,
@@ -29,7 +30,7 @@ uniform float u_saturation;
 uniform float u_brightness;
 varying vec2 vUv;
 
-float luminance(vec3 c) {
+float ieLuma(vec3 c) {
   return dot(c, vec3(0.2126, 0.7152, 0.0722));
 }
 
@@ -41,7 +42,7 @@ void main() {
   color.rgb = (color.rgb - 0.5) * (1.0 + u_contrast) + 0.5;
 
   // Saturation: blend towards luminance.
-  float l = luminance(color.rgb);
+  float l = ieLuma(color.rgb);
   vec3 gray = vec3(l);
   // u_saturation is additive: negative desaturates, positive saturates.
   color.rgb = mix(gray, color.rgb, 1.0 + u_saturation);
@@ -79,12 +80,7 @@ export class ColorGradeNode implements VideoNode {
     this.material.uniforms.u_contrast.value = contrast
     this.material.uniforms.u_saturation.value = saturation
     this.material.uniforms.u_brightness.value = brightness
-    if (params.uvScale) {
-      this.material.uniforms.u_uvScale.value.set(params.uvScale[0], params.uvScale[1])
-    }
-    if (params.uvOffset) {
-      this.material.uniforms.u_uvOffset.value.set(params.uvOffset[0], params.uvOffset[1])
-    }
+    applyUvParams(this.material, params)
   }
 
   getMaterial(inputTexture: THREE.Texture): THREE.Material {
@@ -113,4 +109,3 @@ export class ColorGradeNode implements VideoNode {
     this.material = null
   }
 }
-

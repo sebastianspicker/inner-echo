@@ -23,6 +23,7 @@
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-1);
   backdrop-filter: blur(10px);
+  transition: opacity 0.5s ease, filter 0.5s ease;
 }
 
 .ie-brand {
@@ -94,6 +95,7 @@
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
   padding: 10px 12px;
+  min-height: 44px;
   font-size: 13px;
   letter-spacing: 0.02em;
   transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
@@ -223,9 +225,21 @@
 .ie-panel {
   border-radius: var(--r-lg);
   border: 1px solid var(--border);
-  background: color-mix(in oklab, var(--surface-2) 90%, transparent);
+  background: color-mix(in oklab, var(--bg) 60%, transparent);
   box-shadow: var(--shadow-1);
   overflow: hidden;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: opacity 0.5s ease, filter 0.5s ease;
+}
+
+/* Immersive Mode Support */
+.ie-shell--idle .ie-header,
+.ie-shell--idle .ie-panel {
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(4px);
+  transition: opacity 2.5s ease, filter 2.5s ease;
 }
 
 .ie-panelScroll {
@@ -302,13 +316,16 @@
   .ie-layout {
     grid-template-columns: 1fr;
   }
+
   .ie-headerRight {
     align-items: flex-start;
   }
+
   .ie-statusRow,
   .ie-actions {
     justify-content: flex-start;
   }
+
   .ie-panelScroll {
     max-height: none;
   }

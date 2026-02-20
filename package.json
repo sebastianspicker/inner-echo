@@ -8,6 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "test": "vitest run",
+    "test:e2e": "npm run test:e2e:ui && npm run test:e2e:cross-browser",
+    "test:e2e:ui": "node tests/e2e/ui-debug.e2e.mjs",
+    "test:e2e:cross-browser": "node tests/e2e/cross-browser-smoke.e2e.mjs",
     "preview": "vite preview",
     "docs:gen": "tsx scripts/gen-docs.ts",
     "conditions:validate": "tsx scripts/conditions-validate.ts",
@@ -17,7 +20,9 @@
     "nodes:report": "tsx scripts/nodes-report.ts",
     "references:audit": "tsx scripts/references-audit.ts",
     "runtime:matrix": "tsx scripts/runtime-matrix.ts",
-    "verify": "npm run build && npm test && npm run conditions:validate && npm run composer:validate && npm run evidence:verify"
+    "debug:inspect": "npm run lint && npm test && npm run verify:contracts && tsx scripts/debug-inspect.ts",
+    "verify:contracts": "tsx scripts/verify-contracts.ts",
+    "verify": "npm run build && npm test && npm run conditions:validate && npm run composer:validate && npm run evidence:verify && npm run verify:contracts"
   },
   "dependencies": {
     "dompurify": "^3.3.1",
