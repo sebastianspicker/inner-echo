@@ -61,6 +61,8 @@ const SCALE_CHANGE_COOLDOWN_MS = 900
 
 function toNodeName(value: unknown): string {
   if (!value || typeof value !== 'object') return 'unknown'
+  const explicitName = (value as { nodeName?: string }).nodeName
+  if (explicitName) return explicitName
   const ctor = (value as { constructor?: { name?: string } }).constructor?.name
   if (!ctor) return 'unknown'
   return ctor
@@ -148,101 +150,120 @@ export function startWebGLOverlayLoop(
   callbacks?: WebGLOverlayCallbacks
 ): WebGLOverlayControl | null {
   const startupDisposers: Array<() => void> = []
+  let renderer: THREE.WebGLRenderer | null = null
+  let videoTexture: THREE.VideoTexture | null = null
+  let videoPassthroughMaterial: THREE.Material | null = null
+  let initialMeshMaterial: THREE.Material | null = null
+  let geometry: THREE.PlaneGeometry | null = null
+  let gl: WebGLRenderingContext | null = null
+  let metricsTracker: ReturnType<typeof createVideoMetricsTracker> | null = null
+  let chainRTs: THREE.WebGLRenderTarget[] = []
+  const temporalPingPong: {
+    rtA: THREE.WebGLRenderTarget
+    rtB: THREE.WebGLRenderTarget
+    writeIndex: number
+    firstFrame: boolean
+  }[] = []
+  let finalBlitMaterial: THREE.MeshBasicMaterial | null = null
+  let rafId: number | null = null
+  let stopped = false
+  let cleanedUp = false
+  let consecutiveGlErrors = 0
+  const currentParams: VideoPipelineParams = {
+    intensity: 0.5,
+    safeMode: false,
+    controlValues: {},
+    stressMode: false,
+    safetyContext: undefined,
+  }
+
+  const usePassthrough = nodes.length === 0
+
+  function setParams(params: VideoPipelineParams): void {
+    currentParams.intensity = params.intensity ?? currentParams.intensity
+    currentParams.safeMode = params.safeMode ?? currentParams.safeMode
+    currentParams.controlValues = params.controlValues ?? currentParams.controlValues
+    currentParams.stressMode = params.stressMode ?? currentParams.stressMode
+    currentParams.safetyContext = params.safetyContext ?? currentParams.safetyContext
+  }
+
+  function cleanupResources(): void {
+    if (cleanedUp) return
+    cleanedUp = true
+    try {
+      if (gl) {
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
+      }
+    } catch { /* ignore */ }
+
+    metricsTracker?.dispose()
+    if (!usePassthrough) {
+      nodes.forEach((node) => node.dispose())
+      chainRTs.forEach((rt) => rt.dispose())
+      chainRTs = []
+      temporalPingPong.forEach((pp) => {
+        pp.rtA.dispose()
+        pp.rtB.dispose()
+      })
+      temporalPingPong.length = 0
+      finalBlitMaterial?.dispose()
+      finalBlitMaterial = null
+      videoPassthroughMaterial?.dispose()
+      if (initialMeshMaterial && initialMeshMaterial !== videoPassthroughMaterial) {
+        initialMeshMaterial.dispose()
+      }
+    } else {
+      initialMeshMaterial?.dispose()
+    }
+    videoTexture?.dispose()
+    geometry?.dispose()
+    renderer?.dispose()
+
+    for (let i = startupDisposers.length - 1; i >= 0; i--) {
+      try { startupDisposers[i]() } catch { /* ignore */ }
+    }
+    startupDisposers.length = 0
+  }
+
   try {
-    const renderer = new THREE.WebGLRenderer({
+    renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: false,
       alpha: false,
       powerPreference: 'default',
     })
-    startupDisposers.push(() => renderer.dispose())
+    startupDisposers.push(() => renderer?.dispose())
 
     const scene = new THREE.Scene()
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
     camera.position.z = 0
 
-    const videoTexture = new THREE.VideoTexture(video)
+    videoTexture = new THREE.VideoTexture(video)
     videoTexture.minFilter = THREE.LinearFilter
     videoTexture.magFilter = THREE.LinearFilter
     videoTexture.colorSpace = THREE.SRGBColorSpace
-    startupDisposers.push(() => videoTexture.dispose())
+    startupDisposers.push(() => videoTexture?.dispose())
 
-    const usePassthrough = nodes.length === 0
-    const videoPassthroughMaterial = createPassthroughMaterial(videoTexture)
-    const initialMeshMaterial: THREE.Material = usePassthrough
+    videoPassthroughMaterial = createPassthroughMaterial(videoTexture)
+    initialMeshMaterial = usePassthrough
       ? videoPassthroughMaterial
       : new THREE.MeshBasicMaterial({ color: 0x000000, depthWrite: false })
     if (initialMeshMaterial !== videoPassthroughMaterial) {
-      startupDisposers.push(() => initialMeshMaterial.dispose())
-      startupDisposers.push(() => videoPassthroughMaterial.dispose())
+      startupDisposers.push(() => initialMeshMaterial?.dispose())
+      startupDisposers.push(() => videoPassthroughMaterial?.dispose())
     } else {
-      startupDisposers.push(() => initialMeshMaterial.dispose())
+      startupDisposers.push(() => initialMeshMaterial?.dispose())
     }
-    const geometry = getQuadGeometry()
-    startupDisposers.push(() => geometry.dispose())
+    geometry = getQuadGeometry()
+    startupDisposers.push(() => geometry?.dispose())
     const mesh = new THREE.Mesh(geometry, initialMeshMaterial)
     scene.add(mesh)
-    const gl = renderer.getContext()
 
-    let rafId: number | null = null
-    let stopped = false
-    let cleanedUp = false
+    metricsTracker = createVideoMetricsTracker({ size: 64, everyN: 2, attack: 0.2, release: 0.4 })
+    gl = renderer.getContext()
+
     let lastTime = performance.now()
-    let consecutiveGlErrors = 0
-    const metricsTracker = createVideoMetricsTracker({ size: 64, everyN: 2, attack: 0.2, release: 0.4 })
-
-    const currentParams: VideoPipelineParams = {
-      intensity: 0.5,
-      safeMode: false,
-      controlValues: {},
-      stressMode: false,
-      safetyContext: undefined,
-    }
-
-    function setParams(params: VideoPipelineParams): void {
-      currentParams.intensity = params.intensity ?? currentParams.intensity
-      currentParams.safeMode = params.safeMode ?? currentParams.safeMode
-      currentParams.controlValues = params.controlValues ?? currentParams.controlValues
-      currentParams.stressMode = params.stressMode ?? currentParams.stressMode
-      currentParams.safetyContext = params.safetyContext ?? currentParams.safetyContext
-    }
-
-    function cleanupResources(): void {
-      if (cleanedUp) return
-      cleanedUp = true
-      // Reset unpack flags before disposing. When a renderer is recreated on the same canvas/context,
-      // stale pixelStore state can leak into Three.js init texture uploads and emit WebGL warnings.
-      try {
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
-      } catch {
-        // Ignore lost-context / teardown-time errors.
-      }
-      metricsTracker.dispose()
-      if (!usePassthrough) {
-        nodes.forEach((node) => node.dispose())
-        chainRTs.forEach((rt) => rt.dispose())
-        chainRTs = []
-        temporalPingPong.forEach((pp) => {
-          pp.rtA.dispose()
-          pp.rtB.dispose()
-        })
-        temporalPingPong.length = 0
-        finalBlitMaterial?.dispose()
-        finalBlitMaterial = null
-        videoPassthroughMaterial.dispose()
-        if (initialMeshMaterial !== videoPassthroughMaterial) {
-          initialMeshMaterial.dispose()
-        }
-      } else {
-        initialMeshMaterial.dispose()
-      }
-      videoTexture.dispose()
-      geometry.dispose()
-      renderer.dispose()
-      startupDisposers.length = 0
-    }
-
     function stopInternal(): void {
       if (stopped) return
       stopped = true
@@ -254,6 +275,7 @@ export function startWebGLOverlayLoop(
     }
 
     function hasRepeatedGlErrors(): boolean {
+      if (!gl) return false
       let hadError = false
       let err = gl.getError()
       while (err !== gl.NO_ERROR) {
@@ -406,6 +428,7 @@ export function startWebGLOverlayLoop(
     }
 
     function setSize(): void {
+      if (!renderer || !container) return
       const w = container.clientWidth
       const h = container.clientHeight
       if (w <= 0 || h <= 0) return
@@ -477,11 +500,12 @@ export function startWebGLOverlayLoop(
         lastScaleChangeMs = now
         if (!usePassthrough && lastW > 0 && lastH > 0) allocRTs(lastW, lastH)
       }
+      if (!diagnostics) return
       diagnostics.fps = avgFps
       diagnostics.frameTimeMs = delta * 1000
       diagnostics.renderScale = RENDER_SCALES[renderScaleIndex]
 
-      if (!video || !canvas || !container) {
+      if (!video || !canvas || !container || !renderer) {
         rafId = requestAnimationFrame(loop)
         return
       }
@@ -490,6 +514,7 @@ export function startWebGLOverlayLoop(
 
       // Compute metrics from the *previous* rendered frame (canvas contents) so we can feed video→audio coupling
       // without readPixels stalls. This is an approximation but stable at low-res.
+      if (!metricsTracker) return
       const videoMetrics = metricsTracker.stepFromCanvas(canvas, delta)
       reactiveOptions?.onVideoMetrics?.(videoMetrics)
 
@@ -498,9 +523,9 @@ export function startWebGLOverlayLoop(
       const ch = container.clientHeight
 
       if (videoReady) {
-        if (typeof (videoTexture as THREE.VideoTexture & { update?: () => void }).update === 'function') {
+        if (videoTexture && typeof (videoTexture as THREE.VideoTexture & { update?: () => void }).update === 'function') {
           (videoTexture as THREE.VideoTexture & { update: () => void }).update()
-        } else {
+        } else if (videoTexture) {
           videoTexture.needsUpdate = true
         }
         const vw = video.videoWidth
@@ -543,10 +568,10 @@ export function startWebGLOverlayLoop(
         // baseParams.controlValues already points at mergedControlValues
 
         if (usePassthrough) {
-          renderer.setRenderTarget(null)
-          renderer.render(scene, camera)
+          renderer!.setRenderTarget(null)
+          renderer!.render(scene, camera)
         } else if (chainRTs.length === nodes.length + 1) {
-          renderQuad(renderer, scene, camera, videoPassthroughMaterial, chainRTs[0])
+          renderQuad(renderer!, scene, camera, videoPassthroughMaterial!, chainRTs[0])
           let inputTex: THREE.Texture = chainRTs[0].texture
           let temporalIdx = 0
 
@@ -562,27 +587,27 @@ export function startWebGLOverlayLoop(
               const prevTex = pp.firstFrame ? inputTex : (pp.writeIndex === 0 ? pp.rtB : pp.rtA).texture
               const writeRT = pp.writeIndex === 0 ? pp.rtA : pp.rtB
               const mat = node.getMaterial(inputTex, prevTex) as THREE.Material
-              renderQuad(renderer, scene, camera, mat, writeRT)
+              renderQuad(renderer!, scene, camera, mat, writeRT)
               if (pp.firstFrame) pp.firstFrame = false
               pp.writeIndex = 1 - pp.writeIndex
               inputTex = writeRT.texture
               temporalIdx++
             } else {
               const mat = node.getMaterial(inputTex) as THREE.Material
-              renderQuad(renderer, scene, camera, mat, chainRTs[i + 1])
+              renderQuad(renderer!, scene, camera, mat, chainRTs[i + 1])
               inputTex = chainRTs[i + 1].texture
             }
           }
 
-          if (finalBlitMaterial) {
+          if (finalBlitMaterial && renderer) {
             finalBlitMaterial.map = inputTex as THREE.Texture
             finalBlitMaterial.needsUpdate = true
-            renderer.setRenderTarget(null)
-            renderer.clear()
-            renderQuad(renderer, scene, camera, finalBlitMaterial, null)
+            renderer!.setRenderTarget(null)
+            renderer!.clear()
+            renderQuad(renderer!, scene, camera, finalBlitMaterial, null)
           }
         }
-      } else {
+      } else if (renderer) {
         renderer.setRenderTarget(null)
         renderer.clear()
       }
@@ -601,23 +626,19 @@ export function startWebGLOverlayLoop(
         stopInternal()
       },
       setParams,
-      getDiagnostics: () => ({
-        ...diagnostics,
-        resourceCounts: { ...diagnostics.resourceCounts },
-        activeVideoNodes: diagnostics.activeVideoNodes.slice(),
-      }),
+      getDiagnostics: () => {
+        return {
+          ...diagnostics,
+          resourceCounts: { ...diagnostics.resourceCounts },
+          activeVideoNodes: diagnostics.activeVideoNodes.slice(),
+        }
+      },
     }
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err))
     console.error('WebGL pipeline startup failed', error)
     callbacks?.onFatalRuntimeError?.(error)
-    for (let i = startupDisposers.length - 1; i >= 0; i--) {
-      try {
-        startupDisposers[i]()
-      } catch {
-        // ignore cleanup errors
-      }
-    }
+    cleanupResources()
     return null
   }
 }

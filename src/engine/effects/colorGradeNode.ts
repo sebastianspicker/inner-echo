@@ -55,6 +55,7 @@ void main() {
 `
 
 export class ColorGradeNode implements VideoNode {
+  readonly nodeName = 'color_grade'
   private material: THREE.ShaderMaterial | null = null
 
   setParams(params: VideoNodeParams): void {

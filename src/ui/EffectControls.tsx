@@ -111,6 +111,7 @@ export function EffectControls({
                                         type="range"
                                         min={0}
                                         max={100}
+                                        step={1}
                                         value={Math.round(intensity * 100)}
                                         onChange={(e) => {
                                             const n = Number(e.target.value)

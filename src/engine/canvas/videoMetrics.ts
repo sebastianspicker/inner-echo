@@ -15,14 +15,7 @@ export interface VideoMetricsTracker {
   dispose(): void
 }
 
-import { clamp01 } from '../../utils/numeric'
-
-function smoothStep(current: number, target: number, dt: number, attack: number, release: number): number {
-  const tau = target > current ? attack : release
-  if (tau <= 0) return target
-  const t = 1 - Math.exp(-dt / tau)
-  return current + (target - current) * t
-}
+import { clamp01, smoothStep } from '../../utils/numeric'
 
 export function createVideoMetricsTracker(options?: {
   /** downsample size in pixels (square) */

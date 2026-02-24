@@ -1,5 +1,12 @@
 import type { Profile, VideoStackNodeDef, AudioStackConfig, AnalyserToParamDef } from '../conditions/schema'
-import type { ComposerSettings, SelectedDimension, SelectedPreset } from './types'
+import type {
+  ComposerSettings,
+  SelectedDimension,
+  SelectedPreset,
+  MotifDef,
+  DimensionSignalMappingEntry,
+  ExperienceDimensionDef,
+} from './types'
 import { clamp01 } from './types'
 import { getInteractionGain } from './interactionMatrix'
 import {
@@ -41,29 +48,8 @@ export type ComposeResult = {
   report: ComposeReport
 }
 
-export type MotifDef = {
-  node: string
-  params_hint?: Record<string, unknown>
-}
-
-export type DimensionSignalMappingEntry = {
-  evidence_strength?: string
-  rationale_doc?: string
-  video_motifs?: MotifDef[]
-  audio_motifs?: MotifDef[]
-  safety?: {
-    warnings?: string[]
-    clamps?: Record<string, unknown>
-    reduced_motion?: { disable_nodes?: string[] }
-  }
-}
-
-export type ExperienceDimensionDef = {
-  id: string
-  label?: string
-  evidence_strength?: string
-  rationale_doc?: string
-}
+// Re-export types for backward compatibility
+export type { MotifDef, DimensionSignalMappingEntry, ExperienceDimensionDef }
 
 export type ComposeSources = {
   loadPresetProfile: (profileId: string) => Promise<Profile | null>
@@ -118,14 +104,22 @@ export async function composeEffectiveProfileCore(
     warnings: [],
   }
 
-  const cleanedPresets = (presets ?? [])
-    .map((p) => ({ profileId: String(p.profileId ?? '').trim(), weight: clamp01(p.weight) }))
-    .filter((p) => p.profileId && p.weight > 0)
+  const cleanedPresets = (Array.isArray(presets) ? presets : [])
+    .filter((p) => p && typeof p === 'object' && 'profileId' in p)
+    .map((p) => ({
+      profileId: String(p.profileId ?? '').trim(),
+      weight: clamp01(typeof p.weight === 'number' ? p.weight : 0)
+    }))
+    .filter((p) => p.profileId && p.profileId !== 'undefined' && p.weight > 0)
     .sort((a, b) => a.profileId.localeCompare(b.profileId))
 
-  const cleanedDims = (dimensions ?? [])
-    .map((d) => ({ dimensionId: String(d.dimensionId ?? '').trim(), weight: clamp01(d.weight) }))
-    .filter((d) => d.dimensionId && d.weight > 0)
+  const cleanedDims = (Array.isArray(dimensions) ? dimensions : [])
+    .filter((d) => d && typeof d === 'object' && 'dimensionId' in d)
+    .map((d) => ({
+      dimensionId: String(d.dimensionId ?? '').trim(),
+      weight: clamp01(typeof d.weight === 'number' ? d.weight : 0)
+    }))
+    .filter((d) => d.dimensionId && d.dimensionId !== 'undefined' && d.weight > 0)
     .sort((a, b) => a.dimensionId.localeCompare(b.dimensionId))
 
   // Optional nonlinear interactions: conservative amplification of co-selected dimensions.

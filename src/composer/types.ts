@@ -6,6 +6,63 @@ import type {
   VideoStackNodeDef,
 } from '../conditions/schema'
 
+// ============================================================================
+// Shared Type Definitions (consolidated from multiple files)
+// ============================================================================
+
+/**
+ * Motif definition - maps to a video or audio node with optional parameter hints.
+ * Used in dimension-to-signal mapping to describe which effects implement a dimension.
+ */
+export type MotifDef = {
+  node: string
+  params_hint?: Record<string, unknown>
+}
+
+/**
+ * Evidence strength levels for experience dimensions.
+ */
+export type EvidenceStrength = 'high' | 'medium' | 'low' | 'hypothesis' | string
+
+/**
+ * Experience dimension definition from the conditions catalog.
+ * Represents a single symptom/experience dimension that can be composed.
+ */
+export type ExperienceDimensionDef = {
+  id: string
+  label: string
+  description: string
+  safety?: string[]
+  evidence_strength?: EvidenceStrength
+  rationale_doc?: string
+  motif_summary?: {
+    video_nodes?: string[]
+    audio_nodes?: string[]
+  }
+}
+
+/**
+ * Dimension-to-signal mapping entry.
+ * Describes how an experience dimension maps to video/audio motifs.
+ */
+export type DimensionSignalMappingEntry = {
+  evidence_strength?: string
+  rationale_doc?: string
+  notes?: string
+  safety?: {
+    warnings?: string[]
+    clamps?: Record<string, unknown>
+    reduced_motion?: { disable_nodes?: string[]; note?: string }
+  }
+  video_motifs?: MotifDef[]
+  audio_motifs?: MotifDef[]
+  avoid?: Record<string, unknown>
+}
+
+// ============================================================================
+// Composer Types
+// ============================================================================
+
 export type ComposerMode = 'preset' | 'multimorbid' | 'symptom'
 
 export type SelectedPreset = {

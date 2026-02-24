@@ -143,7 +143,7 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
                     e.preventDefault()
                     props.onNavigate(resolved)
                   } else {
-                    // For non-evidence links, open in a new tab for clarity.
+                    // For non-evidence links, open in a new tab for clarity and security.
                     a.setAttribute('target', '_blank')
                     a.setAttribute('rel', 'noreferrer noopener')
                   }

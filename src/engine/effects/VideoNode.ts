@@ -40,6 +40,11 @@ export interface VideoNodeParams {
  */
 export interface VideoNode {
   /**
+   * Optional explicit identifier for the node (prevents issues with minification).
+   */
+  readonly nodeName?: string
+
+  /**
    * When true, pipeline allocates two RenderTargets (ping-pong) and passes previous frame as second arg.
    */
   readonly needsPreviousFrame?: boolean

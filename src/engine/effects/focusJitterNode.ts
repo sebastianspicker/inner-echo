@@ -18,6 +18,7 @@ function lerp(a: number, b: number, t: number): number {
 }
 
 export class FocusJitterNode implements VideoNode {
+  readonly nodeName = 'focus_jitter'
   private material: THREE.ShaderMaterial | null = null
   private t = 0
   private nextSampleIn = 0

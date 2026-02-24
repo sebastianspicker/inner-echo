@@ -39,6 +39,7 @@ void main() {
 `
 
 export class HazeNode implements VideoNode {
+  readonly nodeName = 'haze'
   private material: THREE.ShaderMaterial | null = null
 
   setParams(params: VideoNodeParams): void {

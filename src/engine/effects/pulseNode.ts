@@ -43,6 +43,7 @@ void main() {
 `
 
 export class PulseNode implements VideoNode {
+  readonly nodeName = 'pulse'
   private material: THREE.ShaderMaterial | null = null
   private phase = 0
   private smoothed = 0.5

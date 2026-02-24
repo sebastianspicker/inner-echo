@@ -17,27 +17,11 @@ import {
   resolveAnalyserTarget,
   type ResolvedMapping,
 } from './analyserToParamsResolver'
-import { clamp } from '../../utils/numeric'
+import { clamp, smoothStep } from '../../utils/numeric'
 
 interface MappingState extends ResolvedMapping {
   smoothed: number
   kind: 'video' | 'audio'
-}
-
-/**
- * Apply exponential smoothing: smoothed += (target - smoothed) * (1 - exp(-dt / tau)).
- */
-function smoothStep(
-  current: number,
-  target: number,
-  dt: number,
-  attack: number,
-  release: number
-): number {
-  const tau = target > current ? attack : release
-  if (tau <= 0) return target
-  const t = 1 - Math.exp(-dt / tau)
-  return current + (target - current) * t
 }
 
 function normalizeClampRange(
@@ -126,15 +110,12 @@ export function createReactiveDriver(
     })
   }
 
-  const videoOut: Record<string, number> = {}
-  const audioOut: Record<string, number> = {}
-  function clear(obj: Record<string, number>): void {
-    for (const k of Object.keys(obj)) delete obj[k]
-  }
+  let videoOut: Record<string, number> = {}
+  let audioOut: Record<string, number> = {}
 
   function stepAll(delta: number, rms: number): { video: Record<string, number>; audio: Record<string, number> } {
-    clear(videoOut)
-    clear(audioOut)
+    videoOut = {}
+    audioOut = {}
     for (const m of mappings) {
       const raw = rms * m.scale + m.offset
       const smoothed = smoothStep(m.smoothed, raw, delta, m.attack, m.release)

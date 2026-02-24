@@ -5,8 +5,21 @@
 
 import type { VideoStackNodeDef } from '../conditions/schema'
 import { clamp01 } from './types'
+import type { MotifDef } from './types'
+
+// Re-export MotifDef for backward compatibility
+export type { MotifDef }
 
 export type SourceId = string
+
+/**
+ * Security: Prevents Prototype Pollution by filtering out forbidden keys.
+ */
+export function isSafeKey(key: string): boolean {
+  if (typeof key !== 'string') return false
+  const k = key.trim()
+  return k !== '__proto__' && k !== 'constructor' && k !== 'prototype'
+}
 
 export function mergeNumericWeighted(items: Array<{ w: number; v: number }>): number {
   let sumW = 0
@@ -27,7 +40,10 @@ export function mergeParams(
 ): Record<string, unknown> {
   const keys = new Set<string>()
   for (const c of contribs) {
-    for (const k of Object.keys(c.params ?? {})) keys.add(k)
+    const p = c.params ?? {}
+    for (const k of Object.keys(p)) {
+      if (isSafeKey(k)) keys.add(k)
+    }
   }
   const out: Record<string, unknown> = {}
   const orderedKeys = Array.from(keys).sort((a, b) => a.localeCompare(b))
@@ -136,7 +152,10 @@ export function mergeSafeModeClamps(
   const out: Record<string, unknown> = {}
   const keys = new Set<string>()
   for (const it of items) {
-    for (const k of Object.keys(it ?? {})) keys.add(k)
+    const obj = it ?? {}
+    for (const k of Object.keys(obj)) {
+      if (isSafeKey(k)) keys.add(k)
+    }
   }
   for (const k of Array.from(keys).sort((a, b) => a.localeCompare(b))) {
     const vs = items.map((it) => it?.[k]).filter((v) => v != null)
@@ -179,11 +198,6 @@ function pickFromHint(hint: unknown, strength01: number): unknown {
     if (s.includes('white')) return 'white'
   }
   return undefined
-}
-
-export type MotifDef = {
-  node: string
-  params_hint?: Record<string, unknown>
 }
 
 export function motifsToVideoDefs(motifs: MotifDef[] | undefined): VideoStackNodeDef[] {

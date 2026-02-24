@@ -9,21 +9,10 @@
 // in the source file without modifying `src/conditions/**` (read-only contract).
 import rawText from '../conditions/experience-dimensions.json?raw'
 import { parseFirstJsonObject } from '../utils/jsonObjectParser'
+import type { EvidenceStrength, ExperienceDimensionDef } from './types'
 
-export type EvidenceStrength = 'high' | 'medium' | 'low' | 'hypothesis' | string
-
-export type ExperienceDimensionDef = {
-  id: string
-  label: string
-  description: string
-  safety?: string[]
-  evidence_strength?: EvidenceStrength
-  rationale_doc?: string
-  motif_summary?: {
-    video_nodes?: string[]
-    audio_nodes?: string[]
-  }
-}
+// Re-export types for backward compatibility
+export type { EvidenceStrength, ExperienceDimensionDef }
 
 export type ExperienceDimensionsFile = {
   version?: string

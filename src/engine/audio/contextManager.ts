@@ -23,6 +23,9 @@ let sharedContext: AudioContext | null = null
 // Tracks if an asynchronous close operation is currently in progress.
 let closingPromise: Promise<void> | null = null
 
+// Tracks if an asynchronous start operation is currently in progress.
+let startingPromise: Promise<AudioContextStatus> | null = null
+
 // A set of callback functions (listeners) that want to be updated when the audio status changes.
 const listeners = new Set<AudioContextManagerListener>()
 
@@ -42,34 +45,55 @@ function notify(status: AudioContextStatus, error?: string): void {
  * @returns A promise resolving to the new `AudioContextStatus`.
  */
 export async function startAudioContext(): Promise<AudioContextStatus> {
-  notify('starting')
-  try {
-    // Wait for any pending shutdown to finish before trying to start again.
-    if (closingPromise) {
-      await closingPromise
-    }
+  if (startingPromise) return startingPromise
 
-    // If we don't have a context yet, or the previous one was permenantly closed, create a new one.
-    if (!sharedContext || sharedContext.state === 'closed') {
-      // Fallback for older WebKit browsers (like Safari)
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
-      sharedContext = new AudioCtx()
+  startingPromise = (async () => {
+    notify('starting')
+    try {
+      // Wait for any pending shutdown to finish before trying to start again.
+      if (closingPromise) {
+        await closingPromise
+      }
+
+      // If we don't have a context yet, or the previous one was permenantly closed, create a new one.
+      if (!sharedContext || sharedContext.state === 'closed') {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+        sharedContext = new AudioCtx()
+      }
+
+      if (sharedContext.state !== 'running') {
+        await sharedContext.resume()
+      }
+
+      if (sharedContext.state === 'running') {
+        notify('on')
+        return 'on'
+      }
+
+      let errorType = 'Failed to start audio.'
+      if (sharedContext.state === 'suspended') {
+        errorType = 'Audio blocked by browser. Please interact with the page (click or tap) and try again.'
+      }
+
+      const message = `${errorType} (Current state: ${sharedContext.state})`
+      notify('error', message)
+      return 'error'
+    } catch (e) {
+      const rawMessage = e instanceof Error ? e.message : String(e)
+      let userMessage = `Audio initialization failed: ${rawMessage}`
+
+      if (rawMessage.includes('hardware') || rawMessage.includes('device')) {
+        userMessage = 'Audio hardware error. Please check your output device and try again.'
+      }
+
+      notify('error', userMessage)
+      return 'error'
+    } finally {
+      startingPromise = null
     }
-    if (sharedContext.state !== 'running') {
-      await sharedContext.resume()
-    }
-    if (sharedContext.state === 'running') {
-      notify('on')
-      return 'on'
-    }
-    const message = `AudioContext is not running (state: ${sharedContext.state})`
-    notify('error', message)
-    return 'error'
-  } catch (e) {
-    const message = e instanceof Error ? e.message : String(e)
-    notify('error', message)
-    return 'error'
-  }
+  })()
+
+  return startingPromise
 }
 
 /**

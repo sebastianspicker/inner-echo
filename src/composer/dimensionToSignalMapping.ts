@@ -8,25 +8,10 @@
 
 import rawText from '../conditions/dimension-to-signal-mapping.json?raw'
 import { parseFirstJsonObject } from '../utils/jsonObjectParser'
+import type { MotifDef, DimensionSignalMappingEntry } from './types'
 
-export type MotifDef = {
-  node: string
-  params_hint?: Record<string, unknown>
-}
-
-export type DimensionSignalMappingEntry = {
-  evidence_strength?: string
-  rationale_doc?: string
-  notes?: string
-  safety?: {
-    warnings?: string[]
-    clamps?: Record<string, unknown>
-    reduced_motion?: { disable_nodes?: string[]; note?: string }
-  }
-  video_motifs?: MotifDef[]
-  audio_motifs?: MotifDef[]
-  avoid?: Record<string, unknown>
-}
+// Re-export types for backward compatibility
+export type { MotifDef, DimensionSignalMappingEntry }
 
 export type DimensionToSignalMappingFile = {
   version?: string

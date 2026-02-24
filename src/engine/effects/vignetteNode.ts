@@ -34,6 +34,7 @@ void main() {
 `
 
 export class VignetteNode implements VideoNode {
+  readonly nodeName = 'vignette'
   private material: THREE.ShaderMaterial | null = null
 
   setParams(params: VideoNodeParams): void {

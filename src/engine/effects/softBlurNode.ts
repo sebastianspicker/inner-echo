@@ -43,6 +43,7 @@ void main() {
 `
 
 export class SoftBlurNode implements VideoNode {
+  readonly nodeName = 'soft_blur'
   private material: THREE.ShaderMaterial | null = null
 
   setParams(params: VideoNodeParams): void {

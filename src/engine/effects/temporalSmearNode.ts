@@ -43,6 +43,7 @@ void main() {
 `
 
 export class TemporalSmearNode implements VideoNode {
+  readonly nodeName = 'temporal_smear'
   readonly needsPreviousFrame = true
   private material: THREE.ShaderMaterial | null = null
   private time = 0

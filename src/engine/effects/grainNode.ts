@@ -47,6 +47,7 @@ void main() {
 `
 
 export class GrainNode implements VideoNode {
+  readonly nodeName = 'grain'
   private material: THREE.ShaderMaterial | null = null
   private time = 0
 

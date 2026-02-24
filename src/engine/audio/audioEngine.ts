@@ -22,7 +22,7 @@ import {
   rampGain,
 } from './audioGraphBuilder'
 import type { AudioMetrics } from './types'
-import { clamp01 } from '../../utils/numeric'
+import { clamp01, smoothStep } from '../../utils/numeric'
 
 const RAMP_MS = 25
 const ANALYSER_FFT_SIZE = 2048
@@ -52,16 +52,6 @@ function computeRms(analyser: AnalyserNode, scratchTime: Float32Array): { rms: n
     sum += x * x
   }
   return { rms: data.length > 0 ? Math.sqrt(sum / data.length) : 0, scratch: data }
-}
-
-/**
- * Apply exponential smoothing: smoothed += (target - smoothed) * (1 - exp(-dt / tau)).
- */
-function smoothStep(current: number, target: number, dt: number, attack: number, release: number): number {
-  const tau = target > current ? attack : release
-  if (tau <= 0) return target
-  const t = 1 - Math.exp(-dt / tau)
-  return current + (target - current) * t
 }
 
 /**

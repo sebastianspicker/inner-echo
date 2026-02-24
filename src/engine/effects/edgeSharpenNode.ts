@@ -43,6 +43,7 @@ void main() {
 `
 
 export class EdgeSharpenNode implements VideoNode {
+  readonly nodeName = 'edge_sharpen'
   private material: THREE.ShaderMaterial | null = null
 
   setParams(params: VideoNodeParams): void {

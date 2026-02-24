@@ -43,6 +43,7 @@ void main() {
 `
 
 export class FeedbackLoopNode implements VideoNode {
+  readonly nodeName = 'feedback_loop'
   readonly needsPreviousFrame = true
   private material: THREE.ShaderMaterial | null = null
   private time = 0

@@ -44,6 +44,7 @@ void main() {
 `
 
 export class GridHintNode implements VideoNode {
+  readonly nodeName = 'grid_hint'
   private material: THREE.ShaderMaterial | null = null
 
   setParams(params: VideoNodeParams): void {

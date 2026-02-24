@@ -30,7 +30,7 @@ import {
 import type { Profile, VideoStackNodeDef } from './schema'
 import { getReducedMotionDisableNodes } from './normalize'
 
-const NODE_FACTORY: Record<string, () => VideoNode> = {
+export const NODE_FACTORY: Record<string, () => VideoNode> = {
   grain: () => new GrainNode(),
   vignette: () => new VignetteNode(),
   chromatic_aberration: () => new ChromaticAberrationNode(),
@@ -56,7 +56,7 @@ export interface BuildVideoNodesOptions {
   reducedMotion?: boolean
 }
 
-function shouldSkipNode(
+export function shouldSkipNode(
   nodeTypeRaw: unknown,
   reducedMotion: boolean,
   reducedMotionDisable: Set<string>

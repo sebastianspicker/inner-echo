@@ -67,6 +67,7 @@ function easeInOut(t: number): number {
 }
 
 export class InterferenceNode implements VideoNode {
+  readonly nodeName = 'interference'
   private material: THREE.ShaderMaterial | null = null
   private time = 0
   private burstTimer = 0

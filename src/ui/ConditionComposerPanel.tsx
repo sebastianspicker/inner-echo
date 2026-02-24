@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { z } from 'zod'
 import { ConditionPicker } from './ConditionPicker'
 import type { CatalogEntry } from '../conditions/schema'
 import { loadProfile } from '../conditions/loader'
@@ -8,6 +9,30 @@ import type { EvidenceDocPath } from '../evidence/docs'
 import { copyTextToClipboard } from './clipboard'
 import { useAsyncEffect } from './hooks/useAsyncEffect'
 import './ConditionComposerPanel.css'
+
+const selectedPresetSchema = z.object({
+  profileId: z.string(),
+  weight: z.number()
+})
+
+const selectedDimensionSchema = z.object({
+  dimensionId: z.string(),
+  weight: z.number()
+})
+
+const customPresetDataSchema = z.object({
+  mode: z.enum(['preset', 'multimorbid', 'symptom']).optional(),
+  conditionId: z.string().optional(),
+  presets: z.array(selectedPresetSchema).optional(),
+  dimensions: z.array(selectedDimensionSchema).optional(),
+  intensity: z.number().optional(),
+  safeMode: z.boolean().optional(),
+  reducedMotion: z.boolean().optional(),
+  audioEnabled: z.boolean().optional(),
+  couplingStrength: z.number().optional(),
+  maxFeedback: z.number().optional(),
+  interactionAmount: z.number().optional(),
+}).passthrough()
 
 export type QuickPreset = 'calm' | 'balanced' | 'intense'
 
@@ -145,7 +170,13 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
     try {
       const str = localStorage.getItem('ie_custom_preset')
       if (!str) return
-      const data = JSON.parse(str)
+      const raw = JSON.parse(str)
+      const parsed = customPresetDataSchema.safeParse(raw)
+      if (!parsed.success) {
+        console.warn('[composer] Local preset validation failed', parsed.error.flatten())
+        return
+      }
+      const data = parsed.data
       if (data.mode) props.onModeChange(data.mode)
       if (data.conditionId) props.onConditionIdChange(data.conditionId)
       if (data.presets) props.onPresetsChange(data.presets)

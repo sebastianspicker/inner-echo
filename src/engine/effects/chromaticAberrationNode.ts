@@ -41,6 +41,7 @@ void main() {
 `
 
 export class ChromaticAberrationNode implements VideoNode {
+  readonly nodeName = 'chromatic_aberration'
   private material: THREE.ShaderMaterial | null = null
 
   setParams(params: VideoNodeParams): void {

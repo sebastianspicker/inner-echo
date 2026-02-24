@@ -15,7 +15,10 @@ export function renderEvidenceMarkdown(md: string): { html: string; title: strin
     USE_PROFILES: { html: true },
   })
 
-  const titleMatch = md.match(/^#\s+(.+)\s*$/m)
+  // Secure title extraction: read the first line and check if it starts with #.
+  // Avoids ReDoS by not using a complex trailing-whitespace greedy regex.
+  const firstLine = md.split('\n')[0] || ''
+  const titleMatch = firstLine.trim().match(/^#\s+(.+)$/)
   const title = titleMatch?.[1]?.trim() ?? 'Evidence'
   return { html, title }
 }
