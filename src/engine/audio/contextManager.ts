@@ -13,6 +13,7 @@
  */
 
 import type { AudioContextStatus } from './types'
+import { logger } from '../../utils/logger'
 
 export type AudioContextManagerListener = (status: AudioContextStatus, error?: string) => void
 
@@ -114,7 +115,7 @@ export async function suspendAudioContext(): Promise<void> {
       await sharedContext.suspend()
       notify('off')
     } catch (err) {
-      console.warn('suspendAudioContext failed', err)
+      logger.warn('suspendAudioContext failed', err)
       notify('off')
     }
   } else {

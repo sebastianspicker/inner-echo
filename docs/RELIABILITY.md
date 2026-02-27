@@ -61,8 +61,25 @@ This document describes supported browsers, fallback behaviour, and mitigations 
 
 Before release, verify:
 
+- [ ] **Full gate run**: Run `npm run check` (verify + cross-browser e2e) and require a green result before tagging.
 - [ ] **Browser matrix**: Smoke-test start/stop, condition switch, audio and mic in Chrome, Firefox, and Safari (or your supported set).
 - [ ] **WebGL fallback**: With WebGL disabled (or on a device without WebGL), confirm 2D passthrough and no crash.
 - [ ] **Stop Everything**: After starting camera and optional audio/mic, click “Stop Everything”; confirm no orphan streams, loops, or console errors.
 - [ ] **ErrorBoundary**: Use the dev “Throw test error” button (or trigger a crash); confirm “Reset App” appears and reload works.
 - [ ] **Security & privacy**: See [SECURITY.md](./SECURITY.md) for the full release checklist (CSP, permissions, logging).
+
+## RC workflow (single-pass)
+
+Use this flow for release candidates:
+
+1. Run local parity gate: `npm run release:rc:local` (exactly `npm run check`).
+2. Generate and verify README screenshots:
+   - `npm run screenshots:readme`
+   - `npm run screenshots:verify`
+3. Push branch and require green CI jobs:
+   - `validate`
+   - `release_candidate_gate`
+4. After CI is green, run manual smoke checks (camera start/stop, mode switches, evidence drawer, mobile layout).
+5. Tag candidate with `v0.1.0-rc.N` (for example `v0.1.0-rc.1`), increasing `N` for each retry.
+
+Detailed one-pass runbook: [RELEASE_RC.md](./RELEASE_RC.md).

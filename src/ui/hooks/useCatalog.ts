@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { loadCatalog } from '../../conditions/loader'
 import type { CatalogEntry } from '../../conditions/schema'
 import { useAsyncEffect } from './useAsyncEffect'
+import { logger } from '../../utils/logger'
 
 /**
  * Loads the condition catalog once on mount. Returns catalog list or null while loading / on error.
@@ -15,7 +16,7 @@ export function useCatalog(): CatalogEntry[] | null {
       if (c?.conditions?.length) setCatalog(c.conditions)
     },
     [],
-    { onError: (err) => console.error('loadCatalog failed', err) }
+    { onError: (err) => logger.error('loadCatalog failed', err) }
   )
   return catalog
 }

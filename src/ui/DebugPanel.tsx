@@ -11,6 +11,7 @@ import type { AudioMetrics } from '../engine/audio'
 import type { AudioEngineDebugState } from '../engine/audio'
 import type { VideoMetrics } from '../engine/canvas'
 import { copyTextToClipboard } from './clipboard'
+import { logger } from '../utils/logger'
 import './DebugPanel.css'
 
 export interface AppliedClampSnapshot {
@@ -104,6 +105,26 @@ function formatDiagnosticsText(props: DebugPanelProps, overlay: OverlayDiagnosti
   return lines.join('\n')
 }
 
+function formatDiagnosticsJson(props: DebugPanelProps, overlay: OverlayDiagnostics | undefined): string {
+  return JSON.stringify(
+    {
+      ts: new Date().toISOString(),
+      overlay,
+      audioStatus: props.audioStatus,
+      micStatus: props.micStatus,
+      couplingStrength: props.couplingStrength,
+      maxFeedback: props.maxFeedback,
+      lastError: props.lastError ?? null,
+      audioMetrics: props.getAudioMetrics?.() ?? null,
+      videoMetrics: props.getVideoMetrics?.() ?? null,
+      audioDebug: props.getAudioDebugState?.() ?? null,
+      appliedClamps: props.getAppliedClamps?.() ?? null,
+    },
+    null,
+    2
+  )
+}
+
 export function DebugPanel(props: DebugPanelProps) {
   const {
     getOverlayDiagnostics,
@@ -163,7 +184,24 @@ export function DebugPanel(props: DebugPanelProps) {
         }, 2000)
       })
       .catch((err) => {
-        if (import.meta.env?.DEV) console.warn('Debug copy failed', err)
+        if (import.meta.env?.DEV) logger.warn('Debug copy failed', err)
+      })
+  }, [props, overlay])
+
+  const handleCopyJson = useCallback(() => {
+    const text = formatDiagnosticsJson(props, overlay)
+    copyTextToClipboard(text)
+      .then((ok) => {
+        if (!ok) return
+        setCopied(true)
+        if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current)
+        copiedTimeoutRef.current = setTimeout(() => {
+          setCopied(false)
+          copiedTimeoutRef.current = null
+        }, 2000)
+      })
+      .catch((err) => {
+        if (import.meta.env?.DEV) logger.warn('Debug JSON copy failed', err)
       })
   }, [props, overlay])
 
@@ -271,6 +309,14 @@ export function DebugPanel(props: DebugPanelProps) {
           aria-label="Copy diagnostics to clipboard"
         >
           {copied ? 'Copied' : 'Copy diagnostics'}
+        </button>
+        <button
+          type="button"
+          onClick={handleCopyJson}
+          className="debug-panel__btn"
+          aria-label="Copy diagnostics as JSON"
+        >
+          Copy JSON
         </button>
         <button
           type="button"

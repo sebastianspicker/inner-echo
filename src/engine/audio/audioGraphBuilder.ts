@@ -20,6 +20,7 @@ import {
   createFlutter,
   createPulseTone,
 } from './fx'
+import { logger } from '../../utils/logger'
 
 const RAMP_DURATION = 0.02
 
@@ -70,13 +71,13 @@ export function buildAudioChain(
   for (const def of list) {
     const nodeType = (def as AudioStackNodeDef).node
     if (!nodeType || typeof nodeType !== 'string') {
-      console.warn('[audio] chain entry missing "node":', def)
+      logger.warn('[audio] chain entry missing "node":', def)
       continue
     }
     const nodeKey = nodeType.toLowerCase()
     const factory = FX_FACTORY[nodeKey]
     if (!factory) {
-      console.warn('[audio] Unknown audio node type, skipping:', nodeType)
+      logger.warn('[audio] Unknown audio node type, skipping:', nodeType)
       continue
     }
     const params = (def as AudioStackNodeDef).params ?? {}

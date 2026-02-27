@@ -11,7 +11,20 @@
  * Critical security note: Never log sensitive user data, media streams, or device IDs.
  */
 
-const isDev = import.meta.env.DEV
+const isDev = (() => {
+  const viteEnv = (import.meta as ImportMeta & { env?: { DEV?: boolean } }).env
+  if (typeof viteEnv?.DEV === 'boolean') {
+    return viteEnv.DEV
+  }
+
+  const nodeEnv = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env
+    ?.NODE_ENV
+  if (typeof nodeEnv === 'string') {
+    return nodeEnv !== 'production'
+  }
+
+  return false
+})()
 
 export const logger = {
   debug(...args: unknown[]): void {

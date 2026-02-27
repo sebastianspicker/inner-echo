@@ -1,4 +1,6 @@
-# inner-echo — Principal Engineer Review (2026-02-15)
+# inner-echo — Principal Engineer Review (Historical, 2026-02-15)
+
+> Historical review context. Use current quality gates (`npm run check`) and canonical docs for present-state decisions.
 
 Scope: runtime app (WebGL/WebAudio), composition layer, evidence UX, scripts/tests/DX.
 
@@ -224,4 +226,3 @@ Date: 2026-02-15
 3. **Performance**
    - Reuse typed arrays in audio analysis to avoid per-frame allocations.
    - Reuse output objects in reactive and coupling engines.
-

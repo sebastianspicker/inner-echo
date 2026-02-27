@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react'
-import { z } from 'zod'
+import { useEffect, useMemo, useState } from 'react'
 import { ConditionPicker } from './ConditionPicker'
 import type { CatalogEntry } from '../conditions/schema'
 import { loadProfile } from '../conditions/loader'
@@ -8,31 +7,21 @@ import { getExperienceDimensions, type ExperienceDimensionDef } from '../compose
 import type { EvidenceDocPath } from '../evidence/docs'
 import { copyTextToClipboard } from './clipboard'
 import { useAsyncEffect } from './hooks/useAsyncEffect'
+import { logger } from '../utils/logger'
+import {
+  DEFAULT_PRESET_NAME,
+  LEGACY_PRESET_STORAGE_KEY,
+  PRESET_LIBRARY_STORAGE_KEY,
+  applyPresetPayload,
+  createPresetPayload,
+  createPresetSnapshot,
+  migrateLegacyPresetPayload,
+  parsePresetLibrary,
+  type PresetPayload,
+  type PresetSnapshotV2,
+} from './presetSnapshot'
+import { decodePresetFromHash, encodePresetToHash } from './presetShare'
 import './ConditionComposerPanel.css'
-
-const selectedPresetSchema = z.object({
-  profileId: z.string(),
-  weight: z.number()
-})
-
-const selectedDimensionSchema = z.object({
-  dimensionId: z.string(),
-  weight: z.number()
-})
-
-const customPresetDataSchema = z.object({
-  mode: z.enum(['preset', 'multimorbid', 'symptom']).optional(),
-  conditionId: z.string().optional(),
-  presets: z.array(selectedPresetSchema).optional(),
-  dimensions: z.array(selectedDimensionSchema).optional(),
-  intensity: z.number().optional(),
-  safeMode: z.boolean().optional(),
-  reducedMotion: z.boolean().optional(),
-  audioEnabled: z.boolean().optional(),
-  couplingStrength: z.number().optional(),
-  maxFeedback: z.number().optional(),
-  interactionAmount: z.number().optional(),
-}).passthrough()
 
 export type QuickPreset = 'calm' | 'balanced' | 'intense'
 
@@ -87,12 +76,59 @@ export interface ConditionComposerPanelProps {
 import { strengthBadge, EvidenceButton } from './composerUtils'
 import { MultimorbidPresetList } from './MultimorbidPresetList'
 import { SymptomDimensionList } from './SymptomDimensionList'
+import { LabeledSlider } from './controls/LabeledSlider'
+import { ToggleField } from './controls/ToggleField'
+
+function nowIso(): string {
+  return new Date().toISOString()
+}
+
+function toCurrentPayload(props: ConditionComposerPanelProps): PresetPayload {
+  return createPresetPayload({
+    mode: props.mode,
+    conditionId: props.conditionId,
+    presets: props.presets,
+    dimensions: props.dimensions,
+    intensity: props.intensity,
+    safeMode: props.safeMode,
+    reducedMotion: props.reducedMotion,
+    audioEnabled: props.audioEnabled,
+    couplingStrength: props.couplingStrength,
+    maxFeedback: props.maxFeedback,
+    interactionAmount: props.interactionAmount,
+  })
+}
+
+function applyPayload(props: ConditionComposerPanelProps, payload: PresetPayload): void {
+  applyPresetPayload(payload, {
+    onModeChange: props.onModeChange,
+    onConditionIdChange: props.onConditionIdChange,
+    onPresetsChange: props.onPresetsChange,
+    onDimensionsChange: props.onDimensionsChange,
+    onIntensityChange: props.onIntensityChange,
+    onSafeModeChange: props.onSafeModeChange,
+    onReducedMotionChange: props.onReducedMotionChange,
+    onAudioEnabledChange: props.onAudioEnabledChange,
+    onCouplingStrengthChange: props.onCouplingStrengthChange,
+    onMaxFeedbackChange: props.onMaxFeedbackChange,
+    onInteractionAmountChange: props.onInteractionAmountChange,
+  })
+}
 
 export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   const dims = useMemo(() => getExperienceDimensions(), [])
   const dimById = useMemo(() => new Map<string, ExperienceDimensionDef>(dims.map((d) => [d.id, d])), [dims])
 
   const [conditionStrength, setConditionStrength] = useState<Record<string, string>>({})
+  const [conditionQuery, setConditionQuery] = useState('')
+  const [dimensionQuery, setDimensionQuery] = useState('')
+
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'deleted' | 'loaded'>('idle')
+
+  const [library, setLibrary] = useState<PresetSnapshotV2[]>([])
+  const [selectedLibraryId, setSelectedLibraryId] = useState('')
+  const [presetName, setPresetName] = useState(DEFAULT_PRESET_NAME)
 
   const catalogIds = useMemo(() => (props.catalog ?? []).map((c) => c.id), [props.catalog])
   useAsyncEffect(
@@ -116,79 +152,149 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
       setConditionStrength(out)
     },
     [catalogIds, dimById],
-    { onError: (err) => console.error('ConditionComposerPanel loadProfile failed', err) }
+    { onError: (err) => logger.error('ConditionComposerPanel loadProfile failed', err) }
   )
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(PRESET_LIBRARY_STORAGE_KEY)
+      const parsed = raw ? parsePresetLibrary(raw) : []
+
+      if (parsed.length === 0) {
+        const legacyRaw = localStorage.getItem(LEGACY_PRESET_STORAGE_KEY)
+        if (legacyRaw) {
+          const legacyParsed = migrateLegacyPresetPayload(JSON.parse(legacyRaw))
+          if (legacyParsed) {
+            const migrated = createPresetSnapshot(legacyParsed, {
+              name: 'Migrated Preset',
+              createdAt: nowIso(),
+            })
+            const next = [migrated]
+            localStorage.setItem(PRESET_LIBRARY_STORAGE_KEY, JSON.stringify(next))
+            setLibrary(next)
+            setSelectedLibraryId(migrated.id)
+            setPresetName(migrated.name)
+            return
+          }
+        }
+      }
+
+      setLibrary(parsed)
+      if (parsed.length > 0) {
+        setSelectedLibraryId(parsed[0].id)
+        setPresetName(parsed[0].name)
+      }
+    } catch (err) {
+      logger.warn('ConditionComposerPanel preset library load failed', err)
+      setLibrary([])
+    }
+  }, [])
+
+  useEffect(() => {
+    const decoded = decodePresetFromHash(window.location.hash)
+    if (!decoded.ok) return
+    applyPayload(props, decoded.payload)
+    setSaveStatus('loaded')
+    setTimeout(() => setSaveStatus('idle'), 2000)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const filteredCatalog = useMemo(() => {
+    const q = conditionQuery.trim().toLowerCase()
+    const all = props.catalog ?? []
+    if (!q) return all
+    const next = all.filter((entry) => {
+      const hay = `${entry.label} ${entry.description ?? ''} ${entry.id} ${(entry.tags ?? []).join(' ')}`.toLowerCase()
+      return hay.includes(q)
+    })
+    if (!next.some((entry) => entry.id === props.conditionId)) {
+      const selected = all.find((entry) => entry.id === props.conditionId)
+      if (selected) next.unshift(selected)
+    }
+    return next
+  }, [props.catalog, conditionQuery, props.conditionId])
+
+  const filteredDims = useMemo(() => {
+    const q = dimensionQuery.trim().toLowerCase()
+    if (!q) return dims
+    return dims.filter((entry) => {
+      const hay = `${entry.label} ${entry.description ?? ''} ${entry.id}`.toLowerCase()
+      return hay.includes(q)
+    })
+  }, [dims, dimensionQuery])
+
+  const currentPayload = toCurrentPayload(props)
   const presetIds = new Set(props.presets.map((p) => p.profileId))
   const dimIds = new Set(props.dimensions.map((d) => d.dimensionId))
   const currentConditionBadge = strengthBadge(conditionStrength[props.conditionId])
 
-  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle')
+  const selectedSnapshot = useMemo(
+    () => library.find((item) => item.id === selectedLibraryId) ?? null,
+    [library, selectedLibraryId]
+  )
+
+  const persistLibrary = (next: PresetSnapshotV2[]): void => {
+    setLibrary(next)
+    localStorage.setItem(PRESET_LIBRARY_STORAGE_KEY, JSON.stringify(next))
+  }
 
   const handleCopy = async () => {
-    const data = {
-      mode: props.mode,
-      conditionId: props.conditionId,
-      presets: props.presets,
-      dimensions: props.dimensions,
-      intensity: props.intensity,
-      safeMode: props.safeMode,
-      reducedMotion: props.reducedMotion,
-      audioEnabled: props.audioEnabled,
-      couplingStrength: props.couplingStrength,
-      maxFeedback: props.maxFeedback,
-      interactionAmount: props.interactionAmount
-    }
-    const ok = await copyTextToClipboard(JSON.stringify(data, null, 2))
+    const ok = await copyTextToClipboard(JSON.stringify(currentPayload, null, 2))
+    setCopyStatus(ok ? 'copied' : 'failed')
+    setTimeout(() => setCopyStatus('idle'), 2000)
+  }
+
+  const handleCopyShareLink = async () => {
+    const hash = encodePresetToHash(currentPayload)
+    const url = `${window.location.origin}${window.location.pathname}${hash}`
+    const ok = await copyTextToClipboard(url)
     setCopyStatus(ok ? 'copied' : 'failed')
     setTimeout(() => setCopyStatus('idle'), 2000)
   }
 
   const handleSaveLocal = () => {
-    const data = {
-      mode: props.mode,
-      conditionId: props.conditionId,
-      presets: props.presets,
-      dimensions: props.dimensions,
-      intensity: props.intensity,
-      safeMode: props.safeMode,
-      reducedMotion: props.reducedMotion,
-      audioEnabled: props.audioEnabled,
-      couplingStrength: props.couplingStrength,
-      maxFeedback: props.maxFeedback,
-      interactionAmount: props.interactionAmount
+    const snapshot = createPresetSnapshot(currentPayload, {
+      name: presetName,
+      createdAt: nowIso(),
+    })
+    const next = [snapshot, ...library.filter((item) => item.id !== snapshot.id)].slice(0, 30)
+    persistLibrary(next)
+    setSelectedLibraryId(snapshot.id)
+    setPresetName(snapshot.name)
+    setSaveStatus('saved')
+    setTimeout(() => setSaveStatus('idle'), 2000)
+  }
+
+  const handleOverwriteLocal = () => {
+    if (!selectedSnapshot) return
+    const updated: PresetSnapshotV2 = {
+      ...selectedSnapshot,
+      name: presetName.trim() || selectedSnapshot.name,
+      createdAt: nowIso(),
+      payload: currentPayload,
     }
-    try {
-      localStorage.setItem('ie_custom_preset', JSON.stringify(data))
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 2000)
-    } catch (e) { }
+    const next = library.map((item) => (item.id === selectedSnapshot.id ? updated : item))
+    persistLibrary(next)
+    setSaveStatus('saved')
+    setTimeout(() => setSaveStatus('idle'), 2000)
+  }
+
+  const handleDeleteLocal = () => {
+    if (!selectedSnapshot) return
+    const next = library.filter((item) => item.id !== selectedSnapshot.id)
+    persistLibrary(next)
+    const newSelected = next[0]
+    setSelectedLibraryId(newSelected?.id ?? '')
+    setPresetName(newSelected?.name ?? DEFAULT_PRESET_NAME)
+    setSaveStatus('deleted')
+    setTimeout(() => setSaveStatus('idle'), 2000)
   }
 
   const handleLoadLocal = () => {
-    try {
-      const str = localStorage.getItem('ie_custom_preset')
-      if (!str) return
-      const raw = JSON.parse(str)
-      const parsed = customPresetDataSchema.safeParse(raw)
-      if (!parsed.success) {
-        console.warn('[composer] Local preset validation failed', parsed.error.flatten())
-        return
-      }
-      const data = parsed.data
-      if (data.mode) props.onModeChange(data.mode)
-      if (data.conditionId) props.onConditionIdChange(data.conditionId)
-      if (data.presets) props.onPresetsChange(data.presets)
-      if (data.dimensions) props.onDimensionsChange(data.dimensions)
-      if (typeof data.intensity === 'number') props.onIntensityChange(data.intensity)
-      if (typeof data.safeMode === 'boolean') props.onSafeModeChange(data.safeMode)
-      if (typeof data.reducedMotion === 'boolean') props.onReducedMotionChange(data.reducedMotion)
-      if (typeof data.audioEnabled === 'boolean') props.onAudioEnabledChange(data.audioEnabled)
-      if (typeof data.couplingStrength === 'number') props.onCouplingStrengthChange(data.couplingStrength)
-      if (typeof data.maxFeedback === 'number') props.onMaxFeedbackChange(data.maxFeedback)
-      if (typeof data.interactionAmount === 'number') props.onInteractionAmountChange(data.interactionAmount)
-    } catch (e) { }
+    if (!selectedSnapshot) return
+    applyPayload(props, selectedSnapshot.payload)
+    setSaveStatus('loaded')
+    setTimeout(() => setSaveStatus('idle'), 2000)
   }
 
   return (
@@ -228,67 +334,37 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
           <button type="button" onClick={() => props.onQuickPreset('intense')}>
             Intense
           </button>
-          <div style={{ width: '1px', background: 'var(--border)', margin: '0 8px' }} />
-          <button type="button" onClick={handleSaveLocal}>
-            {saveStatus === 'saved' ? 'Saved!' : 'Save Local'}
-          </button>
-          <button type="button" onClick={handleLoadLocal}>
-            Load Local
-          </button>
-          <button type="button" onClick={handleCopy}>
-            {copyStatus === 'copied' ? 'Copied JSON!' : copyStatus === 'failed' ? 'Failed' : 'Copy JSON'}
-          </button>
         </div>
       </div>
 
       <div className="composer__global" role="group" aria-label="Global settings">
-        <label className="composer__slider">
-          <span>Intensity</span>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={props.intensity}
-            onChange={(e) => {
-              const n = Number(e.target.value)
-              if (!Number.isFinite(n)) return
-              props.onIntensityChange(n)
-            }}
-          />
-          <span className="composer__slider-val">{Math.round(props.intensity * 100)}%</span>
-        </label>
+        <LabeledSlider
+          label="Intensity"
+          min={0}
+          max={1}
+          step={0.01}
+          value={props.intensity}
+          onChange={props.onIntensityChange}
+        />
 
         <div className="composer__toggles">
-          <label className="composer__toggle">
-            <input type="checkbox" checked={props.safeMode} onChange={(e) => props.onSafeModeChange(e.target.checked)} />
-            <span>Safe Mode</span>
-          </label>
-          <label className="composer__toggle">
-            <input
-              type="checkbox"
-              checked={props.reducedMotion}
-              onChange={(e) => props.onReducedMotionChange(e.target.checked)}
-            />
-            <span>Reduced Motion</span>
-          </label>
-          <label className="composer__toggle">
-            <input
-              type="checkbox"
-              checked={props.audioEnabled}
-              onChange={(e) => props.onAudioEnabledChange(e.target.checked)}
-            />
-            <span>Audio (optional)</span>
-          </label>
-          <label className="composer__toggle">
-            <input
-              type="checkbox"
-              checked={props.micEnabled}
-              disabled={props.micRequiresAudio}
-              onChange={(e) => props.onMicEnabledChange(e.target.checked)}
-            />
-            <span>Microphone (optional)</span>
-          </label>
+          <ToggleField label="Safe Mode" checked={props.safeMode} onChange={props.onSafeModeChange} />
+          <ToggleField
+            label="Reduced Motion"
+            checked={props.reducedMotion}
+            onChange={props.onReducedMotionChange}
+          />
+          <ToggleField
+            label="Audio (optional)"
+            checked={props.audioEnabled}
+            onChange={props.onAudioEnabledChange}
+          />
+          <ToggleField
+            label="Microphone (optional)"
+            checked={props.micEnabled}
+            disabled={props.micRequiresAudio}
+            onChange={props.onMicEnabledChange}
+          />
         </div>
         {props.micRequiresAudio && (
           <p className="composer__micPrereqHint">
@@ -300,54 +376,30 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
       <details className="composer__advanced">
         <summary>Advanced coupling</summary>
         <div className="composer__advanced-body">
-          <label className="composer__slider">
-            <span>Coupling Strength</span>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={props.couplingStrength}
-              onChange={(e) => {
-                const n = Number(e.target.value)
-                if (!Number.isFinite(n)) return
-                props.onCouplingStrengthChange(n)
-              }}
-            />
-            <span className="composer__slider-val">{Math.round(props.couplingStrength * 100)}%</span>
-          </label>
-          <label className="composer__slider">
-            <span>Max Feedback</span>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={props.maxFeedback}
-              onChange={(e) => {
-                const n = Number(e.target.value)
-                if (!Number.isFinite(n)) return
-                props.onMaxFeedbackChange(n)
-              }}
-            />
-            <span className="composer__slider-val">{Math.round(props.maxFeedback * 100)}%</span>
-          </label>
-          <label className="composer__slider">
-            <span>Interaction Amount</span>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={props.interactionAmount}
-              onChange={(e) => {
-                const n = Number(e.target.value)
-                if (!Number.isFinite(n)) return
-                props.onInteractionAmountChange(n)
-              }}
-            />
-            <span className="composer__slider-val">{Math.round(props.interactionAmount * 100)}%</span>
-          </label>
+          <LabeledSlider
+            label="Coupling Strength"
+            min={0}
+            max={1}
+            step={0.01}
+            value={props.couplingStrength}
+            onChange={props.onCouplingStrengthChange}
+          />
+          <LabeledSlider
+            label="Max Feedback"
+            min={0}
+            max={1}
+            step={0.01}
+            value={props.maxFeedback}
+            onChange={props.onMaxFeedbackChange}
+          />
+          <LabeledSlider
+            label="Interaction Amount"
+            min={0}
+            max={1}
+            step={0.01}
+            value={props.interactionAmount}
+            onChange={props.onInteractionAmountChange}
+          />
           <p className="composer__hint">
             Coupling and interactions are a perceptual metaphor. Safety clamps always apply; strobe-like modulation is not
             allowed.
@@ -355,11 +407,91 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
         </div>
       </details>
 
+      <details className="composer__advanced">
+        <summary>Preset Library v2</summary>
+        <div className="composer__advanced-body">
+          <label className="composer__slider">
+            <span>Name</span>
+            <input
+              type="text"
+              value={presetName}
+              onChange={(e) => setPresetName(e.target.value)}
+              aria-label="Preset name"
+            />
+            <span className="composer__slider-val">v2</span>
+          </label>
+
+          <label className="composer__slider">
+            <span>Saved presets</span>
+            <select
+              value={selectedLibraryId}
+              onChange={(e) => {
+                setSelectedLibraryId(e.target.value)
+                const selected = library.find((item) => item.id === e.target.value)
+                if (selected) setPresetName(selected.name)
+              }}
+              aria-label="Saved presets"
+            >
+              <option value="">(none)</option>
+              {library.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name} — {new Date(item.createdAt).toLocaleString()}
+                </option>
+              ))}
+            </select>
+            <span className="composer__slider-val">{library.length}</span>
+          </label>
+
+          <div className="composer__quick-buttons">
+            <button type="button" onClick={handleSaveLocal}>
+              Save new
+            </button>
+            <button type="button" onClick={handleOverwriteLocal} disabled={!selectedSnapshot}>
+              Overwrite
+            </button>
+            <button type="button" onClick={handleLoadLocal} disabled={!selectedSnapshot}>
+              Load
+            </button>
+            <button type="button" onClick={handleDeleteLocal} disabled={!selectedSnapshot}>
+              Delete
+            </button>
+            <button type="button" onClick={handleCopy}>
+              {copyStatus === 'copied' ? 'Copied JSON!' : copyStatus === 'failed' ? 'Failed' : 'Copy JSON'}
+            </button>
+            <button type="button" onClick={handleCopyShareLink}>
+              Share Link
+            </button>
+          </div>
+
+          {saveStatus !== 'idle' && (
+            <p className="composer__hint" role="status">
+              {saveStatus === 'saved' && 'Preset saved.'}
+              {saveStatus === 'loaded' && 'Preset loaded.'}
+              {saveStatus === 'deleted' && 'Preset deleted.'}
+            </p>
+          )}
+        </div>
+      </details>
+
+      {(props.mode === 'preset' || props.mode === 'multimorbid') && (
+        <label className="composer__slider">
+          <span>Filter</span>
+          <input
+            type="text"
+            value={conditionQuery}
+            placeholder="Search conditions"
+            onChange={(e) => setConditionQuery(e.target.value)}
+            aria-label="Condition search"
+          />
+          <span className="composer__slider-val">{filteredCatalog.length}</span>
+        </label>
+      )}
+
       {props.mode === 'preset' && (
         <div className="composer__section">
           <div className="composer__title">Preset</div>
           <ConditionPicker
-            catalog={props.catalog}
+            catalog={filteredCatalog}
             value={props.conditionId}
             onChange={props.onConditionIdChange}
             aria-label="Condition preset"
@@ -380,7 +512,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
 
       {props.mode === 'multimorbid' && (
         <MultimorbidPresetList
-          catalog={props.catalog ?? []}
+          catalog={filteredCatalog}
           presetIds={presetIds}
           presets={props.presets}
           conditionStrength={conditionStrength}
@@ -390,14 +522,27 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
       )}
 
       {props.mode === 'symptom' && (
-        <SymptomDimensionList
-          dims={dims}
-          dimById={dimById}
-          dimIds={dimIds}
-          dimensions={props.dimensions}
-          onDimensionsChange={props.onDimensionsChange}
-          onOpenEvidence={props.onOpenEvidence}
-        />
+        <>
+          <label className="composer__slider">
+            <span>Filter</span>
+            <input
+              type="text"
+              value={dimensionQuery}
+              placeholder="Search dimensions"
+              onChange={(e) => setDimensionQuery(e.target.value)}
+              aria-label="Dimension search"
+            />
+            <span className="composer__slider-val">{filteredDims.length}</span>
+          </label>
+          <SymptomDimensionList
+            dims={filteredDims}
+            dimById={dimById}
+            dimIds={dimIds}
+            dimensions={props.dimensions}
+            onDimensionsChange={props.onDimensionsChange}
+            onOpenEvidence={props.onOpenEvidence}
+          />
+        </>
       )}
     </section>
   )

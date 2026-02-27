@@ -2,28 +2,11 @@ import { useState, type Dispatch, type SetStateAction } from 'react'
 import { loadProfile } from '../../conditions/loader'
 import { getDefaultControlValues } from '../../conditions/controlTargets'
 import type { Profile } from '../../conditions/schema'
+import { BASELINE_PROFILE } from '../../conditions/fallbackProfiles'
 import { composeEffectiveProfile, type ComposeReport } from '../../composer'
 import type { ComposerMode, SelectedDimension, SelectedPreset } from '../../composer'
 import { useAsyncEffect } from './useAsyncEffect'
-
-const FALLBACK_PROFILE: Profile = {
-  id: 'none',
-  label: 'None (Clean)',
-  summary: 'No overlay. Baseline camera view.',
-  framing: { type: 'baseline' },
-  experience_dimensions: [],
-  safety: {
-    intensity_default: 0,
-    intensity_max: 0,
-    warnings: [],
-    safe_mode_clamps: { max_intensity: 0 },
-  },
-  ui: { controls: [] },
-  video_stack: [],
-  audio_stack: { enabled: false },
-  reactive: { analyser_to_params: [] },
-  references: { dimensions: [] },
-}
+import { logger } from '../../utils/logger'
 
 function mergeControlValuesWithDefaults(
   defaults: Record<string, number | boolean>,
@@ -88,7 +71,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
       try {
         const p = await loadProfile(conditionId)
         if (ctx.cancelled) return
-        const prof = p ?? FALLBACK_PROFILE
+        const prof = p ?? BASELINE_PROFILE
         setProfile(prof)
         setComposeReport(null)
         const defaults = getDefaultControlValues(prof)
@@ -101,17 +84,17 @@ export function useProfileLoad(params: UseProfileLoadParams): {
       } catch (err) {
         if (!ctx.cancelled) {
           setComposeReport(null)
-          setProfile(FALLBACK_PROFILE)
-          setControlValues(getDefaultControlValues(FALLBACK_PROFILE))
+          setProfile(BASELINE_PROFILE)
+          setControlValues(getDefaultControlValues(BASELINE_PROFILE))
           setAudioEnabled(false)
-          console.error('loadProfile failed', err)
+          logger.error('loadProfile failed', err)
         }
       } finally {
         setProfileLoading(false)
       }
     },
     [conditionId, composerMode, setIntensity, setAudioEnabled],
-    { onError: (err) => console.error('loadProfile failed', err) }
+    { onError: (err) => logger.error('loadProfile failed', err) }
   )
 
   useAsyncEffect(
@@ -137,7 +120,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
         const defaults = getDefaultControlValues(res.profile)
         setControlValues((prev) => mergeControlValuesWithDefaults(defaults, prev))
       } catch (err) {
-        if (!ctx.cancelled) console.error('composeEffectiveProfile failed', err)
+        if (!ctx.cancelled) logger.error('composeEffectiveProfile failed', err)
       } finally {
         setProfileLoading(false)
       }
@@ -153,7 +136,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
       interactionAmount,
       intensity,
     ],
-    { onError: (err) => console.error('composeEffectiveProfile failed', err) }
+    { onError: (err) => logger.error('composeEffectiveProfile failed', err) }
   )
 
   return { profile, composeReport, controlValues, setControlValues, isProfileLoading }

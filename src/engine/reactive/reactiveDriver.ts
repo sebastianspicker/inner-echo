@@ -18,6 +18,7 @@ import {
   type ResolvedMapping,
 } from './analyserToParamsResolver'
 import { clamp, smoothStep } from '../../utils/numeric'
+import { logger } from '../../utils/logger'
 
 interface MappingState extends ResolvedMapping {
   smoothed: number
@@ -70,7 +71,7 @@ export function createReactiveDriver(
     if (def.source !== 'rms') continue
     const resolved = resolveAnalyserTarget(def.target, profile, options)
     if (!resolved) {
-      console.warn(
+      logger.warn(
         '[reactive] analyser_to_params: target not found or invalid, skipping:',
         def.target
       )

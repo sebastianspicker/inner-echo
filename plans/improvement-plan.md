@@ -1,4 +1,6 @@
-# Inner Echo - Comprehensive Improvement Plan
+# Inner Echo - Comprehensive Improvement Plan (Historical)
+
+> Historical planning artifact. The current canonical status and migration context are documented in `docs/00_DOC_INVENTORY.md` and `docs/MIGRATION_NOTES.md`.
 
 ## Overview
 

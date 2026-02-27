@@ -1,96 +1,98 @@
-# Changelog — Documentation and evidence alignment
+# Changelog
 
-All documentation is merged to a single evidence-based stand. **Source of truth for evidence:** Scientific/ only.
+## 2026-02-27
 
----
+### Release candidate readiness (`0.1.0-rc.1`)
 
-## 2026-02 — GitHub polish (work-in-progress artifacts removed)
+#### Added
 
-### Removed
+- RC scripts:
+  - `npm run screenshots:capture`
+  - `npm run screenshots:convert`
+  - `npm run screenshots:readme`
+  - `npm run screenshots:verify`
+  - `npm run release:rc:local`
+  - `npm run release:rc:checklist`
+- Deterministic README screenshot pipeline:
+  - `tests/e2e/readme-screenshots.mjs`
+  - `scripts/convert-readme-screenshots.mjs`
+  - `scripts/verify-readme-screenshots.mjs`
+  - `assets/readme/screenshots/manifest.json`
+- Screenshot manifest test:
+  - `tests/screenshotManifest.test.ts`
+- New RC runbook:
+  - `docs/RELEASE_RC.md`
 
-- **docs/PHASE_09_MIC_OPTIONAL_SAFETY.md** — Phase implementation note; behaviour documented in 20_ARCHITECTURE and RELIABILITY.
-- **docs/_archive/** — Temporary archive (2026-02-15 snapshot); folder and contents removed.
-- **.codex/ralph-audit/** — Audit WIP artifacts (progress.txt, prd.json, ralph.sh, etc.); removed from repo.
+#### Changed
+
+- `package.json` version bumped to `0.1.0-rc.1`.
+- CI includes `release_candidate_gate` job for RC parity (`npm run release:rc:local` + `npm run screenshots:verify`).
+- README restructured for RC with curated screenshot tour and explicit screenshot generation policy.
+- `docs/RELIABILITY.md` and `docs/SECURITY.md` now define explicit RC workflow and tagging flow.
+
+#### Known limitations
+
+- Production build may still emit large bundle warnings from Vite.
+- RC tags remain provisional until manual smoke and CI parity are both green.
+
+### Added
+
+- Root `AGENTS.md` restored as canonical contributor/safety guide.
+- New shared fallback profile module: `src/conditions/fallbackProfiles.ts`.
+- New preset snapshot module with versioned payloads: `src/ui/presetSnapshot.ts`.
+- New URL share codec for presets: `src/ui/presetShare.ts`.
+- New reusable control primitives: `src/ui/controls/LabeledSlider.tsx`, `src/ui/controls/ToggleField.tsx`.
+- New hooks for controller boundaries:
+  - `src/ui/hooks/useCameraController.ts`
+  - `src/ui/hooks/useAudioController.ts`
+  - `src/ui/hooks/useOverlayController.ts`
+  - `src/ui/hooks/useImmersiveIdleState.ts`
+- New scripts aliases:
+  - `npm run check`
+  - `npm run clean:local`
+- New regression tests:
+  - `tests/presetSnapshot.test.ts`
+  - `tests/presetShare.test.ts`
+  - `tests/dpdrReactiveTarget.test.ts`
+  - `tests/webglParams.test.ts`
+  - `tests/webglLoop.test.ts`
 
 ### Changed
 
-- **.gitignore** — Added `.codex/` so local audit and WIP artifacts are not committed.
-- **docs/00_DOC_INVENTORY.md**, **docs/CLEANUP_PLAN.md** — Updated to record the above removals.
+- `docs/00_DOC_INVENTORY.md`, `docs/MIGRATION_NOTES.md` rewritten to current canonical state.
+- `src/conditions/profiles/dpdr.json` reactive target fixed (`video.haze.amount`), resolving contract mismatch.
+- `scripts/conditions-validate.ts` now treats unresolved reactive targets as errors (aligned with contract verification).
+- Runtime logging standardized to `src/utils/logger.ts` across loader/graph/reactive/audio/onboarding/debug paths.
+- `ConditionComposerPanel` now includes:
+  - Preset Library v2 (save/load/delete/overwrite)
+  - URL hash import/export sharing
+  - Condition and dimension search/filter
+- `CameraView` now includes keyboard shortcuts (`K`, `E`, `D`) and extracted idle-state/controller helpers.
+- `DebugPanel` now supports structured JSON diagnostics export.
+- `webglPipeline` internals split into dedicated helpers:
+  - `src/engine/canvas/webgl/params.ts`
+  - `src/engine/canvas/webgl/loop.ts`
+  - `src/engine/canvas/webgl/resources.ts`
+  - plus existing `constants.ts`, `diagnostics.ts`, `renderHelpers.ts`.
+- UI controls migrated off legacy `camera-view__*` selectors to unified `ie-*` control primitives in:
+  - `src/ui/AudioMicControls.tsx`
+  - `src/ui/EffectControls.tsx`
+  - `src/ui/CameraView.css`
+- Mobile UX pass:
+  - sticky header actions on small screens
+  - simplified one-column scroll hierarchy in the control panel.
+- Accessibility pass:
+  - stronger `:focus-visible` treatment for interactive controls
+  - `EvidenceDrawer` focus restore + Tab trap + ArrowUp/ArrowDown keyboard navigation in evidence nav.
 
----
+### Removed
 
-## 2026-02-16 — Maintenance (systematic debugging + inspect harness)
+- `docs/AGENTS.md` (duplicate copy under `docs/`).
 
-### Added
+## 2026-02-16
 
-- `npm run debug:inspect` (lint + tests + deterministic inspect harness).
-- `scripts/lib/inspectHarness.ts` and `scripts/debug-inspect.ts`.
-- `reports/inspect.json` output from debug inspect runs.
-- CI step to run debug inspect and upload inspect artifact.
-- Debug docs:
-  - `docs/DEBUG_BASELINE.md`
-  - `docs/INSPECTION_REPORT.md`
-  - `docs/DEBUG_BACKLOG.md`
+- UI/debug hardening and cross-browser e2e coverage updates.
 
-### Fixed
+## 2026-02-15
 
-- Composer clamp regression: `maxFeedback=0` now correctly forces feedback-like params to zero.
-- Added regression coverage for the above safety clamp behavior.
-
-### Improved
-
-- Dev debug telemetry now includes:
-  - frame time
-  - WebGL resource counts
-  - active video/audio nodes
-  - applied clamp snapshot (Safe Mode / Reduced Motion)
-
-## 2026-02-16 — UI debug hardening (Phase C)
-
-### Fixed
-
-- Eliminated WebGL console-noise regression during rapid condition switching by resetting GL unpack state on teardown.
-- Hardened camera disconnect handling with centralized stream interruption logic plus active-track liveness polling.
-
-### Added
-
-- Cross-browser smoke e2e matrix for Chrome/Firefox/WebKit:
-  - `tests/e2e/cross-browser-smoke.e2e.mjs`
-- Dedicated active-camera transition regression for `preset -> multimorbid -> symptom -> preset`:
-  - `tests/e2e/ui-debug.e2e.mjs`
-- Expanded e2e script wiring:
-  - `npm run test:e2e`
-  - `npm run test:e2e:ui`
-  - `npm run test:e2e:cross-browser`
-
-## 2026-02-15 — Documentation merge and cleanup
-
-### Added
-
-- **docs/00_OVERVIEW.md** — Documentation map and conventions; links to canonical docs and Scientific/.
-- **docs/10_PRODUCT.md** — Canonical product doc (merged PRD, MVP, user-story summary).
-- **docs/20_ARCHITECTURE.md** — Canonical architecture (merged ARCHITECTURE + FRONTEND).
-- **docs/30_SAFETY_ETHICS.md** — Canonical safety and ethics; aligned with references and Scientific/.
-- **docs/40_CONDITIONS.md** — Canonical conditions doc; dimensions and evidence links.
-- **docs/00_DOC_INVENTORY.md** — Inventory and classification of doc files (canonical / duplicate / outdated / temp / removed).
-- **docs/MIGRATION_NOTES.md** — Where to find content after the merge; list of removed files.
-
-### Consolidated
-
-- Product: PRD + MVP + USER_STORIES summary → 10_PRODUCT.md. Superseded by 10_PRODUCT for canonical product scope.
-- Architecture: ARCHITECTURE + FRONTEND → 20_ARCHITECTURE.md. 20_ARCHITECTURE is canonical.
-- Safety/ethics: DESIGN (principles, safety, UI tone) + references → 30_SAFETY_ETHICS.md.
-- Conditions: Condition list, dimensions, evidence links → 40_CONDITIONS.md. references/ and Scientific/ are the evidence source.
-
-### Evidence alignment (unchanged from prior work)
-
-- All dimension docs under docs/references/dimensions/ cite Scientific/; Evidence Matrix and EVIDENCE_GAPS updated.
-- Conditions (src/conditions and docs/scientific/src/conditions) aligned with Scientific/; dissociation mapped to derealization + depersonalization + time_dilation.
-
-### Cleanup (completed)
-
-- Root ARCHITECTURE.md replaced with a one-line pointer to docs/20_ARCHITECTURE.md.
-- Redundant and unused files were removed: docs/AGENTS.md (duplicate of root AGENTS.md), PHASE_*.md, design-docs/index.md, PLANS.md, PRODUCT_SENSE.md, QUALITY_SCORE.md, and docs/scientific/docs/ (duplicate of docs/references). The temporary docs/_archive/ folder was used during cleanup and has since been deleted.
-- docs/references/reports/ retained as reference (original deep research); Scientific/ is the canonical evidence source.
-
-See **docs/MIGRATION_NOTES.md** for where to find content and **docs/00_DOC_INVENTORY.md** for classification.
+- Documentation merge into canonical 00/10/20/30/40 structure.

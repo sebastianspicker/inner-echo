@@ -29,6 +29,7 @@ import {
 } from '../engine/effects'
 import type { Profile, VideoStackNodeDef } from './schema'
 import { getReducedMotionDisableNodes } from './normalize'
+import { logger } from '../utils/logger'
 
 export const NODE_FACTORY: Record<string, () => VideoNode> = {
   grain: () => new GrainNode(),
@@ -89,7 +90,7 @@ export function buildVideoNodes(
   for (const def of profile.video_stack) {
     const nodeType = (def as VideoStackNodeDef).node
     if (!nodeType || typeof nodeType !== 'string') {
-      console.warn('[conditions] video_stack entry missing "node":', def)
+      logger.warn('[conditions] video_stack entry missing "node":', def)
       continue
     }
     if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) {
@@ -97,7 +98,7 @@ export function buildVideoNodes(
     }
     const factory = NODE_FACTORY[nodeType]
     if (!factory) {
-      console.warn('[conditions] Unknown video node type, skipping:', nodeType)
+      logger.warn('[conditions] Unknown video node type, skipping:', nodeType)
       continue
     }
     nodes.push(factory())

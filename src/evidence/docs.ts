@@ -4,6 +4,8 @@
  * Loads markdown files bundled with the app (no external navigation required).
  */
 
+import { logger } from '../utils/logger'
+
 export type EvidenceDocPath = `docs/${string}.md`
 
 // Bundle all evidence markdown under docs/references/** plus the audit at docs/REFERENCES_AUDIT.md.
@@ -27,7 +29,7 @@ export async function loadEvidenceDoc(docPath: EvidenceDocPath): Promise<string 
   try {
     return await loader()
   } catch (err) {
-    console.warn('loadEvidenceDoc failed', docPath, err)
+    logger.warn('loadEvidenceDoc failed', docPath, err)
     return null
   }
 }
@@ -44,4 +46,3 @@ export function listEvidenceDocPaths(): EvidenceDocPath[] {
   out.sort((a, b) => a.localeCompare(b))
   return out
 }
-

@@ -5,6 +5,7 @@
  */
 
 import { catalogSchema, profileSchema, type Catalog, type Profile } from './schema'
+import { logger } from '../utils/logger'
 
 // Canonical condition data lives under `src/conditions/**`.
 const loadCatalogModule = () => import('./catalog.json')
@@ -26,12 +27,12 @@ export async function loadCatalog(): Promise<Catalog | null> {
     const raw = mod.default
     const parsed = catalogSchema.safeParse(raw)
     if (!parsed.success) {
-      console.warn('[conditions] Catalog validation failed:', parsed.error.flatten())
+      logger.warn('[conditions] Catalog validation failed:', parsed.error.flatten())
       return null
     }
     return parsed.data
   } catch (e) {
-    console.warn('[conditions] Error loading catalog:', e)
+    logger.warn('[conditions] Error loading catalog:', e)
     return null
   }
 }
@@ -43,26 +44,26 @@ export async function loadCatalog(): Promise<Catalog | null> {
  */
 export async function loadProfile(id: string): Promise<Profile | null> {
   if (!id || id.trim() === '') {
-    console.warn('[conditions] loadProfile: empty id')
+    logger.warn('[conditions] loadProfile: empty id')
     return null
   }
   try {
     const path = getProfilePath(id)
     const loader = profileModules[path]
     if (!loader) {
-      console.warn('[conditions] Profile not found:', id)
+      logger.warn('[conditions] Profile not found:', id)
       return null
     }
     const mod = await loader()
     const data = mod.default
     const parsed = profileSchema.safeParse(data)
     if (!parsed.success) {
-      console.warn('[conditions] Profile validation failed for', id, parsed.error.flatten())
+      logger.warn('[conditions] Profile validation failed for', id, parsed.error.flatten())
       return null
     }
     return parsed.data
   } catch (e) {
-    console.warn('[conditions] Error loading profile:', id, e)
+    logger.warn('[conditions] Error loading profile:', id, e)
     return null
   }
 }

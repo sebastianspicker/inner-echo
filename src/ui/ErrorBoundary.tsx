@@ -13,6 +13,7 @@
  */
 
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { logger } from '../utils/logger'
 
 export interface ErrorBoundaryProps {
   children: ReactNode
@@ -50,8 +51,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     // We only log the error stack to the console in development mode.
     // In production, we avoid exposing raw stack traces to the user.
     if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.error('[inner-echo] ErrorBoundary caught:', error.message, errorInfo.componentStack)
+      logger.error('[inner-echo] ErrorBoundary caught:', error.message, errorInfo.componentStack)
     }
   }
 

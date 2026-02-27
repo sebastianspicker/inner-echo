@@ -7,6 +7,7 @@
 
 import type { Profile } from '../../conditions/schema'
 import { getBuiltNodeIndex } from '../../conditions/graphBuilder'
+import { parseScopedTarget } from '../../utils/targetPath'
 
 const VIDEO_PREFIX = 'video.'
 const AUDIO_PREFIX = 'audio.'
@@ -32,12 +33,9 @@ export function resolveAnalyserTarget(
 ): { kind: 'video' | 'audio'; paramKey: string } | null {
   const t = target.trim().toLowerCase()
   if (t.startsWith(VIDEO_PREFIX)) {
-    const rest = t.slice(VIDEO_PREFIX.length)
-    const dot = rest.indexOf('.')
-    if (dot === -1) return null
-    const nodeId = rest.slice(0, dot)
-    const param = rest.slice(dot + 1)
-    if (!param) return null
+    const parsed = parseScopedTarget(t, 'video')
+    if (!parsed) return null
+    const { nodeId, param } = parsed
     const builtIndex = getBuiltNodeIndex(profile, nodeId, { reducedMotion: options?.reducedMotion })
     if (builtIndex === -1) return null
     return { kind: 'video', paramKey: `${builtIndex}.${param}` }
@@ -45,12 +43,9 @@ export function resolveAnalyserTarget(
 
   if (t.startsWith(AUDIO_PREFIX)) {
     // Resolve by audio_stack.chain index: "audio.<nodeId>.<param>" -> "audio.<chainIndex>.<param>"
-    const rest = t.slice(AUDIO_PREFIX.length)
-    const dot = rest.indexOf('.')
-    if (dot === -1) return null
-    const nodeId = rest.slice(0, dot)
-    const param = rest.slice(dot + 1)
-    if (!param) return null
+    const parsed = parseScopedTarget(t, 'audio')
+    if (!parsed) return null
+    const { nodeId, param } = parsed
     const chain = (profile as { audio_stack?: { chain?: Array<{ id?: string; node: string }> } })
       .audio_stack?.chain ?? []
     const idx = chain.findIndex((n) => ((n.id ?? n.node) ?? '').toLowerCase() === nodeId)

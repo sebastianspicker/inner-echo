@@ -184,7 +184,7 @@
     "analyser_to_params": [
       {
         "source": "rms",
-        "target": "video.grain.amount",
+        "target": "video.haze.amount",
         "scale": 0.15,
         "offset": 0.0,
         "smoothing": {
@@ -220,4 +220,3 @@
     ]
   }
 }
-

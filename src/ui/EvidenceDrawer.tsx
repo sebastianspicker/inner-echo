@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import type { EvidenceDocPath } from '../evidence/docs'
 import { listEvidenceDocPaths, loadEvidenceDoc } from '../evidence/docs'
 import { renderEvidenceMarkdown } from '../evidence/markdown'
@@ -24,6 +25,10 @@ function isIndexLike(p: EvidenceDocPath): boolean {
 
 export function EvidenceDrawer(props: EvidenceDrawerProps) {
   const [state, setState] = useState<DocState>({ status: 'loading' })
+  const backdropRef = useRef<HTMLDivElement | null>(null)
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
+  const navRef = useRef<HTMLElement | null>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   const navItems = useMemo(() => {
     const all = listEvidenceDocPaths()
@@ -82,6 +87,57 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     return () => window.removeEventListener('keydown', onKey)
   }, [props.open, props.onClose])
 
+  useEffect(() => {
+    if (!props.open) return
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const id = window.requestAnimationFrame(() => {
+      closeButtonRef.current?.focus()
+    })
+    return () => {
+      window.cancelAnimationFrame(id)
+      previousFocusRef.current?.focus()
+      previousFocusRef.current = null
+    }
+  }, [props.open])
+
+  useEffect(() => {
+    if (!props.open) return
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      const root = backdropRef.current
+      if (!root) return
+
+      const focusables = Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => el.getAttribute('aria-hidden') !== 'true' && el.tabIndex >= 0)
+
+      if (focusables.length === 0) return
+
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement as HTMLElement | null
+
+      if (e.shiftKey) {
+        if (!active || active === first || !root.contains(active)) {
+          e.preventDefault()
+          last.focus()
+        }
+        return
+      }
+
+      if (active === last || !active || !root.contains(active)) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [props.open])
+
   const handleBackdrop = useCallback(
     (e: React.MouseEvent) => {
       if (e.target === e.currentTarget) props.onClose()
@@ -89,22 +145,59 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     [props]
   )
 
+  const handleNavKeyDown = useCallback((e: ReactKeyboardEvent<HTMLElement>) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+    const root = navRef.current
+    if (!root) return
+    const links = Array.from(root.querySelectorAll<HTMLAnchorElement>('a.evidence-navLink'))
+    if (links.length === 0) return
+
+    e.preventDefault()
+    const current = links.findIndex((link) => link === document.activeElement)
+    const nextIndex =
+      current < 0
+        ? 0
+        : e.key === 'ArrowDown'
+          ? (current + 1) % links.length
+          : (current - 1 + links.length) % links.length
+    links[nextIndex].focus()
+  }, [])
+
   if (!props.open) return null
 
   return (
-    <div className="evidence-backdrop" role="dialog" aria-modal="true" aria-label="Evidence viewer" onMouseDown={handleBackdrop}>
-      <div className="evidence-drawer">
+    <div
+      ref={backdropRef}
+      className="evidence-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="evidence-title"
+      aria-label="Evidence viewer"
+      onMouseDown={handleBackdrop}
+    >
+      <div className="evidence-drawer" tabIndex={-1}>
         <div className="evidence-top">
-          <div className="evidence-title">{state.status === 'ready' ? state.title : 'Evidence'}</div>
+          <div id="evidence-title" className="evidence-title">{state.status === 'ready' ? state.title : 'Evidence'}</div>
           <div className="evidence-actions">
-            <button type="button" className="evidence-btn" onClick={props.onClose} aria-label="Close evidence viewer">
+            <button
+              ref={closeButtonRef}
+              type="button"
+              className="evidence-btn"
+              onClick={props.onClose}
+              aria-label="Close evidence viewer"
+            >
               Close
             </button>
           </div>
         </div>
 
         <div className="evidence-body">
-          <nav className="evidence-nav" aria-label="Evidence navigation">
+          <nav
+            ref={navRef}
+            className="evidence-nav"
+            aria-label="Evidence navigation"
+            onKeyDown={handleNavKeyDown}
+          >
             <div className="evidence-navTitle">Evidence</div>
             <ul className="evidence-navList">
               {navItems.map((p) => (

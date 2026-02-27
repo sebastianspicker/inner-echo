@@ -23,6 +23,7 @@ import {
 } from './audioGraphBuilder'
 import type { AudioMetrics } from './types'
 import { clamp01, smoothStep } from '../../utils/numeric'
+import { logger } from '../../utils/logger'
 
 const RAMP_MS = 25
 const ANALYSER_FFT_SIZE = 2048
@@ -631,7 +632,7 @@ export function createAudioEngine(
       synthGain = null
       masterGain = null
       void closeAudioContext().catch((err) => {
-        console.warn('closeAudioContext failed', err)
+        logger.warn('closeAudioContext failed', err)
       })
     },
   }

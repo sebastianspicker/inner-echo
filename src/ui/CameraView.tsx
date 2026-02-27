@@ -19,6 +19,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useCatalog } from './hooks/useCatalog'
 import { useProfileLoad } from './hooks/useProfileLoad'
+import { useImmersiveIdleState } from './hooks/useImmersiveIdleState'
+import { useCameraController } from './hooks/useCameraController'
+import { useAudioController } from './hooks/useAudioController'
+import { useOverlayController } from './hooks/useOverlayController'
+import { logger } from '../utils/logger'
 import {
   buildVideoNodes,
   profileHasTemporalNodes,
@@ -43,9 +48,11 @@ import {
   stopVideoStream,
   type CameraState,
 } from '../engine/video'
+import { BASELINE_PROFILE } from '../conditions/fallbackProfiles'
 import {
   startAudioContext,
   createAudioEngine,
+  type AudioEngineControl,
   type AudioContextStatus,
   type MicStatus,
   type AudioInputMode,
@@ -64,24 +71,6 @@ import type { VideoMetrics } from '../engine/canvas'
 
 const DEFAULT_INTENSITY = 0.5
 const DEFAULT_CONDITION_ID = 'none'
-const FALLBACK_PROFILE: Profile = {
-  id: 'none',
-  label: 'None (Clean)',
-  summary: 'No overlay. Baseline camera view.',
-  framing: { type: 'baseline' },
-  experience_dimensions: [],
-  safety: {
-    intensity_default: 0,
-    intensity_max: 0,
-    warnings: [],
-    safe_mode_clamps: { max_intensity: 0 },
-  },
-  ui: { controls: [] },
-  video_stack: [],
-  audio_stack: { enabled: false },
-  reactive: { analyser_to_params: [] },
-  references: { dimensions: [] },
-}
 const DEFAULT_PICKER_OPTIONS: CatalogEntry[] = [
   { id: 'none', label: 'None (Clean)', description: 'No overlay. Baseline camera view.' },
   { id: 'anxiety', label: 'Anxiety', description: 'Metaphor of heightened tension; grain overlay.' },
@@ -147,7 +136,6 @@ export function CameraView() {
   const [debugOverlay, setDebugOverlay] = useState(false)
   const [evidenceOpen, setEvidenceOpen] = useState(false)
   const [evidenceDocPath, setEvidenceDocPath] = useState<EvidenceDocPath>('docs/references/README.md')
-  const [isIdle, setIsIdle] = useState(false)
 
   const { profile, composeReport, controlValues, setControlValues, isProfileLoading } = useProfileLoad({
     conditionId,
@@ -178,7 +166,7 @@ export function CameraView() {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const overlayControlRef = useRef<OverlayControl | null>(null)
-  const audioEngineControlRef = useRef<ReturnType<typeof createAudioEngine> | null>(null)
+  const audioEngineControlRef = useRef<AudioEngineControl | null>(null)
   const rmsDebugRef = useRef<HTMLSpanElement | null>(null)
   const videoMetricsRef = useRef<VideoMetrics | null>(null)
   const cameraRequestSeqRef = useRef(0)
@@ -200,36 +188,14 @@ export function CameraView() {
     setEvidenceOpen(true)
   }, [])
 
-  const getOverlayDiagnostics = useCallback(
-    () => overlayControlRef.current?.getDiagnostics?.(),
-    []
-  )
-
-  const getAudioDebugState = useCallback(
-    () => audioEngineControlRef.current?.getDebugState?.(),
-    []
-  )
-
-  const getAppliedClamps = useCallback(() => {
-    if (!profile) return undefined
-    const safeModeNow = safeModeRef.current
-    const inputIntensity = intensityRef.current
-    const effectiveIntensity = clampIntensity(profile, inputIntensity, safeModeNow)
-    const safeModeClampKeys = Object.keys(profile.safety.safe_mode_clamps ?? {}).sort((a, b) =>
-      a.localeCompare(b)
-    )
-    const reducedMotionDisabledNodes = Array.from(getReducedMotionDisableNodes(profile)).sort((a, b) =>
-      a.localeCompare(b)
-    )
-    return {
-      intensityInput: inputIntensity,
-      intensityEffective: effectiveIntensity,
-      safeMode: safeModeNow,
-      reducedMotion,
-      safeModeClampKeys,
-      reducedMotionDisabledNodes,
-    }
-  }, [profile, reducedMotion])
+  const { getOverlayDiagnostics, getAudioDebugState, getAppliedClamps } = useOverlayController({
+    overlayControlRef,
+    audioControlRef: audioEngineControlRef,
+    profile,
+    reducedMotion,
+    safeMode,
+    intensity,
+  })
 
   const handleCameraStreamInterrupted = useCallback(
     (stream: MediaStream | null | undefined, message: string) => {
@@ -280,7 +246,7 @@ export function CameraView() {
         video.play().catch((err) => {
           // Autoplay may be restricted; playsInline + srcObject often still shows first frame
           if (import.meta.env?.DEV) {
-            console.warn('video.play failed', err)
+            logger.warn('video.play failed', err)
           }
           setCameraState('error')
           setErrorMessage('Playback error. Please interact with the page or restart the camera.')
@@ -451,20 +417,13 @@ export function CameraView() {
     setMicError(null)
   }, [inputMode])
 
-  const handleMicEnabledChange = useCallback(
-    (enabled: boolean) => {
-      if (audioStatus !== 'on') {
-        setMicEnabled(false)
-        if (enabled) setMicError('Enable audio first, then enable microphone (optional).')
-        else setMicError(null)
-        return
-      }
-      setMicEnabled(enabled)
-      if (enabled) handleEnableMic()
-      else handleDisableMic()
-    },
-    [audioStatus, handleDisableMic, handleEnableMic]
-  )
+  const { toggleMic: handleMicEnabledChange } = useAudioController({
+    audioStatus,
+    enableMic: handleEnableMic,
+    disableMic: handleDisableMic,
+    setMicEnabled,
+    setMicError,
+  })
 
   const handleQuickPreset = useCallback(
     (preset: 'calm' | 'balanced' | 'intense') => {
@@ -536,7 +495,7 @@ export function CameraView() {
 
     function startLoop(): void {
       if (overlayControlRef.current) return
-      const prof = profile ?? FALLBACK_PROFILE
+      const prof = profile ?? BASELINE_PROFILE
       const nodes = buildVideoNodes(prof, { reducedMotion })
       const couplingEngine = createCouplingEngine(prof, {
         couplingStrength: couplingStrengthRef.current,
@@ -685,33 +644,40 @@ export function CameraView() {
     }
   }, [audioStatus, debugOverlay])
 
-  // Phase 3 QoL: Immersive Mode (Auto-hide UI when idle and camera is active)
-  useEffect(() => {
-    if (cameraState !== 'active') {
-      setIsIdle(false)
-      return
-    }
-    let timeoutId: number
-    const handleActivity = () => {
-      setIsIdle(false)
-      window.clearTimeout(timeoutId)
-      timeoutId = window.setTimeout(() => setIsIdle(true), 4500)
-    }
-    window.addEventListener('mousemove', handleActivity)
-    window.addEventListener('keydown', handleActivity)
-    window.addEventListener('touchstart', handleActivity)
-    handleActivity() // start initial timer
-    return () => {
-      window.clearTimeout(timeoutId)
-      window.removeEventListener('mousemove', handleActivity)
-      window.removeEventListener('keydown', handleActivity)
-      window.removeEventListener('touchstart', handleActivity)
-    }
-  }, [cameraState])
+  const isIdle = useImmersiveIdleState(cameraState)
+  const cameraController = useCameraController({
+    cameraState,
+    audioStatus,
+    micStatus,
+    onStart: handleStart,
+    onStop: handleStop,
+  })
 
-  const isRequesting = cameraState === 'requesting'
-  const isActive = cameraState === 'active'
-  const canStop = isRequesting || isActive || audioStatus !== 'off' || micStatus !== 'off'
+  useEffect(() => {
+    const isEditableTarget = (target: EventTarget | null): boolean => {
+      const node = target as HTMLElement | null
+      if (!node) return false
+      const tag = node.tagName.toLowerCase()
+      return tag === 'input' || tag === 'textarea' || tag === 'select' || node.isContentEditable
+    }
+    const onKeyDown = (e: KeyboardEvent): void => {
+      if (isEditableTarget(e.target)) return
+      const key = e.key.toLowerCase()
+      if (key === 'k') {
+        e.preventDefault()
+        if (cameraController.isActive || cameraController.isRequesting) cameraController.stop()
+        else if (onboardingAccepted) cameraController.start()
+      } else if (key === 'e') {
+        e.preventDefault()
+        openEvidence('docs/references/README.md')
+      } else if (key === 'd' && import.meta.env.DEV) {
+        e.preventDefault()
+        setDebugOverlay((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [cameraController, onboardingAccepted, openEvidence])
 
   const warnings: string[] =
     profile?.safety?.warnings ?? []
@@ -730,13 +696,13 @@ export function CameraView() {
       <CameraHeader
         cameraState={cameraState}
         audioStatus={audioStatus}
-        isRequesting={isRequesting}
-        isActive={isActive}
-        canStop={canStop}
+        isRequesting={cameraController.isRequesting}
+        isActive={cameraController.isActive}
+        canStop={cameraController.canStop}
         onboardingAccepted={onboardingAccepted}
         onOpenEvidence={openEvidence}
-        onStart={handleStart}
-        onStop={handleStop}
+        onStart={cameraController.start}
+        onStop={cameraController.stop}
       />
 
       {errorMessage && (
@@ -763,7 +729,7 @@ export function CameraView() {
           videoRef={videoRef}
           canvasRef={canvasRef}
           rmsDebugRef={rmsDebugRef}
-          isActive={isActive}
+          isActive={cameraController.isActive}
           audioStatus={audioStatus}
           debugOverlay={debugOverlay}
         />
@@ -909,7 +875,7 @@ export function CameraView() {
               onInputModeChange={handleInputModeChange}
             />
 
-            {isActive && (
+            {cameraController.isActive && (
               <EffectControls
                 profile={profile}
                 intensity={intensity}

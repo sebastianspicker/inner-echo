@@ -31,6 +31,7 @@ export function CameraHeader({
             <div className="ie-brand" aria-label="Inner Echo">
                 <div className="ie-title">Inner Echo</div>
                 <div className="ie-subtitle">Local-only AV overlay • calm, minimal, safety-first</div>
+                <div className="ie-subtitle">Shortcuts: K start/stop • E evidence • D debug (dev)</div>
             </div>
 
             <div className="ie-headerRight">

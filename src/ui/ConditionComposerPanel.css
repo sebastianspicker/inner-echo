@@ -100,6 +100,17 @@
   accent-color: var(--accent);
 }
 
+.composer__slider input[type='text'],
+.composer__slider select {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0 10px;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text);
+}
+
 .composer__slider-val {
   font-family: var(--font-mono);
   font-size: 12px;

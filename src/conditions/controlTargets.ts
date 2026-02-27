@@ -4,6 +4,7 @@
  */
 
 import type { Profile, UIControl } from './schema'
+import { parseScopedTarget } from '../utils/targetPath'
 
 export interface ResolvedControl {
   control: UIControl
@@ -62,13 +63,9 @@ export function resolveControl(
       defaultValue: false,
     }
   }
-  const videoPrefix = 'video.'
-  if (target.startsWith(videoPrefix)) {
-    const rest = target.slice(videoPrefix.length)
-    const dot = rest.indexOf('.')
-    if (dot === -1) return null
-    const nodeId = rest.slice(0, dot)
-    const param = rest.slice(dot + 1)
+  const parsedTarget = parseScopedTarget(target, 'video')
+  if (parsedTarget) {
+    const { nodeId, param } = parsedTarget
     const stack = Array.isArray(profile.video_stack) ? profile.video_stack : []
     const nodeIndex = stack.findIndex(
       (n) =>

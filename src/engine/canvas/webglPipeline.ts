@@ -22,26 +22,40 @@ import type { VideoNode } from '../effects/VideoNode'
 import type { VideoPipelineParams } from './webglPipelineTypes'
 import { createVideoMetricsTracker, type VideoMetrics } from './videoMetrics'
 import type { AudioMetrics } from '../audio'
+import { logger } from '../../utils/logger'
+import {
+  FPS_SAMPLES,
+  RENDER_SCALES,
+  FPS_DOWN_THRESHOLD,
+  FPS_UP_THRESHOLD,
+  SCALE_CHANGE_COOLDOWN_MS,
+} from './webgl/constants'
+import {
+  createPassthroughMaterial,
+  getQuadGeometry,
+  renderQuad,
+  toNodeName,
+} from './webgl/renderHelpers'
+import {
+  computeUvScaleOffset,
+  resolveReactiveOverrides,
+  writeMergedControlValues,
+} from './webgl/params'
+import { computeNextRenderScaleIndex } from './webgl/loop'
+import {
+  allocateRenderTargets,
+  disposeChainRenderTargets,
+  disposeTemporalPairs,
+  type TemporalPingPongState,
+} from './webgl/resources'
+import {
+  createDiagnostics,
+  updateResourceDiagnostics,
+  type WebGLDiagnostics,
+} from './webgl/diagnostics'
 
 export type { VideoPipelineParams }
 export type WebGLOverlayStop = () => void
-
-/** Phase 12: Diagnostics for dev debug panel (read each frame by consumer). */
-export interface WebGLResourceCounts {
-  renderTargets: number
-  temporalPairs: number
-  estimatedTextures: number
-  estimatedFramebuffers: number
-}
-
-export interface WebGLDiagnostics {
-  rendererMode: 'webgl'
-  fps: number
-  frameTimeMs: number
-  renderScale: number
-  resourceCounts: WebGLResourceCounts
-  activeVideoNodes: string[]
-}
 
 export interface WebGLOverlayControl {
   stop: WebGLOverlayStop
@@ -51,53 +65,6 @@ export interface WebGLOverlayControl {
 
 export interface WebGLOverlayCallbacks {
   onFatalRuntimeError?(error: Error): void
-}
-
-const FPS_SAMPLES = 30
-const RENDER_SCALES = [1.0, 0.75, 0.5] as const
-const FPS_DOWN_THRESHOLD = 28
-const FPS_UP_THRESHOLD = 33
-const SCALE_CHANGE_COOLDOWN_MS = 900
-
-function toNodeName(value: unknown): string {
-  if (!value || typeof value !== 'object') return 'unknown'
-  const explicitName = (value as { nodeName?: string }).nodeName
-  if (explicitName) return explicitName
-  const ctor = (value as { constructor?: { name?: string } }).constructor?.name
-  if (!ctor) return 'unknown'
-  return ctor
-    .replace(/Node$/, '')
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-    .replace(/([A-Z])([A-Z][a-z])/g, '$1_$2')
-    .toLowerCase()
-}
-
-/** Passthrough material: displays input texture with no effect. */
-function createPassthroughMaterial(inputTexture: THREE.Texture): THREE.Material {
-  return new THREE.MeshBasicMaterial({
-    map: inputTexture,
-    depthWrite: false,
-  })
-}
-
-/** Fullscreen quad geometry (shared). */
-function getQuadGeometry(): THREE.PlaneGeometry {
-  const g = new THREE.PlaneGeometry(2, 2)
-  return g
-}
-
-/** Render a quad with the given material to the given target (or null = screen). */
-function renderQuad(
-  renderer: THREE.WebGLRenderer,
-  scene: THREE.Scene,
-  camera: THREE.Camera,
-  material: THREE.Material,
-  target: THREE.WebGLRenderTarget | null
-): void {
-  const mesh = scene.children[0] as THREE.Mesh
-  mesh.material = material
-  renderer.setRenderTarget(target)
-  renderer.render(scene, camera)
 }
 
 /** Phase 8: Optional reactive (audio RMS → video param) callbacks. */
@@ -158,12 +125,7 @@ export function startWebGLOverlayLoop(
   let gl: WebGLRenderingContext | null = null
   let metricsTracker: ReturnType<typeof createVideoMetricsTracker> | null = null
   let chainRTs: THREE.WebGLRenderTarget[] = []
-  const temporalPingPong: {
-    rtA: THREE.WebGLRenderTarget
-    rtB: THREE.WebGLRenderTarget
-    writeIndex: number
-    firstFrame: boolean
-  }[] = []
+  const temporalPingPong: TemporalPingPongState[] = []
   let finalBlitMaterial: THREE.MeshBasicMaterial | null = null
   let rafId: number | null = null
   let stopped = false
@@ -196,29 +158,6 @@ export function startWebGLOverlayLoop(
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
       }
     } catch { /* ignore */ }
-
-    metricsTracker?.dispose()
-    if (!usePassthrough) {
-      nodes.forEach((node) => node.dispose())
-      chainRTs.forEach((rt) => rt.dispose())
-      chainRTs = []
-      temporalPingPong.forEach((pp) => {
-        pp.rtA.dispose()
-        pp.rtB.dispose()
-      })
-      temporalPingPong.length = 0
-      finalBlitMaterial?.dispose()
-      finalBlitMaterial = null
-      videoPassthroughMaterial?.dispose()
-      if (initialMeshMaterial && initialMeshMaterial !== videoPassthroughMaterial) {
-        initialMeshMaterial.dispose()
-      }
-    } else {
-      initialMeshMaterial?.dispose()
-    }
-    videoTexture?.dispose()
-    geometry?.dispose()
-    renderer?.dispose()
 
     for (let i = startupDisposers.length - 1; i >= 0; i--) {
       try { startupDisposers[i]() } catch { /* ignore */ }
@@ -261,6 +200,10 @@ export function startWebGLOverlayLoop(
     scene.add(mesh)
 
     metricsTracker = createVideoMetricsTracker({ size: 64, everyN: 2, attack: 0.2, release: 0.4 })
+    startupDisposers.push(() => {
+      metricsTracker?.dispose()
+      metricsTracker = null
+    })
     gl = renderer.getContext()
 
     let lastTime = performance.now()
@@ -310,28 +253,13 @@ export function startWebGLOverlayLoop(
       controlValues: mergedControlValues,
       nodeIndex: 0,
     }
-    function clearRecord(obj: Record<string, unknown>): void {
-      for (const k of Object.keys(obj)) delete obj[k]
-    }
-
     // Chain RTs: one per node for output (next node's input). Temporal nodes need ping-pong.
-    let chainRTs: THREE.WebGLRenderTarget[] = []
-    const temporalPingPong: {
-      rtA: THREE.WebGLRenderTarget
-      rtB: THREE.WebGLRenderTarget
-      writeIndex: number
-      firstFrame: boolean
-    }[] = []
-    let finalBlitMaterial: THREE.MeshBasicMaterial | null = null
     startupDisposers.push(() => {
-      chainRTs.forEach((rt) => rt.dispose())
+      disposeChainRenderTargets(chainRTs)
       chainRTs = []
     })
     startupDisposers.push(() => {
-      temporalPingPong.forEach((pp) => {
-        pp.rtA.dispose()
-        pp.rtB.dispose()
-      })
+      disposeTemporalPairs(temporalPingPong)
       temporalPingPong.length = 0
     })
     startupDisposers.push(() => {
@@ -351,72 +279,30 @@ export function startWebGLOverlayLoop(
     let avgFps = 60
 
     // Phase 12: diagnostics object (mutated each frame for dev panel)
-    const diagnostics: WebGLDiagnostics = {
-      rendererMode: 'webgl',
-      fps: 60,
-      frameTimeMs: 16.67,
-      renderScale: RENDER_SCALES[0],
-      resourceCounts: {
-        renderTargets: 0,
-        temporalPairs: 0,
-        estimatedTextures: 0,
-        estimatedFramebuffers: 0,
-      },
-      activeVideoNodes: nodes.map((node) => toNodeName(node)),
-    }
+    const diagnostics: WebGLDiagnostics = createDiagnostics(
+      nodes.map((node) => toNodeName(node)),
+      RENDER_SCALES[0]
+    )
 
-    function updateResourceDiagnostics(): void {
+    function syncResourceDiagnostics(): void {
       const renderTargets = chainRTs.length + temporalPingPong.length * 2
-      diagnostics.resourceCounts = {
-        renderTargets,
-        temporalPairs: temporalPingPong.length,
-        estimatedTextures: renderTargets + 1, // + input video texture
-        estimatedFramebuffers: renderTargets,
-      }
+      updateResourceDiagnostics(diagnostics, renderTargets, temporalPingPong.length)
     }
-    updateResourceDiagnostics()
+    syncResourceDiagnostics()
 
     function allocRTs(w: number, h: number): void {
       const scale = RENDER_SCALES[renderScaleIndex]
       const rw = Math.max(1, Math.floor(w * scale))
       const rh = Math.max(1, Math.floor(h * scale))
 
-      chainRTs.forEach((rt) => rt.dispose())
-      const numRTs = nodes.length + 1
-      chainRTs = Array.from({ length: numRTs }, () =>
-        new THREE.WebGLRenderTarget(rw, rh, {
-          minFilter: THREE.LinearFilter,
-          magFilter: THREE.LinearFilter,
-          format: THREE.RGBAFormat,
-          type: THREE.UnsignedByteType,
-        })
-      )
-
-      temporalPingPong.forEach((pp) => {
-        pp.rtA.dispose()
-        pp.rtB.dispose()
-      })
+      disposeChainRenderTargets(chainRTs)
+      chainRTs = []
+      disposeTemporalPairs(temporalPingPong)
       temporalPingPong.length = 0
-      nodes.forEach((node) => {
-        if (node.needsPreviousFrame) {
-          temporalPingPong.push({
-            rtA: new THREE.WebGLRenderTarget(rw, rh, {
-              minFilter: THREE.LinearFilter,
-              magFilter: THREE.LinearFilter,
-              format: THREE.RGBAFormat,
-              type: THREE.UnsignedByteType,
-            }),
-            rtB: new THREE.WebGLRenderTarget(rw, rh, {
-              minFilter: THREE.LinearFilter,
-              magFilter: THREE.LinearFilter,
-              format: THREE.RGBAFormat,
-              type: THREE.UnsignedByteType,
-            }),
-            writeIndex: 0,
-            firstFrame: true,
-          })
-        }
-      })
+
+      const allocated = allocateRenderTargets(nodes, rw, rh)
+      chainRTs = allocated.chainRTs
+      temporalPingPong.push(...allocated.temporalPingPong)
 
       if (!finalBlitMaterial) {
         finalBlitMaterial = new THREE.MeshBasicMaterial({
@@ -424,7 +310,7 @@ export function startWebGLOverlayLoop(
           depthWrite: false,
         })
       }
-      updateResourceDiagnostics()
+      syncResourceDiagnostics()
     }
 
     function setSize(): void {
@@ -440,27 +326,6 @@ export function startWebGLOverlayLoop(
         lastH = h
         if (!usePassthrough) allocRTs(w, h)
       }
-    }
-
-    function getUvScaleOffset(
-      vw: number,
-      vh: number,
-      cw: number,
-      ch: number
-    ): { uvScale: [number, number]; uvOffset: [number, number] } {
-      let uvScale: [number, number] = [1, 1]
-      let uvOffset: [number, number] = [0, 0]
-      if (vw > 0 && vh > 0 && cw > 0 && ch > 0) {
-        const videoAspect = vw / vh
-        const canvasAspect = cw / ch
-        const scale =
-          canvasAspect >= videoAspect
-            ? [1, canvasAspect / videoAspect]
-            : [videoAspect / canvasAspect, 1]
-        uvScale = [1 / scale[0], 1 / scale[1]]
-        uvOffset = [(1 - 1 / scale[0]) * 0.5, (1 - 1 / scale[1]) * 0.5]
-      }
-      return { uvScale, uvOffset }
     }
 
     function loop(): void {
@@ -484,23 +349,22 @@ export function startWebGLOverlayLoop(
           frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length
         avgFps = 1 / avgDelta
       }
-      const shouldScaleDown = currentParams.stressMode || avgFps < FPS_DOWN_THRESHOLD
-      const shouldScaleUp = !currentParams.stressMode && avgFps > FPS_UP_THRESHOLD
-      let nextScaleIndex = renderScaleIndex
-      const canSwitchScale = now - lastScaleChangeMs >= SCALE_CHANGE_COOLDOWN_MS
-      if (canSwitchScale) {
-        if (shouldScaleDown) {
-          nextScaleIndex = Math.min(renderScaleIndex + 1, RENDER_SCALES.length - 1)
-        } else if (shouldScaleUp) {
-          nextScaleIndex = Math.max(0, renderScaleIndex - 1)
-        }
-      }
+      const nextScaleIndex = computeNextRenderScaleIndex({
+        currentIndex: renderScaleIndex,
+        scaleCount: RENDER_SCALES.length,
+        avgFps,
+        stressMode: Boolean(currentParams.stressMode),
+        nowMs: now,
+        lastScaleChangeMs,
+        cooldownMs: SCALE_CHANGE_COOLDOWN_MS,
+        downThreshold: FPS_DOWN_THRESHOLD,
+        upThreshold: FPS_UP_THRESHOLD,
+      })
       if (nextScaleIndex !== renderScaleIndex) {
         renderScaleIndex = nextScaleIndex
         lastScaleChangeMs = now
         if (!usePassthrough && lastW > 0 && lastH > 0) allocRTs(lastW, lastH)
       }
-      if (!diagnostics) return
       diagnostics.fps = avgFps
       diagnostics.frameTimeMs = delta * 1000
       diagnostics.renderScale = RENDER_SCALES[renderScaleIndex]
@@ -530,7 +394,7 @@ export function startWebGLOverlayLoop(
         }
         const vw = video.videoWidth
         const vh = video.videoHeight
-        const { uvScale, uvOffset } = getUvScaleOffset(vw, vh, cw, ch)
+        const { uvScale, uvOffset } = computeUvScaleOffset(vw, vh, cw, ch)
 
         const audioMetrics: AudioMetrics =
           reactiveOptions?.getAudioMetrics?.() ??
@@ -538,27 +402,12 @@ export function startWebGLOverlayLoop(
 
         const baseControlValues = (currentParams.controlValues ?? {}) as Record<string, number | boolean>
         const overridesRaw = reactiveOptions?.getOverrides?.(delta, audioMetrics, videoMetrics, baseControlValues)
-        let videoOverrides: Record<string, number> = {}
-        let audioOverrides: Record<string, number> | null = null
-        if (overridesRaw && typeof overridesRaw === 'object' && 'video' in overridesRaw) {
-          const o = overridesRaw as { video: Record<string, number>; audio?: Record<string, number> }
-          videoOverrides = o.video ?? {}
-          audioOverrides = o.audio ?? null
-        } else if (overridesRaw && typeof overridesRaw === 'object') {
-          videoOverrides = Object.fromEntries(
-            Object.entries(overridesRaw).filter(
-              (entry): entry is [string, number] =>
-                typeof entry[1] === 'number' && Number.isFinite(entry[1])
-            )
-          )
-        }
+        const { video: videoOverrides, audio: audioOverrides } = resolveReactiveOverrides(overridesRaw)
         if (audioOverrides && reactiveOptions?.applyAudioOverrides) {
           reactiveOptions.applyAudioOverrides(audioOverrides)
         }
 
-        clearRecord(mergedControlValues)
-        for (const k in baseControlValues) mergedControlValues[k] = baseControlValues[k]
-        for (const k in videoOverrides) mergedControlValues[k] = videoOverrides[k]
+        writeMergedControlValues(mergedControlValues, baseControlValues, videoOverrides)
 
         baseParams.intensity = currentParams.intensity
         baseParams.safeMode = currentParams.safeMode
@@ -636,7 +485,7 @@ export function startWebGLOverlayLoop(
     }
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err))
-    console.error('WebGL pipeline startup failed', error)
+    logger.error('WebGL pipeline startup failed', error)
     callbacks?.onFatalRuntimeError?.(error)
     cleanupResources()
     return null

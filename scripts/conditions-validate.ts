@@ -6,7 +6,7 @@
  * - every `src/conditions/profiles/*.json` validates and is present in catalog
  * - referenced docs exist under `docs/references/**`
  * - video graph can be built (unknown nodes treated as failures here)
- * - reactive mappings resolve (video + audio targets), unknown targets are WARN+skip
+ * - reactive mappings resolve (video + audio targets), unknown targets are failures
  *
  * Run: npm run conditions:validate
  */
@@ -46,8 +46,6 @@ function main(): void {
   }
 
   const failures = { count: 0 }
-  let warnings = 0
-
   // catalog-level doc references
   const refs = catalogParsed.data.references
   if (refs?.dimensions_index) requireDoc(refs.dimensions_index, failures)
@@ -90,9 +88,10 @@ function main(): void {
     for (const m of reactive) {
       const resolved = resolveAnalyserTarget(m.target, profile, { reducedMotion: false })
       if (!resolved) {
-        // Runtime requires unknown targets to be handled as warn+skip.
-        console.warn(`[conditions-validate] WARN reactive target did not resolve for ${profile.id}:`, m.target)
-        warnings++
+        console.error(
+          `[conditions-validate] reactive target did not resolve for ${profile.id}: ${m.target}`
+        )
+        failures.count++
       }
     }
   }
@@ -101,8 +100,7 @@ function main(): void {
     console.error(`[conditions-validate] FAIL (${failures.count} issue(s))`)
     process.exit(1)
   }
-  console.log(`[conditions-validate] OK (${files.length} profiles, ${warnings} warning(s))`)
+  console.log(`[conditions-validate] OK (${files.length} profiles)`)
 }
 
 main()
-

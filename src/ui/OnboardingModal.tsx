@@ -6,6 +6,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { logger } from '../utils/logger'
 import './OnboardingModal.css'
 
 const STORAGE_KEY = 'inner-echo-onboarding-accepted'
@@ -22,7 +23,7 @@ export function setOnboardingAccepted(): void {
   try {
     localStorage.setItem(STORAGE_KEY, 'true')
   } catch (err) {
-    console.warn('setOnboardingAccepted failed', err)
+    logger.warn('setOnboardingAccepted failed', err)
   }
 }
 

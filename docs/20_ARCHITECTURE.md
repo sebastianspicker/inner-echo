@@ -61,6 +61,7 @@ Boundary: **Engine** builds graphs from **conditions** data; **UI** drives the e
 ## Video and audio implementation
 
 - **Video:** `THREE.VideoTexture`; post-processing-style chain (render targets); nodes implement `VideoNode` (setParams, getMaterial, dispose). Implemented nodes include grain, vignette, chromatic_aberration, temporal_smear (and others). Unknown node types are skipped with a warning.
+- **WebGL module split:** `src/engine/canvas/webglPipeline.ts` is orchestrator-only; loop/params/resource helpers live under `src/engine/canvas/webgl/` for lower coupling and safer incremental changes.
 - **Audio:** Native WebAudio; starts only after user gesture. Synth + FX chain from profile `audio_stack.chain`; FX include lowpass, highpass, tremolo, noise_bed, compressor_limiter. Condition switch: master gain ramp, dispose and rebuild chain.
 - **Reactive:** Profile can define `reactive.analyser_to_params`; analyser (e.g. RMS) drives video parameters with smoothing and clamps.
 

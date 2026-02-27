@@ -77,6 +77,7 @@ Tighten or relax directives (e.g. `worker-src`, `form-action`) as required by yo
 
 Before releasing a build:
 
+- [ ] **Baseline quality gate**: Run `npm run check` and block release on any failure.
 - [ ] **No third-party requests**: Confirm no network calls (DevTools Network tab, or run with network disabled). No external scripts, fonts, or CDNs.
 - [ ] **Permissions**: Camera and mic only after user gesture; no `getUserMedia` or `AudioContext` on page load.
 - [ ] **CSP**: If possible, deploy with the recommended CSP (or equivalent) and verify the app still loads and runs.
@@ -84,3 +85,16 @@ Before releasing a build:
 - [ ] **Logs**: Ensure no sensitive data is logged (search for `console.*` and `logger.*`; no device IDs, no media, no PII).
 - [ ] **Debug panel**: Confirm the dev-only debug panel is not exposed in production (it is gated by `import.meta.env.DEV`; production builds should not include it).
 - [ ] **ErrorBoundary**: “Reset App” must not leak sensitive data; it only reloads the page.
+- [ ] **Local artifact cleanup**: Optionally run `npm run clean:local` before packaging to remove local `dist/` and `reports/` leftovers.
+
+## RC security gate (required)
+
+For each release-candidate cycle:
+
+1. Run `npm run release:rc:local` (must be green).
+2. Run `npm run screenshots:readme` and `npm run screenshots:verify` so README images remain deterministic and non-PII.
+3. Ensure CI `release_candidate_gate` is green on the same commit.
+4. Draft RC tag in `v0.1.0-rc.N` format and include known limitations in release notes.
+5. Do not publish or tag if any of the above gates fail.
+
+Full release-candidate runbook: [RELEASE_RC.md](./RELEASE_RC.md).

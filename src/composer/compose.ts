@@ -1,5 +1,7 @@
 import { loadProfile } from '../conditions/loader'
-import { profileSchema, type Profile } from '../conditions/schema'
+import { profileSchema } from '../conditions/schema'
+import { createComposeFallbackProfile } from '../conditions/fallbackProfiles'
+import { logger } from '../utils/logger'
 import { getDimensionMappingEntry } from './dimensionToSignalMapping'
 import { getExperienceDimensions } from './experienceDimensions'
 import type { ComposerSettings, SelectedDimension, SelectedPreset } from './types'
@@ -11,27 +13,6 @@ import {
 } from './composeCore'
 
 export type { ComposeReport, ComposeResult, MissingNodesReport }
-
-function makeFallbackComposedProfile(): Profile {
-  return {
-    id: 'composed_fallback',
-    label: 'Composed Overlay (Fallback)',
-    summary: 'Fallback profile used due to an internal validation error. No overlay is applied.',
-    framing: { type: 'baseline', disclaimer: 'Fallback: composition failed validation; showing clean camera view.' },
-    experience_dimensions: [],
-    safety: {
-      intensity_default: 0,
-      intensity_max: 0,
-      warnings: ['Internal validation error: composed profile could not be loaded.'],
-      safe_mode_clamps: { max_intensity: 0 },
-    },
-    video_stack: [],
-    audio_stack: { enabled: false },
-    reactive: { analyser_to_params: [] },
-    ui: { controls: [] },
-    references: { dimensions: [] },
-  }
-}
 
 /**
  * Runtime entrypoint (browser/Vite):
@@ -49,9 +30,14 @@ export async function composeEffectiveProfile(
   })
   const parsed = profileSchema.safeParse(res.profile)
   if (!parsed.success) {
-    console.warn('[composer] Composed profile failed schema validation; falling back to clean profile.', parsed.error.flatten())
+    logger.warn(
+      '[composer] Composed profile failed schema validation; falling back to clean profile.',
+      parsed.error.flatten()
+    )
     return {
-      profile: makeFallbackComposedProfile(),
+      profile: createComposeFallbackProfile(
+        'Internal validation error: composed profile could not be loaded.'
+      ),
       report: {
         ...res.report,
         warnings: [
@@ -63,4 +49,3 @@ export async function composeEffectiveProfile(
   }
   return { profile: parsed.data, report: res.report }
 }
-
