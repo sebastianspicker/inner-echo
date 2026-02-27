@@ -2,16 +2,18 @@
 
 
 ## Context
-This page tracks maintenance decisions for csp followup during maintenance burst work.
+This page keeps the current csp followup guidance concise after earlier rough notes.
 
 ## Usage
 - Merged scattered csp guidance into the docs.
 
-## Scratch Notes
+## Notes Folded Into Current Flow
 Early notes are still uneven and may be folded into clearer sections later.
 
 ## Architecture
-- Reduced the csp surface that later fixes have to touch.
+- Simplified the next maintenance pass through csp.
+
+- Earlier scratch notes were compressed into the current guidance.
 
 ## Caveats
 Some setup details still depend on the current local workflow and may change again.
