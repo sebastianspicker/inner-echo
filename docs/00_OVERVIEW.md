@@ -17,8 +17,6 @@ This repo contains a **privacy-first, client-only** web app: an audio-visual ove
 | [references/](references/README.md) | Evidence rationale; dimension docs; Evidence Matrix; long-form reports. |
 | [generated/](generated/README.md) | Generated catalog and schema (do not edit by hand). |
 
-Root: **[AGENTS.md](../AGENTS.md)** — contributor standards, glossary, Definition of Done, how to add a Condition.
-
 ---
 
 ## Source of truth (evidence)

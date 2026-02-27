@@ -37,7 +37,6 @@
 
 ### Added
 
-- Root `AGENTS.md` restored as canonical contributor/safety guide.
 - New shared fallback profile module: `src/conditions/fallbackProfiles.ts`.
 - New preset snapshot module with versioned payloads: `src/ui/presetSnapshot.ts`.
 - New URL share codec for presets: `src/ui/presetShare.ts`.
@@ -88,6 +87,11 @@
 ### Removed
 
 - `docs/AGENTS.md` (duplicate copy under `docs/`).
+- `docs/REVIEW.md` and `plans/improvement-plan.md` (obsolete historical artifacts).
+
+### Repo cleanup
+
+- `AGENTS.md` moved to local-only usage and ignored from version control.
 
 ## 2026-02-16
 

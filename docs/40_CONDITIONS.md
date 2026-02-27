@@ -62,8 +62,7 @@ In Advanced settings, **Interaction Amount** introduces a conservative, code-def
 1. Add an entry to `src/conditions/catalog.json` (id, label, description, tags).
 2. Create `src/conditions/profiles/<id>.json` with `video_stack`, optional `audio_stack`, `safety`, `ui.controls`. Use only nodes and motifs supported by the Evidence Matrix for the chosen dimensions (or mark as speculative and cap intensity).
 3. Run `npm run docs:gen` to regenerate [generated/](generated/README.md) catalog and schema.
-
-See root [AGENTS.md](../AGENTS.md) for full "How to add a Condition" and safety checklist.
+4. Validate safety framing and constraints in [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md) before shipping.
 
 ---
 

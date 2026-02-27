@@ -6,7 +6,6 @@ Purpose: current, source-backed inventory of maintained documentation and genera
 
 | Path | Status | Notes |
 |---|---|---|
-| `AGENTS.md` | canonical | Contributor/runtime standards and safety guardrails. |
 | `README.md` | canonical | Project overview and local dev entrypoint. |
 | `docs/00_OVERVIEW.md` | canonical | Navigation index for docs. |
 | `docs/10_PRODUCT.md` | canonical | Product goals, scope, and non-goals. |
@@ -42,12 +41,9 @@ Purpose: current, source-backed inventory of maintained documentation and genera
 | `docs/generated/preset-schema.json` | generated | Derived schema output. |
 | `docs/generated/preset-schema.md` | generated | Human-readable schema output. |
 
-## Historical docs (kept intentionally)
+## Historical docs
 
-| Path | Status | Notes |
-|---|---|---|
-| `docs/REVIEW.md` | historical | Prior principal-engineer review context. |
-| `plans/improvement-plan.md` | historical | Older planning artifact, not canonical. |
+No historical docs are intentionally retained in-repo at this time.
 
 ## Cleanup policy
 
