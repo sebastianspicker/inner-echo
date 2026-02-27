@@ -3,10 +3,10 @@
 A working tree for inner-echo with an evolving implementation history.
 
 ## Overview
-inner-echo keeps setup, verification, and known limitations in one place.
+inner-echo documents maintained build commands, known limits, and remaining work.
 
 ## Status
-Lifecycle stage: publication. The useful early notes have been carried forward.
+Lifecycle stage: maintenance. Maintenance guidance now reflects the stable shape.
 
 ## Usage
 - Merged scattered error guidance into the docs.
@@ -22,3 +22,8 @@ Use the next review to check behavior before adding surface area.
 - Aligned local and CI checks for github actions.
 
 - The older setup fragments have been reduced to the useful parts.
+
+## Architecture
+- Simplified the next maintenance pass through csp.
+
+- The document now favors checked behavior over exploratory notes.
