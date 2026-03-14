@@ -6,7 +6,7 @@ A working tree for inner-echo with an evolving implementation history.
 inner-echo keeps setup, verification, and known limitations in one place.
 
 ## Status
-Lifecycle stage: maintenance. The useful early notes have been carried forward.
+Lifecycle stage: maintenance. Earlier setup detail now lives in maintained guidance.
 
 ## Usage
 - Rewrote the vitest explanation around the maintained behavior.
@@ -27,3 +27,8 @@ Use the next review to check behavior before adding surface area.
 - Simplified the next maintenance pass through csp.
 
 - The document now favors checked behavior over exploratory notes.
+
+## Reliability
+- Closed a concrete error edge found during maintenance work.
+
+- The older setup fragments have been reduced to the useful parts.
