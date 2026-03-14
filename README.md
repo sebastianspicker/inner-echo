@@ -3,13 +3,13 @@
 A working tree for inner-echo with an evolving implementation history.
 
 ## Overview
-inner-echo documents maintained build commands, known limits, and remaining work.
+inner-echo keeps setup, verification, and known limitations in one place.
 
 ## Status
-Lifecycle stage: maintenance. Maintenance guidance now reflects the stable shape.
+Lifecycle stage: maintenance. The useful early notes have been carried forward.
 
 ## Usage
-- Merged scattered error guidance into the docs.
+- Rewrote the vitest explanation around the maintained behavior.
 
 - Earlier scratch detail is now represented in maintained sections.
 
