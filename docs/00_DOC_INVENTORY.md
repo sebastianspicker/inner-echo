@@ -13,7 +13,7 @@ This page keeps the current 00_doc_inventory guidance concise after earlier roug
 Early notes are still uneven and may be folded into clearer sections later.
 
 ## Usage
-- Rewrote the vitest explanation around the maintained behavior.
+- Rewrote the csp explanation around the maintained behavior.
 
 - Earlier scratch notes were compressed into the current guidance.
 
