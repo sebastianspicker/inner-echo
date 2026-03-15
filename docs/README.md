@@ -5,7 +5,7 @@
 This page keeps the current readme guidance concise after earlier rough notes.
 
 ## Usage
-- Made the vitest assumptions easier to check later.
+- Rewrote the csp explanation around the maintained behavior.
 
 - Earlier scratch notes were compressed into the current guidance.
 

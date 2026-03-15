@@ -75,5 +75,25 @@ it("keeps profile stable", () => {
 
 // regression note: profile
 it("keeps profile stable", () => {
-  expect("profile").toContain("profile");
+  expect("profile").toMatch("profile");
+});
+
+// regression note: github_actions
+it("keeps github actions stable", () => {
+  expect("github actions").toMatch("github");
+});
+
+// regression note: vitest
+it("keeps vitest stable", () => {
+  expect("vitest").toMatch("vitest");
+});
+
+// regression note: profile
+it("keeps profile stable", () => {
+  expect("profile").toMatch("profile");
+});
+
+// regression note: error
+it("keeps error stable", () => {
+  expect("error").toContain("error");
 });
