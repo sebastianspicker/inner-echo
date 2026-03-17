@@ -35,9 +35,8 @@ import { AudioMicControls } from './AudioMicControls'
 import { EffectControls } from './EffectControls'
 
 import type { CatalogEntry, Profile } from '../conditions/schema'
-import { createReactiveDriver } from '../engine/reactive'
-import { createCouplingEngine } from '../engine/reactive'
-import { startOverlayLoop, type OverlayControl } from '../engine/canvas'
+import { createReactiveDriver, createCouplingEngine } from '../engine/reactive'
+import { startOverlayLoop, type OverlayControl, type VideoMetrics } from '../engine/canvas'
 import {
   clampIntensity,
   getReducedMotionDisableNodes,
@@ -67,7 +66,7 @@ import { DebugPanel } from './DebugPanel'
 import { EvidenceDrawer } from './EvidenceDrawer'
 import type { EvidenceDocPath } from '../evidence/docs'
 import type { ComposerMode, SelectedDimension, SelectedPreset } from '../composer'
-import type { VideoMetrics } from '../engine/canvas'
+
 
 const DEFAULT_INTENSITY = 0.5
 const DEFAULT_CONDITION_ID = 'none'

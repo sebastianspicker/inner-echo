@@ -19,6 +19,7 @@ import {
   makeIdForNode,
   motifsToVideoDefs,
   motifsToAudioDefs,
+  scaleNumericParams,
   type SourceId,
 } from './composeBlend'
 import { clampAudioParams, clampVideoParams, deriveComposedSafety } from './composeSafety'
@@ -205,11 +206,7 @@ export async function composeEffectiveProfileCore(
       }
       const key = makeIdForNode(def) || node
       const strength = clamp01(effectiveDimWeight.get(d.dimensionId) ?? d.weight)
-      const scaledParams: Record<string, unknown> = {}
-      for (const [k, v] of Object.entries((def.params ?? {}) as Record<string, unknown>)) {
-        if (typeof v === 'number') scaledParams[k] = v * strength
-        else scaledParams[k] = v
-      }
+      const scaledParams = scaleNumericParams((def.params ?? {}) as Record<string, unknown>, strength)
       const e = videoByKey.get(key) ?? { node, id: key, contribs: [], minIndex: 1000 + i }
       e.minIndex = Math.min(e.minIndex, 1000 + i)
       e.contribs.push({ w: strength, params: scaledParams, source: `dim:${d.dimensionId}`, index: 1000 + i, node, id: key })
@@ -270,11 +267,7 @@ export async function composeEffectiveProfileCore(
       }
       const key = node
       const strength = clamp01(effectiveDimWeight.get(d.dimensionId) ?? d.weight)
-      const scaledParams: Record<string, unknown> = {}
-      for (const [k, v] of Object.entries(def.params)) {
-        if (typeof v === 'number') scaledParams[k] = v * strength
-        else scaledParams[k] = v
-      }
+      const scaledParams = scaleNumericParams(def.params, strength)
       const e = audioByKey.get(key) ?? { node, contribs: [], minIndex: 1000 + i }
       e.minIndex = Math.min(e.minIndex, 1000 + i)
       e.contribs.push({ w: strength, params: scaledParams, source: `dim:${d.dimensionId}`, index: 1000 + i })
@@ -298,7 +291,7 @@ export async function composeEffectiveProfileCore(
   const audioStack: AudioStackConfig = {
     enabled,
     input: 'synth',
-    master: { volume: Math.max(0, Math.min(1, baseMaster || 0.2)) },
+    master: { volume: clamp01(baseMaster || 0.2) },
     chain,
   }
 
@@ -321,8 +314,6 @@ export async function composeEffectiveProfileCore(
   const clampedVideoStack = clampVideoParams(videoStack, settings, safeClampsActive)
   const clampedAudioStack = clampAudioParams(audioStack, settings, safeClampsActive)
 
-  report.missingNodes.video = stableUniqSorted(report.missingNodes.video)
-  report.missingNodes.audio = stableUniqSorted(report.missingNodes.audio)
   report.missingPresets = stableUniqSorted(report.missingPresets)
 
   const profile: Profile = {

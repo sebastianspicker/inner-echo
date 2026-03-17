@@ -11,15 +11,8 @@ import {
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
+  QUAD_VERTEX_SHADER,
 } from './paramUtils'
-
-const VERT = `
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = vec4(position.xy, 0.0, 1.0);
-}
-`
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -104,7 +97,7 @@ export class PulseNode implements VideoNode {
         u_depth: { value: 0 },
         u_pulse: { value: 0.5 },
       },
-      vertexShader: VERT,
+      vertexShader: QUAD_VERTEX_SHADER,
       fragmentShader: FRAG,
       depthWrite: false,
     })

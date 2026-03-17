@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.1.0-rc.1",
   "type": "module",
+  "license": "MIT",
+  "author": "Sebastian Spicker",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

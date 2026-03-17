@@ -2,37 +2,37 @@
 
 ## Search strategy and safeguards
 
-This response covers the first three **experience dimensions** from `src/conditions/experience-dimensions.json` in the uploaded `inner-echo` starter repo: **hyperarousal**, **hypervigilance**, and **panic_peaks**. The intent is to support **metaphorical, non-diagnostic** audiovisual (AV) design hypotheses—*not* to depict “what a condition looks/sounds like,” *not* to simulate clinical states, and *not* to provide medical advice.
+This response covers the first three experience dimensions from `src/conditions/experience-dimensions.json` in the uploaded `inner-echo` starter repo: hyperarousal, hypervigilance, and panic_peaks. The intent is to support metaphorical, non-diagnostic audiovisual (AV) design hypotheses—not to depict “what a condition looks/sounds like,” not to simulate clinical states, and not to provide medical advice.
 
-**Databases and source types used.** Evidence was gathered primarily from **Europe PMC / PubMed-indexed records**, major **peer‑reviewed journals and academic publishers** (e.g., *Psychological Bulletin*, *Psychological Medicine*, *Clinical Psychology Review*, *Neuroscience & Biobehavioral Reviews*), and **clinical guidelines** (e.g., VA/DoD; RANZCP; WFSBP) where relevant. citeturn15search1turn15search9turn19search0turn46view0turn40search4turn40search1turn0search1
+Databases and source types used. Evidence was gathered primarily from Europe PMC / PubMed-indexed records, major peer‑reviewed journals and academic publishers (e.g., *Psychological Bulletin*, *Psychological Medicine*, *Clinical Psychology Review*, *Neuroscience & Biobehavioral Reviews*), and clinical guidelines (e.g., VA/DoD; RANZCP; WFSBP) where relevant.
 
-**Query method (high level).** For each dimension, searches combined (a) the exact repo label + synonyms (e.g., “hyperarousal physiological tension,” “hypervigilance threat monitoring”), (b) **measurement terms** (“scale,” “questionnaire,” “PCL-5,” “CAPS-5,” “PDSS”), (c) **review filters** (“systematic review,” “meta-analysis,” “guideline”), and (d) **perception/attention mechanisms** (“attentional bias,” “locus coeruleus,” “arousal-biased competition,” “interoception”). Selected sources were prioritized when they:  
-- explicitly addressed **subjective experience / phenomenology**, attention changes, sensory gating, or interoceptive focus (rather than only biomarkers), and  
-- provided **DOIs/PMIDs** and stable scholarly landing pages. citeturn15search1turn19search0turn37view0turn39view0turn9search6turn14search5
+Query method (high level). For each dimension, searches combined (a) the exact repo label + synonyms (e.g., “hyperarousal physiological tension,” “hypervigilance threat monitoring”), (b) measurement terms (“scale,” “questionnaire,” “PCL-5,” “CAPS-5,” “PDSS”), (c) review filters (“systematic review,” “meta-analysis,” “guideline”), and (d) perception/attention mechanisms (“attentional bias,” “locus coeruleus,” “arousal-biased competition,” “interoception”). Selected sources were prioritized when they: 
+- explicitly addressed subjective experience / phenomenology, attention changes, sensory gating, or interoceptive focus (rather than only biomarkers), and 
+- provided DOIs/PMIDs and stable scholarly landing pages.
 
-**Interpretation rule: evidence → perceptual correlate → metaphor (not depiction).** The design bridge is framed as:  
-- empirical/phenomenological findings suggest certain **perceptual correlates** (e.g., attentional narrowing, “threat capture,” elevated autonomic readiness, interoceptive amplification), and  
-- those correlates can be represented with **bounded signal metaphors** (e.g., subtle gain, noise floor, gentle compression, cautious vignette),  
-without claiming clinical equivalence. This framing is consistent with the broader attention/arousal literature in which arousal can bias competition in perception (amplifying “high-priority” signals) and with neurobiological reviews linking arousal systems to vigilance/attention. citeturn14search5turn9search2turn9search6
+Interpretation rule: evidence → perceptual correlate → metaphor (not depiction). The design bridge is framed as: 
+- empirical/phenomenological findings suggest certain perceptual correlates (e.g., attentional narrowing, “threat capture,” elevated autonomic readiness, interoceptive amplification), and 
+- those correlates can be represented with bounded signal metaphors (e.g., subtle gain, noise floor, gentle compression, cautious vignette), 
+without claiming clinical equivalence. This framing is consistent with the broader attention/arousal literature in which arousal can bias competition in perception (amplifying “high-priority” signals) and with neurobiological reviews linking arousal systems to vigilance/attention.
 
-**Safety-first constraints (especially for a public-facing repo).** The repo may include motifs that can inadvertently trigger discomfort (photosensitivity, vestibular symptoms, migraine, startle). Therefore:  
-- Avoid or strictly clamp **flashes/flicker** (noting accessibility standards such as WCAG’s “Three Flashes or Below Threshold”). citeturn10search0  
-- Offer **Reduced Motion** alternatives and the ability to disable non-essential animation; this aligns with WCAG guidance on user control over animation and with platform guidance around “prefers-reduced-motion.” citeturn11search10turn10search5  
-- Treat **sudden loud sound** or sharp transients as potential startle triggers (the acoustic startle response is a rapid defensive reflex to sudden intense stimuli). citeturn10search3  
-- Consider photosensitivity thresholds discussed in epilepsy safety consensus work (e.g., hazard conditions involving flash frequency and screen area), and treat these as design “hard limits,” not optional nice-to-haves. citeturn10search2turn10search6  
+Safety-first constraints (especially for a public-facing repo). The repo may include motifs that can inadvertently trigger discomfort (photosensitivity, vestibular symptoms, migraine, startle). Therefore: 
+- Avoid or strictly clamp flashes/flicker (noting accessibility standards such as WCAG’s “Three Flashes or Below Threshold”). 
+- Offer Reduced Motion alternatives and the ability to disable non-essential animation; this aligns with WCAG guidance on user control over animation and with platform guidance around “prefers-reduced-motion.” 
+- Treat sudden loud sound or sharp transients as potential startle triggers (the acoustic startle response is a rapid defensive reflex to sudden intense stimuli). 
+- Consider photosensitivity thresholds discussed in epilepsy safety consensus work (e.g., hazard conditions involving flash frequency and screen area), and treat these as design “hard limits,” not optional nice-to-haves. 
 
 ## File for hyperarousal
 
-The repo defines **hyperarousal** as: **“Elevated baseline alertness, physiological tension, and readiness to react.”** This is commonly discussed in clinical psychophysiology as elevated sympathetic readiness and altered autonomic regulation (e.g., lower vagally mediated HRV in meta-analytic PTSD work) and is also used more broadly in models of insomnia as persistent multi-level arousal (cognitive/emotional/physiological). citeturn15search9turn14search18turn0search1
+The repo defines hyperarousal as: “Elevated baseline alertness, physiological tension, and readiness to react.” This is commonly discussed in clinical psychophysiology as elevated sympathetic readiness and altered autonomic regulation (e.g., lower vagally mediated HRV in meta-analytic PTSD work) and is also used more broadly in models of insomnia as persistent multi-level arousal (cognitive/emotional/physiological).
 
-**Distinguishing scope (important for mapping):**  
-- *Hyperarousal vs hypervigilance*: hyperarousal is primarily a **baseline state** of physiological readiness/tension, whereas hypervigilance emphasizes **monitoring/scanning** and attention allocation toward potential cues. (In practice they can co-occur, but they are not identical design targets.) This distinction matches how attention/arousal reviews separate global arousal systems from selective attentional processes. citeturn9search2turn9search6  
-- *Hyperarousal vs panic peaks*: panic peaks are **episodic surges** that rise/fall; hyperarousal is often **sustained/tonic**. Evidence from PTSD psychophysiology meta-analysis suggests group differences can appear in baseline measures as well as reactivity paradigms, supporting this “tonic vs phasic” distinction as a useful design axis. citeturn15search1turn13search6  
+Distinguishing scope (important for mapping): 
+- *Hyperarousal vs hypervigilance*: hyperarousal is primarily a baseline state of physiological readiness/tension, whereas hypervigilance emphasizes monitoring/scanning and attention allocation toward potential cues. (In practice they can co-occur, but they are not identical design targets.) This distinction matches how attention/arousal reviews separate global arousal systems from selective attentional processes. 
+- *Hyperarousal vs panic peaks*: panic peaks are episodic surges that rise/fall; hyperarousal is often sustained/tonic. Evidence from PTSD psychophysiology meta-analysis suggests group differences can appear in baseline measures as well as reactivity paradigms, supporting this “tonic vs phasic” distinction as a useful design axis. 
 
-**Perceptual correlates suitable for cautious signal metaphors:**  
-- Autonomic imbalance findings (e.g., lower HRV meta-analyses) are consistent with a **reduced “physiological buffer”** and sustained readiness, which can map metaphorically to reduced dynamic headroom (gentle compression/limiting rather than spikes). citeturn15search9turn15search5  
-- Arousal can bias attention/perception toward “high-priority” signals (“winner-take-more”), suggesting a modest rationale for metaphors like **slight edge/contrast emphasis** or **salience weighting**—as long as it is bounded and not intense. citeturn14search5turn13search7  
-- Psychophysiology work highlights that subjective distress and physiological measures can be partially dissociated; for design, this is a caution against “biomarker cosplay” and supports keeping mappings as **optional metaphors** with user control. citeturn13search6turn13search2  
+Perceptual correlates suitable for cautious signal metaphors: 
+- Autonomic imbalance findings (e.g., lower HRV meta-analyses) are consistent with a reduced “physiological buffer” and sustained readiness, which can map metaphorically to reduced dynamic headroom (gentle compression/limiting rather than spikes). 
+- Arousal can bias attention/perception toward “high-priority” signals (“winner-take-more”), suggesting a modest rationale for metaphors like slight edge/contrast emphasis or salience weighting—as long as it is bounded and not intense. 
+- Psychophysiology work highlights that subjective distress and physiological measures can be partially dissociated; for design, this is a caution against “biomarker cosplay” and supports keeping mappings as optional metaphors with user control. 
 
 ```markdown
 # docs/references/dimensions/hyperarousal.md
@@ -56,8 +56,8 @@ Hyperarousal here means a **tonic elevation** in alertness/activation (baseline 
 
 **Common measurement instruments (examples)**
 - PTSD symptom measures that include arousal/reactivity items:
-  - CAPS-5 (structured interview) — DOI: https://doi.org/10.1037/pas0000486 (PMID: 28493729)
-  - PCL-5 (self-report) — DOI: https://doi.org/10.1002/jts.22059 (PMID: 26606250)
+ - CAPS-5 (structured interview) — DOI: https://doi.org/10.1037/pas0000486 (PMID: 28493729)
+ - PCL-5 (self-report) — DOI: https://doi.org/10.1002/jts.22059 (PMID: 26606250)
 - Autonomic correlates sometimes used in research (non-diagnostic, group-level): heart-rate variability (HRV) meta-analyses in PTSD.
 
 ---
@@ -122,12 +122,12 @@ Rationale: multiple converging reviews/meta-analyses plus widely used measuremen
 
 ## File for hypervigilance
 
-The repo defines **hypervigilance** as: **“Scanning for threats, narrowed attention, heightened sensitivity to cues.”** This aligns with a large threat-attention literature in anxiety and trauma exposure, often operationalized as **threat-related attentional bias**, and with empirical work that treats hypervigilance as a state that can influence scanning patterns and autonomic arousal (e.g., pupil dilation). citeturn19search0turn16search2turn16search18
+The repo defines hypervigilance as: “Scanning for threats, narrowed attention, heightened sensitivity to cues.” This aligns with a large threat-attention literature in anxiety and trauma exposure, often operationalized as threat-related attentional bias, and with empirical work that treats hypervigilance as a state that can influence scanning patterns and autonomic arousal (e.g., pupil dilation).
 
-**What is strongly supported vs contested (important for design claims):**  
-- Large meta-analytic work finds threat-related attentional bias effects in anxiety on average, but effect sizes are modest and heterogeneity is meaningful (paradigm, stimulus type, sample). citeturn19search0turn44view0  
-- Eye-tracking meta-analysis suggests small but significant relationships between anxiety/fear symptoms and both early orienting and maintenance on threat, and also explicitly highlights measurement issues and reliability differences between eye tracking and RT-based measures. citeturn46view0  
-- Counterpoints include arguments that the field has faced “crisis”-type concerns about reliability and universality of attentional bias, motivating restrained design language and optionality rather than definitive “this is hypervigilance.” citeturn45search6turn46view0  
+What is strongly supported vs contested (important for design claims): 
+- Large meta-analytic work finds threat-related attentional bias effects in anxiety on average, but effect sizes are modest and heterogeneity is meaningful (paradigm, stimulus type, sample). 
+- Eye-tracking meta-analysis suggests small but significant relationships between anxiety/fear symptoms and both early orienting and maintenance on threat, and also explicitly highlights measurement issues and reliability differences between eye tracking and RT-based measures. 
+- Counterpoints include arguments that the field has faced “crisis”-type concerns about reliability and universality of attentional bias, motivating restrained design language and optionality rather than definitive “this is hypervigilance.” 
 
 ```markdown
 # docs/references/dimensions/hypervigilance.md
@@ -150,12 +150,12 @@ Hypervigilance here emphasizes **selective attention + monitoring**, not merely 
 
 **Common measurement instruments (examples)**
 - PTSD symptom measures that include hypervigilance items:
-  - CAPS-5 — https://doi.org/10.1037/pas0000486 (PMID: 28493729)
-  - PCL-5 — https://doi.org/10.1002/jts.22059 (PMID: 26606250)
+ - CAPS-5 — https://doi.org/10.1037/pas0000486 (PMID: 28493729)
+ - PCL-5 — https://doi.org/10.1002/jts.22059 (PMID: 26606250)
 - **Brief Hypervigilance Scale (BHS)** (self-report):
-  - https://doi.org/10.1037/tra0000070 (PMID: 26121174)
+ - https://doi.org/10.1037/tra0000070 (PMID: 26121174)
 - **Body Vigilance Scale (BVS)** (panic-relevant attentional focus to bodily cues; related construct):
-  - https://doi.org/10.1037/0022-006X.65.2.214 (PMID: 9086684)
+ - https://doi.org/10.1037/0022-006X.65.2.214 (PMID: 9086684)
 - Behavioral paradigms used in research (measurement caveats): dot-probe, emotional Stroop, spatial cueing, and increasingly eye-tracking free-viewing tasks.
 
 ---
@@ -221,13 +221,13 @@ Rationale: substantial review literature supports threat-related attention effec
 
 ## File for panic_peaks
 
-The repo defines **panic_peaks** as: **“Sudden waves of intense fear or bodily alarm that rise and fall.”** This is strongly consistent with both classic cognitive models (catastrophic misinterpretation of bodily sensations) and modern interoception/anxiety research emphasizing how bodily signals can become the focus of negative appraisal and attention. citeturn21search20turn37view0
+The repo defines panic_peaks as: “Sudden waves of intense fear or bodily alarm that rise and fall.” This is strongly consistent with both classic cognitive models (catastrophic misinterpretation of bodily sensations) and modern interoception/anxiety research emphasizing how bodily signals can become the focus of negative appraisal and attention.
 
-**Evidence that supports “rise/fall surges” and careful limits:**  
-- PDSS development work supports clinical measurement of panic severity and explicitly ties to panic attack frequency, distress, anticipatory anxiety, avoidance, and impairment—compatible with the repo’s “peaks” framing (while still diagnostic in origin). citeturn36search3  
-- CO₂ challenge literature systematically reviews provocation paradigms used to reliably elicit panic attacks in controlled settings, but network meta-analysis shows CO₂ vulnerability is **not fully specific** to panic disorder—supporting careful wording and non-diagnostic framing. citeturn34search9turn39view0  
-- Interoception meta-analysis finds anxiety is associated with more negative evaluation and attention to bodily signals (questionnaire measures), supporting “bodily alarm” and body-focused salience as a plausible correlate for AV metaphors like pulse, breath, and constrained dynamic range—again, with caution about measure overlap and specificity. citeturn37view0  
-- Qualitative phenomenology (e.g., adolescents’ lived experience) emphasizes overwhelming, engulfing bodily sensations; this supports metaphors that are *intense but bounded* and user-controlled, rather than chaotic or incapacitating visuals. citeturn36search10  
+Evidence that supports “rise/fall surges” and careful limits: 
+- PDSS development work supports clinical measurement of panic severity and explicitly ties to panic attack frequency, distress, anticipatory anxiety, avoidance, and impairment—compatible with the repo’s “peaks” framing (while still diagnostic in origin). 
+- CO₂ challenge literature systematically reviews provocation paradigms used to reliably elicit panic attacks in controlled settings, but network meta-analysis shows CO₂ vulnerability is not fully specific to panic disorder—supporting careful wording and non-diagnostic framing. 
+- Interoception meta-analysis finds anxiety is associated with more negative evaluation and attention to bodily signals (questionnaire measures), supporting “bodily alarm” and body-focused salience as a plausible correlate for AV metaphors like pulse, breath, and constrained dynamic range—again, with caution about measure overlap and specificity. 
+- Qualitative phenomenology (e.g., adolescents’ lived experience) emphasizes overwhelming, engulfing bodily sensations; this supports metaphors that are intense but bounded and user-controlled, rather than chaotic or incapacitating visuals. 
 
 ```markdown
 # docs/references/dimensions/panic_peaks.md
@@ -253,11 +253,11 @@ Panic peaks here emphasize:
 
 **Common measurement instruments (examples)**
 - Panic Disorder Severity Scale (PDSS; clinician-rated):
-  - https://doi.org/10.1176/ajp.154.11.1571 (multicenter scale; classic paper)
+ - https://doi.org/10.1176/ajp.154.11.1571 (multicenter scale; classic paper)
 - Self-report adjuncts often used in panic research:
-  - anxiety sensitivity measures (AS constructs),
-  - body vigilance measures (BVS),
-  - interoception questionnaires (research context; interpret cautiously).
+ - anxiety sensitivity measures (AS constructs),
+ - body vigilance measures (BVS),
+ - interoception questionnaires (research context; interpret cautiously).
 
 ---
 
@@ -324,7 +324,7 @@ Rationale: panic surges are extensively studied and measured; multiple reviews a
 
 ## Repo-ready methodology README
 
-Below is a repo-ready scaffold explaining method, framing, and safety ethics. It references standards that support strong guardrails against flicker and against uncontrolled animation, and it recommends Reduced Motion pathways. citeturn10search0turn11search10turn10search5turn10search2  
+Below is a repo-ready scaffold explaining method, framing, and safety ethics. It references standards that support strong guardrails against flicker and against uncontrolled animation, and it recommends Reduced Motion pathways. 
 
 ```markdown
 # docs/references/README.md
@@ -350,9 +350,9 @@ We avoid stigmatizing or sensational language, and we prioritize safety and user
 For each experience dimension we:
 1. Use the repo’s definition from `src/conditions/experience-dimensions.json`.
 2. Identify 6–10 peer-reviewed sources where possible:
-   - ≥2 reviews/meta-analyses or clinical guidelines
-   - ≥2 primary empirical studies
-   - plus optional foundational references where needed
+ - ≥2 reviews/meta-analyses or clinical guidelines
+ - ≥2 primary empirical studies
+ - plus optional foundational references where needed
 3. Extract findings directly relevant to **subjective experience**, attention, perception, and repetition/loops.
 4. Note limitations and counterpoints (heterogeneity, measurement reliability, non-specificity).
 5. Propose bounded AV motifs with explicit **safety clamps** and **Reduced Motion** alternatives.
@@ -396,7 +396,7 @@ Each dimension file provides:
 
 ## Evidence matrix for the first three dimensions
 
-This initial matrix summarizes each dimension’s key phenomena, metaphors, citations, evidence strength, and safety notes; it should be extended as the remaining dimensions are documented. Safety notes are intentionally conservative, anchored in accessibility guidance about flashes/animation and in photosensitivity consensus recommendations. citeturn10search0turn11search10turn10search2turn39view0turn46view0  
+This initial matrix summarizes each dimension’s key phenomena, metaphors, citations, evidence strength, and safety notes; it should be extended as the remaining dimensions are documented. Safety notes are intentionally conservative, anchored in accessibility guidance about flashes/animation and in photosensitivity consensus recommendations. 
 
 ```markdown
 # docs/references/EVIDENCE_MATRIX.md
@@ -410,73 +410,73 @@ This initial matrix summarizes each dimension’s key phenomena, metaphors, cita
 
 ## Motif consistency check with safer substitutions
 
-This audit asks two questions for each dimension:  
-- Does the motif clearly map to a described perceptual/phenomenological feature (even as a metaphor)?  
+This audit asks two questions for each dimension: 
+- Does the motif clearly map to a described perceptual/phenomenological feature (even as a metaphor)? 
 - Is the motif more “stylish” than evidence-aligned (and therefore better treated as optional/avoid)?
 
-Safety constraints about flashes and animation control are treated as non-negotiable; they follow WCAG guidance and photosensitivity consensus recommendations. citeturn10search0turn11search10turn10search2turn10search6  
+Safety constraints about flashes and animation control are treated as non-negotiable; they follow WCAG guidance and photosensitivity consensus recommendations. 
 
 ### Hyperarousal
 
-**Consistency notes.** Evidence for hyperarousal supports tonic activation and (in some literatures) altered autonomic regulation; this is more naturally mapped to **persistent, low-amplitude signal changes** than to fast motion or flashing. citeturn15search9turn14search18turn15search1  
+Consistency notes. Evidence for hyperarousal supports tonic activation and (in some literatures) altered autonomic regulation; this is more naturally mapped to persistent, low-amplitude signal changes than to fast motion or flashing. 
 
-**Recommended (evidence-aligned + safer by default)**  
-- **Gentle compressor/limiter (audio)**: aligns with the idea of reduced physiological “dynamic buffer” (autonomic dysregulation / readiness) and prevents startle peaks; avoids overclaiming because it is a metaphor about headroom, not a diagnosis marker. citeturn15search9turn10search3  
-- **Low-level, steady noise bed (audio)**: plausibly maps to persistent activation without event-like surprises; keep amplitude very low. citeturn14search18turn10search3  
-- **Fine grain / static texture (video), clamped**: metaphor for persistent activation background; avoids motion triggers if static. citeturn14search18turn11search10  
+Recommended (evidence-aligned + safer by default) 
+- **Gentle compressor/limiter (audio)**: aligns with the idea of reduced physiological “dynamic buffer” (autonomic dysregulation / readiness) and prevents startle peaks; avoids overclaiming because it is a metaphor about headroom, not a diagnosis marker. 
+- **Low-level, steady noise bed (audio)**: plausibly maps to persistent activation without event-like surprises; keep amplitude very low. 
+- **Fine grain / static texture (video), clamped**: metaphor for persistent activation background; avoids motion triggers if static. 
 
-**Optional (plausible but easier to become “stylistic” than evidential)**  
-- **Subtle edge sharpening / salience weighting (video)**: loosely consistent with arousal-biased competition’s claim that arousal can increase priority weighting, but it’s indirect; should be optional and minimal. citeturn14search5turn13search7  
-- **Mild presence tilt (audio EQ)**: can suggest “on-edge” sensitivity; risks harshness if overdone, so keep as optional. citeturn9search6turn10search3  
+Optional (plausible but easier to become “stylistic” than evidential) 
+- **Subtle edge sharpening / salience weighting (video)**: loosely consistent with arousal-biased competition’s claim that arousal can increase priority weighting, but it’s indirect; should be optional and minimal. 
+- **Mild presence tilt (audio EQ)**: can suggest “on-edge” sensitivity; risks harshness if overdone, so keep as optional. 
 
-**Avoid (misaligned or safety-negative)**  
-- **Flicker, strobe, rapid luminance modulation**: not needed for tonic hyperarousal and increases seizure risk; violates accessibility expectations. citeturn10search0turn10search2  
-- **Sudden loud transients / jump-cut audio spikes**: would conflate hyperarousal with startle-induction; startle is a defensive reflex to sudden stimuli and can be distressing. citeturn10search3turn13search6  
+Avoid (misaligned or safety-negative) 
+- **Flicker, strobe, rapid luminance modulation**: not needed for tonic hyperarousal and increases seizure risk; violates accessibility expectations. 
+- **Sudden loud transients / jump-cut audio spikes**: would conflate hyperarousal with startle-induction; startle is a defensive reflex to sudden stimuli and can be distressing. 
 
-**Safer substitutions (same metaphor goal, lower risk)**  
-- Replace any “jitter” with **slow envelope** changes (<0.2 Hz) or static texture + intensity slider. citeturn11search10turn10search5  
+Safer substitutions (same metaphor goal, lower risk) 
+- Replace any “jitter” with slow envelope changes (<0.2 Hz) or static texture + intensity slider. 
 
 ### Hypervigilance
 
-**Consistency notes.** The most evidence-aligned correlates are **attention capture/maintenance** and scanning/monitoring behaviors, but the literature is mixed and measurement reliability is an explicit concern—so motifs should stay **gentle, optional, and user-controlled**. citeturn19search0turn46view0turn45search6  
+Consistency notes. The most evidence-aligned correlates are attention capture/maintenance and scanning/monitoring behaviors, but the literature is mixed and measurement reliability is an explicit concern—so motifs should stay gentle, optional, and user-controlled. 
 
-**Recommended (evidence-aligned + safer by default)**  
-- **Static, soft vignette (video)**: maps to “narrowed attention” without inducing motion sickness (avoid moving tunnel effects). citeturn46view0turn11search10  
-- **Quiet noise floor (audio)**: metaphor for persistent monitoring load; no surprise transients. citeturn19search0turn10search3  
-- **Strict limiter with gentle release (audio)**: prevents jump-scare dynamics and supports the repo’s “no spikes” safety note. citeturn10search3turn11search10  
+Recommended (evidence-aligned + safer by default) 
+- **Static, soft vignette (video)**: maps to “narrowed attention” without inducing motion sickness (avoid moving tunnel effects). 
+- **Quiet noise floor (audio)**: metaphor for persistent monitoring load; no surprise transients. 
+- **Strict limiter with gentle release (audio)**: prevents jump-scare dynamics and supports the repo’s “no spikes” safety note. 
 
-**Optional (can be evidence-adjacent but easily becomes “stylistic”)**  
-- **Subtle peripheral “edge watch” shimmer**: could metaphorically represent monitoring of the periphery, but any shimmer risks becoming flicker; keep extremely slow and provide Reduced Motion. citeturn46view0turn10search0  
-- **Rare, soft salience ping (audio)**: loosely maps to attentional orienting, but easily becomes startle-like; keep optional/off by default and never sudden/loud. citeturn46view0turn10search3  
+Optional (can be evidence-adjacent but easily becomes “stylistic”) 
+- **Subtle peripheral “edge watch” shimmer**: could metaphorically represent monitoring of the periphery, but any shimmer risks becoming flicker; keep extremely slow and provide Reduced Motion. 
+- **Rare, soft salience ping (audio)**: loosely maps to attentional orienting, but easily becomes startle-like; keep optional/off by default and never sudden/loud. 
 
-**Avoid (misaligned or safety-negative)**  
-- **Jump scares / abrupt cuts**: directly violate the repo safety note and are not necessary to represent vigilance/maintenance. citeturn46view0turn11search10  
-- **Fast scanning camera motion** (pan/tilt, parallax): may cause vestibular discomfort and suggests “cinematic scanning” more than attention science. citeturn11search10turn11search7  
+Avoid (misaligned or safety-negative) 
+- **Jump scares / abrupt cuts**: directly violate the repo safety note and are not necessary to represent vigilance/maintenance. 
+- Fast scanning camera motion (pan/tilt, parallax): may cause vestibular discomfort and suggests “cinematic scanning” more than attention science. 
 
-**Safer substitutions**  
-- Replace moving focus windows with **static composition + micro-contrast cueing** (slow fades) and allow user to disable all cueing (“Reduced Surprise”). citeturn11search10turn10search5  
+Safer substitutions 
+- Replace moving focus windows with static composition + micro-contrast cueing (slow fades) and allow user to disable all cueing (“Reduced Surprise”). 
 
 ### Panic peaks
 
-**Consistency notes.** Panic peaks are best supported as **time-bounded surges**: a rise–crest–release envelope. The strongest mapping is therefore **envelope-based modulation** (slow, clamped), not chaotic motion. CO₂ provocation literature supports that panic-like surges can be elicited in controlled ways, but also shows lack of full specificity—supporting careful, non-diagnostic wording. citeturn34search9turn39view0turn21search20  
+Consistency notes. Panic peaks are best supported as time-bounded surges: a rise–crest–release envelope. The strongest mapping is therefore envelope-based modulation (slow, clamped), not chaotic motion. CO₂ provocation literature supports that panic-like surges can be elicited in controlled ways, but also shows lack of full specificity—supporting careful, non-diagnostic wording. 
 
-**Recommended (evidence-aligned + safer by default)**  
-- **Envelope-shaped modulation (audio + video)**: rise/crest/release aligns directly with the repo definition; can be done without flashes or motion sickness. citeturn21search20turn11search10  
-- **Strict intensity caps + user control**: consistent with both safety ethics and the fact that provocation paradigms are not diagnosis-specific; users should never be “pushed” by default. citeturn39view0turn11search10  
-- **Breath/pulse metaphor at safe levels**: aligns with interoception/anxiety links (body signal attention and appraisal) while staying explicitly metaphorical (avoid literal “medical” heart sounds). citeturn37view0turn10search3  
+Recommended (evidence-aligned + safer by default) 
+- **Envelope-shaped modulation (audio + video)**: rise/crest/release aligns directly with the repo definition; can be done without flashes or motion sickness. 
+- **Strict intensity caps + user control**: consistent with both safety ethics and the fact that provocation paradigms are not diagnosis-specific; users should never be “pushed” by default. 
+- **Breath/pulse metaphor at safe levels**: aligns with interoception/anxiety links (body signal attention and appraisal) while staying explicitly metaphorical (avoid literal “medical” heart sounds). 
 
-**Optional (plausible but riskier)**  
-- **Low-pass sweep (audio)**: can suggest perceptual narrowing; can be unpleasant for some users if too strong—make optional and clamp bandwidth. citeturn37view0turn10search3  
-- **Mild desaturation at crest (video)**: metaphor for “alarm mode” salience shift; indirect support, so keep subtle/optional. citeturn21search7turn21search20  
+Optional (plausible but riskier) 
+- **Low-pass sweep (audio)**: can suggest perceptual narrowing; can be unpleasant for some users if too strong—make optional and clamp bandwidth. 
+- **Mild desaturation at crest (video)**: metaphor for “alarm mode” salience shift; indirect support, so keep subtle/optional. 
 
-**Avoid (misaligned or safety-negative)**  
-- **Strobe / flicker / fast rhythmic flashes**: unnecessary for “wave” dynamics and presents seizure risk. citeturn10search0turn10search2  
-- **Rapid zooms, camera shakes, heavy feedback trails**: more likely to induce cybersickness/vestibular discomfort than to represent panic phenomenology. citeturn11search7turn11search10  
-- **Harsh audio distortion or sudden siren-like elements**: can function as a startle/provocation rather than a metaphor; violates safety-first intent. citeturn10search3turn39view0  
+Avoid (misaligned or safety-negative) 
+- **Strobe / flicker / fast rhythmic flashes**: unnecessary for “wave” dynamics and presents seizure risk. 
+- **Rapid zooms, camera shakes, heavy feedback trails**: more likely to induce cybersickness/vestibular discomfort than to represent panic phenomenology. 
+- **Harsh audio distortion or sudden siren-like elements**: can function as a startle/provocation rather than a metaphor; violates safety-first intent. 
 
-**Safer substitutions**  
-- Replace motion-heavy “swells” with **static imagery + slow luminance/contrast envelope** and offer a prominent Reduced Motion toggle. citeturn11search10turn10search5  
+Safer substitutions 
+- Replace motion-heavy “swells” with static imagery + slow luminance/contrast envelope and offer a prominent Reduced Motion toggle. 
 
 ---
 
-*When you’re ready, ask for the next batch and I will continue with the remaining repo dimensions (intrusion, rumination_loop, emotional_numbing, cognitive_fog, time_dilation, derealization, depersonalization, sensory_overload, attention_fragmentation, compulsive_loop) using the same evidence + safety methodology.*
+When you’re ready, ask for the next batch and I will continue with the remaining repo dimensions (intrusion, rumination_loop, emotional_numbing, cognitive_fog, time_dilation, derealization, depersonalization, sensory_overload, attention_fragmentation, compulsive_loop) using the same evidence + safety methodology.

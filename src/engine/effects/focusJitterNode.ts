@@ -11,6 +11,7 @@ import {
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
+  QUAD_VERTEX_SHADER,
 } from './paramUtils'
 
 function lerp(a: number, b: number, t: number): number {
@@ -86,13 +87,7 @@ export class FocusJitterNode implements VideoNode {
         u_smoothing: { value: 0.92 },
         u_offset: { value: new THREE.Vector2(0, 0) },
       },
-      vertexShader: `
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = vec4(position.xy, 0.0, 1.0);
-}
-`,
+      vertexShader: QUAD_VERTEX_SHADER,
       fragmentShader: `
 uniform sampler2D u_map;
 uniform vec2 u_uvScale;

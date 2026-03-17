@@ -1,9 +1,9 @@
 # Evidence index (dimension-level)
 
-This is a **quick index** for authors and reviewers.
+Quick index for authors and reviewers.
 
-- **Evidence strength** refers to the **experience dimension** (phenomenology + measurement literature).
-- It does **not** mean the AV overlay “simulates” a disorder.
+- Evidence strength refers to the experience dimension (phenomenology + measurement literature).
+- It does not mean the AV overlay “simulates” a disorder.
 - See `dimension-to-signal-mapping.json` for implementation-facing motif hints and safety clamps.
 
 | Dimension | Label | Evidence strength | Rationale doc |

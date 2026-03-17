@@ -2,21 +2,21 @@ import type { AudioContextStatus, MicStatus, AudioInputMode } from '../engine/au
 import { LabeledSlider } from './controls/LabeledSlider'
 
 export interface AudioMicControlsProps {
-    audioStatus: AudioContextStatus
-    audioError: string | null
-    masterVolume: number
-    micStatus: MicStatus
-    micError: string | null
-    micSensitivity: number
-    micGate: number
-    inputMode: AudioInputMode
-    onEnableAudio: () => void
-    onEnableMic: () => void
-    onDisableMic: () => void
-    onMasterVolumeChange: (vol: number) => void
-    onMicSensitivityChange: (val: number) => void
-    onMicGateChange: (val: number) => void
-    onInputModeChange: (mode: AudioInputMode) => void
+  audioStatus: AudioContextStatus
+  audioError: string | null
+  masterVolume: number
+  micStatus: MicStatus
+  micError: string | null
+  micSensitivity: number
+  micGate: number
+  inputMode: AudioInputMode
+  onEnableAudio: () => void
+  onEnableMic: () => void
+  onDisableMic: () => void
+  onMasterVolumeChange: (vol: number) => void
+  onMicSensitivityChange: (val: number) => void
+  onMicGateChange: (val: number) => void
+  onInputModeChange: (mode: AudioInputMode) => void
 }
 
 export function AudioMicControls({

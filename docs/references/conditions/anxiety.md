@@ -23,7 +23,7 @@
 
 ## Motifs used in this preset (quick traceability)
 
-These motifs are used by the included dimensions. Each motif is an **artistic/engineering implementation** of a metaphor; the evidence applies primarily to the dimension phenomena.
+These motifs are used by the included dimensions. Each motif is an artistic/engineering implementation of a metaphor; the evidence applies primarily to the dimension phenomena.
 
 - `compressor_limiter` — Reduces peaks and smooths dynamics (safety-first). — `docs/references/motifs/compressor_limiter.md`
 - `delay` — Short echo with low feedback/mix (clamped). — `docs/references/motifs/delay.md`

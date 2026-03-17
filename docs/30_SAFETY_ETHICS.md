@@ -1,12 +1,12 @@
 # Safety and ethics
 
-**Canonical safety and ethics doc.** Aligned with [references/README.md](references/README.md) and evidence docs under `docs/references/**`. Non-diagnostic, metaphorical framing only.
+Canonical safety and ethics doc. Aligned with [references/README.md](references/README.md) and evidence docs under `docs/references/**`. Non-diagnostic, metaphorical framing only.
 
 ---
 
 ## Core framing
 
-This project does **not** aim to "accurately simulate" a diagnosis. It uses **metaphors** based on **experience dimensions** (e.g. intrusion, tension, derealization, rumination). Evidence for dimensions and AV motifs is in [references/](references/README.md) and the deep research reports under [references/reports/](references/reports/).
+This project does not aim to "accurately simulate" a diagnosis. It uses metaphors based on experience dimensions (e.g. intrusion, tension, derealization, rumination). Evidence for dimensions and AV motifs is in [references/](references/README.md) and the deep research reports under [references/reports/](references/reports/).
 
 **Design intent:** Support empathy and understanding without shock or sensationalism.
 
@@ -45,7 +45,7 @@ References explicitly warn against: flicker/strobe, sudden loud transients, jump
 
 ## Coupling loops (audio ↔ video) — safety posture
 
-The system supports a **bidirectional coupling layer** (audio→video and video→audio) as a **perceptual metaphor of mutual reinforcement**. This is **not** presented as a clinical mechanism.
+The system supports a bidirectional coupling layer (audio→video and video→audio) as a perceptual metaphor of mutual reinforcement. This is not presented as a clinical mechanism.
 
 Safety requirements for coupling:
 
@@ -65,7 +65,7 @@ All modulation ranges are intentionally small and clamped by Safe Mode and globa
 
 ## Microphone (optional) — privacy + calibration
 
-Microphone input is **optional**, **off by default**, **local-only**, and can be disabled at any time.
+Microphone input is optional, off by default, local-only, and can be disabled at any time.
 
 - **No recording**: mic audio is not stored or uploaded.
 - **Permission-separated**: mic requires an explicit user action.
@@ -98,7 +98,7 @@ See [SECURITY.md](SECURITY.md) for Permissions-Policy, CSP, and release checklis
 
 ## Example mappings (metaphorical only)
 
-Experience → signal mappings are **hypotheses** supported by references/Scientific where indicated; otherwise they are labeled as evidence gaps. Examples of supported motifs (see [references/EVIDENCE_MATRIX.md](references/EVIDENCE_MATRIX.md)):
+Experience → signal mappings are hypotheses supported by references/Scientific where indicated; otherwise they are labeled as evidence gaps. Examples of supported motifs (see [references/EVIDENCE_MATRIX.md](references/EVIDENCE_MATRIX.md)):
 
 - **Hyperarousal:** grain, edge_sharpen, vignette (video); compressor_limiter, highpass, noise_bed (audio). Avoid flicker and sudden loud transients. Source: evidence corpus (`docs/references/**`).
 - **Derealization:** haze, chroma_aberration (low), temporal_smear (low); lowpass, flutter, reverb. Avoid strong warping or glitch aesthetics. Source: evidence corpus (`docs/references/**`).

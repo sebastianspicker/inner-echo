@@ -31,7 +31,7 @@ No backend is required for core runtime behavior.
 
 ## What This Repository Is Not
 
-`inner-echo` is **not**:
+`inner-echo` is not:
 - a diagnostic tool,
 - a medical device,
 - a treatment platform,
@@ -198,6 +198,10 @@ npm run screenshots:verify
 - No real camera feed is stored in the repository.
 - Assets are generated from `assets/readme/screenshots/manifest.json`.
 - Primary format is WebP with explicit PNG fallback links.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, contribution guidelines, and the safety checklist that applies to all PRs.
 
 ## Evidence & Docs
 

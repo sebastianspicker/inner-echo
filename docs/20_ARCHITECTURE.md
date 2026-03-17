@@ -1,18 +1,18 @@
 # Architecture — System design and data flow
 
-**Canonical architecture doc.** Merged from ARCHITECTURE and FRONTEND. Client-only; engine and conditions are separate; data-driven profiles.
+Canonical architecture doc. Merged from ARCHITECTURE and FRONTEND. Client-only; engine and conditions are separate; data-driven profiles.
 
 ---
 
 ## Overview
 
-The application is **client-only**:
+The application is client-only:
 
-- Camera video via `getUserMedia()`; rendered through a **Three.js WebGL pipeline** as a texture.
-- Visual effects are applied as a **stack** (graph of nodes).
-- Optional audio via **WebAudio** (synth or optional mic); **analyser** can drive a modulation layer (Audio → Video).
+- Camera video via `getUserMedia()`, rendered through a Three.js WebGL pipeline as a texture.
+- Visual effects applied as a node stack.
+- Optional audio via WebAudio (synth or optional mic); an analyser can drive a modulation layer (Audio → Video).
 
-**Goals:** Modular (engine ≠ conditions); data-driven (profiles define behaviour); safe (Stop / Safe Mode / Reduced Motion); robust (WebGL fallback).
+Design goals: modular (engine ≠ conditions), data-driven (profiles define behaviour), safe (Stop / Safe Mode / Reduced Motion), with a Canvas2D fallback when WebGL init fails.
 
 ---
 
@@ -54,7 +54,7 @@ User gesture → AudioContext
 | **`src/ui/`** | Components, condition picker, controls, onboarding, accessibility. Calls engine APIs only. |
 | **`src/app/`** | Entry point and composition. |
 
-Boundary: **Engine** builds graphs from **conditions** data; **UI** drives the engine and displays state.
+Boundary: the engine module builds graphs from conditions data; UI calls engine APIs only.
 
 ---
 
@@ -96,7 +96,7 @@ See [RELIABILITY.md](RELIABILITY.md) for browser matrix, WebGL fallback details,
 ## Runtime state and permissions
 
 - States: idle, requesting_video, video_active, requesting_audio, audio_active, (optional) mic flow, denied/error.
-- All permission triggers (camera, mic, AudioContext) must be bound to a **user gesture**.
+- All permission triggers (camera, mic, AudioContext) must be bound to a user gesture.
 
 ---
 

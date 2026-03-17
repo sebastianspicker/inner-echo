@@ -4,6 +4,8 @@ dist/
 *.log
 tsconfig.tsbuildinfo
 reports/
+coverage/
+.vite/
 
 # Secrets & credentials — never commit these
 .env
@@ -24,6 +26,13 @@ service-account*.json
 # Local / WIP artifacts (audit runs, progress logs)
 .codex/
 .cursor/
+.claude/ralph-loop.local.md
+
+# OS / editor
+Thumbs.db
+ehthumbs.db
+.idea/
+*.sw?
 
 docs/references/reports/
 AGENTS.md

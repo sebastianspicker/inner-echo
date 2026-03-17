@@ -9,15 +9,8 @@ import {
   clamp,
   getSafeModeClampNumber,
   resolveNumberParam,
+  QUAD_VERTEX_SHADER,
 } from './paramUtils'
-
-const GRAIN_VERTEX = `
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = vec4(position.xy, 0.0, 1.0);
-}
-`
 
 const GRAIN_FRAGMENT = `
 uniform sampler2D u_map;
@@ -90,7 +83,7 @@ export class GrainNode implements VideoNode {
         u_time: { value: 0 },
         u_scale: { value: 1.2 },
       },
-      vertexShader: GRAIN_VERTEX,
+      vertexShader: QUAD_VERTEX_SHADER,
       fragmentShader: GRAIN_FRAGMENT,
       depthWrite: false,
     })

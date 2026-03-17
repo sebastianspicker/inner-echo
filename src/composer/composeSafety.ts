@@ -4,8 +4,8 @@
  */
 
 import type { Profile, VideoStackNodeDef, AudioStackConfig } from '../conditions/schema'
-import type { ComposerSettings } from './types'
-import { clamp01 } from './types'
+import { clamp01, type ComposerSettings } from './types'
+import { clamp } from '../utils/numeric'
 import {
   mergeSafeModeClamps,
   mergeWarnings,
@@ -27,14 +27,14 @@ export function clampAudioParams(
     const node = normalizeNodeType(n.node)
     const params = { ...(n.params ?? {}) }
     if (node === 'noise_bed' && typeof params.level === 'number') {
-      params.level = Math.max(0, Math.min(maxNoise, params.level))
+      params.level = clamp(params.level, 0, maxNoise)
     }
     if (node === 'tremolo') {
-      if (typeof params.rate === 'number') params.rate = Math.max(0, Math.min(maxTremoloRate, params.rate))
-      if (typeof params.depth === 'number') params.depth = Math.max(0, Math.min(maxTremoloDepth, params.depth))
+      if (typeof params.rate === 'number') params.rate = clamp(params.rate, 0, maxTremoloRate)
+      if (typeof params.depth === 'number') params.depth = clamp(params.depth, 0, maxTremoloDepth)
     }
     if (node === 'delay' && typeof params.feedback === 'number') {
-      params.feedback = Math.max(0, Math.min(0.18 * hardMaxFeedback, params.feedback))
+      params.feedback = clamp(params.feedback, 0, 0.18 * hardMaxFeedback)
     }
     return { ...n, node, params }
   })
@@ -52,7 +52,7 @@ export function clampVideoParams(
   const maxChroma = typeof safeModeClamps.max_chroma === 'number' ? safeModeClamps.max_chroma : 0.12
 
   const hardMaxFeedback = clamp01(settings.maxFeedback)
-  const hard = (x: number, max: number) => Math.max(0, Math.min(max * hardMaxFeedback, x))
+  const hard = (x: number, max: number) => clamp(x, 0, max * hardMaxFeedback)
 
   return stack.map((def) => {
     const node = normalizeNodeType(def.node)
@@ -81,7 +81,7 @@ export function clampVideoParams(
         k !== 'burst_duration_ms' &&
         k !== 'burst_min_gap_ms'
       ) {
-        params[k] = Math.max(-1, Math.min(1, v))
+        params[k] = clamp(v, -1, 1)
       }
     }
     return { ...def, node, params }

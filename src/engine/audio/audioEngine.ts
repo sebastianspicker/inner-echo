@@ -10,8 +10,7 @@
  */
 
 import { getAudioContext, startAudioContext, closeAudioContext, addAudioContextListener } from './contextManager'
-import type { AudioContextStatus, MicStatus, AudioInputMode } from './types'
-import type { AudioModule } from './types'
+import type { AudioContextStatus, MicStatus, AudioInputMode, AudioModule, AudioMetrics } from './types'
 import type { AudioStackConfig } from '../../conditions/schema'
 import { createSynth } from './synth'
 import { createCompressor } from './fx'
@@ -21,7 +20,6 @@ import {
   isKnownAudioNodeType,
   rampGain,
 } from './audioGraphBuilder'
-import type { AudioMetrics } from './types'
 import { clamp01, smoothStep } from '../../utils/numeric'
 import { logger } from '../../utils/logger'
 
@@ -37,6 +35,15 @@ const MIC_LIMITER_RELEASE = 0.1
 function ensureSize(buf: Float32Array, size: number): Float32Array {
   if (buf.length === size) return buf
   return new Float32Array(size)
+}
+
+function safeDisconnect(node: AudioNode | null): void {
+  if (!node) return
+  try {
+    node.disconnect()
+  } catch {
+    // already disconnected or not connected — safe to ignore
+  }
 }
 
 /**
@@ -261,23 +268,9 @@ export function createAudioEngine(
     if (!ctx || !masterGain || !mixer || !synthGain) return
 
     // Disconnect previous routing before rebuilding to avoid stacked parallel connections.
-    try {
-      synthGain.disconnect()
-    } catch {
-      // ignore
-    }
-    try {
-      mixer.disconnect()
-    } catch {
-      // ignore
-    }
-    if (analyserNode) {
-      try {
-        analyserNode.disconnect()
-      } catch {
-        // ignore
-      }
-    }
+    safeDisconnect(synthGain)
+    safeDisconnect(mixer)
+    safeDisconnect(analyserNode)
 
     for (const m of chain) m.dispose()
     chain = []
@@ -361,50 +354,18 @@ export function createAudioEngine(
       micStream.getTracks().forEach((t) => t.stop())
       micStream = null
     }
-    if (micSource) {
-      try {
-        micSource.disconnect()
-      } catch {
-        // already disconnected
-      }
-      micSource = null
-    }
-    if (micPreGain) {
-      try {
-        micPreGain.disconnect()
-      } catch {
-        // ignore
-      }
-      micPreGain = null
-    }
-    if (micLimiterModule) {
-      micLimiterModule.dispose()
-      micLimiterModule = null
-    }
-    if (micAnalyserNode) {
-      try {
-        micAnalyserNode.disconnect()
-      } catch {
-        // ignore
-      }
-      micAnalyserNode = null
-    }
-    if (micGateGain) {
-      try {
-        micGateGain.disconnect()
-      } catch {
-        // ignore
-      }
-      micGateGain = null
-    }
-    if (micGain) {
-      try {
-        micGain.disconnect()
-      } catch {
-        // ignore
-      }
-      micGain = null
-    }
+    safeDisconnect(micSource)
+    micSource = null
+    safeDisconnect(micPreGain)
+    micPreGain = null
+    micLimiterModule?.dispose()
+    micLimiterModule = null
+    safeDisconnect(micAnalyserNode)
+    micAnalyserNode = null
+    safeDisconnect(micGateGain)
+    micGateGain = null
+    safeDisconnect(micGain)
+    micGain = null
     prevMicSpectrumMag = null
     micGateSmoothed = 1
     callbacks.onMicStatusChange?.('off')
@@ -504,8 +465,7 @@ export function createAudioEngine(
   return {
     setMasterVolume(value: number) {
       if (masterGain) {
-        const v = Math.max(0, Math.min(1, value))
-        masterGain.gain.setValueAtTime(v, getCtx()?.currentTime ?? 0)
+        masterGain.gain.setValueAtTime(clamp01(value), getCtx()?.currentTime ?? 0)
       }
     },
     setConditionAudio,

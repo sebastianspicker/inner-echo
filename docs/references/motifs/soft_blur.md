@@ -8,8 +8,8 @@ Applies mild blur to reduce sharp detail (clamped).
 
 ## Evidence vs artistic implementation (make this explicit)
 
-- **Evidence-backed** in this project refers to *reported phenomena* in the evidence corpus (see dimension pages and the matrix).
-- This node is an **artistic/engineering implementation** used to represent those phenomena metaphorically.
+- **Evidence-backed** in this project refers to reported phenomena in the evidence corpus (see dimension pages and the matrix).
+- This node is an artistic/engineering implementation used to represent those phenomena metaphorically.
 - Therefore, the correct claim level for a node is usually **Mixed**: phenomenon supported, motif choice interpretive, implementation details artistic.
 
 ## Where this motif is used (traceability)
@@ -29,9 +29,9 @@ Applies mild blur to reduce sharp detail (clamped).
 
 ## Scientific sources (peer-reviewed; from in-repo corpus)
 
-These sources come from the **evidence corpus** sections for the dimensions that currently use this motif.
+These sources come from the evidence corpus sections for the dimensions that currently use this motif.
 
-> Important: these papers support the **phenomena** described by the dimensions; they do not claim that this specific node is a biomarker or uniquely “correct”.
+> Important: these papers support the phenomena described by the dimensions; they do not claim that this specific node is a biomarker or uniquely “correct”.
 
 - Vasterling, J. J., & Arditte Hall, K. A. (2018). Neurocognitive and information processing biases in posttraumatic stress disorder. *Current Psychiatry Reports, 20*, 106. https://doi.org/10.1007/s11920-018-0964-1
   DOI: https://doi.org/10.1007/s11920-018-0964-1 (`10.1007/s11920-018-0964-1`) — from `docs/references/reports/deep-research-report-2.md`

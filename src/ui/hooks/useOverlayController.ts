@@ -1,5 +1,4 @@
-import { useCallback } from 'react'
-import type { MutableRefObject } from 'react'
+import { useCallback, type MutableRefObject } from 'react'
 import type { OverlayControl } from '../../engine/canvas'
 import type { AudioEngineControl } from '../../engine/audio'
 import type { Profile } from '../../conditions/schema'

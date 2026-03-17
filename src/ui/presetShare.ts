@@ -3,15 +3,17 @@ import { decodePresetPayload, encodePresetPayload, type PresetPayload } from './
 const HASH_PREFIX = '#preset='
 
 function toBase64Url(value: string): string {
-  const encoded = btoa(unescape(encodeURIComponent(value)))
-  return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+  const bytes = new TextEncoder().encode(value)
+  const binary = Array.from(bytes, (b) => String.fromCharCode(b)).join('')
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
 }
 
 function fromBase64Url(value: string): string {
   const padded = value.replace(/-/g, '+').replace(/_/g, '/')
   const withPadding = padded + '='.repeat((4 - (padded.length % 4 || 4)) % 4)
-  const decoded = atob(withPadding)
-  return decodeURIComponent(escape(decoded))
+  const binary = atob(withPadding)
+  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0))
+  return new TextDecoder().decode(bytes)
 }
 
 export function encodePresetToHash(payload: PresetPayload): string {

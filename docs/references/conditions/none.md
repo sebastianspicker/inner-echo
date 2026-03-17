@@ -21,7 +21,7 @@ _No dimensions listed in profile._
 
 ## Motifs used in this preset (quick traceability)
 
-These motifs are used by the included dimensions. Each motif is an **artistic/engineering implementation** of a metaphor; the evidence applies primarily to the dimension phenomena.
+These motifs are used by the included dimensions. Each motif is an artistic/engineering implementation of a metaphor; the evidence applies primarily to the dimension phenomena.
 
 _No motifs listed._
 

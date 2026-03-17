@@ -11,15 +11,8 @@ import {
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
+  QUAD_VERTEX_SHADER,
 } from './paramUtils'
-
-const VERT = `
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = vec4(position.xy, 0.0, 1.0);
-}
-`
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -93,7 +86,7 @@ export class FeedbackLoopNode implements VideoNode {
         u_decay: { value: 0.94 },
         u_jitter: { value: new THREE.Vector2(0, 0) },
       },
-      vertexShader: VERT,
+      vertexShader: QUAD_VERTEX_SHADER,
       fragmentShader: FRAG,
       depthWrite: false,
     })

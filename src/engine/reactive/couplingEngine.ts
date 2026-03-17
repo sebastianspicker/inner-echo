@@ -13,14 +13,13 @@
  * to produce real-time smoothed parameter overrides.
  */
 
-import type { Profile } from '../../conditions/schema'
+import type { Profile, VideoStackNodeDef } from '../../conditions/schema'
 import {
   getProfileEntryForBuiltIndex,
   NODE_FACTORY,
   shouldSkipNode,
 } from '../../conditions/graphBuilder'
 import { getReducedMotionDisableNodes } from '../../conditions/normalize'
-import type { VideoStackNodeDef } from '../../conditions/schema'
 import type { AudioMetrics } from '../audio'
 import type { VideoMetrics } from '../canvas'
 

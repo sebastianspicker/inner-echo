@@ -4,19 +4,19 @@ import { LabeledSlider } from './controls/LabeledSlider'
 import { ToggleField } from './controls/ToggleField'
 
 export interface EffectControlsProps {
-    profile: Profile | null
-    intensity: number
-    safeMode: boolean
-    stressMode: boolean
-    reducedMotion: boolean
-    audioEnabled: boolean
-    controlValues: Record<string, number | boolean>
-    onIntensityChange: (v: number) => void
-    onSafeModeChange: (v: boolean) => void
-    onStressModeChange: (v: boolean) => void
-    onReducedMotionChange: (v: boolean) => void
-    onAudioEnabledChange: (v: boolean) => void
-    onControlValuesChange: (updater: (prev: Record<string, number | boolean>) => Record<string, number | boolean>) => void
+  profile: Profile | null
+  intensity: number
+  safeMode: boolean
+  stressMode: boolean
+  reducedMotion: boolean
+  audioEnabled: boolean
+  controlValues: Record<string, number | boolean>
+  onIntensityChange: (v: number) => void
+  onSafeModeChange: (v: boolean) => void
+  onStressModeChange: (v: boolean) => void
+  onReducedMotionChange: (v: boolean) => void
+  onAudioEnabledChange: (v: boolean) => void
+  onControlValuesChange: (updater: (prev: Record<string, number | boolean>) => Record<string, number | boolean>) => void
 }
 
 export function EffectControls({

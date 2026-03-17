@@ -11,15 +11,8 @@ import {
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
+  QUAD_VERTEX_SHADER,
 } from './paramUtils'
-
-const VERT = `
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = vec4(position.xy, 0.0, 1.0);
-}
-`
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -98,7 +91,7 @@ export class ColorGradeNode implements VideoNode {
         u_saturation: { value: 0 },
         u_brightness: { value: 0 },
       },
-      vertexShader: VERT,
+      vertexShader: QUAD_VERTEX_SHADER,
       fragmentShader: FRAG,
       depthWrite: false,
     })

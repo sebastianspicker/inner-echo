@@ -1,6 +1,6 @@
 # Inner Echo — Documentation overview
 
-This repo contains a **privacy-first, client-only** web app: an audio-visual overlay on the webcam feed. Users choose a **Condition** (e.g. tension, dissociation) and the app applies a responsive visual and optional audio **metaphor**. It is an **artistic, educational metaphor**, not a diagnostic or therapy tool.
+This repo contains a privacy-first, client-only web app: an audio-visual overlay on the webcam feed. Users choose a condition (e.g. tension, dissociation) and the app applies a responsive visual and optional audio metaphor. It is an artistic, educational metaphor — not a diagnostic or therapy tool.
 
 ---
 

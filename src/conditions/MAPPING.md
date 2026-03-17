@@ -1,7 +1,7 @@
 # Mapping: Experience Dimensions ↔ Conditions (Metaphor Framing)
 
-Author **experience dimensions** first, then group them into *Condition profiles*.
-The mapping below is **educational** and **non-diagnostic**.
+Author experience dimensions first, then group them into condition profiles.
+The mapping below is educational and non-diagnostic.
 
 ## Why dimensions?
 “Diagnosis labels” can be too broad, stigmatizing, or misleading in an art context.
@@ -17,8 +17,8 @@ Experience dimensions (e.g., `hyperarousal`, `rumination_loop`, `derealization`)
 - **ADHD (Attention Fragmentation / Overload)**: `attention_fragmentation`, `sensory_overload`, (sometimes) `hyperarousal`
 
 ## Evidence strength (dimension-level)
-Evidence strength is **about the underlying experience dimension**, not about “the condition as a whole”.
-Even **HIGH** evidence does *not* mean the AV mapping is clinically accurate — it only means the **phenomenology** is well supported.
+Evidence strength is about the underlying experience dimension, not about “the condition as a whole”.
+Even HIGH evidence does not mean the AV mapping is clinically accurate — it only means the phenomenology is well supported.
 
 - `hyperarousal` — **HIGH** — Elevated baseline alertness, physiological tension, and readiness to react.
 - `hypervigilance` — **MEDIUM** — Scanning for threats, narrowed attention, heightened sensitivity to cues.

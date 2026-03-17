@@ -8,8 +8,8 @@ Adds a soft tone pulse (level clamped).
 
 ## Evidence vs artistic implementation (make this explicit)
 
-- **Evidence-backed** in this project refers to *reported phenomena* in the evidence corpus (see dimension pages and the matrix).
-- This node is an **artistic/engineering implementation** used to represent those phenomena metaphorically.
+- **Evidence-backed** in this project refers to reported phenomena in the evidence corpus (see dimension pages and the matrix).
+- This node is an artistic/engineering implementation used to represent those phenomena metaphorically.
 - Therefore, the correct claim level for a node is usually **Mixed**: phenomenon supported, motif choice interpretive, implementation details artistic.
 
 ## Where this motif is used (traceability)
@@ -24,9 +24,9 @@ Adds a soft tone pulse (level clamped).
 
 ## Scientific sources (peer-reviewed; from in-repo corpus)
 
-These sources come from the **evidence corpus** sections for the dimensions that currently use this motif.
+These sources come from the evidence corpus sections for the dimensions that currently use this motif.
 
-> Important: these papers support the **phenomena** described by the dimensions; they do not claim that this specific node is a biomarker or uniquely “correct”.
+> Important: these papers support the phenomena described by the dimensions; they do not claim that this specific node is a biomarker or uniquely “correct”.
 
 - Guan, X., & Cao, P. (2023/2024). Brain mechanisms underlying panic attack and panic disorder. *Neuroscience Bulletin*. https://doi.org/10.1007/s12264-023-01088-9 (PMID: 37477800) https://pubmed.ncbi.nlm.nih.gov/37477800/
   DOI: https://doi.org/10.1007/s12264-023-01088-9 (`10.1007/s12264-023-01088-9`) — from `docs/references/reports/deep-research-report.md`

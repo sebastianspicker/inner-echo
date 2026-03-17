@@ -1,16 +1,16 @@
 # Product — Goals, scope, and requirements
 
-**Canonical product doc.** Merged from PRD, MVP, and user-story scope. Non-diagnostic, metaphorical framing only.
+Canonical product doc. Merged from PRD, MVP, and user-story scope. Non-diagnostic, metaphorical framing only.
 
 ---
 
 ## Problem and solution
 
-Many mental health experiences are difficult to understand from the outside because they are often **invisible**. This gap can reduce empathy and increase misunderstanding.
+Many mental health experiences are difficult to understand from the outside because they are often invisible. This gap can reduce empathy and increase misunderstanding.
 
-**Proposed solution:** A web app that layers **metaphorical** audio-visual overlays on top of a user's webcam feed. Users pick a **Condition** (a curated experiential frame) and experience an overlay intended to foster empathy, education, and reflection.
+**Proposed solution:** A web app that layers metaphorical audio-visual overlays on top of a user's webcam feed. Users pick a condition (a curated experiential frame) and experience an overlay intended to foster empathy, education, and reflection.
 
-**Non-claim:** This is **not** a clinical simulation and does not diagnose. It is an artistic and educational representation of experience dimensions. Evidence for dimensions and mappings is documented in [references/](references/README.md).
+**Non-claim:** This is not a clinical simulation and does not diagnose. It is an artistic and educational representation of experience dimensions. Evidence for dimensions and mappings is documented in [references/](references/README.md).
 
 ---
 
@@ -44,7 +44,7 @@ Many mental health experiences are difficult to understand from the outside beca
 1. Webcam overlay rendering (Three.js VideoTexture)
 2. Condition selection (data-driven profiles from `src/conditions/`)
 3. Visual effect stacks (video nodes)
-4. Global Intensity, Safe Mode, Reduced Motion, **Stop Everything**
+4. Global Intensity, Safe Mode, Reduced Motion, Stop Everything
 5. Optional: audio synth and modulation (Audio → Video)
 
 ---

@@ -10,15 +10,8 @@ import {
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
+  QUAD_VERTEX_SHADER,
 } from './paramUtils'
-
-const VERT = `
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = vec4(position.xy, 0.0, 1.0);
-}
-`
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -73,7 +66,7 @@ export class ChromaticAberrationNode implements VideoNode {
         u_uvOffset: { value: new THREE.Vector2(0, 0) },
         u_amount: { value: 0.02 },
       },
-      vertexShader: VERT,
+      vertexShader: QUAD_VERTEX_SHADER,
       fragmentShader: FRAG,
       depthWrite: false,
     })

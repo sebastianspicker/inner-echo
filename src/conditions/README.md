@@ -1,10 +1,10 @@
 # inner-echo — Condition Profiles (v0.2.0)
 
-This folder contains a **data-driven condition authoring layer** for the *inner-echo* concept:
-a privacy-first, client-only webcam overlay app that renders **metaphorical** audio-visual treatments.
+This folder contains a data-driven condition authoring layer for the *inner-echo* concept:
+a privacy-first, client-only webcam overlay app that renders metaphorical audio-visual treatments.
 
 ## What this is
-- A **metaphor engine**: conditions are authored as presets composed from **experience dimensions**.
+- A **metaphor engine**: conditions are authored as presets composed from experience dimensions.
 - A **teaching / empathy tool**: helps make invisible inner experiences more understandable.
 
 ## What this is NOT
@@ -13,11 +13,11 @@ a privacy-first, client-only webcam overlay app that renders **metaphorical** au
 - Not therapy or medical advice.
 
 ## Evidence-informed (still metaphorical)
-The dimension vocabulary and motif suggestions are **informed by literature** and summarized in:
+The dimension vocabulary and motif suggestions are informed by literature and summarized in:
 - `docs/references/dimensions/*.md` (dimension-by-dimension rationale)
 - `docs/references/EVIDENCE_MATRIX.md` (overview)
 
-Inside this folder we only keep **implementation-facing** artifacts:
+Inside this folder we only keep implementation-facing artifacts:
 dimension definitions, motif hints, and condition presets.
 
 ## Files
@@ -50,10 +50,8 @@ Hard limits for a public-facing repo:
 - no intense camera-like motion (avoid nausea)
 
 ## Notes for implementers
-Node names in `video_stack` and `audio_stack` are **intended interfaces**. Your engine should:
+Node names in `video_stack` and `audio_stack` are intended interfaces. Your engine should:
 - validate profiles
 - skip unknown nodes with warnings
 - apply safety clamps, Safe Mode, and Reduced Motion filtering consistently
-
-Generated: {today}
 

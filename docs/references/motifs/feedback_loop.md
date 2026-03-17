@@ -8,8 +8,8 @@ Low-feedback image recurrence (bounded; reduced-motion disables).
 
 ## Evidence vs artistic implementation (make this explicit)
 
-- **Evidence-backed** in this project refers to *reported phenomena* in the evidence corpus (see dimension pages and the matrix).
-- This node is an **artistic/engineering implementation** used to represent those phenomena metaphorically.
+- **Evidence-backed** in this project refers to reported phenomena in the evidence corpus (see dimension pages and the matrix).
+- This node is an artistic/engineering implementation used to represent those phenomena metaphorically.
 - Therefore, the correct claim level for a node is usually **Mixed**: phenomenon supported, motif choice interpretive, implementation details artistic.
 
 ## Where this motif is used (traceability)
@@ -26,9 +26,9 @@ Low-feedback image recurrence (bounded; reduced-motion disables).
 
 ## Scientific sources (peer-reviewed; from in-repo corpus)
 
-These sources come from the **evidence corpus** sections for the dimensions that currently use this motif.
+These sources come from the evidence corpus sections for the dimensions that currently use this motif.
 
-> Important: these papers support the **phenomena** described by the dimensions; they do not claim that this specific node is a biomarker or uniquely “correct”.
+> Important: these papers support the phenomena described by the dimensions; they do not claim that this specific node is a biomarker or uniquely “correct”.
 
 - Gillan, C. M., Robbins, T. W., Sahakian, B. J., van den Heuvel, O. A., & van Wingen, G. (2016). The role of habit in compulsivity. *European Neuropsychopharmacology, 26*(5), 828–840. https://doi.org/10.1016/j.euroneuro.2015.12.033
   DOI: https://doi.org/10.1016/j.euroneuro.2015.12.033 (`10.1016/j.euroneuro.2015.12.033`) — from `docs/references/reports/deep-research-report-2.md`

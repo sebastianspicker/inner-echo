@@ -3,6 +3,18 @@ import type { VideoNodeParams } from './VideoNode'
 
 export { clamp }
 
+/**
+ * Standard vertex shader shared by all full-screen quad effect nodes.
+ * Passes UV coordinates to the fragment shader; positions the quad to fill clip space.
+ */
+export const QUAD_VERTEX_SHADER = `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = vec4(position.xy, 0.0, 1.0);
+}
+`
+
 /** Material with optional UV uniforms (u_uvScale, u_uvOffset as Vector2-like). */
 interface MaterialWithUvUniforms {
   uniforms: {

@@ -1,6 +1,6 @@
 # References audit (dimensions → motifs → evidence)
 
-This file enumerates the **evidence-linked** dimension→motif mappings used by the composer.
+This file enumerates the evidence-linked dimension→motif mappings used by the composer.
 
 - **Non-diagnostic framing**: motifs are metaphorical design choices, not clinical simulations.
 - **Evidence-bounded**: each dimension points to in-repo rationale docs under `docs/references/dimensions/`.

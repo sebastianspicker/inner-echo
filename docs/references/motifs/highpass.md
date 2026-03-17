@@ -8,8 +8,8 @@ Attenuates low frequencies below cutoff (clamped).
 
 ## Evidence vs artistic implementation (make this explicit)
 
-- **Evidence-backed** in this project refers to *reported phenomena* in the evidence corpus (see dimension pages and the matrix).
-- This node is an **artistic/engineering implementation** used to represent those phenomena metaphorically.
+- **Evidence-backed** in this project refers to reported phenomena in the evidence corpus (see dimension pages and the matrix).
+- This node is an artistic/engineering implementation used to represent those phenomena metaphorically.
 - Therefore, the correct claim level for a node is usually **Mixed**: phenomenon supported, motif choice interpretive, implementation details artistic.
 
 ## Where this motif is used (traceability)
@@ -29,9 +29,9 @@ Attenuates low frequencies below cutoff (clamped).
 
 ## Scientific sources (peer-reviewed; from in-repo corpus)
 
-These sources come from the **evidence corpus** sections for the dimensions that currently use this motif.
+These sources come from the evidence corpus sections for the dimensions that currently use this motif.
 
-> Important: these papers support the **phenomena** described by the dimensions; they do not claim that this specific node is a biomarker or uniquely “correct”.
+> Important: these papers support the phenomena described by the dimensions; they do not claim that this specific node is a biomarker or uniquely “correct”.
 
 - Blevins, C. A., Weathers, F. W., Davis, M. T., Witte, T. K., & Domino, J. L. (2015). The Posttraumatic Stress Disorder Checklist for DSM-5 (PCL-5): Development and initial psychometric evaluation. *Journal of Traumatic Stress, 28*(6), 489–498. https://doi.org/10.1002/jts.22059 (PMID: 26606250) https://pubmed.ncbi.nlm.nih.gov/26606250/
   DOI: https://doi.org/10.1002/jts.22059 (`10.1002/jts.22059`) — from `docs/references/reports/deep-research-report.md`

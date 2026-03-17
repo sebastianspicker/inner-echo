@@ -4,12 +4,8 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { OverlayDiagnostics } from '../engine/canvas'
-import type { AudioContextStatus } from '../engine/audio'
-import type { MicStatus } from '../engine/audio'
-import type { AudioMetrics } from '../engine/audio'
-import type { AudioEngineDebugState } from '../engine/audio'
-import type { VideoMetrics } from '../engine/canvas'
+import type { OverlayDiagnostics, VideoMetrics } from '../engine/canvas'
+import type { AudioContextStatus, MicStatus, AudioMetrics, AudioEngineDebugState } from '../engine/audio'
 import { copyTextToClipboard } from './clipboard'
 import { logger } from '../utils/logger'
 import './DebugPanel.css'

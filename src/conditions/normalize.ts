@@ -9,6 +9,7 @@
 
 import type { Profile } from './schema'
 import { GLOBAL_SAFETY_CLAMPS } from './ssotClamps'
+import { clamp } from '../utils/numeric'
 
 export interface SafetyContext {
   global: Record<string, unknown>
@@ -41,6 +42,6 @@ export function clampIntensity(
       ? safety.safe_mode_clamps.max_intensity
       : 1
   const max = Math.min(1, maxByProfile, maxBySafeMode)
-  return Math.max(0, Math.min(max, i0))
+  return clamp(i0, 0, max)
 }
 

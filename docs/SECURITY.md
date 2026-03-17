@@ -1,5 +1,20 @@
 # SECURITY.md — Security and privacy
 
+## Reporting a vulnerability
+
+If you find a security issue, please do not open a public GitHub issue.
+
+Email the details to **sebastian.spicker@googlemail.com** with:
+- a description of the issue,
+- steps to reproduce or a proof of concept,
+- any suggested fix if you have one.
+
+You will receive a response within 7 days. Once confirmed, a fix will be prioritised and you will be credited in the release notes (unless you prefer anonymity).
+
+This project is a local-only browser app with no server, no user accounts, and no remote data transmission — the attack surface is limited. The most relevant concerns are XSS, clickjacking, and supply-chain vulnerabilities in npm dependencies.
+
+---
+
 ## Privacy-first by default
 
 - **Local-first**: All processing in the browser. No transmission of video or audio data to any server.
@@ -11,7 +26,7 @@
 
 ## No third-party calls
 
-- The app **must not** load scripts, fonts, or data from third-party origins in MVP.
+- The app must not load scripts, fonts, or data from third-party origins in MVP.
 - All assets are bundled or served from the same origin as the app.
 - If you add analytics, CDNs, or external APIs in a future phase, document them and obtain approval; they are out of scope for MVP.
 
@@ -46,19 +61,19 @@ Even for static hosting, a strict CSP is recommended to reduce XSS and unauthori
 - `style-src 'self' 'unsafe-inline'` — styles from same origin; inline styles are common in React (or use nonces if you move to a non-inline strategy).
 - `img-src 'self' data:` — images from self and data URIs (e.g. placeholders).
 - `media-src 'self' blob:` — video/audio from self and blob (e.g. MediaStream).
-- `connect-src 'none'` — no fetch/XHR to any URL (MVP has no network calls).
-- `frame-ancestors 'none'` — prevent embedding in iframes if you do not need it.
+- `connect-src 'self'` — same-origin fetch/XHR only (Vite dev-server HMR requires `'self'`; tighten to `'none'` if you control all headers in production and have no same-origin requests).
+- `frame-ancestors 'none'` — prevent iframe embedding. Note: this directive is silently ignored in `<meta>` CSP delivery; it only works as an HTTP response header.
 
-Example header (single line for use in server config or meta tag):
+Example HTTP header (server config or `public/_headers`):
 
 ```http
-Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'none'; frame-ancestors 'none';
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';
 ```
 
-If you serve the app via a meta tag:
+If you deliver CSP via a meta tag (defence-in-depth only — `frame-ancestors` won't apply):
 
 ```html
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'none'; frame-ancestors 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
 ```
 
 Tighten or relax directives (e.g. `worker-src`, `form-action`) as required by your deployment.
@@ -68,7 +83,7 @@ Tighten or relax directives (e.g. `worker-src`, `form-action`) as required by yo
 ## Logging principles
 
 - **Development**: Logs for state, renderer mode, FPS and errors are allowed (see `src/utils/logger.ts`). Use `logger.debug` / `logger.warn` instead of raw `console` where appropriate.
-- **Production**: Keep logging minimal; **no** sensitive data (no device IDs, no media content, no user identifiers, no stream or track details).
+- **Production**: Keep logging minimal; no sensitive data (no device IDs, no media content, no user identifiers, no stream or track details).
 - No persistent storage of video/audio without an explicit, separately approved scope.
 
 ---

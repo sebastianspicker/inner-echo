@@ -2,7 +2,7 @@
 
 This page is a condensed, navigable summary of the evidence corpus under `docs/references/`.
 
-**Non-diagnostic framing:** Everything here is a **metaphor design rationale**, not a clinical model.
+**Non-diagnostic framing:** Everything here is a metaphor design rationale, not a clinical model.
 
 **Source of truth:** the evidence corpus in this repo:
 

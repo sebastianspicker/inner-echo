@@ -4,11 +4,7 @@
  */
 
 import type { VideoStackNodeDef } from '../conditions/schema'
-import { clamp01 } from './types'
-import type { MotifDef } from './types'
-
-// Re-export MotifDef for backward compatibility
-export type { MotifDef }
+import { clamp01, type MotifDef } from './types'
 
 export type SourceId = string
 
@@ -198,6 +194,21 @@ function pickFromHint(hint: unknown, strength01: number): unknown {
     if (s.includes('white')) return 'white'
   }
   return undefined
+}
+
+/**
+ * Scale all numeric values in a params record by `strength`, leaving non-numeric values unchanged.
+ * Used to weight dimension-motif contributions before merging them into the composed stack.
+ */
+export function scaleNumericParams(
+  params: Record<string, unknown>,
+  strength: number
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(params)) {
+    out[k] = typeof v === 'number' ? v * strength : v
+  }
+  return out
 }
 
 export function motifsToVideoDefs(motifs: MotifDef[] | undefined): VideoStackNodeDef[] {
