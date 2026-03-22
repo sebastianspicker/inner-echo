@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -44,8 +44,20 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      - name: Test coverage
+        run: npm run test:coverage
+
       - name: Verify JSON-runtime contracts
         run: npm run verify:contracts
+
+      - name: Validate conditions
+        run: npm run conditions:validate
+
+      - name: Validate composer
+        run: npm run composer:validate
+
+      - name: Verify evidence
+        run: npm run evidence:verify
 
       - name: Debug inspect harness
         run: npm run debug:inspect
@@ -56,6 +68,13 @@ jobs:
         with:
           name: contract-verification-reports
           path: reports/contract-verification.*
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: coverage-report
+          path: coverage/
 
       - name: Upload inspect report
         if: always()
@@ -79,7 +98,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies

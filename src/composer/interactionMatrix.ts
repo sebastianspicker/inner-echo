@@ -11,15 +11,15 @@ import { clamp01 } from './types'
  * - Defaults are intentionally small; treat as perceptual design, not a clinical model.
  */
 
-export type DimensionId = string
+type DimensionId = string
 
-export type InteractionMatrix = Record<string, number>
+type InteractionMatrix = Record<string, number>
 
 function key(a: DimensionId, b: DimensionId): string {
   return a < b ? `${a}|${b}` : `${b}|${a}`
 }
 
-export const DEFAULT_INTERACTION_MATRIX: InteractionMatrix = {
+const DEFAULT_INTERACTION_MATRIX: InteractionMatrix = {
   // Conservative examples (0..1). These are *small* gains before clamps.
   [key('hyperarousal', 'intrusion')]: 0.18,
   [key('hyperarousal', 'hypervigilance')]: 0.12,

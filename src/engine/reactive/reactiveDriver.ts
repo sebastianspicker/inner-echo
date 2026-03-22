@@ -82,7 +82,7 @@ export function createReactiveDriver(
       const [builtIndexStr, paramName] = resolved.paramKey.split('.')
       const builtIndex = Number(builtIndexStr)
       const entry = getProfileEntryForBuiltIndex(profile, builtIndex, { reducedMotion: options?.reducedMotion })
-      const params = entry?.params as Record<string, unknown> | undefined
+      const params = entry?.params
       baseValue = params && typeof params[paramName] === 'number' ? (params[paramName] as number) : 0
     } else if (resolved.kind === 'audio') {
       // For audio overrides, default to 0 unless profile declares a numeric param.

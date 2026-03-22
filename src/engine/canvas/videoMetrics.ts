@@ -118,12 +118,10 @@ export function createVideoMetricsTracker(options?: {
       if (frame % everyN === 0) {
         last = computeOnce(sourceCanvas)
       }
-      sm = {
-        motion: smoothStep(sm.motion, last.motion, deltaSec, attack, release),
-        luminance: smoothStep(sm.luminance, last.luminance, deltaSec, attack, release),
-        edge: smoothStep(sm.edge, last.edge, deltaSec, attack, release),
-        instability: smoothStep(sm.instability, last.instability, deltaSec, attack, release),
-      }
+      sm.motion = smoothStep(sm.motion, last.motion, deltaSec, attack, release)
+      sm.luminance = smoothStep(sm.luminance, last.luminance, deltaSec, attack, release)
+      sm.edge = smoothStep(sm.edge, last.edge, deltaSec, attack, release)
+      sm.instability = smoothStep(sm.instability, last.instability, deltaSec, attack, release)
       return sm
     },
     getLast(): VideoMetrics {

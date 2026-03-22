@@ -10,7 +10,13 @@ export interface UseCameraControllerParams {
   onStop: () => void
 }
 
-export function useCameraController(params: UseCameraControllerParams) {
+export function useCameraController(params: UseCameraControllerParams): {
+  isRequesting: boolean
+  isActive: boolean
+  canStop: boolean
+  start: () => void
+  stop: () => void
+} {
   const { cameraState, audioStatus, micStatus, onStart, onStop } = params
   return useMemo(() => {
     const isRequesting = cameraState === 'requesting'

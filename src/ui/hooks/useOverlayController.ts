@@ -22,7 +22,11 @@ export interface UseOverlayControllerParams {
   intensity: number
 }
 
-export function useOverlayController(params: UseOverlayControllerParams) {
+export function useOverlayController(params: UseOverlayControllerParams): {
+  getOverlayDiagnostics: () => ReturnType<NonNullable<OverlayControl['getDiagnostics']>> | undefined
+  getAudioDebugState: () => ReturnType<NonNullable<AudioEngineControl['getDebugState']>> | undefined
+  getAppliedClamps: () => AppliedClampSnapshot | undefined
+} {
   const {
     overlayControlRef,
     audioControlRef,

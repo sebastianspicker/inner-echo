@@ -64,6 +64,7 @@ The machine-readable JSON Schema is embedded below and also written to `preset-s
       "additionalProperties": false
     },
     "experience_dimensions": {
+      "maxItems": 20,
       "type": "array",
       "items": {
         "type": "object",
@@ -84,6 +85,7 @@ The machine-readable JSON Schema is embedded below and also written to `preset-s
       }
     },
     "video_stack": {
+      "maxItems": 30,
       "type": "array",
       "items": {
         "type": "object",
@@ -132,6 +134,7 @@ The machine-readable JSON Schema is embedded below and also written to `preset-s
           "additionalProperties": false
         },
         "chain": {
+          "maxItems": 20,
           "type": "array",
           "items": {
             "type": "object",
@@ -228,6 +231,7 @@ The machine-readable JSON Schema is embedded below and also written to `preset-s
           "type": "number"
         },
         "warnings": {
+          "maxItems": 20,
           "type": "array",
           "items": {
             "type": "string"
@@ -309,6 +313,7 @@ The machine-readable JSON Schema is embedded below and also written to `preset-s
       "type": "object",
       "properties": {
         "controls": {
+          "maxItems": 30,
           "type": "array",
           "items": {
             "type": "object",

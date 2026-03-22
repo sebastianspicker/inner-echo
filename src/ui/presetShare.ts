@@ -1,6 +1,7 @@
 import { decodePresetPayload, encodePresetPayload, type PresetPayload } from './presetSnapshot'
 
 const HASH_PREFIX = '#preset='
+const MAX_HASH_PAYLOAD_LENGTH = 8192
 
 function toBase64Url(value: string): string {
   const bytes = new TextEncoder().encode(value)
@@ -26,6 +27,9 @@ export function decodePresetFromHash(
 ): { ok: true; payload: PresetPayload } | { ok: false; reason: string } {
   if (!hash.startsWith(HASH_PREFIX)) {
     return { ok: false, reason: 'missing-prefix' }
+  }
+  if (hash.length > MAX_HASH_PAYLOAD_LENGTH) {
+    return { ok: false, reason: 'payload-too-large' }
   }
   const token = hash.slice(HASH_PREFIX.length).trim()
   if (!token) return { ok: false, reason: 'empty' }

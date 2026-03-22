@@ -11,7 +11,7 @@ export type SourceId = string
 /**
  * Security: Prevents Prototype Pollution by filtering out forbidden keys.
  */
-export function isSafeKey(key: string): boolean {
+function isSafeKey(key: string): boolean {
   if (typeof key !== 'string') return false
   const k = key.trim()
   return k !== '__proto__' && k !== 'constructor' && k !== 'prototype'
@@ -216,7 +216,7 @@ export function motifsToVideoDefs(motifs: MotifDef[] | undefined): VideoStackNod
   const strength = 1
   return motifs.map((m) => {
     const node = normalizeNodeType(m.node)
-    const hint = (m.params_hint ?? {}) as Record<string, unknown>
+    const hint = m.params_hint ?? {}
     const params: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(hint)) {
       const chosen = pickFromHint(v, strength)
@@ -233,7 +233,7 @@ export function motifsToAudioDefs(
   const strength = 1
   return motifs.map((m) => {
     const node = normalizeNodeType(m.node)
-    const hint = (m.params_hint ?? {}) as Record<string, unknown>
+    const hint = m.params_hint ?? {}
     const params: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(hint)) {
       const chosen = pickFromHint(v, strength)

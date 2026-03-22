@@ -31,6 +31,32 @@ export function computeUvScaleOffset(vw: number, vh: number, cw: number, ch: num
   }
 }
 
+/**
+ * Write UV scale/offset into pre-allocated tuples to avoid per-frame allocations.
+ */
+export function writeUvScaleOffset(
+  vw: number, vh: number, cw: number, ch: number,
+  outScale: [number, number], outOffset: [number, number]
+): void {
+  if (vw <= 0 || vh <= 0 || cw <= 0 || ch <= 0) {
+    outScale[0] = 1; outScale[1] = 1
+    outOffset[0] = 0; outOffset[1] = 0
+    return
+  }
+  const videoAspect = vw / vh
+  const canvasAspect = cw / ch
+  let sx: number, sy: number
+  if (canvasAspect >= videoAspect) {
+    sx = 1; sy = canvasAspect / videoAspect
+  } else {
+    sx = videoAspect / canvasAspect; sy = 1
+  }
+  outScale[0] = 1 / sx
+  outScale[1] = 1 / sy
+  outOffset[0] = (1 - 1 / sx) * 0.5
+  outOffset[1] = (1 - 1 / sy) * 0.5
+}
+
 export function resolveReactiveOverrides(overridesRaw: unknown): {
   video: Record<string, number>
   audio: Record<string, number> | null

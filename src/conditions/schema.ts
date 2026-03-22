@@ -78,7 +78,7 @@ export const audioStackSchema = z.object({
   enabled: z.boolean().optional(),
   input: z.enum(['synth']).optional(),
   master: z.object({ volume: z.number().min(0).max(1).optional() }).optional(),
-  chain: z.array(audioStackNodeSchema).optional(),
+  chain: z.array(audioStackNodeSchema).max(20).optional(),
 })
 
 /** Phase 8: One analyser→video param mapping (source, target, scale, smoothing, clamp). */
@@ -134,11 +134,79 @@ export const profileSafetySchema = z
   .object({
     intensity_default: z.number(),
     intensity_max: z.number(),
-    warnings: z.array(z.string()),
+    warnings: z.array(z.string()).max(20),
     safe_mode_clamps: safeModeClampsSchema,
     reduced_motion_policy: reducedMotionPolicySchema.optional(),
   })
   .passthrough()
+
+// ---------------------------------------------------------------------------
+// Experience Dimensions file (src/conditions/experience-dimensions.json)
+// ---------------------------------------------------------------------------
+
+/** Motif summary within an experience dimension definition. */
+export const motifSummarySchema = z.object({
+  video_nodes: z.array(z.string()).optional(),
+  audio_nodes: z.array(z.string()).optional(),
+})
+
+/** Single entry in the experience-dimensions.json `dimensions` array. */
+export const experienceDimensionDefSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  description: z.string().min(1),
+  safety: z.array(z.string()).optional(),
+  evidence_strength: z.string().optional(),
+  rationale_doc: z.string().optional(),
+  motif_summary: motifSummarySchema.optional(),
+})
+
+/** Top-level shape of experience-dimensions.json. */
+export const experienceDimensionsFileSchema = z.object({
+  version: z.string().optional(),
+  note: z.string().optional(),
+  dimensions: z.array(experienceDimensionDefSchema).min(1),
+})
+
+// ---------------------------------------------------------------------------
+// Dimension-to-Signal Mapping file (src/conditions/dimension-to-signal-mapping.json)
+// ---------------------------------------------------------------------------
+
+/** A single motif definition used in dimension-to-signal mapping. */
+export const motifDefSchema = z.object({
+  node: z.string().min(1),
+  params_hint: z.record(z.string(), z.unknown()).optional(),
+})
+
+/** Safety block within a dimension-to-signal mapping entry. */
+export const dimensionMappingSafetySchema = z.object({
+  warnings: z.array(z.string()).optional(),
+  clamps: z.record(z.string(), z.unknown()).optional(),
+  reduced_motion: z.object({
+    disable_nodes: z.array(z.string()).optional(),
+    note: z.string().optional(),
+  }).passthrough().optional(),
+}).passthrough()
+
+/** Single mapping entry for one experience dimension. */
+export const dimensionSignalMappingEntrySchema = z.object({
+  evidence_strength: z.string().optional(),
+  rationale_doc: z.string().optional(),
+  notes: z.string().optional(),
+  safety: dimensionMappingSafetySchema.optional(),
+  video_motifs: z.array(motifDefSchema).optional(),
+  audio_motifs: z.array(motifDefSchema).optional(),
+  avoid: z.record(z.string(), z.unknown()).optional(),
+})
+
+/** Top-level shape of dimension-to-signal-mapping.json. */
+export const dimensionToSignalMappingFileSchema = z.object({
+  version: z.string().optional(),
+  note: z.string().optional(),
+  mapping: z.record(z.string(), dimensionSignalMappingEntrySchema),
+})
+
+// ---------------------------------------------------------------------------
 
 /** Profile file (profiles/<id>.json). Required: id, label, video_stack. */
 export const profileSchema = z.object({
@@ -146,14 +214,14 @@ export const profileSchema = z.object({
   label: z.string(),
   summary: z.string(),
   framing: framingSchema,
-  experience_dimensions: z.array(experienceDimensionSchema),
-  video_stack: z.array(videoStackNodeSchema),
+  experience_dimensions: z.array(experienceDimensionSchema).max(20),
+  video_stack: z.array(videoStackNodeSchema).max(30),
   audio_stack: audioStackSchema.optional(),
   reactive: reactiveSchema.optional(),
   safety: profileSafetySchema,
   ui: z
     .object({
-      controls: z.array(uiControlSchema).optional(),
+      controls: z.array(uiControlSchema).max(30).optional(),
     })
     .optional(),
   references: z
@@ -173,3 +241,9 @@ export type CatalogEntry = z.infer<typeof catalogEntrySchema>
 export type Catalog = z.infer<typeof catalogSchema>
 export type VideoStackNodeDef = z.infer<typeof videoStackNodeSchema>
 export type Profile = z.infer<typeof profileSchema>
+
+export type ExperienceDimensionDefZ = z.infer<typeof experienceDimensionDefSchema>
+export type ExperienceDimensionsFile = z.infer<typeof experienceDimensionsFileSchema>
+export type MotifDefZ = z.infer<typeof motifDefSchema>
+export type DimensionSignalMappingEntryZ = z.infer<typeof dimensionSignalMappingEntrySchema>
+export type DimensionToSignalMappingFile = z.infer<typeof dimensionToSignalMappingFileSchema>

@@ -20,7 +20,8 @@ export interface SafetyContext {
 export function getSafetyContext(profile: Profile | null | undefined): SafetyContext {
   const safeMode = profile?.safety?.safe_mode_clamps ?? {}
   // Expose as Records so the engine layer can consume without depending on condition-layer types.
-  return { global: GLOBAL_SAFETY_CLAMPS as unknown as Record<string, unknown>, safeMode }
+  // Spread converts the fixed-shape GlobalSafetyClamps into a plain Record<string, unknown>.
+  return { global: { ...GLOBAL_SAFETY_CLAMPS }, safeMode }
 }
 
 export function getReducedMotionDisableNodes(profile: Profile | null | undefined): Set<string> {

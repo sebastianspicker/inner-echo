@@ -59,11 +59,17 @@ export interface ParseFirstJsonObjectOptions {
  * The generic T is not runtime-validated. When T is a specific shape, pass a
  * predicate that validates it (e.g. a type guard) so invalid data is rejected.
  */
+/** Maximum input length to prevent excessive memory/CPU usage. */
+const MAX_INPUT_LENGTH = 1_048_576 // 1 MiB
+
 export function parseFirstJsonObject<T = unknown>(
   text: string,
   options: ParseFirstJsonObjectOptions = {}
 ): T {
   const source = stripBom(String(text ?? ''))
+  if (source.length > MAX_INPUT_LENGTH) {
+    throw new Error(`Input too large (${source.length} chars, max ${MAX_INPUT_LENGTH})`)
+  }
   const predicate = options.predicate ?? (() => true)
 
   const tryAccept = (value: unknown): T | null => {

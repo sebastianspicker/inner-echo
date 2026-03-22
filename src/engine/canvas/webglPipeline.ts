@@ -37,7 +37,7 @@ import {
   toNodeName,
 } from './webgl/renderHelpers'
 import {
-  computeUvScaleOffset,
+  writeUvScaleOffset,
   resolveReactiveOverrides,
   writeMergedControlValues,
 } from './webgl/params'
@@ -373,6 +373,8 @@ export function startWebGLOverlayLoop(
         rafId = requestAnimationFrame(loop)
         return
       }
+      // Capture as const so TypeScript narrows the type past the null guard above.
+      const r = renderer
 
       setSize()
 
@@ -394,7 +396,7 @@ export function startWebGLOverlayLoop(
         }
         const vw = video.videoWidth
         const vh = video.videoHeight
-        const { uvScale, uvOffset } = computeUvScaleOffset(vw, vh, cw, ch)
+        writeUvScaleOffset(vw, vh, cw, ch, baseParams.uvScale, baseParams.uvOffset)
 
         const audioMetrics: AudioMetrics =
           reactiveOptions?.getAudioMetrics?.() ??
@@ -412,15 +414,14 @@ export function startWebGLOverlayLoop(
         baseParams.intensity = currentParams.intensity
         baseParams.safeMode = currentParams.safeMode
         baseParams.safetyContext = currentParams.safetyContext
-        baseParams.uvScale = uvScale
-        baseParams.uvOffset = uvOffset
+        // baseParams.uvScale and uvOffset already written in-place above
         // baseParams.controlValues already points at mergedControlValues
 
         if (usePassthrough) {
-          renderer!.setRenderTarget(null)
-          renderer!.render(scene, camera)
-        } else if (chainRTs.length === nodes.length + 1) {
-          renderQuad(renderer!, scene, camera, videoPassthroughMaterial!, chainRTs[0])
+          r.setRenderTarget(null)
+          r.render(scene, camera)
+        } else if (chainRTs.length === nodes.length + 1 && videoPassthroughMaterial) {
+          renderQuad(r, scene, camera, videoPassthroughMaterial, chainRTs[0])
           let inputTex: THREE.Texture = chainRTs[0].texture
           let temporalIdx = 0
 
@@ -436,24 +437,24 @@ export function startWebGLOverlayLoop(
               const prevTex = pp.firstFrame ? inputTex : (pp.writeIndex === 0 ? pp.rtB : pp.rtA).texture
               const writeRT = pp.writeIndex === 0 ? pp.rtA : pp.rtB
               const mat = node.getMaterial(inputTex, prevTex) as THREE.Material
-              renderQuad(renderer!, scene, camera, mat, writeRT)
+              renderQuad(r, scene, camera, mat, writeRT)
               if (pp.firstFrame) pp.firstFrame = false
               pp.writeIndex = 1 - pp.writeIndex
               inputTex = writeRT.texture
               temporalIdx++
             } else {
               const mat = node.getMaterial(inputTex) as THREE.Material
-              renderQuad(renderer!, scene, camera, mat, chainRTs[i + 1])
+              renderQuad(r, scene, camera, mat, chainRTs[i + 1])
               inputTex = chainRTs[i + 1].texture
             }
           }
 
-          if (finalBlitMaterial && renderer) {
+          if (finalBlitMaterial) {
             finalBlitMaterial.map = inputTex as THREE.Texture
             finalBlitMaterial.needsUpdate = true
-            renderer!.setRenderTarget(null)
-            renderer!.clear()
-            renderQuad(renderer!, scene, camera, finalBlitMaterial, null)
+            r.setRenderTarget(null)
+            r.clear()
+            renderQuad(r, scene, camera, finalBlitMaterial, null)
           }
         }
       } else if (renderer) {

@@ -13,7 +13,7 @@
  * to produce real-time smoothed parameter overrides.
  */
 
-import type { Profile, VideoStackNodeDef } from '../../conditions/schema'
+import type { Profile } from '../../conditions/schema'
 import {
   getProfileEntryForBuiltIndex,
   NODE_FACTORY,
@@ -68,7 +68,7 @@ function getProfileVideoBase(profile: Profile, key: string, reducedMotion: boole
   const param = key.slice(dot + 1)
   if (!Number.isFinite(builtIndex) || !param) return 0
   const entry = getProfileEntryForBuiltIndex(profile, builtIndex, { reducedMotion })
-  const params = entry?.params as Record<string, unknown> | undefined
+  const params = entry?.params
   const v = params?.[param]
   return typeof v === 'number' && Number.isFinite(v) ? v : 0
 }
@@ -100,11 +100,11 @@ function resolveVideoKeys(profile: Profile, target: string, reducedMotion: boole
   let builtIndex = 0
   const reducedMotionDisable = getReducedMotionDisableNodes(profile)
   for (const def of profile.video_stack) {
-    const nodeType = (def as VideoStackNodeDef).node
+    const nodeType = def.node
     if (!nodeType || typeof nodeType !== 'string') continue
     if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) continue
     if (!NODE_FACTORY[nodeType]) continue
-    const entryId = ((def as VideoStackNodeDef).id ?? nodeType).toLowerCase()
+    const entryId = (def.id ?? nodeType).toLowerCase()
     const entryType = nodeType.toLowerCase()
     if (entryId === nodeId || entryType === nodeId) {
       indices.push(builtIndex)
@@ -115,8 +115,7 @@ function resolveVideoKeys(profile: Profile, target: string, reducedMotion: boole
 }
 
 function resolveAudioKeys(profile: Profile, nodeId: string, param: string): string[] {
-  const chain = (profile as { audio_stack?: { chain?: Array<{ id?: string; node: string }> } })
-    .audio_stack?.chain ?? []
+  const chain = profile.audio_stack?.chain ?? []
   const indices: number[] = []
   chain.forEach((n, idx) => {
     if (((n.id ?? n.node) ?? '').toLowerCase() === nodeId.toLowerCase()) {

@@ -8,24 +8,34 @@
 
 import rawText from '../conditions/dimension-to-signal-mapping.json?raw'
 import { parseFirstJsonObject } from '../utils/jsonObjectParser'
+import { dimensionToSignalMappingFileSchema } from '../conditions/schema'
+import { logger } from '../utils/logger'
 import type { MotifDef, DimensionSignalMappingEntry } from './types'
 
 // Re-export types for backward compatibility
 export type { MotifDef, DimensionSignalMappingEntry }
 
-export type DimensionToSignalMappingFile = {
+type DimensionToSignalMappingFile = {
   version?: string
   note?: string
   mapping: Record<string, DimensionSignalMappingEntry>
 }
 
-export const dimensionToSignalMappingFile =
+const dimensionToSignalMappingFile =
   parseFirstJsonObject<DimensionToSignalMappingFile>(rawText, {
     predicate(value) {
       const mapping = (value as { mapping?: unknown }).mapping
       return mapping != null && typeof mapping === 'object' && !Array.isArray(mapping)
     },
   })
+
+// Validate parsed data against Zod schema (log-only — never reject at runtime)
+{
+  const result = dimensionToSignalMappingFileSchema.safeParse(dimensionToSignalMappingFile)
+  if (!result.success) {
+    logger.warn('[dimensionToSignalMapping] Schema validation issues:', result.error.issues)
+  }
+}
 
 export function getDimensionMappingEntry(dimensionId: string): DimensionSignalMappingEntry | null {
   const m = dimensionToSignalMappingFile?.mapping ?? {}

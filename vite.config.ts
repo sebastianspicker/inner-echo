@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 const securityHeaders = {
@@ -11,6 +11,21 @@ const securityHeaders = {
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    sourcemap: false, // Defence-in-depth: never ship sourcemaps to production.
+  },
   server: { headers: securityHeaders },
   preview: { headers: securityHeaders },
+  test: {
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'clover'],
+      thresholds: {
+        statements: 72,
+        branches: 55,
+        functions: 78,
+        lines: 75,
+      },
+    },
+  },
 })

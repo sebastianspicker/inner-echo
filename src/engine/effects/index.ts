@@ -12,8 +12,3 @@ export { InterferenceNode } from './interferenceNode'
 export { FocusJitterNode } from './focusJitterNode'
 export { FeedbackLoopNode } from './feedbackLoopNode'
 export { GridHintNode } from './gridHintNode'
-export {
-  SAFE_MODE_INTENSITY_MAX,
-  SAFE_MODE_TEMPORAL_FEEDBACK_MAX,
-  SAFE_MODE_TEMPORAL_JITTER_MAX,
-} from './constants'

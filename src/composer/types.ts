@@ -1,11 +1,3 @@
-import type {
-  AnalyserToParamDef,
-  AudioStackConfig,
-  Profile,
-  UIControl,
-  VideoStackNodeDef,
-} from '../conditions/schema'
-
 // ============================================================================
 // Shared Type Definitions (consolidated from multiple files)
 // ============================================================================
@@ -102,31 +94,6 @@ export type ComposerSettings = {
 
   /** UI-only: show debug overlays/panels (never enabled by default). */
   debugOverlay: boolean
-}
-
-export type EffectiveProfile = {
-  /** Effective video node stack (already reduced-motion filtered and safety clamped). */
-  videoStack: VideoStackNodeDef[]
-  /** Effective audio stack config (already safety clamped). */
-  audioStack: AudioStackConfig
-  /** Effective reactive mappings (audio→video and/or video→audio, as supported by runtime). */
-  reactiveMappings: AnalyserToParamDef[]
-  /** Effective safety envelope (used by UI warnings and runtime clamps). */
-  safety: Profile['safety']
-  /** Effective UI controls to expose (composer-specific; profile controls are not a contract). */
-  uiControls: UIControl[]
-}
-
-export const DEFAULT_COMPOSER_SETTINGS: ComposerSettings = {
-  intensity: 0.5,
-  safeMode: false,
-  reducedMotion: false,
-  audioEnabled: false,
-  micEnabled: false,
-  couplingStrength: 0.5,
-  maxFeedback: 0.35,
-  interactionAmount: 0.15,
-  debugOverlay: false,
 }
 
 export { clamp01 } from '../utils/numeric'

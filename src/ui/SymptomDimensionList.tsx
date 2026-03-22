@@ -38,6 +38,7 @@ function DimensionRow({
             max={1}
             step={0.01}
             value={weight}
+            aria-label={`Weight for ${dim.label ?? dim.id}`}
             onChange={(e) => {
               const n = Number(e.target.value)
               if (!Number.isFinite(n)) return

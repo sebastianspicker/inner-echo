@@ -29,6 +29,7 @@
       "additionalProperties": false
     },
     "experience_dimensions": {
+      "maxItems": 20,
       "type": "array",
       "items": {
         "type": "object",
@@ -49,6 +50,7 @@
       }
     },
     "video_stack": {
+      "maxItems": 30,
       "type": "array",
       "items": {
         "type": "object",
@@ -97,6 +99,7 @@
           "additionalProperties": false
         },
         "chain": {
+          "maxItems": 20,
           "type": "array",
           "items": {
             "type": "object",
@@ -193,6 +196,7 @@
           "type": "number"
         },
         "warnings": {
+          "maxItems": 20,
           "type": "array",
           "items": {
             "type": "string"
@@ -274,6 +278,7 @@
       "type": "object",
       "properties": {
         "controls": {
+          "maxItems": 30,
           "type": "array",
           "items": {
             "type": "object",

@@ -8,7 +8,7 @@
  */
 
 import type { AudioModule } from './types'
-import type { AudioStackConfig, AudioStackNodeDef } from '../../conditions/schema'
+import type { AudioStackConfig } from '../../conditions/schema'
 import {
   createLowpass,
   createHighpass,
@@ -69,7 +69,7 @@ export function buildAudioChain(
   if (!list?.length) return chain
 
   for (const def of list) {
-    const nodeType = (def as AudioStackNodeDef).node
+    const nodeType = def.node
     if (!nodeType || typeof nodeType !== 'string') {
       logger.warn('[audio] chain entry missing "node":', def)
       continue
@@ -80,7 +80,7 @@ export function buildAudioChain(
       logger.warn('[audio] Unknown audio node type, skipping:', nodeType)
       continue
     }
-    const params = (def as AudioStackNodeDef).params ?? {}
+    const params = def.params ?? {}
     chain.push(factory(context, params))
   }
   return chain

@@ -180,11 +180,11 @@ export async function composeEffectiveProfileCore(
 
   for (const { preset, profile } of loadedProfiles) {
     for (let i = 0; i < (profile.video_stack ?? []).length; i++) {
-      const def = profile.video_stack[i] as VideoStackNodeDef
+      const def = profile.video_stack[i]
       const node = normalizeNodeType(def.node)
       const id = makeIdForNode(def)
       const key = id || node
-      const params = (def.params ?? {}) as Record<string, unknown>
+      const params = def.params ?? {}
       const entry = videoByKey.get(key) ?? { node, id: key, contribs: [], minIndex: i }
       entry.node = node
       entry.minIndex = Math.min(entry.minIndex, i)
@@ -206,7 +206,7 @@ export async function composeEffectiveProfileCore(
       }
       const key = makeIdForNode(def) || node
       const strength = clamp01(effectiveDimWeight.get(d.dimensionId) ?? d.weight)
-      const scaledParams = scaleNumericParams((def.params ?? {}) as Record<string, unknown>, strength)
+      const scaledParams = scaleNumericParams(def.params ?? {}, strength)
       const e = videoByKey.get(key) ?? { node, id: key, contribs: [], minIndex: 1000 + i }
       e.minIndex = Math.min(e.minIndex, 1000 + i)
       e.contribs.push({ w: strength, params: scaledParams, source: `dim:${d.dimensionId}`, index: 1000 + i, node, id: key })
@@ -244,7 +244,7 @@ export async function composeEffectiveProfileCore(
       const node = normalizeNodeType(def.node)
       const id = (def.id ?? def.node ?? '').toString()
       const key = id || node
-      const params = (def.params ?? {}) as Record<string, unknown>
+      const params = def.params ?? {}
       const e = audioByKey.get(key) ?? { node, contribs: [], minIndex: i }
       e.node = node
       e.minIndex = Math.min(e.minIndex, i)
@@ -331,7 +331,7 @@ export async function composeEffectiveProfileCore(
     reactive: { analyser_to_params: reactive },
     ui: { controls: [] },
     references: { dimensions: cleanedDims.map((d) => `docs/references/dimensions/${d.dimensionId}.md`) },
-  } as Profile
+  } satisfies Profile
 
   for (const v of profile.video_stack) {
     const node = normalizeNodeType(v.node)

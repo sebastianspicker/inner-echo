@@ -1,14 +1,21 @@
 /**
  * Condition Graph Builder
- * 
+ *
  * This module bridges the gap between the static JSON profiles and the live WebGL/Audio engines.
  * Its main job is to read the `video_stack` array from a profile and instantiate the
  * correct TypeScript `VideoNode` objects (e.g. turning `"node": "grain"` in JSON into `new GrainNode()`).
- * 
+ *
  * Features:
  * - Safely skips unrecognized nodes (instead of crashing).
  * - Implements logic for the "Reduced Motion" accessibility setting, skipping
  *   temporal/motion-heavy nodes like `temporal_smear` if requested.
+ *
+ * Architecture note: This module lives in conditions/ but imports from engine/effects/.
+ * This cross-layer dependency is intentional — graphBuilder is the bridge that translates
+ * condition profile data into live engine node instances. The dependency direction
+ * (conditions → engine) is correct: profiles declare *what* to build, this module
+ * instantiates *how*. Moving NODE_FACTORY to engine/ would invert the dependency
+ * without simplifying the architecture, since buildVideoNodes needs profile types.
  */
 
 import type { VideoNode } from '../engine/effects/VideoNode'
@@ -88,7 +95,7 @@ export function buildVideoNodes(
   const reducedMotionDisable = getReducedMotionDisableNodes(profile)
   const nodes: VideoNode[] = []
   for (const def of profile.video_stack) {
-    const nodeType = (def as VideoStackNodeDef).node
+    const nodeType = def.node
     if (!nodeType || typeof nodeType !== 'string') {
       logger.warn('[conditions] video_stack entry missing "node":', def)
       continue
@@ -113,7 +120,7 @@ export function buildVideoNodes(
 export function profileHasTemporalNodes(profile: Profile): boolean {
   const reducedMotionDisable = getReducedMotionDisableNodes(profile)
   for (const def of profile.video_stack) {
-    const nodeType = (def as VideoStackNodeDef).node
+    const nodeType = def.node
     if (!nodeType) continue
     const t = nodeType.toLowerCase()
     if (TEMPORAL_NODE_TYPES.has(t) || reducedMotionDisable.has(t)) return true
@@ -135,11 +142,11 @@ export function getBuiltNodeIndex(
   const reducedMotionDisable = getReducedMotionDisableNodes(profile)
   const reducedMotion = options?.reducedMotion === true
   for (const def of profile.video_stack) {
-    const nodeType = (def as VideoStackNodeDef).node
+    const nodeType = def.node
     if (!nodeType || typeof nodeType !== 'string') continue
     if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) continue
     if (!NODE_FACTORY[nodeType]) continue
-    const entryId = ((def as VideoStackNodeDef).id ?? nodeType).toLowerCase()
+    const entryId = (def.id ?? nodeType).toLowerCase()
     const entryType = nodeType.toLowerCase()
     // SSOT targets may refer to either stack `id` or node type; accept both.
     if (entryId === id || entryType === id) return builtIndex
@@ -160,11 +167,11 @@ export function getProfileEntryForBuiltIndex(
   const reducedMotionDisable = getReducedMotionDisableNodes(profile)
   const reducedMotion = options?.reducedMotion === true
   for (const def of profile.video_stack) {
-    const nodeType = (def as VideoStackNodeDef).node
+    const nodeType = def.node
     if (!nodeType || typeof nodeType !== 'string') continue
     if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) continue
     if (!NODE_FACTORY[nodeType]) continue
-    if (count === builtIndex) return def as VideoStackNodeDef
+    if (count === builtIndex) return def
     count++
   }
   return undefined

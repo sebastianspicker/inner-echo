@@ -5,9 +5,7 @@
 export type {
   AudioContextStatus,
   AudioModule,
-  AudioEngineParams,
   AudioStackConfig,
-  AudioChainNodeDef,
   MicStatus,
   AudioInputMode,
   AudioMetrics,
@@ -19,12 +17,10 @@ export {
   addAudioContextListener,
   closeAudioContext,
 } from './contextManager'
-export type { AudioContextManagerListener } from './contextManager'
 export { createSynth } from './synth'
 export { createAudioEngine } from './audioEngine'
 export type {
   AudioEngineControl,
-  AudioEngineCallbacks,
   AudioEngineDebugState,
 } from './audioEngine'
 export { buildAudioChain, connectAudioChain, rampGain } from './audioGraphBuilder'

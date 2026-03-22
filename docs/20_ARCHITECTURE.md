@@ -40,7 +40,7 @@ User gesture → AudioContext
 ## Stack and layers
 
 - **Stack:** Vite, React, TypeScript, Three.js, Web APIs (`getUserMedia`, WebAudio).
-- **UI (`src/ui/`):** OnboardingModal, ConditionPicker (from `catalog.json`), ControlsPanel (Intensity, Safe Mode, Reduced Motion, Audio, Mic optional), WarningsPanel; optional DebugPanel (dev-only).
+- **UI (`src/ui/`):** OnboardingModal, ConditionPicker (from `catalog.json`), ConditionComposerPanel, EffectControls, AudioMicControls; optional DebugPanel (dev-only).
 - **Engine (`src/engine/`):** API used by UI: `startVideo`/`stopVideo`, `startAudio`/`stopAudio`, `startMic`/`stopMic`, `setCondition(id)`, `setControl(key, value)`, `stopEverything()`. Engine owns camera, WebGL, WebAudio, render loop, disposal.
 
 ---
@@ -51,7 +51,11 @@ User gesture → AudioContext
 |--------|----------------|
 | **`src/engine/`** | Camera lifecycle, WebGL renderer, WebAudio, effect nodes, graph construction, runtime (state, safety, Stop Everything). No UI logic, no condition data. |
 | **`src/conditions/`** | Data: `catalog.json`, `profiles/*.json`. Schema, loader, graph builder. No engine logic. |
-| **`src/ui/`** | Components, condition picker, controls, onboarding, accessibility. Calls engine APIs only. |
+| **`src/composer/`** | Multimorbid and symptom-first blend logic, dimension-to-signal mapping, interaction matrix, safety composition. |
+| **`src/contractVerification/`** | Registry metadata and probe harnesses for video/audio nodes. Used by `verify:contracts`. |
+| **`src/evidence/`** | Evidence doc loading and markdown rendering for the in-app evidence drawer. |
+| **`src/ui/`** | Components, condition picker, composer panel, controls, onboarding, accessibility. Calls engine APIs only. |
+| **`src/utils/`** | Shared helpers: logger, numeric clamp, JSON parser, target-path resolver. |
 | **`src/app/`** | Entry point and composition. |
 
 Boundary: the engine module builds graphs from conditions data; UI calls engine APIs only.
@@ -62,7 +66,7 @@ Boundary: the engine module builds graphs from conditions data; UI calls engine 
 
 - **Video:** `THREE.VideoTexture`; post-processing-style chain (render targets); nodes implement `VideoNode` (setParams, getMaterial, dispose). Implemented nodes include grain, vignette, chromatic_aberration, temporal_smear (and others). Unknown node types are skipped with a warning.
 - **WebGL module split:** `src/engine/canvas/webglPipeline.ts` is orchestrator-only; loop/params/resource helpers live under `src/engine/canvas/webgl/` for lower coupling and safer incremental changes.
-- **Audio:** Native WebAudio; starts only after user gesture. Synth + FX chain from profile `audio_stack.chain`; FX include lowpass, highpass, tremolo, noise_bed, compressor_limiter. Condition switch: master gain ramp, dispose and rebuild chain.
+- **Audio:** Native WebAudio; starts only after user gesture. Synth + FX chain from profile `audio_stack.chain`; FX include lowpass, highpass, tremolo, noise_bed, compressor_limiter, delay, reverb, flutter, pulse_tone. Condition switch: master gain ramp, dispose and rebuild chain.
 - **Reactive:** Profile can define `reactive.analyser_to_params`; analyser (e.g. RMS) drives video parameters with smoothing and clamps.
 
 ---

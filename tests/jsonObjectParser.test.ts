@@ -16,6 +16,15 @@ describe('utils/jsonObjectParser', () => {
     expect(value.mapping).toEqual({ a: 1 })
   })
 
+  it('throws on empty string', () => {
+    expect(() => parseFirstJsonObject('')).toThrow('No valid JSON object found')
+  })
+
+  it('throws on input exceeding max length', () => {
+    const huge = '{"x":"' + 'a'.repeat(1_048_576 + 100) + '"}'
+    expect(() => parseFirstJsonObject(huge)).toThrow('Input too large')
+  })
+
   it('skips earlier object candidates that do not satisfy predicate', () => {
     const text = [
       'prefix text',

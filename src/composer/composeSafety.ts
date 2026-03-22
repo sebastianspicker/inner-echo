@@ -88,7 +88,7 @@ export function clampVideoParams(
   })
 }
 
-export type DimensionSafetyEntry = {
+type DimensionSafetyEntry = {
   safety?: {
     warnings?: string[]
     clamps?: Record<string, unknown>
@@ -96,7 +96,7 @@ export type DimensionSafetyEntry = {
   }
 }
 
-export type DerivedSafety = {
+type DerivedSafety = {
   mergedSafeModeClamps: Record<string, unknown>
   mergedWarnings: string[]
   mergedDisableNodes: string[]
@@ -114,7 +114,7 @@ export function deriveComposedSafety(
   getDimensionSafety: (dimensionId: string) => DimensionSafetyEntry | null
 ): DerivedSafety {
   const safeModeClampsList: Array<Record<string, unknown> | undefined> = safetyBlocks.map(
-    (s) => s.safe_mode_clamps as Record<string, unknown>
+    (s) => s.safe_mode_clamps
   )
   const reducedMotionDisableLists: Array<string[] | undefined> = safetyBlocks.map(
     (s) => s.reduced_motion_policy?.disable_nodes

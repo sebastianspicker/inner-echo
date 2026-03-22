@@ -28,4 +28,13 @@ describe('presetShare', () => {
     const decoded = decodePresetFromHash('#preset=%%%')
     expect(decoded.ok).toBe(false)
   })
+
+  test('rejects hash exceeding MAX_HASH_PAYLOAD_LENGTH', () => {
+    const oversized = '#preset=' + 'A'.repeat(8200)
+    const decoded = decodePresetFromHash(oversized)
+    expect(decoded.ok).toBe(false)
+    if (!decoded.ok) {
+      expect(decoded.reason).toBe('payload-too-large')
+    }
+  })
 })
