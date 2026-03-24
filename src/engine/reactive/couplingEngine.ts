@@ -80,8 +80,7 @@ function getProfileAudioBase(profile: Profile, key: string): number {
   const idx = Number(parts[1])
   if (!Number.isFinite(idx) || idx < 0) return 0
   const param = parts.slice(2).join('.')
-  const chain = (profile as { audio_stack?: { chain?: Array<{ params?: Record<string, unknown> }> } }).audio_stack
-    ?.chain ?? []
+  const chain = profile.audio_stack?.chain ?? []
   const params = chain[idx]?.params
   const v = params?.[param]
   return typeof v === 'number' && Number.isFinite(v) ? v : 0

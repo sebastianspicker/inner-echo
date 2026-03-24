@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ConditionPicker } from './ConditionPicker'
 import type { CatalogEntry } from '../conditions/schema'
 import { loadProfile } from '../conditions/loader'
@@ -124,6 +124,27 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
 
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'deleted' | 'loaded'>('idle')
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
+  }, [])
+
+  const setCopyStatusTimed = useCallback((status: 'copied' | 'failed') => {
+    setCopyStatus(status)
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+    copyTimerRef.current = setTimeout(() => setCopyStatus('idle'), 2000)
+  }, [])
+
+  const setSaveStatusTimed = useCallback((status: 'saved' | 'deleted' | 'loaded') => {
+    setSaveStatus(status)
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000)
+  }, [])
 
   const [library, setLibrary] = useState<PresetSnapshotV2[]>([])
   const [selectedLibraryId, setSelectedLibraryId] = useState('')
@@ -193,8 +214,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
     const decoded = decodePresetFromHash(window.location.hash)
     if (!decoded.ok) return
     applyPayload(props, decoded.payload)
-    setSaveStatus('loaded')
-    setTimeout(() => setSaveStatus('idle'), 2000)
+    setSaveStatusTimed('loaded')
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -239,16 +259,14 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
 
   const handleCopy = async () => {
     const ok = await copyTextToClipboard(JSON.stringify(currentPayload, null, 2))
-    setCopyStatus(ok ? 'copied' : 'failed')
-    setTimeout(() => setCopyStatus('idle'), 2000)
+    setCopyStatusTimed(ok ? 'copied' : 'failed')
   }
 
   const handleCopyShareLink = async () => {
     const hash = encodePresetToHash(currentPayload)
     const url = `${window.location.origin}${window.location.pathname}${hash}`
     const ok = await copyTextToClipboard(url)
-    setCopyStatus(ok ? 'copied' : 'failed')
-    setTimeout(() => setCopyStatus('idle'), 2000)
+    setCopyStatusTimed(ok ? 'copied' : 'failed')
   }
 
   const handleSaveLocal = () => {
@@ -260,8 +278,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
     persistLibrary(next)
     setSelectedLibraryId(snapshot.id)
     setPresetName(snapshot.name)
-    setSaveStatus('saved')
-    setTimeout(() => setSaveStatus('idle'), 2000)
+    setSaveStatusTimed('saved')
   }
 
   const handleOverwriteLocal = () => {
@@ -274,8 +291,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
     }
     const next = library.map((item) => (item.id === selectedSnapshot.id ? updated : item))
     persistLibrary(next)
-    setSaveStatus('saved')
-    setTimeout(() => setSaveStatus('idle'), 2000)
+    setSaveStatusTimed('saved')
   }
 
   const handleDeleteLocal = () => {
@@ -285,15 +301,13 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
     const newSelected = next[0]
     setSelectedLibraryId(newSelected?.id ?? '')
     setPresetName(newSelected?.name ?? DEFAULT_PRESET_NAME)
-    setSaveStatus('deleted')
-    setTimeout(() => setSaveStatus('idle'), 2000)
+    setSaveStatusTimed('deleted')
   }
 
   const handleLoadLocal = () => {
     if (!selectedSnapshot) return
     applyPayload(props, selectedSnapshot.payload)
-    setSaveStatus('loaded')
-    setTimeout(() => setSaveStatus('idle'), 2000)
+    setSaveStatusTimed('loaded')
   }
 
   return (
@@ -414,6 +428,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
             <input
               type="text"
               value={presetName}
+              maxLength={200}
               onChange={(e) => setPresetName(e.target.value)}
               aria-label="Preset name"
             />

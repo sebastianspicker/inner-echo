@@ -46,8 +46,7 @@ export function resolveAnalyserTarget(
     const parsed = parseScopedTarget(t, 'audio')
     if (!parsed) return null
     const { nodeId, param } = parsed
-    const chain = (profile as { audio_stack?: { chain?: Array<{ id?: string; node: string }> } })
-      .audio_stack?.chain ?? []
+    const chain = profile.audio_stack?.chain ?? []
     const idx = chain.findIndex((n) => ((n.id ?? n.node) ?? '').toLowerCase() === nodeId)
     if (idx === -1) return null
     return { kind: 'audio', paramKey: `audio.${idx}.${param}` }

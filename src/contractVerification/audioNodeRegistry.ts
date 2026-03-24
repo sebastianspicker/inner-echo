@@ -21,6 +21,7 @@ import type {
   ProbeHarness,
   RegistryNodeSummary,
 } from './types'
+import { getByPath } from './utils'
 
 function withSeededRandom<T>(seed: number, fn: () => T): T {
   const prev = Math.random
@@ -34,18 +35,6 @@ function withSeededRandom<T>(seed: number, fn: () => T): T {
   } finally {
     Math.random = prev
   }
-}
-
-function getByPath(root: unknown, path: string): unknown {
-  const parts = path.split('.').filter(Boolean)
-  let current: unknown = root
-  for (const part of parts) {
-    if (current == null || typeof current !== 'object') return undefined
-    const obj = current as Record<string, unknown>
-    if (!Object.prototype.hasOwnProperty.call(obj, part)) return undefined
-    current = obj[part]
-  }
-  return current
 }
 
 class AudioProbeHarness implements ProbeHarness {

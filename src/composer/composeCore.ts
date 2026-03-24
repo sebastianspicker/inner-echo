@@ -23,6 +23,7 @@ import {
   type SourceId,
 } from './composeBlend'
 import { clampAudioParams, clampVideoParams, deriveComposedSafety } from './composeSafety'
+import { IMPLEMENTED_VIDEO_NODES, IMPLEMENTED_AUDIO_NODES } from '../engine/nodeTypes'
 
 export type MissingNodesReport = {
   video: string[]
@@ -57,36 +58,6 @@ export type ComposeSources = {
   getDimensionMappingEntry: (dimensionId: string) => DimensionSignalMappingEntry | null
   getExperienceDimensions: () => ExperienceDimensionDef[]
 }
-
-// Keep in sync with implemented engine nodes (graphBuilder + audioGraphBuilder).
-const IMPLEMENTED_VIDEO_NODES = new Set<string>([
-  'grain',
-  'vignette',
-  'chromatic_aberration',
-  'chroma_aberration',
-  'temporal_smear',
-  'color_grade',
-  'haze',
-  'soft_blur',
-  'edge_sharpen',
-  'pulse',
-  'interference',
-  'focus_jitter',
-  'feedback_loop',
-  'grid_hint',
-])
-
-const IMPLEMENTED_AUDIO_NODES = new Set<string>([
-  'lowpass',
-  'highpass',
-  'tremolo',
-  'flutter',
-  'noise_bed',
-  'delay',
-  'reverb',
-  'pulse_tone',
-  'compressor_limiter',
-])
 
 function stableUniqSorted(list: string[]): string[] {
   return Array.from(new Set(list)).sort((a, b) => a.localeCompare(b))
@@ -297,7 +268,7 @@ export async function composeEffectiveProfileCore(
 
   const reactiveAll: AnalyserToParamDef[] = []
   for (const { profile } of loadedProfiles) {
-    const list = (profile as { reactive?: { analyser_to_params?: AnalyserToParamDef[] } }).reactive?.analyser_to_params ?? []
+    const list = profile.reactive?.analyser_to_params ?? []
     for (const m of list) reactiveAll.push(m)
   }
   const reactiveKey = (m: AnalyserToParamDef) => `${m.source}|${m.target}|${m.scale ?? ''}|${m.offset ?? ''}|${JSON.stringify(m.clamp ?? [])}`

@@ -23,6 +23,7 @@ import type {
   RegistryNodeSummary,
   SafetyContextShape,
 } from './types'
+import { getByPath } from './utils'
 
 const DEFAULT_SAFETY_CONTEXT: SafetyContextShape = {
   global: {
@@ -36,18 +37,6 @@ const DEFAULT_SAFETY_CONTEXT: SafetyContextShape = {
     max_luminance_delta_per_frame: 0.25,
   },
   safeMode: {},
-}
-
-function getByPath(root: unknown, path: string): unknown {
-  const parts = path.split('.').filter(Boolean)
-  let current: unknown = root
-  for (const part of parts) {
-    if (current == null || typeof current !== 'object') return undefined
-    const obj = current as Record<string, unknown>
-    if (!Object.prototype.hasOwnProperty.call(obj, part)) return undefined
-    current = obj[part]
-  }
-  return current
 }
 
 class VideoProbeHarness implements ProbeHarness {

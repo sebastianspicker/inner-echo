@@ -58,7 +58,7 @@ export async function startAudioContext(): Promise<AudioContextStatus> {
 
       // If we don't have a context yet, or the previous one was permenantly closed, create a new one.
       if (!sharedContext || sharedContext.state === 'closed') {
-        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+        const AudioCtx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
         sharedContext = new AudioCtx()
       }
 

@@ -48,6 +48,9 @@ const FX_FACTORY: Record<string, NodeFactory> = {
     createCompressor(ctx, p as { threshold?: number; ratio?: number; attack?: number; release?: number; ceiling?: number }),
 }
 
+/** Exported key list so the canonical IMPLEMENTED_AUDIO_NODES set can be derived in engine/nodeTypes.ts. */
+export const AUDIO_NODE_TYPE_KEYS: readonly string[] = Object.keys(FX_FACTORY)
+
 export function isKnownAudioNodeType(nodeType: string): boolean {
   return Object.prototype.hasOwnProperty.call(FX_FACTORY, String(nodeType).toLowerCase())
 }

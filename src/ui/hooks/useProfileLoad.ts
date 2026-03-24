@@ -61,12 +61,13 @@ export function useProfileLoad(params: UseProfileLoadParams): {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [composeReport, setComposeReport] = useState<ComposeReport | null>(null)
   const [controlValues, setControlValues] = useState<Record<string, number | boolean>>({})
-  const [isProfileLoading, setProfileLoading] = useState(false)
+  const [loadingCount, setLoadingCount] = useState(0)
+  const isProfileLoading = loadingCount > 0
 
   useAsyncEffect(
     async (ctx) => {
       if (composerMode !== 'preset' || !conditionId) return
-      setProfileLoading(true)
+      setLoadingCount((c) => c + 1)
       try {
         const p = await loadProfile(conditionId)
         if (ctx.cancelled) return
@@ -89,7 +90,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
           logger.error('loadProfile failed', err)
         }
       } finally {
-        setProfileLoading(false)
+        if (!ctx.cancelled) setLoadingCount((c) => Math.max(0, c - 1))
       }
     },
     [conditionId, composerMode, setIntensity, setAudioEnabled],
@@ -99,7 +100,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
   useAsyncEffect(
     async (ctx) => {
       if (composerMode === 'preset') return
-      setProfileLoading(true)
+      setLoadingCount((c) => c + 1)
       const settings = {
         intensity,
         safeMode,
@@ -121,7 +122,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
       } catch (err) {
         if (!ctx.cancelled) logger.error('composeEffectiveProfile failed', err)
       } finally {
-        setProfileLoading(false)
+        if (!ctx.cancelled) setLoadingCount((c) => Math.max(0, c - 1))
       }
     },
     [

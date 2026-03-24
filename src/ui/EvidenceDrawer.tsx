@@ -140,7 +140,7 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     (e: React.MouseEvent) => {
       if (e.target === e.currentTarget) props.onClose()
     },
-    [props]
+    [props.onClose]
   )
 
   const handleNavKeyDown = useCallback((e: ReactKeyboardEvent<HTMLElement>) => {

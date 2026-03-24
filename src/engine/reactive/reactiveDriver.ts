@@ -11,7 +11,7 @@
  *    frame (60fps), which returns the calculated, smoothed, and clamped parameter overrides.
  */
 
-import type { Profile, AnalyserToParamDef } from '../../conditions/schema'
+import type { Profile } from '../../conditions/schema'
 import { getProfileEntryForBuiltIndex } from '../../conditions/graphBuilder'
 import {
   resolveAnalyserTarget,
@@ -56,8 +56,7 @@ export function createReactiveDriver(
   getVideoOverrides(delta: number, rms: number): Record<string, number>
   getAudioOverrides(delta: number, rms: number): Record<string, number>
 } {
-  const list = (profile as { reactive?: { analyser_to_params?: AnalyserToParamDef[] } })
-    .reactive?.analyser_to_params
+  const list = profile.reactive?.analyser_to_params
   if (!list?.length) {
     return {
       getVideoOverrides: () => ({}),
@@ -89,8 +88,7 @@ export function createReactiveDriver(
       const parts = resolved.paramKey.split('.')
       const chainIndex = Number(parts[1])
       const paramName = parts.slice(2).join('.')
-      const chain = (profile as { audio_stack?: { chain?: Array<{ params?: Record<string, unknown> }> } })
-        .audio_stack?.chain ?? []
+      const chain = profile.audio_stack?.chain ?? []
       const params = chain[chainIndex]?.params
       baseValue = params && typeof params[paramName] === 'number' ? (params[paramName] as number) : 0
     }

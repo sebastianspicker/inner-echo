@@ -35,7 +35,7 @@ export type PresetPayload = z.infer<typeof presetPayloadSchema>
 export const presetSnapshotV2Schema = z.object({
   version: z.literal(2),
   id: z.string(),
-  name: z.string().min(1),
+  name: z.string().min(1).max(200),
   createdAt: z.string(),
   payload: presetPayloadSchema,
 })

@@ -9,7 +9,8 @@ export function renderEvidenceMarkdown(md: string): { html: string; title: strin
   const raw = marked.parse(md, {
     gfm: true,
     breaks: false,
-  }) as string
+    async: false,
+  })
 
   const html = DOMPurify.sanitize(raw, {
     USE_PROFILES: { html: true },

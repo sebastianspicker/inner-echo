@@ -23,9 +23,9 @@ import { useImmersiveIdleState } from './hooks/useImmersiveIdleState'
 import { useCameraController } from './hooks/useCameraController'
 import { useAudioController } from './hooks/useAudioController'
 import { useOverlayController } from './hooks/useOverlayController'
+import { useReactivePipeline } from './hooks/useReactivePipeline'
 import { logger } from '../utils/logger'
 import {
-  buildVideoNodes,
   profileHasTemporalNodes,
   TEMPORAL_NODE_TYPES,
 } from '../conditions/graphBuilder'
@@ -35,8 +35,7 @@ import { AudioMicControls } from './AudioMicControls'
 import { EffectControls } from './EffectControls'
 
 import type { CatalogEntry, Profile } from '../conditions/schema'
-import { createReactiveDriver, createCouplingEngine } from '../engine/reactive'
-import { startOverlayLoop, type OverlayControl, type VideoMetrics } from '../engine/canvas'
+import type { OverlayControl, VideoMetrics } from '../engine/canvas'
 import {
   clampIntensity,
   getReducedMotionDisableNodes,
@@ -47,7 +46,6 @@ import {
   stopVideoStream,
   type CameraState,
 } from '../engine/video'
-import { BASELINE_PROFILE } from '../conditions/fallbackProfiles'
 import {
   startAudioContext,
   createAudioEngine,
@@ -352,7 +350,7 @@ export function CameraView() {
             audioEngineControlRef.current.stop()
             audioEngineControlRef.current = null
           }
-          const profileHasAudio = !!(profile?.audio_stack && (profile.audio_stack as { enabled?: boolean }).enabled)
+          const profileHasAudio = !!profile?.audio_stack?.enabled
           const audioStack =
             profileHasAudio
               ? (profile?.audio_stack ?? { enabled: false })
@@ -392,7 +390,7 @@ export function CameraView() {
           setAudioError(err instanceof Error ? err.message : String(err))
         }
       })
-  }, [profile?.audio_stack, profile?.id, audioEnabled, inputMode, micSensitivity, micGate])
+  }, [profile, audioEnabled, inputMode, micSensitivity, micGate])
 
   const handleMasterVolumeChange = useCallback((value: number) => {
     setMasterVolume(value)
@@ -473,134 +471,23 @@ export function CameraView() {
     })
   }, [composerMode, conditionId])
 
-  // Canvas overlay: start loop when camera is active (after video has dimensions), using current condition profile.
-  // When conditionId changes, cleanup stops the loop and we restart with the new profile (pipeline update without page refresh).
-  useEffect(() => {
-    if (cameraState !== 'active') {
-      if (overlayControlRef.current) {
-        overlayControlRef.current.stop()
-        overlayControlRef.current = null
-      }
-      return
-    }
-
-    const video = videoRef.current
-    const canvas = canvasRef.current
-    const container = containerRef.current
-    if (!video || !canvas || !container) return
-    if (!profile) return
-
-    let listener: (() => void) | null = null
-
-    function startLoop(): void {
-      if (overlayControlRef.current) return
-      const prof = profile ?? BASELINE_PROFILE
-      const nodes = buildVideoNodes(prof, { reducedMotion })
-      const couplingEngine = createCouplingEngine(prof, {
-        couplingStrength: couplingStrengthRef.current,
-        maxFeedback: maxFeedbackRef.current,
-        reducedMotion,
-        safeMode: safeModeRef.current,
-      })
-      const reactiveOptions = {
-        getAudioMetrics: () => audioEngineControlRef.current?.getMetrics?.() ?? { rms: 0, centroid: 0, flux: 0 },
-        getRms: () => audioEngineControlRef.current?.getRms?.() ?? 0, // back-compat
-        applyAudioOverrides: (overrides: Record<string, number>) => {
-          audioEngineControlRef.current?.applyReactiveParams?.(overrides)
-        },
-        onVideoMetrics: (m: VideoMetrics) => {
-          videoMetricsRef.current = m
-        },
-        getOverrides: (() => {
-          const driver = createReactiveDriver(prof, { reducedMotion })
-          const baseAfterReactive: Record<string, number | boolean> = {}
-          const outVideo: Record<string, number> = {}
-          const outAudio: Record<string, number> = {}
-          const clear = (obj: Record<string, unknown>): void => {
-            for (const k of Object.keys(obj)) delete obj[k]
-          }
-          const copy = (dst: Record<string, number | boolean>, src: Record<string, number | boolean>): void => {
-            for (const k in src) dst[k] = src[k]
-          }
-          const mergeNum = (dst: Record<string, number>, src: Record<string, number>): void => {
-            for (const k in src) dst[k] = src[k]
-          }
-          return (
-            delta: number,
-            audio: { rms: number; centroid: number; flux: number },
-            video: { motion: number; luminance: number; edge: number; instability: number },
-            baseControlValues: Record<string, number | boolean>
-          ) => {
-            // Existing SSOT reactive (RMS-only)
-            const videoReactive = driver.getVideoOverrides(delta, audio.rms)
-            const audioReactive = driver.getAudioOverrides(delta, audio.rms)
-
-            // Coupling layer (audio↔video)
-            clear(baseAfterReactive)
-            copy(baseAfterReactive, baseControlValues)
-            mergeNum(baseAfterReactive as Record<string, number>, videoReactive)
-            // Ensure coupling uses the latest UI settings (sliders can change while loop runs).
-            couplingEngine.setSettings({
-              couplingStrength: couplingStrengthRef.current,
-              maxFeedback: maxFeedbackRef.current,
-              safeMode: safeModeRef.current,
-            })
-            const coupled = couplingEngine.step(delta, audio, video, baseAfterReactive)
-
-            clear(outVideo)
-            clear(outAudio)
-            mergeNum(outVideo, videoReactive)
-            mergeNum(outVideo, coupled.video)
-            mergeNum(outAudio, audioReactive)
-            mergeNum(outAudio, coupled.audio)
-            return {
-              video: outVideo,
-              audio: outAudio,
-            }
-          }
-        })(),
-      }
-      const control = startOverlayLoop(
-        video,
-        canvas,
-        container,
-        nodes,
-        reactiveOptions
-      )
-      overlayControlRef.current = control
-      const safetyCtx = getSafetyContext(prof)
-      const safeModeNow = safeModeRef.current
-      const clampedIntensity = clampIntensity(prof, intensityRef.current, safeModeNow)
-      control.setParams({
-        intensity: clampedIntensity,
-        safeMode: safeModeNow,
-        controlValues: { ...controlValuesRef.current, intensity: clampedIntensity, safeMode: safeModeNow },
-        stressMode: stressModeRef.current,
-        safetyContext: safetyCtx,
-      })
-    }
-
-    if (video.readyState >= 1 && video.videoWidth > 0 && video.videoHeight > 0) {
-      startLoop()
-    } else {
-      listener = (): void => {
-        if (listener) {
-          video.removeEventListener('loadedmetadata', listener)
-        }
-        listener = null
-        startLoop()
-      }
-      video.addEventListener('loadedmetadata', listener)
-    }
-
-    return () => {
-      if (listener && video) video.removeEventListener('loadedmetadata', listener)
-      if (overlayControlRef.current) {
-        overlayControlRef.current.stop()
-        overlayControlRef.current = null
-      }
-    }
-  }, [cameraState, reducedMotion, profile])
+  useReactivePipeline({
+    cameraState,
+    reducedMotion,
+    profile,
+    videoRef,
+    canvasRef,
+    containerRef,
+    overlayControlRef,
+    audioEngineControlRef,
+    videoMetricsRef,
+    couplingStrengthRef,
+    maxFeedbackRef,
+    safeModeRef,
+    intensityRef,
+    controlValuesRef,
+    stressModeRef,
+  })
 
   // Push params to the overlay when they change (only has effect when WebGL is active).
   useEffect(() => {
@@ -715,8 +602,8 @@ export function CameraView() {
         <div className="ie-callout ie-callout--warn" role="region" aria-label="Condition warnings">
           <div className="ie-calloutTitle">Hinweise</div>
           <ul className="ie-calloutList">
-            {warnings.map((w, i) => (
-              <li key={i}>{w}</li>
+            {warnings.map((w) => (
+              <li key={w}>{w}</li>
             ))}
           </ul>
         </div>
