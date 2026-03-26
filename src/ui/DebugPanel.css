@@ -1,0 +1,73 @@
+.debug-panel {
+  margin-top: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: rgba(0, 0, 0, 0.18);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+
+.debug-panel__title {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 650;
+  margin-bottom: var(--sp-2);
+}
+
+.debug-panel__grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+}
+
+.debug-panel dt {
+  color: var(--faint);
+  letter-spacing: 0.06em;
+}
+
+.debug-panel dd {
+  margin: 0;
+  color: var(--text);
+}
+
+.debug-panel__error {
+  color: color-mix(in oklab, var(--danger) 85%, white 0%);
+}
+
+.debug-panel__actions {
+  margin-top: var(--sp-2);
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.debug-panel__btn {
+  padding: 8px 12px;
+  font-size: 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--duration-normal) var(--ease-gentle),
+              border-color var(--duration-normal) var(--ease-gentle),
+              transform var(--duration-normal) var(--ease-out-soft),
+              box-shadow var(--duration-normal) var(--ease-gentle);
+}
+
+.debug-panel__btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.debug-panel__btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 80ms;
+}

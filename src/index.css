@@ -1,0 +1,215 @@
+* {
+  box-sizing: border-box;
+}
+
+/* Minimal dark design tokens (therapeutic, calm). */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces — warmer undertone */
+  --bg: #080a0e;
+  --surface-1: rgba(255, 255, 255, 0.04);
+  --surface-2: rgba(255, 255, 255, 0.06);
+  --surface-3: rgba(255, 255, 255, 0.08);
+
+  /* Text — slightly softer for gentler reading */
+  --text: rgba(255, 255, 255, 0.86);
+  --muted: rgba(255, 255, 255, 0.58);
+  --faint: rgba(255, 255, 255, 0.38);
+
+  /* Lines + radii */
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+
+  /* Accent (low-chroma teal — warmer, more soothing) */
+  --accent: #7bc8c0;
+  --accent-2: #4fb3a9;
+  --accent-glow: rgba(123, 200, 192, 0.12);
+  --danger: #f0a0a0;
+  --warn: #f0dd8a;
+
+  /* Shadows (soft, layered for depth) */
+  --shadow-1: 0 8px 24px rgba(0, 0, 0, 0.32), 0 2px 8px rgba(0, 0, 0, 0.18);
+  --shadow-2: 0 16px 48px rgba(0, 0, 0, 0.42), 0 4px 16px rgba(0, 0, 0, 0.22);
+
+  /* Spacing scale */
+  --sp-1: 6px;
+  --sp-2: 10px;
+  --sp-3: 14px;
+  --sp-4: 18px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  /* Transition timing — gentle, not snappy */
+  --ease-gentle: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 180ms;
+  --duration-normal: 280ms;
+  --duration-slow: 420ms;
+}
+
+/* Gentle breathing animation for ambient life — slow and soothing */
+@keyframes ie-breathe {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+
+/* Soft fade-in for elements appearing */
+@keyframes ie-fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Soft scale-in for modals */
+@keyframes ie-scaleIn {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Backdrop fade */
+@keyframes ie-backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg);
+  background-image: radial-gradient(ellipse at 50% 0%, rgba(123, 200, 192, 0.03) 0%, transparent 60%);
+  color: var(--text);
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+}
+
+#root {
+  min-height: 100vh;
+  display: block;
+}
+
+/* Accessible focus ring — soft glow instead of hard outline */
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 60%, transparent);
+  outline-offset: 3px;
+  transition: outline var(--duration-normal) var(--ease-gentle),
+              outline-offset var(--duration-normal) var(--ease-gentle);
+}
+
+/* Premium Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color var(--duration-normal) var(--ease-gentle);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Form controls (minimal, calm). */
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom range slider styling for therapeutic feel */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--surface-3);
+  border-radius: 999px;
+  outline: none;
+  transition: background var(--duration-normal) var(--ease-gentle);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 0 0 var(--accent-glow);
+  transition: box-shadow var(--duration-normal) var(--ease-gentle),
+              transform var(--duration-fast) var(--ease-gentle);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 6px var(--accent-glow);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: var(--surface-3);
+  border-radius: 999px;
+}
+
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 6px var(--accent-glow);
+}
+
+/* Reduce motion: no transitions/animations.
+   !important is required here to override all animations for the prefers-reduced-motion accessibility query. */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: required for prefers-reduced-motion override */
+    animation-duration: 0.001ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: required for prefers-reduced-motion override */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: required for prefers-reduced-motion override */
+    transition-duration: 0.001ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: required for prefers-reduced-motion override */
+    scroll-behavior: auto !important;
+  }
+}

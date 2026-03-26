@@ -1,0 +1,553 @@
+/* New shell layout (therapeutic, calm). */
+.ie-app {
+  min-height: 100vh;
+  padding: clamp(14px, 2.2vw, 26px);
+}
+
+.ie-shell {
+  max-width: 1160px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  animation: ie-fadeIn var(--duration-slow) var(--ease-out-soft) both;
+}
+
+.ie-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  background: color-mix(in oklab, var(--surface-2) 85%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: opacity 0.5s var(--ease-gentle), filter 0.5s var(--ease-gentle),
+              transform 0.5s var(--ease-gentle);
+}
+
+.ie-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ie-title {
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.ie-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ie-subtitle--shortcuts {
+  font-size: 11px;
+  color: var(--faint);
+  letter-spacing: 0.04em;
+}
+
+.ie-headerRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-2);
+}
+
+.ie-statusRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}
+
+.ie-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.18);
+  transition: border-color var(--duration-normal) var(--ease-gentle),
+              background var(--duration-normal) var(--ease-gentle);
+}
+
+.ie-pill:hover {
+  border-color: var(--border-strong);
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.ie-pillKey {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.ie-pillVal {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+
+.ie-actions {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.ie-btn {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  padding: 10px 16px;
+  min-height: 44px;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: transform var(--duration-normal) var(--ease-out-soft),
+              background var(--duration-normal) var(--ease-gentle),
+              border-color var(--duration-normal) var(--ease-gentle),
+              box-shadow var(--duration-normal) var(--ease-gentle),
+              opacity var(--duration-normal) var(--ease-gentle);
+}
+
+.ie-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--border-strong);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.ie-btn:active:not(:disabled) {
+  transform: translateY(0px) scale(0.98);
+  transition-duration: 80ms;
+}
+
+.ie-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ie-btn--danger {
+  border-color: color-mix(in oklab, var(--danger) 25%, var(--border));
+  background: color-mix(in oklab, rgba(240, 180, 180, 0.06) 70%, transparent);
+}
+
+.ie-btn--danger:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--danger) 40%, var(--border));
+  background: color-mix(in oklab, rgba(240, 180, 180, 0.10) 70%, transparent);
+  box-shadow: 0 4px 16px rgba(240, 180, 180, 0.06);
+}
+
+.ie-callout {
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.18);
+  padding: var(--sp-3) var(--sp-4);
+  animation: ie-fadeIn var(--duration-normal) var(--ease-out-soft) both;
+}
+
+.ie-calloutTitle {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 6px;
+}
+
+.ie-calloutBody {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.ie-calloutList {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.ie-callout--error {
+  border-color: color-mix(in oklab, var(--danger) 35%, var(--border));
+  background: rgba(240, 160, 160, 0.04);
+}
+
+.ie-callout--warn {
+  border-color: color-mix(in oklab, var(--warn) 55%, var(--border));
+}
+
+.ie-layout {
+  display: grid;
+  grid-template-columns: 1.45fr 0.85fr;
+  gap: var(--sp-3);
+  align-items: start;
+}
+
+.ie-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: var(--shadow-2);
+  transition: box-shadow var(--duration-slow) var(--ease-gentle),
+              border-color var(--duration-slow) var(--ease-gentle);
+}
+
+.ie-stage--active {
+  border-color: color-mix(in oklab, var(--accent) 20%, var(--border));
+  box-shadow: var(--shadow-2), 0 0 40px rgba(123, 200, 192, 0.04);
+}
+
+.ie-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.95) contrast(0.98) brightness(0.96);
+}
+
+.ie-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.ie-debugChip {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.ie-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.35));
+  animation: ie-breathe 5s var(--ease-gentle) infinite;
+}
+
+.ie-panel {
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--bg) 60%, transparent);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: opacity 0.5s var(--ease-gentle), filter 0.5s var(--ease-gentle),
+              transform 0.5s var(--ease-gentle);
+}
+
+/* Immersive Mode Support — gentle fade with transform */
+.ie-shell--idle .ie-header,
+.ie-shell--idle .ie-panel {
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(4px);
+  transform: translateY(4px);
+  transition: opacity 2.5s var(--ease-gentle), filter 2.5s var(--ease-gentle),
+              transform 2.5s var(--ease-gentle);
+}
+
+.ie-panelScroll {
+  max-height: calc(100vh - 200px);
+  overflow: auto;
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.ie-panelSection {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: rgba(0, 0, 0, 0.14);
+  padding: var(--sp-3);
+  transition: border-color var(--duration-normal) var(--ease-gentle);
+}
+
+.ie-panelSection:hover {
+  border-color: var(--border-strong);
+}
+
+.ie-panelBody {
+  padding-top: var(--sp-2);
+  animation: ie-fadeIn var(--duration-normal) var(--ease-out-soft) both;
+}
+
+.ie-summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  user-select: none;
+  padding: 4px 0;
+  transition: color var(--duration-normal) var(--ease-gentle);
+}
+
+.ie-summary:hover {
+  color: var(--text);
+}
+
+.ie-summary::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: rotate(-45deg);
+  margin-right: 8px;
+  transition: transform var(--duration-normal) var(--ease-gentle),
+              border-color var(--duration-normal) var(--ease-gentle);
+  vertical-align: 1px;
+}
+
+details[open] > .ie-summary::before {
+  transform: rotate(45deg);
+}
+
+.ie-summary:hover::before {
+  border-color: var(--text);
+}
+
+.ie-summary::-webkit-details-marker {
+  display: none;
+}
+
+.ie-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ie-subsectionTitle {
+  margin: 10px 0 6px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.ie-codeList {
+  margin: 0;
+  padding-left: 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.ie-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text);
+  user-select: none;
+}
+
+.ie-toggle input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--accent);
+}
+
+@media (max-width: 980px) {
+  .ie-app {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .ie-header {
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    z-index: 25;
+  }
+
+  .ie-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ie-headerRight {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .ie-statusRow,
+  .ie-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .ie-actions .ie-btn {
+    flex: 1 1 180px;
+  }
+
+  .ie-panelScroll {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+.ie-btn--accent {
+  border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
+  background: color-mix(in oklab, rgba(123, 200, 192, 0.10) 70%, transparent);
+}
+
+.ie-btn--accent:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--accent) 60%, var(--border));
+  background: color-mix(in oklab, rgba(123, 200, 192, 0.16) 70%, transparent);
+  box-shadow: 0 4px 16px rgba(123, 200, 192, 0.1);
+}
+
+.ie-controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: rgba(0, 0, 0, 0.12);
+  transition: border-color var(--duration-normal) var(--ease-gentle);
+}
+
+.ie-controlGroup:hover {
+  border-color: var(--border-strong);
+}
+
+.ie-controlSubgroup {
+  margin-top: var(--sp-1);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.ie-controlStatus {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.ie-inlineError {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklab, var(--danger) 30%, var(--border));
+  background: rgba(240, 160, 160, 0.04);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  animation: ie-fadeIn var(--duration-normal) var(--ease-out-soft) both;
+}
+
+.ie-control {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.ie-control.ie-control--range > span:first-child,
+.ie-controlLabel {
+  min-width: 6.25rem;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.ie-control.ie-control--range input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.ie-control .composer__slider-val {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ie-control.ie-control--toggle {
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 0;
+  border-radius: var(--r-sm);
+  transition: color var(--duration-normal) var(--ease-gentle);
+}
+
+.ie-control.ie-control--toggle:hover {
+  color: var(--text);
+}
+
+.ie-control.ie-control--toggle input[type="checkbox"],
+.ie-control.ie-control--toggle input[type="radio"] {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.ie-controlInputMode {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ie-controlOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.ie-controlHint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+:where(
+    .ie-btn,
+    .ie-summary,
+    .ie-toggle input,
+    .composer input,
+    .composer select,
+    .composer button,
+    .evidence-btn,
+    .evidence-navLink
+  ):focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 60%, transparent);
+  outline-offset: 3px;
+  transition: outline var(--duration-normal) var(--ease-gentle),
+              outline-offset var(--duration-normal) var(--ease-gentle);
+}

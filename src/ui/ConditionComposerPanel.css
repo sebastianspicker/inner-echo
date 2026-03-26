@@ -1,0 +1,370 @@
+.composer {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.composer__header,
+.composer__quick {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.composer__title {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 650;
+  min-width: 5rem;
+}
+
+.composer__mode,
+.composer__quick-buttons,
+.composer__toggles {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.composer__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: var(--text);
+  min-height: 44px;
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+  transition: background var(--duration-normal) var(--ease-gentle),
+              color var(--duration-normal) var(--ease-gentle);
+}
+
+.composer__toggle:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.composer__toggle input {
+  accent-color: var(--accent);
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.composer__quick-buttons button {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background var(--duration-normal) var(--ease-gentle),
+              border-color var(--duration-normal) var(--ease-gentle),
+              transform var(--duration-normal) var(--ease-out-soft),
+              box-shadow var(--duration-normal) var(--ease-gentle);
+}
+
+.composer__quick-buttons button:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.composer__quick-buttons button:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 80ms;
+}
+
+.composer__quick-buttons button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.composer__global {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.composer__micPrereqHint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.composer__slider {
+  display: grid;
+  grid-template-columns: 6rem 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.composer__slider input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.composer__slider input[type='text'],
+.composer__slider select {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0 12px;
+  background: rgba(0, 0, 0, 0.14);
+  color: var(--text);
+  transition: border-color var(--duration-normal) var(--ease-gentle),
+              background var(--duration-normal) var(--ease-gentle),
+              box-shadow var(--duration-normal) var(--ease-gentle);
+}
+
+.composer__slider input[type='text']:hover,
+.composer__slider select:hover {
+  border-color: var(--border-strong);
+}
+
+.composer__slider input[type='text']:focus,
+.composer__slider select:focus {
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.composer__slider-val {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 3.25rem;
+  text-align: right;
+}
+
+.composer__advanced {
+  border-top: 1px dashed var(--border);
+  padding-top: var(--sp-2);
+}
+
+.composer__advanced summary {
+  cursor: pointer;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 650;
+  padding: 4px 0;
+  list-style: none;
+  transition: color var(--duration-normal) var(--ease-gentle);
+}
+
+.composer__advanced summary:hover {
+  color: var(--text);
+}
+
+.composer__advanced summary::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: rotate(-45deg);
+  margin-right: 8px;
+  transition: transform var(--duration-normal) var(--ease-gentle),
+              border-color var(--duration-normal) var(--ease-gentle);
+  vertical-align: 1px;
+}
+
+.composer__advanced[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.composer__advanced summary:hover::before {
+  border-color: var(--text);
+}
+
+.composer__advanced summary::-webkit-details-marker {
+  display: none;
+}
+
+.composer__advanced-body {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  animation: ie-fadeIn var(--duration-normal) var(--ease-out-soft) both;
+}
+
+.composer__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.composer__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.composer__row {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: border-color var(--duration-normal) var(--ease-gentle),
+              background var(--duration-normal) var(--ease-gentle);
+}
+
+.composer__row:hover {
+  border-color: var(--border-strong);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.composer__row-main {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 0.75rem;
+  align-items: start;
+  cursor: pointer;
+}
+
+.composer__row-title {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.composer__row-sub {
+  grid-column: 2;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.composer__row-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.composer__badge {
+  font-size: 11px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  letter-spacing: 0.02em;
+  transition: border-color var(--duration-normal) var(--ease-gentle);
+}
+.composer__badge--high {
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--border));
+  color: var(--text);
+  background: rgba(123, 200, 192, 0.08);
+}
+.composer__badge--medium {
+  border-color: color-mix(in oklab, var(--warn) 55%, var(--border));
+  color: var(--text);
+  background: rgba(253, 230, 138, 0.08);
+}
+.composer__badge--low {
+  border-color: color-mix(in oklab, var(--danger) 45%, var(--border));
+  color: var(--text);
+  background: rgba(252, 165, 165, 0.06);
+}
+.composer__badge--hyp {
+  border-color: var(--border-strong);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.composer__evidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.composer__evidence-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.composer__evidence-path {
+  font-size: 11px;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.18rem 0.5rem;
+}
+
+.composer__evidenceBtn {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: background var(--duration-normal) var(--ease-gentle),
+              border-color var(--duration-normal) var(--ease-gentle),
+              color var(--duration-normal) var(--ease-gentle),
+              transform var(--duration-normal) var(--ease-out-soft),
+              box-shadow var(--duration-normal) var(--ease-gentle);
+}
+
+.composer__evidenceBtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--border-strong);
+  color: var(--text);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.composer__evidenceBtn:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 80ms;
+}
+
+.composer__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.composer__summary ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+}
+
+@media (max-width: 520px) {
+  .composer__slider {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .composer__slider-val {
+    text-align: left;
+    min-width: auto;
+  }
+}

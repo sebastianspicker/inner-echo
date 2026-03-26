@@ -1,0 +1,39 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+tsconfig.tsbuildinfo
+reports/
+coverage/
+.vite/
+
+# Secrets & credentials — never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+credentials.json
+service-account*.json
+**/secrets/
+
+# Local / WIP artifacts (audit runs, progress logs)
+.codex/
+.cursor/
+.claude/
+progress.md
+
+# OS / editor
+Thumbs.db
+ehthumbs.db
+.idea/
+*.sw?
+
+docs/references/reports/
+AGENTS.md

@@ -1,0 +1,55 @@
+{
+  "id": "none",
+  "label": "None (Clean)",
+  "summary": "No overlay. Baseline camera view.",
+  "framing": {
+    "type": "baseline"
+  },
+  "experience_dimensions": [],
+  "safety": {
+    "intensity_default": 0.0,
+    "intensity_max": 0.0,
+    "warnings": [],
+    "safe_mode_clamps": {
+      "max_intensity": 0.0
+    }
+  },
+  "ui": {
+    "controls": [
+      {
+        "id": "intensity",
+        "type": "slider",
+        "label": "Intensity",
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "id": "safe_mode",
+        "type": "toggle",
+        "label": "Safe Mode"
+      },
+      {
+        "id": "reduced_motion",
+        "type": "toggle",
+        "label": "Reduced Motion"
+      },
+      {
+        "id": "audio_enabled",
+        "type": "toggle",
+        "label": "Audio (optional)"
+      }
+    ]
+  },
+  "video_stack": [],
+  "audio_stack": {
+    "enabled": false
+  },
+  "reactive": {
+    "analyser_to_params": []
+  },
+  "references": {
+    "dimensions": []
+  }
+}
+
