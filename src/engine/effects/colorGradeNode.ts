@@ -3,7 +3,7 @@
  * Safety: clamp contrast and chroma; never strobe.
  */
 
-import * as THREE from 'three'
+import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -49,7 +49,7 @@ void main() {
 
 export class ColorGradeNode implements VideoNode {
   readonly nodeName = 'color_grade'
-  private material: THREE.ShaderMaterial | null = null
+  private material: ShaderMaterial | null = null
 
   setParams(params: VideoNodeParams): void {
     if (!this.material) return
@@ -77,16 +77,16 @@ export class ColorGradeNode implements VideoNode {
     applyUvParams(this.material, params)
   }
 
-  getMaterial(inputTexture: THREE.Texture): THREE.Material {
+  getMaterial(inputTexture: Texture): Material {
     if (this.material) {
       this.material.uniforms.u_map.value = inputTexture
       return this.material
     }
-    this.material = new THREE.ShaderMaterial({
+    this.material = new ShaderMaterial({
       uniforms: {
         u_map: { value: inputTexture },
-        u_uvScale: { value: new THREE.Vector2(1, 1) },
-        u_uvOffset: { value: new THREE.Vector2(0, 0) },
+        u_uvScale: { value: new Vector2(1, 1) },
+        u_uvOffset: { value: new Vector2(0, 0) },
         u_contrast: { value: 0 },
         u_saturation: { value: 0 },
         u_brightness: { value: 0 },

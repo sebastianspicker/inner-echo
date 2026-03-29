@@ -33,6 +33,9 @@ export function createFlutter(context: BaseAudioContext, params: FlutterParams =
   const depthGain = context.createGain()
   depthGain.gain.value = 0.0003
 
+  // The constant source provides a fixed DC offset for the delay line center point.
+  // Unlike tremolo, flutter intentionally keeps a fixed modulation depth — the LFO
+  // amplitude is set at construction and only the rate changes at runtime via setParams.
   const offset = context.createConstantSource()
   offset.offset.value = 0.008
 
@@ -81,4 +84,3 @@ export function createFlutter(context: BaseAudioContext, params: FlutterParams =
     },
   }
 }
-

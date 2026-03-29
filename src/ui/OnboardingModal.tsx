@@ -66,7 +66,7 @@ export function OnboardingModal({ onAccept }: OnboardingModalProps) {
       }
       if (e.key === 'Tab') {
         const focusable = wrapper.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
+          'button:not([disabled]):not([aria-hidden="true"]), [href]:not([aria-hidden="true"]), input:not([disabled]):not([aria-hidden="true"]), select:not([aria-hidden="true"]), textarea:not([aria-hidden="true"]), [tabindex]:not([tabindex="-1"]):not([aria-hidden="true"])',
         )
         if (focusable.length === 0) return
         const first = focusable[0]
@@ -103,25 +103,25 @@ export function OnboardingModal({ onAccept }: OnboardingModalProps) {
           Welcome to Inner Echo
         </h2>
         <p className="onboarding-modal__intro">
-          This is a safe, private space. Take a moment to read through the following before you begin.
+          This is a safe, private space. Take a moment to read through the following before you
+          begin.
         </p>
         <div id="onboarding-desc" className="onboarding-modal__content">
           <p>
-            <strong>Your privacy comes first.</strong> Your camera and microphone stay entirely
-            in your browser. Nothing is ever recorded, stored, or sent anywhere.
+            <strong>Your privacy comes first.</strong> Your camera and microphone stay entirely in
+            your browser. Nothing is ever recorded, stored, or sent anywhere.
           </p>
           <p>
-            <strong>This is not a diagnosis.</strong> Inner Echo uses artistic metaphor to
-            help you explore and reflect. It does not diagnose, treat, or replace
-            professional care.
+            <strong>This is not a diagnosis.</strong> Inner Echo uses artistic metaphor to help you
+            explore and reflect. It does not diagnose, treat, or replace professional care.
           </p>
           <p>
-            <strong>You are always in control.</strong> You can pause or stop everything at
-            any time. There is no pressure to continue.
+            <strong>You are always in control.</strong> You can pause or stop everything at any
+            time. There is no pressure to continue.
           </p>
           <p>
-            <strong>Comfort first.</strong> We suggest starting with Safe Mode on to keep
-            the experience gentle. You can adjust this whenever you like.
+            <strong>Comfort first.</strong> We suggest starting with Safe Mode on to keep the
+            experience gentle. You can adjust this whenever you like.
           </p>
         </div>
         <label className="onboarding-modal__checkbox">

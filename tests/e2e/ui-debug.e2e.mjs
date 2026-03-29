@@ -27,15 +27,11 @@ async function waitForServerReady(timeoutMs) {
 }
 
 function spawnDevServer() {
-  return spawn(
-    'npm',
-    ['run', 'dev', '--', '--host', HOST, '--port', String(PORT)],
-    {
-      cwd: process.cwd(),
-      stdio: 'pipe',
-      env: process.env,
-    }
-  )
+  return spawn('npm', ['run', 'dev', '--', '--host', HOST, '--port', String(PORT)], {
+    cwd: process.cwd(),
+    stdio: 'pipe',
+    env: process.env,
+  })
 }
 
 async function stopServer(proc) {
@@ -199,7 +195,7 @@ const tests = [
         assert.equal(
           capture.webglLike.length,
           0,
-          `Expected no WebGL/shader console noise, got ${capture.webglLike.length}`
+          `Expected no WebGL/shader console noise, got ${capture.webglLike.length}`,
         )
       } finally {
         await context.close()
@@ -221,7 +217,10 @@ const tests = [
           })
           const presetChecks = multimorbid.getByRole('checkbox')
           const presetCount = await presetChecks.count()
-          assert.ok(presetCount >= 2, `Expected at least 2 multimorbid preset checkboxes, got ${presetCount}`)
+          assert.ok(
+            presetCount >= 2,
+            `Expected at least 2 multimorbid preset checkboxes, got ${presetCount}`,
+          )
           await presetChecks.nth(0).check()
           await presetChecks.nth(1).check()
           await delay(120)
@@ -238,7 +237,10 @@ const tests = [
           })
           const dimChecks = symptom.getByRole('checkbox')
           const dimCount = await dimChecks.count()
-          assert.ok(dimCount >= 2, `Expected at least 2 symptom dimension checkboxes, got ${dimCount}`)
+          assert.ok(
+            dimCount >= 2,
+            `Expected at least 2 symptom dimension checkboxes, got ${dimCount}`,
+          )
           await dimChecks.nth(0).check()
           await dimChecks.nth(1).check()
           await delay(120)
@@ -248,7 +250,10 @@ const tests = [
           }
           await delay(180)
           const summaryItems = symptom.locator('.composer__summary li')
-          assert.ok((await summaryItems.count()) >= 1, 'Expected symptom summary to list selected dimensions')
+          assert.ok(
+            (await summaryItems.count()) >= 1,
+            'Expected symptom summary to list selected dimensions',
+          )
 
           await page.getByRole('radio', { name: /^preset$/i }).check()
           await assert.doesNotReject(async () => {
@@ -261,7 +266,7 @@ const tests = [
         assert.equal(
           capture.webglLike.length,
           0,
-          `Expected no WebGL/shader console noise during mode transitions, got ${capture.webglLike.length}`
+          `Expected no WebGL/shader console noise during mode transitions, got ${capture.webglLike.length}`,
         )
       } finally {
         await context.close()
@@ -302,7 +307,11 @@ const tests = [
           .locator('.ie-callout.ie-callout--error[aria-label="Camera error"]')
           .isVisible()
           .catch(() => false)
-        assert.equal(hasErrorCallout, false, 'Stop Everything should not surface interruption error state')
+        assert.equal(
+          hasErrorCallout,
+          false,
+          'Stop Everything should not surface interruption error state',
+        )
       } finally {
         await context.close()
       }
@@ -315,10 +324,10 @@ const tests = [
       try {
         const result = await page.evaluate(() => {
           const toggleLabels = Array.from(
-            document.querySelectorAll('.composer__toggles .composer__toggle')
+            document.querySelectorAll('.composer__toggles .composer__toggle'),
           )
           const micLabel = toggleLabels.find((l) =>
-            (l.textContent ?? '').toLowerCase().includes('microphone')
+            (l.textContent ?? '').toLowerCase().includes('microphone'),
           )
           const micInput = micLabel?.querySelector('input[type="checkbox"]')
           const hint = document.querySelector('.composer__micPrereqHint')
@@ -403,7 +412,7 @@ const tests = [
         assert.equal(
           tooSmall.length,
           0,
-          `Found controls below 44px: ${tooSmall.map((x) => `${x.text}:${x.h}`).join(', ')}`
+          `Found controls below 44px: ${tooSmall.map((x) => `${x.text}:${x.h}`).join(', ')}`,
         )
       } finally {
         await context.close()

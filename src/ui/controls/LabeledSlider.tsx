@@ -22,8 +22,7 @@ export function LabeledSlider({
   onChange,
 }: LabeledSliderProps) {
   const valueText =
-    formatValue?.(value) ??
-    (max <= 1 ? `${Math.round(value * 100)}%` : `${Math.round(value)}`)
+    formatValue?.(value) ?? (max <= 1 ? `${Math.round(value * 100)}%` : `${Math.round(value)}`)
   return (
     <label className={className}>
       <span>{label}</span>
@@ -33,9 +32,6 @@ export function LabeledSlider({
         max={max}
         step={step}
         value={value}
-        aria-valuemin={min}
-        aria-valuemax={max}
-        aria-valuenow={value}
         aria-valuetext={ariaValueText?.(value) ?? valueText}
         onChange={(e) => {
           const n = Number(e.target.value)

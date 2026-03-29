@@ -47,4 +47,3 @@ describe('conditions/normalize', () => {
     expect(s.has('pulse')).toBe(true)
   })
 })
-

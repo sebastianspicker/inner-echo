@@ -3,7 +3,7 @@
  * Uses ping-pong RenderTargets managed by the pipeline; this node only provides the material.
  */
 
-import * as THREE from 'three'
+import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -38,7 +38,7 @@ void main() {
 export class TemporalSmearNode implements VideoNode {
   readonly nodeName = 'temporal_smear'
   readonly needsPreviousFrame = true
-  private material: THREE.ShaderMaterial | null = null
+  private material: ShaderMaterial | null = null
   private time = 0
 
   setParams(params: VideoNodeParams): void {
@@ -67,24 +67,21 @@ export class TemporalSmearNode implements VideoNode {
     applyUvParams(this.material, params)
   }
 
-  getMaterial(
-    inputTexture: THREE.Texture,
-    previousFrameTexture?: THREE.Texture | null
-  ): THREE.Material {
+  getMaterial(inputTexture: Texture, previousFrameTexture?: Texture | null): Material {
     if (this.material) {
       this.material.uniforms.u_map.value = inputTexture
       this.material.uniforms.u_prev.value = previousFrameTexture ?? inputTexture
       return this.material
     }
-    this.material = new THREE.ShaderMaterial({
+    this.material = new ShaderMaterial({
       uniforms: {
         u_map: { value: inputTexture },
         u_prev: { value: previousFrameTexture ?? inputTexture },
-        u_uvScale: { value: new THREE.Vector2(1, 1) },
-        u_uvOffset: { value: new THREE.Vector2(0, 0) },
+        u_uvScale: { value: new Vector2(1, 1) },
+        u_uvOffset: { value: new Vector2(0, 0) },
         u_feedback: { value: 0.5 },
         u_decay: { value: 0.94 },
-        u_jitter: { value: new THREE.Vector2(0, 0) },
+        u_jitter: { value: new Vector2(0, 0) },
       },
       vertexShader: QUAD_VERTEX_SHADER,
       fragmentShader: FRAG,

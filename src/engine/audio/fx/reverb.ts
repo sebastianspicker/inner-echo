@@ -52,6 +52,9 @@ export function createReverb(context: BaseAudioContext, params: ReverbParams = {
     wet.gain.setValueAtTime(mix, context.currentTime)
 
     // Regenerate impulse only when decay changes meaningfully.
+    // Note: makeImpulse blocks the main thread synchronously, but the >0.08
+    // threshold guard ensures this only fires on significant decay changes,
+    // which is sufficient for current usage patterns.
     if (Math.abs(decay - lastDecay) > 0.08) {
       convolver.buffer = makeImpulse(context, decay)
       lastDecay = decay
@@ -89,4 +92,3 @@ export function createReverb(context: BaseAudioContext, params: ReverbParams = {
     },
   }
 }
-

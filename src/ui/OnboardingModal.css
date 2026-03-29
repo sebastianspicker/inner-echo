@@ -85,8 +85,9 @@
   border-radius: var(--r-sm);
   border: 1px solid var(--border);
   background: rgba(0, 0, 0, 0.12);
-  transition: border-color var(--duration-normal) var(--ease-gentle),
-              background var(--duration-normal) var(--ease-gentle);
+  transition:
+    border-color var(--duration-normal) var(--ease-gentle),
+    background var(--duration-normal) var(--ease-gentle);
 }
 
 .onboarding-modal__checkbox:hover {
@@ -115,15 +116,16 @@
   border-radius: 999px;
   border: 1px solid var(--border);
   cursor: pointer;
-  transition: transform var(--duration-normal) var(--ease-out-soft),
-              background var(--duration-normal) var(--ease-gentle),
-              border-color var(--duration-normal) var(--ease-gentle),
-              box-shadow var(--duration-normal) var(--ease-gentle),
-              opacity var(--duration-normal) var(--ease-gentle);
+  transition:
+    transform var(--duration-normal) var(--ease-out-soft),
+    background var(--duration-normal) var(--ease-gentle),
+    border-color var(--duration-normal) var(--ease-gentle),
+    box-shadow var(--duration-normal) var(--ease-gentle),
+    opacity var(--duration-normal) var(--ease-gentle);
 }
 
 .onboarding-modal__btn--primary {
-  background: rgba(123, 200, 192, 0.10);
+  background: rgba(123, 200, 192, 0.1);
   color: var(--text);
   border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
 }

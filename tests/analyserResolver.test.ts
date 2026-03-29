@@ -49,4 +49,3 @@ describe('reactive/analyserToParamsResolver', () => {
     expect(res?.paramKey).toBe('audio.0.depth')
   })
 })
-

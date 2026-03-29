@@ -10,11 +10,8 @@ export type EvidenceDocPath = `docs/${string}.md`
 
 // Bundle all evidence markdown under docs/references/** plus the audit at docs/REFERENCES_AUDIT.md.
 const EVIDENCE_DOC_MODULES = import.meta.glob<string>(
-  [
-    '../../docs/references/**/*.md',
-    '../../docs/REFERENCES_AUDIT.md',
-  ],
-  { query: '?raw', import: 'default' }
+  ['../../docs/references/**/*.md', '../../docs/REFERENCES_AUDIT.md'],
+  { query: '?raw', import: 'default' },
 )
 
 function toKey(docPath: EvidenceDocPath): string {

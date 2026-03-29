@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import { Texture } from 'three'
 import {
   ChromaticAberrationNode,
   ColorGradeNode,
@@ -41,8 +41,8 @@ const DEFAULT_SAFETY_CONTEXT: SafetyContextShape = {
 
 class VideoProbeHarness implements ProbeHarness {
   readonly node: VideoNode & Record<string, unknown>
-  private readonly input = new THREE.Texture()
-  private readonly previous = new THREE.Texture()
+  private readonly input = new Texture()
+  private readonly previous = new Texture()
 
   constructor(factory: () => VideoNode) {
     this.node = factory() as VideoNode & Record<string, unknown>
@@ -57,8 +57,8 @@ class VideoProbeHarness implements ProbeHarness {
   }
 
   applyParam(paramKey: string, value: unknown, options?: ProbeOptions): void {
-    const controlValues: Record<string, number | boolean> = {}
-    if (typeof value === 'number' || typeof value === 'boolean') {
+    const controlValues: Record<string, number | boolean | string> = {}
+    if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'string') {
       controlValues[`0.${paramKey}`] = value
     }
     const safeMode = options?.safeMode === true
@@ -94,7 +94,7 @@ function numberParam(
     probeLow?: number
     probeHigh?: number
     epsilon?: number
-  }
+  },
 ): ContractParamMetadata {
   return {
     type: 'number',
@@ -189,9 +189,7 @@ const VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         min: 0.85,
         max: 0.99,
         readEffective(harness: ProbeHarness): unknown {
-          return (harness as VideoProbeHarness).readPath(
-            'node.material.uniforms.u_decay.value'
-          )
+          return (harness as VideoProbeHarness).readPath('node.material.uniforms.u_decay.value')
         },
       },
     },

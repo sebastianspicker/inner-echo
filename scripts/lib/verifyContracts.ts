@@ -26,11 +26,11 @@ import type {
 } from '../../src/contractVerification/types'
 import { loadContractJsonReferences } from './jsonContracts'
 
-function asNumber(value: unknown): number | null {
+export function asNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
 
-function differs(a: unknown, b: unknown, epsilon = 1e-6): boolean {
+export function differs(a: unknown, b: unknown, epsilon = 1e-6): boolean {
   const na = asNumber(a)
   const nb = asNumber(b)
   if (na != null && nb != null) return Math.abs(na - nb) > epsilon
@@ -58,11 +58,11 @@ function defaultProbeHigh(meta: ContractParamMetadata): unknown {
   return 1
 }
 
-function outOfRangeLow(min: number): number {
+export function outOfRangeLow(min: number): number {
   return min - Math.max(1, Math.abs(min) + 1)
 }
 
-function outOfRangeHigh(max: number): number {
+export function outOfRangeHigh(max: number): number {
   return max + Math.max(1, Math.abs(max) + 1)
 }
 
@@ -78,10 +78,7 @@ function hasSafeModeControl(profile: Profile): boolean {
     const id = String(c.id ?? '').toLowerCase()
     const target = String(c.target ?? '').toLowerCase()
     return (
-      id === 'safe_mode' ||
-      id === 'safemode' ||
-      target === 'safe_mode' ||
-      target === 'safemode'
+      id === 'safe_mode' || id === 'safemode' || target === 'safe_mode' || target === 'safemode'
     )
   })
 }
@@ -101,7 +98,7 @@ function hasReducedMotionControl(profile: Profile): boolean {
 
 function runUsageCheck(
   nodeDef: ContractNodeDefinition,
-  paramKey: string
+  paramKey: string,
 ): {
   changed: boolean
   low: unknown
@@ -143,10 +140,7 @@ function runUsageCheck(
   }
 }
 
-function runRangeCheck(
-  nodeDef: ContractNodeDefinition,
-  paramKey: string
-): RangeCheckResult | null {
+function runRangeCheck(nodeDef: ContractNodeDefinition, paramKey: string): RangeCheckResult | null {
   const meta = nodeDef.params[paramKey]
   if (meta.type !== 'number') return null
   if (typeof meta.min !== 'number' || typeof meta.max !== 'number') return null
@@ -322,7 +316,7 @@ export function verifyContracts(rootDir: string): ContractVerificationReport {
         const chainIndex = Number(parts[1])
         const param = parts.slice(2).join('.')
         const nodeName = String(
-          p.profile.audio_stack?.chain?.[chainIndex]?.node ?? ''
+          p.profile.audio_stack?.chain?.[chainIndex]?.node ?? '',
         ).toLowerCase()
         const def = audioLookup.get(nodeName)
         if (!def) {
@@ -465,9 +459,7 @@ export function verifyContracts(rootDir: string): ContractVerificationReport {
 
     const safeIntensity = clampIntensity(profile, 1, true)
     const normalIntensity = clampIntensity(profile, 1, false)
-    const maxIntensityClamp = asNumber(
-      profile.safety.safe_mode_clamps.max_intensity
-    )
+    const maxIntensityClamp = asNumber(profile.safety.safe_mode_clamps.max_intensity)
     const safeIntensityOk =
       safeIntensity <= normalIntensity + 1e-6 &&
       (maxIntensityClamp == null || safeIntensity <= maxIntensityClamp + 1e-6)
@@ -492,16 +484,12 @@ export function verifyContracts(rootDir: string): ContractVerificationReport {
 
     const disabled = new Set(
       (profile.safety.reduced_motion_policy?.disable_nodes ?? []).map((n) =>
-        String(n).toLowerCase()
-      )
+        String(n).toLowerCase(),
+      ),
     )
     const expectedBuiltCount = profile.video_stack.filter((def) => {
       const node = String(def.node).toLowerCase()
-      return (
-        videoLookup.has(node) &&
-        !disabled.has(node) &&
-        !TEMPORAL_NODE_TYPES.has(node)
-      )
+      return videoLookup.has(node) && !disabled.has(node) && !TEMPORAL_NODE_TYPES.has(node)
     }).length
     const actualBuiltCount = buildVideoNodes(profile, {
       reducedMotion: true,
@@ -525,12 +513,7 @@ export function verifyContracts(rootDir: string): ContractVerificationReport {
       })
     }
 
-    const temporalSensitive = [
-      'temporal_smear',
-      'feedback_loop',
-      'pulse',
-      'focus_jitter',
-    ]
+    const temporalSensitive = ['temporal_smear', 'feedback_loop', 'pulse', 'focus_jitter']
     for (const def of profile.video_stack) {
       const node = String(def.node).toLowerCase()
       if (!temporalSensitive.includes(node)) continue
@@ -550,8 +533,7 @@ export function verifyContracts(rootDir: string): ContractVerificationReport {
           policy: 'reduced_motion',
           status: 'warning',
           node,
-          message:
-            'Temporal node should be listed in reduced motion disable policy',
+          message: 'Temporal node should be listed in reduced motion disable policy',
         })
       }
     }
@@ -616,9 +598,7 @@ export function verifyContracts(rootDir: string): ContractVerificationReport {
       for (const [paramName, value] of Object.entries(chainDef.params ?? {})) {
         const paramMeta = nodeDef.params[paramName]
         if (!paramMeta?.safeModeClampKey) continue
-        const clampValue = asNumber(
-          profile.safety.safe_mode_clamps[paramMeta.safeModeClampKey]
-        )
+        const clampValue = asNumber(profile.safety.safe_mode_clamps[paramMeta.safeModeClampKey])
         const numericValue = asNumber(value)
         if (clampValue == null || numericValue == null) continue
         const ok = numericValue <= clampValue + (paramMeta.epsilon ?? 1e-6)

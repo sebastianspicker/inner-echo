@@ -1,15 +1,15 @@
-import * as THREE from 'three'
+import { WebGLRenderTarget, LinearFilter, RGBAFormat, UnsignedByteType } from 'three'
 
 import type { VideoNode } from '../../effects/VideoNode'
 
 export interface TemporalPingPongState {
-  rtA: THREE.WebGLRenderTarget
-  rtB: THREE.WebGLRenderTarget
+  rtA: WebGLRenderTarget
+  rtB: WebGLRenderTarget
   writeIndex: number
   firstFrame: boolean
 }
 
-export function disposeChainRenderTargets(chainRTs: THREE.WebGLRenderTarget[]): void {
+export function disposeChainRenderTargets(chainRTs: WebGLRenderTarget[]): void {
   chainRTs.forEach((rt) => rt.dispose())
 }
 
@@ -20,21 +20,21 @@ export function disposeTemporalPairs(temporalPairs: TemporalPingPongState[]): vo
   })
 }
 
-function createRenderTarget(width: number, height: number): THREE.WebGLRenderTarget {
-  return new THREE.WebGLRenderTarget(width, height, {
-    minFilter: THREE.LinearFilter,
-    magFilter: THREE.LinearFilter,
-    format: THREE.RGBAFormat,
-    type: THREE.UnsignedByteType,
+function createRenderTarget(width: number, height: number): WebGLRenderTarget {
+  return new WebGLRenderTarget(width, height, {
+    minFilter: LinearFilter,
+    magFilter: LinearFilter,
+    format: RGBAFormat,
+    type: UnsignedByteType,
   })
 }
 
 export function allocateRenderTargets(
   nodes: VideoNode[],
   width: number,
-  height: number
+  height: number,
 ): {
-  chainRTs: THREE.WebGLRenderTarget[]
+  chainRTs: WebGLRenderTarget[]
   temporalPingPong: TemporalPingPongState[]
 } {
   const chainRTs = Array.from({ length: nodes.length + 1 }, () => createRenderTarget(width, height))

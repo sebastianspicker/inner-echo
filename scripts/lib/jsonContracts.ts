@@ -10,9 +10,11 @@ import type {
 } from '../../src/contractVerification/types'
 
 function parseReactiveTarget(
-  target: string
+  target: string,
 ): { kind: 'video' | 'audio'; node: string; param: string } | null {
-  const raw = String(target ?? '').trim().toLowerCase()
+  const raw = String(target ?? '')
+    .trim()
+    .toLowerCase()
   if (!raw) return null
   const isVideo = raw.startsWith('video.')
   const isAudio = raw.startsWith('audio.')
@@ -51,10 +53,7 @@ export function loadContractJsonReferences(rootDir: string): LoadedContracts {
       parseErrors.push({
         severity: 'error',
         code: 'PROFILE_JSON_PARSE_ERROR',
-        message:
-          error instanceof Error
-            ? error.message
-            : `Failed to parse ${sourceFile}`,
+        message: error instanceof Error ? error.message : `Failed to parse ${sourceFile}`,
         sourceFile,
       })
       continue
@@ -159,7 +158,7 @@ export function loadContractJsonReferences(rootDir: string): LoadedContracts {
     rootDir,
     'src',
     'conditions',
-    'dimension-to-signal-mapping.json'
+    'dimension-to-signal-mapping.json',
   )
   const mappingSource = rel(rootDir, mappingAbsolute)
   try {
@@ -235,20 +234,12 @@ export function loadContractJsonReferences(rootDir: string): LoadedContracts {
     parseErrors.push({
       severity: 'error',
       code: 'MAPPING_PARSE_ERROR',
-      message:
-        error instanceof Error
-          ? error.message
-          : `Failed to parse ${mappingSource}`,
+      message: error instanceof Error ? error.message : `Failed to parse ${mappingSource}`,
       sourceFile: mappingSource,
     })
   }
 
-  const dimensionsAbsolute = path.join(
-    rootDir,
-    'src',
-    'conditions',
-    'experience-dimensions.json'
-  )
+  const dimensionsAbsolute = path.join(rootDir, 'src', 'conditions', 'experience-dimensions.json')
   const dimensionsSource = rel(rootDir, dimensionsAbsolute)
   try {
     const dimensions = parseFirstJsonObject<{
@@ -295,10 +286,7 @@ export function loadContractJsonReferences(rootDir: string): LoadedContracts {
     parseErrors.push({
       severity: 'error',
       code: 'DIMENSIONS_PARSE_ERROR',
-      message:
-        error instanceof Error
-          ? error.message
-          : `Failed to parse ${dimensionsSource}`,
+      message: error instanceof Error ? error.message : `Failed to parse ${dimensionsSource}`,
       sourceFile: dimensionsSource,
     })
   }

@@ -20,4 +20,3 @@ describe('composer/interactionMatrix', () => {
     expect(g).toBeLessThanOrEqual(1)
   })
 })
-

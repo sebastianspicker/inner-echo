@@ -29,7 +29,7 @@ export interface ResolvedMapping {
 export function resolveAnalyserTarget(
   target: string,
   profile: Profile,
-  options?: { reducedMotion?: boolean }
+  options?: { reducedMotion?: boolean },
 ): { kind: 'video' | 'audio'; paramKey: string } | null {
   const t = target.trim().toLowerCase()
   if (t.startsWith(VIDEO_PREFIX)) {
@@ -47,7 +47,7 @@ export function resolveAnalyserTarget(
     if (!parsed) return null
     const { nodeId, param } = parsed
     const chain = profile.audio_stack?.chain ?? []
-    const idx = chain.findIndex((n) => ((n.id ?? n.node) ?? '').toLowerCase() === nodeId)
+    const idx = chain.findIndex((n) => (n.id ?? n.node ?? '').toLowerCase() === nodeId)
     if (idx === -1) return null
     return { kind: 'audio', paramKey: `audio.${idx}.${param}` }
   }

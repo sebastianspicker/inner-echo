@@ -1,17 +1,17 @@
 /**
  * Global Engine Safety Limits (Single Source of Truth)
- * 
+ *
  * This module defines the absolute maximum permissible values for various
  * high-risk visual and audio effects within the entire Inner Echo application.
- * 
+ *
  * Purpose:
  * To protect users from potentially harmful sensory experiences, such as:
  * - High-frequency flashing (seizure risk)
  * - Extreme volumes (hearing damage)
  * - Intense visual chaos (nausea / vertigo)
- * 
- * These global limits are baked into the application's engine and act as a hard 
- * ceiling. Individual condition profiles can request lower limits (via `safety.safe_mode_clamps`), 
+ *
+ * These global limits are baked into the application's engine and act as a hard
+ * ceiling. Individual condition profiles can request lower limits (via `safety.safe_mode_clamps`),
  * but they can NEVER exceed these global defaults.
  */
 export interface GlobalSafetyClamps {
@@ -43,4 +43,3 @@ export const GLOBAL_SAFETY_CLAMPS: GlobalSafetyClamps = {
   max_tremolo_depth: 0.15,
   max_noise_level: 0.08,
 }
-

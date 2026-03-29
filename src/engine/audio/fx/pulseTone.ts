@@ -20,7 +20,10 @@ const DEFAULT_RATE = 1.0
 const DEFAULT_MIX = 0.06
 const DEFAULT_FREQ = 120
 
-export function createPulseTone(context: BaseAudioContext, params: PulseToneParams = {}): AudioModule {
+export function createPulseTone(
+  context: BaseAudioContext,
+  params: PulseToneParams = {},
+): AudioModule {
   const input = context.createGain()
   input.gain.value = 1
 
@@ -100,4 +103,3 @@ export function createPulseTone(context: BaseAudioContext, params: PulseTonePara
     },
   }
 }
-

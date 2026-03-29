@@ -9,7 +9,9 @@ export interface UseAudioControllerParams {
   setMicError: (message: string | null) => void
 }
 
-export function useAudioController(params: UseAudioControllerParams): { toggleMic: (enabled: boolean) => void } {
+export function useAudioController(params: UseAudioControllerParams): {
+  toggleMic: (enabled: boolean) => void
+} {
   const { audioStatus, enableMic, disableMic, setMicEnabled, setMicError } = params
 
   const toggleMic = useCallback(
@@ -24,7 +26,7 @@ export function useAudioController(params: UseAudioControllerParams): { toggleMi
       if (enabled) enableMic()
       else disableMic()
     },
-    [audioStatus, enableMic, disableMic, setMicEnabled, setMicError]
+    [audioStatus, enableMic, disableMic, setMicEnabled, setMicError],
   )
 
   return { toggleMic }

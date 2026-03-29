@@ -16,10 +16,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value != null && typeof value === 'object' && !Array.isArray(value)
 }
 
-function extractBalancedObject(
-  text: string,
-  start: number
-): string | null {
+function extractBalancedObject(text: string, start: number): string | null {
   if (text[start] !== '{') return null
   let depth = 0
   let inString = false
@@ -63,7 +60,7 @@ const MAX_INPUT_LENGTH = 1_048_576 // 1 MiB
 
 export function parseFirstJsonObject<T = unknown>(
   text: string,
-  options: ParseFirstJsonObjectOptions = {}
+  options: ParseFirstJsonObjectOptions = {},
 ): T {
   const source = stripBom(String(text ?? ''))
   if (source.length > MAX_INPUT_LENGTH) {
@@ -102,4 +99,3 @@ export function parseFirstJsonObject<T = unknown>(
 
   throw new Error('No valid JSON object found')
 }
-

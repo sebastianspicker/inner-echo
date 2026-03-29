@@ -49,16 +49,46 @@ interface NodeEntry {
 const nodeEntries: NodeEntry[] = [
   { name: 'GrainNode', create: () => new GrainNode(), isTemporal: false, hasTick: true },
   { name: 'VignetteNode', create: () => new VignetteNode(), isTemporal: false, hasTick: false },
-  { name: 'ChromaticAberrationNode', create: () => new ChromaticAberrationNode(), isTemporal: false, hasTick: false },
-  { name: 'TemporalSmearNode', create: () => new TemporalSmearNode(), isTemporal: true, hasTick: true },
+  {
+    name: 'ChromaticAberrationNode',
+    create: () => new ChromaticAberrationNode(),
+    isTemporal: false,
+    hasTick: false,
+  },
+  {
+    name: 'TemporalSmearNode',
+    create: () => new TemporalSmearNode(),
+    isTemporal: true,
+    hasTick: true,
+  },
   { name: 'ColorGradeNode', create: () => new ColorGradeNode(), isTemporal: false, hasTick: false },
   { name: 'HazeNode', create: () => new HazeNode(), isTemporal: false, hasTick: false },
   { name: 'SoftBlurNode', create: () => new SoftBlurNode(), isTemporal: false, hasTick: false },
-  { name: 'EdgeSharpenNode', create: () => new EdgeSharpenNode(), isTemporal: false, hasTick: false },
+  {
+    name: 'EdgeSharpenNode',
+    create: () => new EdgeSharpenNode(),
+    isTemporal: false,
+    hasTick: false,
+  },
   { name: 'PulseNode', create: () => new PulseNode(), isTemporal: false, hasTick: true },
-  { name: 'InterferenceNode', create: () => new InterferenceNode(), isTemporal: false, hasTick: true },
-  { name: 'FocusJitterNode', create: () => new FocusJitterNode(), isTemporal: false, hasTick: true },
-  { name: 'FeedbackLoopNode', create: () => new FeedbackLoopNode(), isTemporal: true, hasTick: true },
+  {
+    name: 'InterferenceNode',
+    create: () => new InterferenceNode(),
+    isTemporal: false,
+    hasTick: true,
+  },
+  {
+    name: 'FocusJitterNode',
+    create: () => new FocusJitterNode(),
+    isTemporal: false,
+    hasTick: true,
+  },
+  {
+    name: 'FeedbackLoopNode',
+    create: () => new FeedbackLoopNode(),
+    isTemporal: true,
+    hasTick: true,
+  },
   { name: 'GridHintNode', create: () => new GridHintNode(), isTemporal: false, hasTick: false },
 ]
 
@@ -106,9 +136,14 @@ describe('engine/effects (VideoNode implementations)', () => {
           node.setParams(
             defaultParams({
               intensity: 0.7,
-              controlValues: { '0.amount': 0.3, '0.feedback': 0.1, '0.depth': 0.1, '0.decay': 0.95 },
-            })
-          )
+              controlValues: {
+                '0.amount': 0.3,
+                '0.feedback': 0.1,
+                '0.depth': 0.1,
+                '0.decay': 0.95,
+              },
+            }),
+          ),
         ).not.toThrow()
       })
 
@@ -121,12 +156,28 @@ describe('engine/effects (VideoNode implementations)', () => {
               intensity: 0.8,
               safeMode: true,
               safetyContext: {
-                global: { max_feedback: 0.18, max_jitter: 0.06, max_chroma: 0.12, max_pulse_depth: 0.18, max_flash_hz: 3, max_luminance_delta_per_frame: 0.25, max_global_contrast: 0.25 },
-                safeMode: { max_intensity: 0.7, max_temporal_feedback: 0.1, max_jitter: 0.04, max_chroma: 0.08, max_pulse_depth: 0.12, max_flash_hz: 2, max_contrast: 0.15 },
+                global: {
+                  max_feedback: 0.18,
+                  max_jitter: 0.06,
+                  max_chroma: 0.12,
+                  max_pulse_depth: 0.18,
+                  max_flash_hz: 3,
+                  max_luminance_delta_per_frame: 0.25,
+                  max_global_contrast: 0.25,
+                },
+                safeMode: {
+                  max_intensity: 0.7,
+                  max_temporal_feedback: 0.1,
+                  max_jitter: 0.04,
+                  max_chroma: 0.08,
+                  max_pulse_depth: 0.12,
+                  max_flash_hz: 2,
+                  max_contrast: 0.15,
+                },
               },
               controlValues: { '0.amount': 0.5, '0.feedback': 0.2, '0.depth': 0.2 },
-            })
-          )
+            }),
+          ),
         ).not.toThrow()
       })
 
@@ -140,7 +191,7 @@ describe('engine/effects (VideoNode implementations)', () => {
         const node = entry.create()
         node.getMaterial(dummyTexture(), entry.isTemporal ? dummyTexture() : undefined)
         expect(() =>
-          node.setParams(defaultParams({ uvScale: [1.2, 0.9], uvOffset: [0.05, -0.05] }))
+          node.setParams(defaultParams({ uvScale: [1.2, 0.9], uvOffset: [0.05, -0.05] })),
         ).not.toThrow()
       })
 
@@ -274,8 +325,8 @@ describe('engine/effects (VideoNode implementations)', () => {
         node.setParams(
           defaultParams({
             controlValues: { '0.contrast': 0.1, '0.saturation': -0.2, '0.brightness': 0.05 },
-          })
-        )
+          }),
+        ),
       ).not.toThrow()
       node.dispose()
     })
@@ -291,7 +342,7 @@ describe('engine/effects (VideoNode implementations)', () => {
       node.setParams(
         defaultParams({
           controlValues: { '0.amount': 0.1, '0.burst_probability': 0 },
-        })
+        }),
       )
       for (let i = 0; i < 60; i++) {
         node.tick(1 / 60)

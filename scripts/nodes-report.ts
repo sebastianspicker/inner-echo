@@ -15,6 +15,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
 import { parseFirstJsonObject } from '../src/utils/jsonObjectParser'
+import { IMPLEMENTED_VIDEO_NODES, IMPLEMENTED_AUDIO_NODES } from '../src/engine/nodeTypes'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -24,89 +25,18 @@ function loadJson(pathFromRoot: string): any {
 }
 
 function norm(s: unknown): string {
-  return String(s ?? '').trim().toLowerCase()
+  return String(s ?? '')
+    .trim()
+    .toLowerCase()
 }
 
 function uniqSorted(xs: string[]): string[] {
   return Array.from(new Set(xs.filter(Boolean))).sort((a, b) => a.localeCompare(b))
 }
 
-function extractObjectKeysFromFactorySource(text: string, constName: string): string[] {
-  // Very small parser: find "const NAME: ... = { ... }" and extract top-level keys before ':'.
-  const idx = text.indexOf(`const ${constName}`)
-  if (idx < 0) return []
-  const braceStart = text.indexOf('{', idx)
-  if (braceStart < 0) return []
-  let depth = 0
-  let inString = false
-  let escaped = false
-  let end = -1
-  for (let i = braceStart; i < text.length; i++) {
-    const ch = text[i]
-    if (inString) {
-      if (escaped) escaped = false
-      else if (ch === '\\') escaped = true
-      else if (ch === '"') inString = false
-      continue
-    }
-    if (ch === '"') {
-      inString = true
-      continue
-    }
-    if (ch === '{') depth++
-    if (ch === '}') {
-      depth--
-      if (depth === 0) {
-        end = i
-        break
-      }
-    }
-  }
-  if (end < 0) return []
-  const body = text.slice(braceStart + 1, end)
-  const keys: string[] = []
-
-  // Track nested braces within the object literal so we only capture top-level keys.
-  let braceDepth = 0
-  let lineInString = false
-  let lineEscape = false
-
-  function updateDepthFromLine(line: string): void {
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i]
-      if (lineInString) {
-        if (lineEscape) lineEscape = false
-        else if (ch === '\\') lineEscape = true
-        else if (ch === '"') lineInString = false
-        continue
-      }
-      if (ch === '"') {
-        lineInString = true
-        continue
-      }
-      if (ch === '{') braceDepth++
-      if (ch === '}') braceDepth = Math.max(0, braceDepth - 1)
-    }
-  }
-
-  for (const line of body.split('\n')) {
-    // Capture only when we're at the top level of the object literal.
-    if (braceDepth === 0) {
-      const m = line.match(/^\s*([a-zA-Z0-9_]+)\s*:/)
-      if (m?.[1]) keys.push(m[1])
-    }
-    updateDepthFromLine(line)
-  }
-
-  return uniqSorted(keys.map((k) => k.toLowerCase()))
-}
-
 function main(): void {
-  const graphBuilderSrc = readFileSync(join(ROOT, 'src/conditions/graphBuilder.ts'), 'utf-8')
-  const audioGraphBuilderSrc = readFileSync(join(ROOT, 'src/engine/audio/audioGraphBuilder.ts'), 'utf-8')
-
-  const implementedVideo = extractObjectKeysFromFactorySource(graphBuilderSrc, 'NODE_FACTORY')
-  const implementedAudio = extractObjectKeysFromFactorySource(audioGraphBuilderSrc, 'FX_FACTORY')
+  const implementedVideo = uniqSorted(Array.from(IMPLEMENTED_VIDEO_NODES))
+  const implementedAudio = uniqSorted(Array.from(IMPLEMENTED_AUDIO_NODES))
 
   const referencedVideo: string[] = []
   const referencedAudio: string[] = []

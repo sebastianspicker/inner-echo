@@ -56,9 +56,7 @@ const experienceDimsFile = parseFirstJsonObject<{
   },
 })
 
-function getDimensionMappingEntry(
-  dimensionId: string
-): DimensionSignalMappingEntry | null {
+function getDimensionMappingEntry(dimensionId: string): DimensionSignalMappingEntry | null {
   return dimensionMappingFile.mapping?.[dimensionId] ?? null
 }
 
@@ -110,7 +108,7 @@ async function oneCase(
     interactionAmount: number
     debugOverlay: boolean
   },
-  f: Failures
+  f: Failures,
 ): Promise<void> {
   const a = await composeEffectiveProfileCore(presets, dims, settings, {
     loadPresetProfile,
@@ -133,7 +131,7 @@ async function oneCase(
       f,
       `${name}: missing nodes reported (video=${a.report.missingNodes.video.join(',') || 'none'}; audio=${
         a.report.missingNodes.audio.join(',') || 'none'
-      })`
+      })`,
     )
   }
   if (a.report.missingPresets.length) {
@@ -174,7 +172,7 @@ async function main(): Promise<void> {
     ],
     [],
     baseSettings,
-    f
+    f,
   )
 
   await oneCase(
@@ -185,7 +183,7 @@ async function main(): Promise<void> {
       { dimensionId: 'rumination_loop', weight: 0.6 },
     ],
     baseSettings,
-    f
+    f,
   )
 
   await oneCase(
@@ -193,7 +191,7 @@ async function main(): Promise<void> {
     [{ profileId: 'adhd', weight: 0.8 }],
     [{ dimensionId: 'sensory_overload', weight: 0.5 }],
     baseSettings,
-    f
+    f,
   )
 
   if (f.count > 0) {

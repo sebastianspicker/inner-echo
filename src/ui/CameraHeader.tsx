@@ -31,7 +31,12 @@ export function CameraHeader({
       <div className="ie-brand" aria-label="Inner Echo">
         <div className="ie-title">Inner Echo</div>
         <div className="ie-subtitle">A private, calming space for reflection</div>
-        <div className="ie-subtitle ie-subtitle--shortcuts" aria-label="Keyboard shortcuts">K start/stop · E evidence</div>
+        <div
+          className="ie-subtitle ie-subtitle--shortcuts keyboard-hint"
+          aria-label="Keyboard shortcuts"
+        >
+          K start/stop · E evidence
+        </div>
       </div>
 
       <div className="ie-headerRight">

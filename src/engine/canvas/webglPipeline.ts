@@ -1,23 +1,36 @@
 /**
  * WebGL Rendering Pipeline (Three.js)
- * 
- * This module is the core visual engine of Inner Echo. It uses Three.js to process 
+ *
+ * This module is the core visual engine of Inner Echo. It uses Three.js to process
  * the raw webcam feed through a series of custom shader effects (nodes).
- * 
+ *
  * Data Flow:
- * 1. Raw WebRTC `<video>` is converted to a `THREE.VideoTexture`.
+ * 1. Raw WebRTC `<video>` is converted to a `VideoTexture`.
  * 2. It passes sequentially through a chain of `VideoNode`s defined by the current condition profile.
  * 3. Each node renders its output to a `WebGLRenderTarget` (FBO), which becomes the input for the next node.
  * 4. Temporal nodes (effects that need the "previous frame" like Smear) use a ping-pong buffer technique.
  * 5. The final output is blitted onto the main HTML `<canvas>`.
- * 
+ *
  * Performance:
  * Includes a built-in FPS guard. If the framerate drops below 30 FPS, it automatically
- * reduces the internal render scale (resolution) to maintain smooth performance without 
+ * reduces the internal render scale (resolution) to maintain smooth performance without
  * interrupting the effect.
  */
 
-import * as THREE from 'three'
+import {
+  LinearFilter,
+  Mesh,
+  MeshBasicMaterial,
+  OrthographicCamera,
+  Scene,
+  SRGBColorSpace,
+  VideoTexture,
+  WebGLRenderer,
+  type Material,
+  type PlaneGeometry,
+  type Texture,
+  type WebGLRenderTarget,
+} from 'three'
 import type { VideoNode } from '../effects/VideoNode'
 import type { VideoPipelineParams } from './webglPipelineTypes'
 import { createVideoMetricsTracker, type VideoMetrics } from './videoMetrics'
@@ -83,13 +96,13 @@ export interface ReactiveLoopOptions {
     delta: number,
     audio: AudioMetrics,
     video: VideoMetrics,
-    baseControlValues: Record<string, number | boolean>
+    baseControlValues: Record<string, number | boolean>,
   ):
     | Record<string, number>
     | {
-      video: Record<string, number>
-      audio?: Record<string, number>
-    }
+        video: Record<string, number>
+        audio?: Record<string, number>
+      }
   /** Optional: apply audio overrides directly from the render loop. */
   applyAudioOverrides?(overrides: Record<string, number>): void
   /** Optional: observe video metrics for debug UI. */
@@ -99,7 +112,7 @@ export interface ReactiveLoopOptions {
 /**
  * Bootstraps and starts the WebGL render loop using `requestAnimationFrame`.
  * Continually pushes the video feed through the effect nodes and manages memory/garbage collection.
- * 
+ *
  * @param video The source `<video>` element receiving the webcam feed.
  * @param canvas The target `<canvas>` element to draw the final result onto.
  * @param container The parent DOM element, used to determine correct aspect ratio and sizing.
@@ -114,19 +127,19 @@ export function startWebGLOverlayLoop(
   container: HTMLElement,
   nodes: VideoNode[],
   reactiveOptions?: ReactiveLoopOptions | null,
-  callbacks?: WebGLOverlayCallbacks
+  callbacks?: WebGLOverlayCallbacks,
 ): WebGLOverlayControl | null {
   const startupDisposers: Array<() => void> = []
-  let renderer: THREE.WebGLRenderer | null = null
-  let videoTexture: THREE.VideoTexture | null = null
-  let videoPassthroughMaterial: THREE.Material | null = null
-  let initialMeshMaterial: THREE.Material | null = null
-  let geometry: THREE.PlaneGeometry | null = null
+  let renderer: WebGLRenderer | null = null
+  let videoTexture: VideoTexture | null = null
+  let videoPassthroughMaterial: Material | null = null
+  let initialMeshMaterial: Material | null = null
+  let geometry: PlaneGeometry | null = null
   let gl: WebGLRenderingContext | null = null
   let metricsTracker: ReturnType<typeof createVideoMetricsTracker> | null = null
-  let chainRTs: THREE.WebGLRenderTarget[] = []
+  let chainRTs: WebGLRenderTarget[] = []
   const temporalPingPong: TemporalPingPongState[] = []
-  let finalBlitMaterial: THREE.MeshBasicMaterial | null = null
+  let finalBlitMaterial: MeshBasicMaterial | null = null
   let rafId: number | null = null
   let stopped = false
   let cleanedUp = false
@@ -157,16 +170,22 @@ export function startWebGLOverlayLoop(
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     for (let i = startupDisposers.length - 1; i >= 0; i--) {
-      try { startupDisposers[i]() } catch { /* ignore */ }
+      try {
+        startupDisposers[i]()
+      } catch {
+        /* ignore */
+      }
     }
     startupDisposers.length = 0
   }
 
   try {
-    renderer = new THREE.WebGLRenderer({
+    renderer = new WebGLRenderer({
       canvas,
       antialias: false,
       alpha: false,
@@ -174,20 +193,20 @@ export function startWebGLOverlayLoop(
     })
     startupDisposers.push(() => renderer?.dispose())
 
-    const scene = new THREE.Scene()
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
+    const scene = new Scene()
+    const camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1)
     camera.position.z = 0
 
-    videoTexture = new THREE.VideoTexture(video)
-    videoTexture.minFilter = THREE.LinearFilter
-    videoTexture.magFilter = THREE.LinearFilter
-    videoTexture.colorSpace = THREE.SRGBColorSpace
+    videoTexture = new VideoTexture(video)
+    videoTexture.minFilter = LinearFilter
+    videoTexture.magFilter = LinearFilter
+    videoTexture.colorSpace = SRGBColorSpace
     startupDisposers.push(() => videoTexture?.dispose())
 
     videoPassthroughMaterial = createPassthroughMaterial(videoTexture)
     initialMeshMaterial = usePassthrough
       ? videoPassthroughMaterial
-      : new THREE.MeshBasicMaterial({ color: 0x000000, depthWrite: false })
+      : new MeshBasicMaterial({ color: 0x000000, depthWrite: false })
     if (initialMeshMaterial !== videoPassthroughMaterial) {
       startupDisposers.push(() => initialMeshMaterial?.dispose())
       startupDisposers.push(() => videoPassthroughMaterial?.dispose())
@@ -196,7 +215,7 @@ export function startWebGLOverlayLoop(
     }
     geometry = getQuadGeometry()
     startupDisposers.push(() => geometry?.dispose())
-    const mesh = new THREE.Mesh(geometry, initialMeshMaterial)
+    const mesh = new Mesh(geometry, initialMeshMaterial)
     scene.add(mesh)
 
     metricsTracker = createVideoMetricsTracker({ size: 64, everyN: 2, attack: 0.2, release: 0.4 })
@@ -228,7 +247,7 @@ export function startWebGLOverlayLoop(
       cleanupResources()
     }
 
-    function hasRepeatedGlErrors(): boolean {
+    function hasRepeatedGlErrors(didRender: boolean): boolean {
       if (!gl) return false
       let hadError = false
       let err = gl.getError()
@@ -236,7 +255,9 @@ export function startWebGLOverlayLoop(
         hadError = true
         err = gl.getError()
       }
-      consecutiveGlErrors = hadError ? consecutiveGlErrors + 1 : 0
+      if (didRender) {
+        consecutiveGlErrors = hadError ? consecutiveGlErrors + 1 : 0
+      }
       return consecutiveGlErrors >= 3
     }
 
@@ -284,15 +305,19 @@ export function startWebGLOverlayLoop(
     let lastH = 0
     let renderScaleIndex = 0
     let lastScaleChangeMs = performance.now()
+    let prevStressMode = false
 
     // FPS guard: moving average
     const frameTimes: number[] = []
     let avgFps = 60
 
-    // Phase 12: diagnostics object (mutated each frame for dev panel)
+    // Phase 12: diagnostics object (mutated each frame for dev panel).
+    // Note: activeVideoNodes reflects the initial chain configuration and is not
+    // refreshed at runtime. This is intentional — the node list is static for the
+    // lifetime of a single pipeline instance.
     const diagnostics: WebGLDiagnostics = createDiagnostics(
       nodes.map((node) => toNodeName(node)),
-      RENDER_SCALES[0]
+      RENDER_SCALES[0],
     )
 
     function syncResourceDiagnostics(): void {
@@ -316,7 +341,7 @@ export function startWebGLOverlayLoop(
       temporalPingPong.push(...allocated.temporalPingPong)
 
       if (!finalBlitMaterial) {
-        finalBlitMaterial = new THREE.MeshBasicMaterial({
+        finalBlitMaterial = new MeshBasicMaterial({
           map: null,
           depthWrite: false,
         })
@@ -343,34 +368,41 @@ export function startWebGLOverlayLoop(
       if (stopped) return
       rafId = null
       const now = performance.now()
-      const delta = (now - lastTime) / 1000
+      let delta = (now - lastTime) / 1000
       lastTime = now
 
       if (currentParams.stressMode && delta < 0.05) {
-        // Simulate heavy load for testing: burn a few ms
-        const end = performance.now() + 25
-        while (performance.now() < end) { }
+        // Simulate heavy load for testing: burn a few ms.
+        // Capture the burn duration separately so FPS metrics reflect actual render
+        // time, not the artificial busy-wait.
+        const burnStart = performance.now()
+        const end = burnStart + 25
+        while (performance.now() < end) {}
+        const burnSec = (performance.now() - burnStart) / 1000
+        delta = Math.max(0, delta - burnSec)
       }
 
       // FPS moving average
       if (delta > 0 && delta < 1) {
         frameTimes.push(delta)
         if (frameTimes.length > FPS_SAMPLES) frameTimes.shift()
-        const avgDelta =
-          frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length
+        const avgDelta = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length
         avgFps = 1 / avgDelta
       }
+      const currentStress = Boolean(currentParams.stressMode)
       const nextScaleIndex = computeNextRenderScaleIndex({
         currentIndex: renderScaleIndex,
         scaleCount: RENDER_SCALES.length,
         avgFps,
-        stressMode: Boolean(currentParams.stressMode),
+        stressMode: currentStress,
+        prevStressMode,
         nowMs: now,
         lastScaleChangeMs,
         cooldownMs: SCALE_CHANGE_COOLDOWN_MS,
         downThreshold: FPS_DOWN_THRESHOLD,
         upThreshold: FPS_UP_THRESHOLD,
       })
+      prevStressMode = currentStress
       if (nextScaleIndex !== renderScaleIndex) {
         renderScaleIndex = nextScaleIndex
         lastScaleChangeMs = now
@@ -391,7 +423,10 @@ export function startWebGLOverlayLoop(
 
       // Compute metrics from the *previous* rendered frame (canvas contents) so we can feed video→audio coupling
       // without readPixels stalls. This is an approximation but stable at low-res.
-      if (!metricsTracker) return
+      if (!metricsTracker) {
+        rafId = requestAnimationFrame(loop)
+        return
+      }
       const videoMetrics = metricsTracker.stepFromCanvas(canvas, delta)
       reactiveOptions?.onVideoMetrics?.(videoMetrics)
 
@@ -400,8 +435,11 @@ export function startWebGLOverlayLoop(
       const ch = container.clientHeight
 
       if (videoReady) {
-        if (videoTexture && typeof (videoTexture as THREE.VideoTexture & { update?: () => void }).update === 'function') {
-          (videoTexture as THREE.VideoTexture & { update: () => void }).update()
+        if (
+          videoTexture &&
+          typeof (videoTexture as VideoTexture & { update?: () => void }).update === 'function'
+        ) {
+          ;(videoTexture as VideoTexture & { update: () => void }).update()
         } else if (videoTexture) {
           videoTexture.needsUpdate = true
         }
@@ -413,9 +451,18 @@ export function startWebGLOverlayLoop(
           reactiveOptions?.getAudioMetrics?.() ??
           ({ rms: reactiveOptions?.getRms?.() ?? 0, centroid: 0, flux: 0 } as AudioMetrics)
 
-        const baseControlValues = (currentParams.controlValues ?? {}) as Record<string, number | boolean>
-        const overridesRaw = reactiveOptions?.getOverrides?.(delta, audioMetrics, videoMetrics, baseControlValues)
-        const { video: videoOverrides, audio: audioOverrides } = resolveReactiveOverrides(overridesRaw)
+        const baseControlValues = (currentParams.controlValues ?? {}) as Record<
+          string,
+          number | boolean
+        >
+        const overridesRaw = reactiveOptions?.getOverrides?.(
+          delta,
+          audioMetrics,
+          videoMetrics,
+          baseControlValues,
+        )
+        const { video: videoOverrides, audio: audioOverrides } =
+          resolveReactiveOverrides(overridesRaw)
         if (audioOverrides && reactiveOptions?.applyAudioOverrides) {
           reactiveOptions.applyAudioOverrides(audioOverrides)
         }
@@ -433,7 +480,7 @@ export function startWebGLOverlayLoop(
           r.render(scene, camera)
         } else if (chainRTs.length === nodes.length + 1 && videoPassthroughMaterial) {
           renderQuad(r, scene, camera, videoPassthroughMaterial, chainRTs[0])
-          let inputTex: THREE.Texture = chainRTs[0].texture
+          let inputTex: Texture = chainRTs[0].texture
           let temporalIdx = 0
 
           for (let i = 0; i < nodes.length; i++) {
@@ -445,23 +492,25 @@ export function startWebGLOverlayLoop(
 
             if (node.needsPreviousFrame) {
               const pp = temporalPingPong[temporalIdx]
-              const prevTex = pp.firstFrame ? inputTex : (pp.writeIndex === 0 ? pp.rtB : pp.rtA).texture
+              const prevTex = pp.firstFrame
+                ? inputTex
+                : (pp.writeIndex === 0 ? pp.rtB : pp.rtA).texture
               const writeRT = pp.writeIndex === 0 ? pp.rtA : pp.rtB
-              const mat = node.getMaterial(inputTex, prevTex) as THREE.Material
+              const mat = node.getMaterial(inputTex, prevTex) as Material
               renderQuad(r, scene, camera, mat, writeRT)
               if (pp.firstFrame) pp.firstFrame = false
               pp.writeIndex = 1 - pp.writeIndex
               inputTex = writeRT.texture
               temporalIdx++
             } else {
-              const mat = node.getMaterial(inputTex) as THREE.Material
+              const mat = node.getMaterial(inputTex) as Material
               renderQuad(r, scene, camera, mat, chainRTs[i + 1])
               inputTex = chainRTs[i + 1].texture
             }
           }
 
           if (finalBlitMaterial) {
-            finalBlitMaterial.map = inputTex as THREE.Texture
+            finalBlitMaterial.map = inputTex as Texture
             finalBlitMaterial.needsUpdate = true
             r.setRenderTarget(null)
             r.clear()
@@ -473,7 +522,7 @@ export function startWebGLOverlayLoop(
         renderer.clear()
       }
 
-      if (hasRepeatedGlErrors()) {
+      if (hasRepeatedGlErrors(videoReady)) {
         failAndFallback('Renderer switched to 2D fallback after repeated GPU errors.')
         return
       }

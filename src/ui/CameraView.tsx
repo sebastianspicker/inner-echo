@@ -1,15 +1,15 @@
 /**
  * CameraView Component
- * 
+ *
  * Architecture Overview:
  * This component is the primary orchestrator of the entire Inner Echo application.
  * It strictly acts as a conductor, bridging four distinct technological layers:
- * 
+ *
  * 1. UI State (React): Manages the panels, buttons, and user preferences (e.g., intensity, safe mode).
  * 2. Video Capture (WebRTC): Solicits and maintains the raw camera feed (`requestVideoStream`).
  * 3. Audio Engine (Web Audio API): Manages background audio, microphone inputs, and volume (`contextManager.ts`).
  * 4. Visual Engine (WebGL): Feeds the raw video into WebGL shaders for pixel manipulation (`startOverlayLoop`).
- * 
+ *
  * Note on Performance:
  * To avoid freezing the UI when heavy WebGL calculations occur, `CameraView` heavily utilizes
  * `useRef` to pass real-time config values (like slider values) into the WebGL requestAnimationFrame loop
@@ -25,10 +25,7 @@ import { useAudioController } from './hooks/useAudioController'
 import { useOverlayController } from './hooks/useOverlayController'
 import { useReactivePipeline } from './hooks/useReactivePipeline'
 import { logger } from '../utils/logger'
-import {
-  profileHasTemporalNodes,
-  TEMPORAL_NODE_TYPES,
-} from '../conditions/graphBuilder'
+import { profileHasTemporalNodes, TEMPORAL_NODE_TYPES } from '../conditions/graphBuilder'
 import { CameraHeader } from './CameraHeader'
 import { CameraStage } from './CameraStage'
 import { AudioMicControls } from './AudioMicControls'
@@ -41,11 +38,7 @@ import {
   getReducedMotionDisableNodes,
   getSafetyContext,
 } from '../conditions/normalize'
-import {
-  requestVideoStream,
-  stopVideoStream,
-  type CameraState,
-} from '../engine/video'
+import { requestVideoStream, stopVideoStream, type CameraState } from '../engine/video'
 import {
   startAudioContext,
   createAudioEngine,
@@ -56,31 +49,30 @@ import {
 } from '../engine/audio'
 import { getCameraErrorMessage } from './cameraMessages'
 import { ConditionComposerPanel } from './ConditionComposerPanel'
-import {
-  OnboardingModal,
-  getOnboardingAccepted,
-} from './OnboardingModal'
+import { OnboardingModal, getOnboardingAccepted } from './OnboardingModal'
 import { DebugPanel } from './DebugPanel'
+// TODO: Lazy-load EvidenceDrawer via React.lazy to code-split marked + DOMPurify
+// out of the main chunk. Currently they are bundled eagerly (~50 KB combined).
 import { EvidenceDrawer } from './EvidenceDrawer'
 import type { EvidenceDocPath } from '../evidence/docs'
 import type { ComposerMode, SelectedDimension, SelectedPreset } from '../composer'
-
 
 const DEFAULT_INTENSITY = 0.5
 const DEFAULT_CONDITION_ID = 'none'
 const DEFAULT_PICKER_OPTIONS: CatalogEntry[] = [
   { id: 'none', label: 'None (Clean)', description: 'No overlay. Baseline camera view.' },
-  { id: 'anxiety', label: 'Anxiety', description: 'Metaphor of heightened tension; grain overlay.' },
+  {
+    id: 'anxiety',
+    label: 'Anxiety',
+    description: 'Metaphor of heightened tension; grain overlay.',
+  },
 ]
 const CAMERA_STREAM_INTERRUPTED_MESSAGE =
   'The camera connection was briefly interrupted. You can restart it whenever you are ready.'
 const CAMERA_DEVICE_DISCONNECTED_MESSAGE =
   'It seems your camera was disconnected. Please reconnect it and start again when you are ready.'
 
-function getActiveVideoNodeIds(
-  profile: Profile | null,
-  reducedMotion: boolean
-): string[] {
+function getActiveVideoNodeIds(profile: Profile | null, reducedMotion: boolean): string[] {
   if (!profile) return []
   const disabled = getReducedMotionDisableNodes(profile)
   const active: string[] = []
@@ -132,22 +124,25 @@ export function CameraView() {
   const [interactionAmount, setInteractionAmount] = useState(0.15)
   const [debugOverlay, setDebugOverlay] = useState(false)
   const [evidenceOpen, setEvidenceOpen] = useState(false)
-  const [evidenceDocPath, setEvidenceDocPath] = useState<EvidenceDocPath>('docs/references/README.md')
+  const [evidenceDocPath, setEvidenceDocPath] = useState<EvidenceDocPath>(
+    'docs/references/README.md',
+  )
 
-  const { profile, composeReport, controlValues, setControlValues, isProfileLoading } = useProfileLoad({
-    conditionId,
-    composerMode,
-    selectedPresets,
-    selectedDimensions,
-    setIntensity,
-    setAudioEnabled,
-    intensity,
-    safeMode,
-    reducedMotion,
-    audioEnabled,
-    maxFeedback,
-    interactionAmount,
-  })
+  const { profile, composeReport, controlValues, setControlValues, isProfileLoading } =
+    useProfileLoad({
+      conditionId,
+      composerMode,
+      selectedPresets,
+      selectedDimensions,
+      setIntensity,
+      setAudioEnabled,
+      intensity,
+      safeMode,
+      reducedMotion,
+      audioEnabled,
+      maxFeedback,
+      interactionAmount,
+    })
 
   // Render-loop consumers should read settings from refs to avoid stale captures.
   // By using mutable refs, the WebGL render loop running at 60fps can read the latest UI slider
@@ -207,6 +202,7 @@ export function CameraView() {
   const handleCameraStreamInterrupted = useCallback(
     (stream: MediaStream | null | undefined, message: string) => {
       if (!stream) return
+      if (streamRef.current === null) return // already torn down by handleStop
       if (cameraStateRef.current !== 'active') return
       if (streamRef.current !== stream) return
       if (overlayControlRef.current) {
@@ -221,7 +217,7 @@ export function CameraView() {
       setCameraState('error')
       setErrorMessage(message)
     },
-    []
+    [],
   )
 
   /**
@@ -250,29 +246,34 @@ export function CameraView() {
       const video = videoRef.current
       if (video) {
         video.srcObject = stream
-        video.play().then(() => {
-          if (requestSeq !== cameraRequestSeqRef.current) return
-          setCameraState('active')
-        }).catch((err) => {
-          // Autoplay may be restricted; playsInline + srcObject often still shows first frame
-          if (import.meta.env?.DEV) {
-            logger.warn('video.play failed', err)
-          }
-          // Stop the camera stream since playback failed
-          stopVideoStream(stream)
-          streamRef.current = null
-          if (video) video.srcObject = null
-          setCameraState('error')
-          setErrorMessage('The camera could not start playback. Please try clicking anywhere on the page and then restarting the camera.')
-        })
+        video
+          .play()
+          .then(() => {
+            if (requestSeq !== cameraRequestSeqRef.current) return
+            setCameraState('active')
+          })
+          .catch((err) => {
+            if (requestSeq !== cameraRequestSeqRef.current) return
+            // Autoplay may be restricted; playsInline + srcObject often still shows first frame
+            if (import.meta.env?.DEV) {
+              logger.warn('video.play failed', err)
+            }
+            // Stop the camera stream since playback failed
+            stopVideoStream(stream)
+            streamRef.current = null
+            if (video) video.srcObject = null
+            setCameraState('error')
+            setErrorMessage(
+              'The camera could not start playback. Please try clicking anywhere on the page and then restarting the camera.',
+            )
+          })
       } else {
         setCameraState('active')
       }
     } else {
       streamRef.current = null
       const isDenied =
-        result.error.name === 'NotAllowedError' ||
-        result.error.name === 'PermissionDeniedError'
+        result.error.name === 'NotAllowedError' || result.error.name === 'PermissionDeniedError'
       setCameraState(isDenied ? 'denied' : 'error')
       setErrorMessage(getCameraErrorMessage(result.error))
     }
@@ -379,10 +380,11 @@ export function CameraView() {
           const currentProfile = profileRef.current
           const currentAudioEnabled = audioEnabledRef.current
           const profileHasAudio = !!currentProfile?.audio_stack?.enabled
-          const audioStack =
-            profileHasAudio
-              ? (currentProfile?.audio_stack ?? { enabled: false })
-              : (currentAudioEnabled ? (currentProfile?.audio_stack ?? null) : { enabled: false })
+          const audioStack = profileHasAudio
+            ? (currentProfile?.audio_stack ?? { enabled: false })
+            : currentAudioEnabled
+              ? (currentProfile?.audio_stack ?? null)
+              : { enabled: false }
           if (profileHasAudio) setAudioEnabled(true)
           const control = createAudioEngine(audioStack, {
             onStatusChange(s, err) {
@@ -402,7 +404,10 @@ export function CameraView() {
           }
           audioEngineControlRef.current = control
           setAudioStatus('on')
-          const vol = profileHasAudio || currentAudioEnabled ? (currentProfile?.audio_stack?.master?.volume ?? 0.22) : 0
+          const vol =
+            profileHasAudio || currentAudioEnabled
+              ? (currentProfile?.audio_stack?.master?.volume ?? 0.22)
+              : 0
           control.setMasterVolume(vol)
           control.setInputMode(inputModeRef.current)
           control.setMicSensitivity(micSensitivityRef.current)
@@ -433,14 +438,14 @@ export function CameraView() {
 
   const handleDisableMic = useCallback(() => {
     audioEngineControlRef.current?.stopMic()
-    if (inputMode === 'mic') {
+    if (inputModeRef.current === 'mic') {
       setInputMode('synth')
       audioEngineControlRef.current?.setInputMode('synth')
     }
     setMicEnabled(false)
     setMicStatus('off')
     setMicError(null)
-  }, [inputMode])
+  }, [])
 
   const { toggleMic: handleMicEnabledChange } = useAudioController({
     audioStatus,
@@ -450,28 +455,25 @@ export function CameraView() {
     setMicError,
   })
 
-  const handleQuickPreset = useCallback(
-    (preset: 'calm' | 'balanced' | 'intense') => {
-      // Conservative defaults; clamps still apply at runtime.
-      if (preset === 'calm') {
-        setIntensity(0.25)
-        setCouplingStrength(0.2)
-        setInteractionAmount(0.1)
-        setMaxFeedback(0.25)
-      } else if (preset === 'balanced') {
-        setIntensity(0.5)
-        setCouplingStrength(0.5)
-        setInteractionAmount(0.15)
-        setMaxFeedback(0.35)
-      } else {
-        setIntensity(0.8)
-        setCouplingStrength(0.75)
-        setInteractionAmount(0.25)
-        setMaxFeedback(0.45)
-      }
-    },
-    []
-  )
+  const handleQuickPreset = useCallback((preset: 'calm' | 'balanced' | 'intense') => {
+    // Conservative defaults; clamps still apply at runtime.
+    if (preset === 'calm') {
+      setIntensity(0.25)
+      setCouplingStrength(0.2)
+      setInteractionAmount(0.1)
+      setMaxFeedback(0.25)
+    } else if (preset === 'balanced') {
+      setIntensity(0.5)
+      setCouplingStrength(0.5)
+      setInteractionAmount(0.15)
+      setMaxFeedback(0.35)
+    } else {
+      setIntensity(0.8)
+      setCouplingStrength(0.75)
+      setInteractionAmount(0.25)
+      setMaxFeedback(0.45)
+    }
+  }, [])
 
   const handleInputModeChange = useCallback((mode: AudioInputMode) => {
     setInputMode(mode)
@@ -593,19 +595,19 @@ export function CameraView() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [cameraController, onboardingAccepted, openEvidence])
 
-  const warnings: string[] =
-    profile?.safety?.warnings ?? []
-  const showReducedMotionHint =
-    reducedMotion && profile != null && profileHasTemporalNodes(profile)
+  const warnings: string[] = profile?.safety?.warnings ?? []
+  const showReducedMotionHint = reducedMotion && profile != null && profileHasTemporalNodes(profile)
   const activeVideoNodeIds = getActiveVideoNodeIds(profile, reducedMotion)
-  const profileDefinesReducedMotionControl =
-    (profile?.ui?.controls ?? []).some((c) => c.id === 'reduced_motion')
+  const profileDefinesReducedMotionControl = (profile?.ui?.controls ?? []).some(
+    (c) => c.id === 'reduced_motion',
+  )
 
   return (
-    <section className={`ie-shell ${isIdle ? 'ie-shell--idle' : ''}`} aria-label="Inner Echo — camera and controls">
-      {!onboardingAccepted && (
-        <OnboardingModal onAccept={() => setOnboardingAccepted(true)} />
-      )}
+    <section
+      className={`ie-shell ${isIdle ? 'ie-shell--idle' : ''}`}
+      aria-label="Inner Echo — camera and controls"
+    >
+      {!onboardingAccepted && <OnboardingModal onAccept={() => setOnboardingAccepted(true)} />}
 
       <CameraHeader
         cameraState={cameraState}
@@ -627,7 +629,11 @@ export function CameraView() {
       )}
 
       {warnings.length > 0 && (
-        <div className="ie-callout ie-callout--warn" role="region" aria-label="Things to be aware of">
+        <div
+          className="ie-callout ie-callout--warn"
+          role="region"
+          aria-label="Things to be aware of"
+        >
           <div className="ie-calloutTitle">Please be aware</div>
           <ul className="ie-calloutList">
             {warnings.map((w) => (
@@ -698,7 +704,8 @@ export function CameraView() {
 
               {!profileDefinesReducedMotionControl && showReducedMotionHint && (
                 <p className="ie-hint" role="status">
-                  Reduced Motion is on. Some animated effects have been gently paused for your comfort.
+                  Reduced Motion is on. Some animated effects have been gently paused for your
+                  comfort.
                 </p>
               )}
             </div>
@@ -708,7 +715,10 @@ export function CameraView() {
                 <summary className="ie-summary">Composer report (dev)</summary>
                 <div className="ie-panelBody">
                   {composerMode === 'preset' && (
-                    <p className="ie-hint">Only shown in Multimorbid or Symptom-first mode. In Preset mode a single condition is loaded; no composition report.</p>
+                    <p className="ie-hint">
+                      Only shown in Multimorbid or Symptom-first mode. In Preset mode a single
+                      condition is loaded; no composition report.
+                    </p>
                   )}
                   {composerMode !== 'preset' && composeReport && (
                     <>
@@ -724,7 +734,8 @@ export function CameraView() {
                           </ul>
                         </>
                       )}
-                      {(composeReport.missingNodes.video.length > 0 || composeReport.missingNodes.audio.length > 0) && (
+                      {(composeReport.missingNodes.video.length > 0 ||
+                        composeReport.missingNodes.audio.length > 0) && (
                         <>
                           <div className="ie-subsectionTitle">Missing nodes (not applied)</div>
                           <ul className="ie-codeList">
@@ -757,7 +768,9 @@ export function CameraView() {
                         composeReport.missingNodes.video.length === 0 &&
                         composeReport.missingNodes.audio.length === 0 &&
                         (composeReport.evidence.gaps?.length ?? 0) === 0 && (
-                          <p className="ie-hint">Composition applied. No missing presets or nodes.</p>
+                          <p className="ie-hint">
+                            Composition applied. No missing presets or nodes.
+                          </p>
                         )}
                     </>
                   )}

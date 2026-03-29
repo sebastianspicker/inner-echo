@@ -1,10 +1,10 @@
 /**
  * Audio Context Manager
- * 
+ *
  * This module acts as a global singleton manager for the Web Audio API's `AudioContext`.
  * Modern browsers have strict autoplay policies for audio: an `AudioContext` cannot
  * play sound until the user has explicitly interacted with the page (e.g., clicking a button).
- * 
+ *
  * To handle this gracefully:
  * 1. The `sharedContext` is only instantiated after a user gesture calls `startAudioContext()`.
  * 2. It tracks the current lifecycle state (off, starting, on, error) and broadcasts changes
@@ -30,19 +30,24 @@ let startingPromise: Promise<AudioContextStatus> | null = null
 // A set of callback functions (listeners) that want to be updated when the audio status changes.
 const listeners = new Set<AudioContextManagerListener>()
 
+// Tracks the last notified status to avoid duplicate notifications (e.g. double 'off').
+let lastNotifiedStatus: AudioContextStatus | null = null
+
 /**
  * Helper function to broadcast the current status to all registered UI components.
  */
 function notify(status: AudioContextStatus, error?: string): void {
+  if (status === lastNotifiedStatus && status === 'off') return
+  lastNotifiedStatus = status
   listeners.forEach((fn) => fn(status, error))
 }
 
 /**
  * Initializes or resumes the global `AudioContext`.
- * 
- * **IMPORTANT:** This function MUST be triggered by a direct user interaction event 
+ *
+ * **IMPORTANT:** This function MUST be triggered by a direct user interaction event
  * (e.g., an `onClick` handler on a "Start" button) to comply with browser autoplay policies.
- * 
+ *
  * @returns A promise resolving to the new `AudioContextStatus`.
  */
 export async function startAudioContext(): Promise<AudioContextStatus> {
@@ -58,7 +63,9 @@ export async function startAudioContext(): Promise<AudioContextStatus> {
 
       // If we don't have a context yet, or the previous one was permenantly closed, create a new one.
       if (!sharedContext || sharedContext.state === 'closed') {
-        const AudioCtx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+        const AudioCtx =
+          window.AudioContext ??
+          (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
         sharedContext = new AudioCtx()
       }
 
@@ -68,17 +75,18 @@ export async function startAudioContext(): Promise<AudioContextStatus> {
 
       if (sharedContext.state === 'running') {
         notify('on')
-        return 'on'
+        return 'on' as const
       }
 
       let errorType = 'Failed to start audio.'
       if (sharedContext.state === 'suspended') {
-        errorType = 'Audio blocked by browser. Please interact with the page (click or tap) and try again.'
+        errorType =
+          'Audio blocked by browser. Please interact with the page (click or tap) and try again.'
       }
 
       const message = `${errorType} (Current state: ${sharedContext.state})`
       notify('error', message)
-      return 'error'
+      return 'error' as const
     } catch (e) {
       const rawMessage = e instanceof Error ? e.message : String(e)
       let userMessage = `Audio initialization failed: ${rawMessage}`
@@ -88,18 +96,18 @@ export async function startAudioContext(): Promise<AudioContextStatus> {
       }
 
       notify('error', userMessage)
-      return 'error'
-    } finally {
-      startingPromise = null
+      return 'error' as const
     }
-  })()
+  })().finally(() => {
+    startingPromise = null
+  })
 
   return startingPromise
 }
 
 /**
  * Pauses the audio processing.
- * 
+ *
  * Suspending the context stops the hardware from processing audio, which saves CPU battery,
  * but keeps the internal audio graph intact so it can be resumed instantly later.
  * Use this when the user clicks "Stop" or hides the application.
@@ -125,8 +133,8 @@ export async function suspendAudioContext(): Promise<void> {
 
 /**
  * Retrieves the currently active `AudioContext` singleton.
- * 
- * Modules that need to build an audio graph (like synthesizers or microphone inputs) 
+ *
+ * Modules that need to build an audio graph (like synthesizers or microphone inputs)
  * will call this to attach their nodes. It returns `null` if audio hasn't been started yet.
  */
 export function getAudioContext(): AudioContext | null {
@@ -135,7 +143,7 @@ export function getAudioContext(): AudioContext | null {
 
 /**
  * Subscribes a listener to context status changes (e.g., connected, suspended, error).
- * 
+ *
  * @param fn The callback function.
  * @returns A cleanup function to remove the listener later (useful for React `useEffect` cleanup).
  */
@@ -146,7 +154,7 @@ export function addAudioContextListener(fn: AudioContextManagerListener): () => 
 
 /**
  * Fully destroys the `AudioContext` and releases system audio resources.
- * 
+ *
  * Unlike `suspendAudioContext`, this permanently shuts down the graph. A completely
  * new `AudioContext` will need to be instantiated (requiring a new user gesture) to play audio again.
  * Used during complete application teardown.
@@ -164,10 +172,7 @@ export async function closeAudioContext(): Promise<void> {
   closingPromise = (async () => {
     try {
       // Safari may hang on ctx.close(); use a timeout to avoid blocking indefinitely.
-      await Promise.race([
-        ctx.close(),
-        new Promise<void>((resolve) => setTimeout(resolve, 2000)),
-      ])
+      await Promise.race([ctx.close(), new Promise<void>((resolve) => setTimeout(resolve, 2000))])
     } catch (err) {
       logger.warn('AudioContext.close() failed', err)
     } finally {

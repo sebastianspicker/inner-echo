@@ -32,7 +32,7 @@ export function mergeNumericWeighted(items: Array<{ w: number; v: number }>): nu
 }
 
 export function mergeParams(
-  contribs: Array<{ w: number; params: Record<string, unknown>; source: SourceId }>
+  contribs: Array<{ w: number; params: Record<string, unknown>; source: SourceId }>,
 ): Record<string, unknown> {
   const keys = new Set<string>()
   for (const c of contribs) {
@@ -65,9 +65,9 @@ export function mergeParams(
   return out
 }
 
-export function sortStackKeys<T extends { key: string; node: string; minIndex: number; minOrderGroup: number }>(
-  items: T[]
-): T[] {
+export function sortStackKeys<
+  T extends { key: string; node: string; minIndex: number; minOrderGroup: number },
+>(items: T[]): T[] {
   return items.sort((a, b) => {
     if (a.minOrderGroup !== b.minOrderGroup) return a.minOrderGroup - b.minOrderGroup
     if (a.minIndex !== b.minIndex) return a.minIndex - b.minIndex
@@ -107,11 +107,33 @@ export const AUDIO_ORDER_GROUP: Record<string, number> = {
 }
 
 export function normalizeNodeType(s: string): string {
-  return String(s ?? '').trim().toLowerCase()
+  return String(s ?? '')
+    .trim()
+    .toLowerCase()
 }
 
 export function makeIdForNode(def: { id?: string; node: string }): string {
   return (def.id ?? def.node ?? '').toString()
+}
+
+/**
+ * Deduplicate IDs in a stack: when multiple entries share the same `id`,
+ * append a counter suffix (`_1`, `_2`, ...) so each entry is distinguishable
+ * in debug views. Entries with unique IDs are left untouched.
+ */
+export function deduplicateStackIds<T extends { id: string }>(items: T[]): T[] {
+  const counts = new Map<string, number>()
+  for (const it of items) {
+    counts.set(it.id, (counts.get(it.id) ?? 0) + 1)
+  }
+  const seen = new Map<string, number>()
+  return items.map((it) => {
+    const total = counts.get(it.id) ?? 1
+    if (total <= 1) return it
+    const idx = (seen.get(it.id) ?? 0) + 1
+    seen.set(it.id, idx)
+    return { ...it, id: `${it.id}_${idx}` }
+  })
 }
 
 export function mergeWarnings(lists: string[][]): string[] {
@@ -143,7 +165,7 @@ export function mergeDisableNodes(lists: Array<string[] | undefined>): string[] 
 }
 
 export function mergeSafeModeClamps(
-  items: Array<Record<string, unknown> | undefined>
+  items: Array<Record<string, unknown> | undefined>,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   const keys = new Set<string>()
@@ -163,6 +185,9 @@ export function mergeSafeModeClamps(
     }
     const boolVs = vs.filter((v): v is boolean => typeof v === 'boolean')
     if (boolVs.length === vs.length) {
+      // OR semantics: if ANY preset sets the flag, the merged result is true.
+      // This is correct for "no_" prefixed keys (e.g. no_strobe) where true = safe,
+      // so any single preset requesting safety wins.
       out[k] = boolVs.some(Boolean)
       continue
     }
@@ -198,11 +223,10 @@ function pickFromHint(hint: unknown, strength01: number): unknown {
 
 /**
  * Scale all numeric values in a params record by `strength`, leaving non-numeric values unchanged.
- * Used to weight dimension-motif contributions before merging them into the composed stack.
  */
 export function scaleNumericParams(
   params: Record<string, unknown>,
-  strength: number
+  strength: number,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(params)) {
@@ -211,9 +235,11 @@ export function scaleNumericParams(
   return out
 }
 
-export function motifsToVideoDefs(motifs: MotifDef[] | undefined): VideoStackNodeDef[] {
+export function motifsToVideoDefs(
+  motifs: MotifDef[] | undefined,
+  strength = 1,
+): VideoStackNodeDef[] {
   if (!motifs?.length) return []
-  const strength = 1
   return motifs.map((m) => {
     const node = normalizeNodeType(m.node)
     const hint = m.params_hint ?? {}
@@ -227,10 +253,10 @@ export function motifsToVideoDefs(motifs: MotifDef[] | undefined): VideoStackNod
 }
 
 export function motifsToAudioDefs(
-  motifs: MotifDef[] | undefined
+  motifs: MotifDef[] | undefined,
+  strength = 1,
 ): Array<{ node: string; params: Record<string, unknown> }> {
   if (!motifs?.length) return []
-  const strength = 1
   return motifs.map((m) => {
     const node = normalizeNodeType(m.node)
     const hint = m.params_hint ?? {}

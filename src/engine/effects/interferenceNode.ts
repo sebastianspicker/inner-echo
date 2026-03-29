@@ -10,7 +10,7 @@
  * - burst_min_gap_ms
  */
 
-import * as THREE from 'three'
+import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -61,7 +61,7 @@ function easeInOut(t: number): number {
 
 export class InterferenceNode implements VideoNode {
   readonly nodeName = 'interference'
-  private material: THREE.ShaderMaterial | null = null
+  private material: ShaderMaterial | null = null
   private time = 0
   private burstTimer = 0
   private burstGapTimer = 0
@@ -81,7 +81,8 @@ export class InterferenceNode implements VideoNode {
 
     const globalMax = getGlobalClampNumber(params, 'max_luminance_delta_per_frame', 0.25)
     // Keep interference strength conservative regardless; SSOT profiles keep it low.
-    amount = clamp(amount, 0, 0.2)
+    // Use the global luminance delta clamp as a soft cap: prevent "spiky" changes in burst.
+    amount = clamp(amount, 0, Math.min(0.2, globalMax))
     if (params.safeMode) {
       const maxIntensity = getSafeModeClampNumber(params, 'max_intensity', 1)
       amount = Math.min(amount, 0.2 * clamp(maxIntensity, 0, 1))
@@ -91,9 +92,6 @@ export class InterferenceNode implements VideoNode {
     this.material.uniforms.u_banding.value = clamp(banding, 0, 1)
     this.material.uniforms.u_smoothing.value = clamp(smoothing, 0, 1)
     this.material.uniforms.u_time.value = this.time
-
-    // Use the global luminance delta clamp as a soft cap: prevent "spiky" changes in burst.
-    void globalMax
 
     // Burst scheduling params (kept conservative + non-strobing).
     this.burstProbPerSec = clamp(burstProbability, 0, 1)
@@ -135,16 +133,16 @@ export class InterferenceNode implements VideoNode {
     }
   }
 
-  getMaterial(inputTexture: THREE.Texture): THREE.Material {
+  getMaterial(inputTexture: Texture): Material {
     if (this.material) {
       this.material.uniforms.u_map.value = inputTexture
       return this.material
     }
-    this.material = new THREE.ShaderMaterial({
+    this.material = new ShaderMaterial({
       uniforms: {
         u_map: { value: inputTexture },
-        u_uvScale: { value: new THREE.Vector2(1, 1) },
-        u_uvOffset: { value: new THREE.Vector2(0, 0) },
+        u_uvScale: { value: new Vector2(1, 1) },
+        u_uvOffset: { value: new Vector2(0, 0) },
         u_amount: { value: 0 },
         u_banding: { value: 0.06 },
         u_smoothing: { value: 0.9 },
@@ -163,4 +161,3 @@ export class InterferenceNode implements VideoNode {
     this.material = null
   }
 }
-

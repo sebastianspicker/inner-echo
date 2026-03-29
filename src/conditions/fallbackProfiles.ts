@@ -20,7 +20,7 @@ export const BASELINE_PROFILE: Profile = {
 }
 
 export function createComposeFallbackProfile(
-  warning = 'Internal error: composed profile failed schema validation; falling back to clean profile.'
+  warning = 'Internal error: composed profile failed schema validation; falling back to clean profile.',
 ): Profile {
   return {
     ...BASELINE_PROFILE,

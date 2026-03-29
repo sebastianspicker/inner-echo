@@ -3,13 +3,19 @@ import { loadProfile } from '../../conditions/loader'
 import { getDefaultControlValues } from '../../conditions/controlTargets'
 import type { Profile } from '../../conditions/schema'
 import { BASELINE_PROFILE } from '../../conditions/fallbackProfiles'
-import { composeEffectiveProfile, type ComposeReport, type ComposerMode, type SelectedDimension, type SelectedPreset } from '../../composer'
+import {
+  composeEffectiveProfile,
+  type ComposeReport,
+  type ComposerMode,
+  type SelectedDimension,
+  type SelectedPreset,
+} from '../../composer'
 import { useAsyncEffect } from './useAsyncEffect'
 import { logger } from '../../utils/logger'
 
 function mergeControlValuesWithDefaults(
   defaults: Record<string, number | boolean>,
-  previous: Record<string, number | boolean>
+  previous: Record<string, number | boolean>,
 ): Record<string, number | boolean> {
   const next: Record<string, number | boolean> = { ...defaults }
   for (const [key, fallback] of Object.entries(defaults)) {
@@ -65,6 +71,9 @@ export function useProfileLoad(params: UseProfileLoadParams): {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [composeReport, setComposeReport] = useState<ComposeReport | null>(null)
   const [controlValues, setControlValues] = useState<Record<string, number | boolean>>({})
+  // loadingCount tracks concurrent async loads via manual increment/decrement.
+  // The Math.max(0, c - 1) guard in the decrement prevents underflow if a cancellation race
+  // causes an extra decrement. This pattern is intentional.
   const [loadingCount, setLoadingCount] = useState(0)
   const isProfileLoading = loadingCount > 0
 
@@ -98,7 +107,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
       }
     },
     [conditionId, composerMode, setIntensity, setAudioEnabled],
-    { onError: (err) => logger.error('loadProfile failed', err) }
+    { onError: (err) => logger.error('loadProfile failed', err) },
   )
 
   useAsyncEffect(
@@ -139,7 +148,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
       maxFeedback,
       interactionAmount,
     ],
-    { onError: (err) => logger.error('composeEffectiveProfile failed', err) }
+    { onError: (err) => logger.error('composeEffectiveProfile failed', err) },
   )
 
   return { profile, composeReport, controlValues, setControlValues, isProfileLoading }

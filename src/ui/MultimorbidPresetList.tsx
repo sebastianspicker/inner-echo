@@ -23,7 +23,10 @@ export function MultimorbidPresetList({
   return (
     <div className="composer__section" role="group" aria-label="Multimorbid preset stack">
       <div className="composer__title">Preset stack</div>
-      <p className="composer__hint">Combine multiple presets with per-preset weights (metaphor-first, safety-clamped).</p>
+      <p className="composer__hint">
+        Combine multiple presets with per-preset weights (metaphor-first, safety-clamped).
+      </p>
+      {/* Note: if the catalog grows significantly, consider virtualizing this list (e.g. react-window). */}
       <div className="composer__list">
         {catalog.map((entry: CatalogEntry) => {
           const enabled = presetIds.has(entry.id)
@@ -35,7 +38,9 @@ export function MultimorbidPresetList({
                 <input
                   type="checkbox"
                   checked={enabled}
-                  onChange={(e) => onPresetsChange(upsertPreset(presets, entry.id, weight, e.target.checked))}
+                  onChange={(e) =>
+                    onPresetsChange(upsertPreset(presets, entry.id, weight, e.target.checked))
+                  }
                 />
                 <span className="composer__row-title">{entry.label}</span>
                 <span className="composer__row-sub">{entry.description ?? ''}</span>

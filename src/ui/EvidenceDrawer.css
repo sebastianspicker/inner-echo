@@ -54,10 +54,11 @@
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
   cursor: pointer;
-  transition: background var(--duration-normal) var(--ease-gentle),
-              border-color var(--duration-normal) var(--ease-gentle),
-              transform var(--duration-normal) var(--ease-out-soft),
-              box-shadow var(--duration-normal) var(--ease-gentle);
+  transition:
+    background var(--duration-normal) var(--ease-gentle),
+    border-color var(--duration-normal) var(--ease-gentle),
+    transform var(--duration-normal) var(--ease-out-soft),
+    box-shadow var(--duration-normal) var(--ease-gentle);
 }
 
 .evidence-btn:hover {
@@ -116,9 +117,10 @@
   color: var(--text);
   padding: 8px 12px;
   border-radius: 12px;
-  transition: border-color var(--duration-normal) var(--ease-gentle),
-              background var(--duration-normal) var(--ease-gentle),
-              box-shadow var(--duration-normal) var(--ease-gentle);
+  transition:
+    border-color var(--duration-normal) var(--ease-gentle),
+    background var(--duration-normal) var(--ease-gentle),
+    box-shadow var(--duration-normal) var(--ease-gentle);
 }
 
 .evidence-navLink:hover {
@@ -185,8 +187,9 @@
   color: color-mix(in oklab, var(--accent) 85%, white 0%);
   text-decoration: none;
   border-bottom: 1px solid color-mix(in oklab, var(--accent) 30%, transparent);
-  transition: border-color var(--duration-normal) var(--ease-gentle),
-              color var(--duration-normal) var(--ease-gentle);
+  transition:
+    border-color var(--duration-normal) var(--ease-gentle),
+    color var(--duration-normal) var(--ease-gentle);
 }
 
 .evidence-markdown a:hover {
@@ -202,4 +205,3 @@
     display: none;
   }
 }
-

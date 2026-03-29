@@ -6,10 +6,7 @@
  */
 
 import type { VideoNode } from '../effects/VideoNode'
-import {
-  startOverlayLoop as start2DOverlayLoop,
-  syncCanvasToContainer,
-} from './overlayRenderer'
+import { startOverlayLoop as start2DOverlayLoop, syncCanvasToContainer } from './overlayRenderer'
 import {
   startWebGLOverlayLoop,
   type WebGLOverlayCallbacks,
@@ -58,7 +55,7 @@ export function startOverlayLoop(
   canvas: HTMLCanvasElement | null,
   container: HTMLElement | null,
   nodes: VideoNode[] = [],
-  reactiveOptions?: ReactiveLoopOptions | null
+  reactiveOptions?: ReactiveLoopOptions | null,
 ): OverlayControl {
   const noOpSetParams: OverlayControl['setParams'] = () => {}
   const get2dDiagnostics = (): OverlayDiagnostics => ({
@@ -100,7 +97,7 @@ export function startOverlayLoop(
       container,
       nodes,
       reactiveOptions ?? undefined,
-      callbacks
+      callbacks,
     )
     if (control) {
       delegateStop = () => control.stop()

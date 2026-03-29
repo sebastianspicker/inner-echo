@@ -26,4 +26,3 @@ describe('conditions/graphBuilder', () => {
     expect(nodes.length).toBe(1)
   })
 })
-

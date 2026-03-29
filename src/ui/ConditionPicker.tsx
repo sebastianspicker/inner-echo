@@ -20,11 +20,10 @@ export function ConditionPicker({
   onChange,
   disabled = false,
   id = 'condition-picker',
-  'aria-label': ariaLabel = 'Experience profile',
 }: ConditionPickerProps) {
   const options = catalog ?? []
   return (
-    <div className="condition-picker" role="group" aria-label={ariaLabel}>
+    <div className="condition-picker">
       <label htmlFor={id} className="condition-picker__label">
         Experience
       </label>
@@ -42,14 +41,15 @@ export function ConditionPicker({
           </option>
         ))}
       </select>
-      {options.length > 0 && (() => {
-        const current = options.find((e) => e.id === value)
-        return current?.description ? (
-          <p id={`${id}-desc`} className="condition-picker__description">
-            {current.description}
-          </p>
-        ) : null
-      })()}
+      {options.length > 0 &&
+        (() => {
+          const current = options.find((e) => e.id === value)
+          return current?.description ? (
+            <p id={`${id}-desc`} className="condition-picker__description">
+              {current.description}
+            </p>
+          ) : null
+        })()}
     </div>
   )
 }

@@ -5,7 +5,7 @@ export interface ParsedScopedTarget {
 
 export function parseScopedTarget(
   target: string,
-  scope: 'video' | 'audio'
+  scope: 'video' | 'audio',
 ): ParsedScopedTarget | null {
   const prefix = `${scope}.`
   const normalized = target.trim().toLowerCase()

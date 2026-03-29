@@ -6,20 +6,26 @@ export const PRESET_LIBRARY_STORAGE_KEY = 'ie_custom_presets_v2'
 export const LEGACY_PRESET_STORAGE_KEY = 'ie_custom_preset'
 export const DEFAULT_PRESET_NAME = 'My Preset'
 
+const zIdentifier = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z0-9_-]+$/i)
+
 export const presetPayloadSchema = z.object({
   mode: z.enum(['preset', 'multimorbid', 'symptom']),
-  conditionId: z.string(),
+  conditionId: zIdentifier,
   presets: z.array(
     z.object({
-      profileId: z.string(),
+      profileId: zIdentifier,
       weight: z.number().min(0).max(1),
-    })
+    }),
   ),
   dimensions: z.array(
     z.object({
-      dimensionId: z.string(),
+      dimensionId: zIdentifier,
       weight: z.number().min(0).max(1),
-    })
+    }),
   ),
   intensity: z.number().min(0).max(1),
   safeMode: z.boolean(),
@@ -99,12 +105,12 @@ export function decodePresetPayload(serialized: string): PresetPayload | null {
 
 export function createPresetSnapshot(
   payload: PresetPayload,
-  options?: { name?: string; id?: string; createdAt?: string }
+  options?: { name?: string; id?: string; createdAt?: string },
 ): PresetSnapshotV2 {
   const timestamp = options?.createdAt ?? new Date().toISOString()
   return {
     version: 2,
-    id: options?.id ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    id: options?.id ?? crypto.randomUUID(),
     name: options?.name?.trim() || DEFAULT_PRESET_NAME,
     createdAt: timestamp,
     payload: createPresetPayload(payload),
@@ -136,7 +142,7 @@ export function migrateLegacyPresetPayload(raw: unknown): PresetPayload | null {
           z.object({
             profileId: z.string(),
             weight: z.number(),
-          })
+          }),
         )
         .optional(),
       dimensions: z
@@ -144,7 +150,7 @@ export function migrateLegacyPresetPayload(raw: unknown): PresetPayload | null {
           z.object({
             dimensionId: z.string(),
             weight: z.number(),
-          })
+          }),
         )
         .optional(),
       intensity: z.number().optional(),
@@ -183,7 +189,7 @@ export function readPresetLibrary(storage: Pick<Storage, 'getItem'>): PresetSnap
 
 export function writePresetLibrary(
   storage: Pick<Storage, 'setItem'>,
-  snapshots: PresetSnapshotV2[]
+  snapshots: PresetSnapshotV2[],
 ): void {
   storage.setItem(PRESET_LIBRARY_STORAGE_KEY, JSON.stringify(snapshots))
 }
@@ -204,7 +210,7 @@ export interface ApplyPresetPayloadCallbacks {
 
 export function applyPresetPayload(
   payload: PresetPayload,
-  callbacks: ApplyPresetPayloadCallbacks
+  callbacks: ApplyPresetPayloadCallbacks,
 ): void {
   callbacks.onModeChange(payload.mode)
   callbacks.onConditionIdChange(payload.conditionId)

@@ -4,7 +4,10 @@ function normalizeHref(href: string): string {
   return href.trim().split('#')[0]?.trim() ?? ''
 }
 
-export function resolveEvidenceHref(current: EvidenceDocPath, href: string): EvidenceDocPath | null {
+export function resolveEvidenceHref(
+  current: EvidenceDocPath,
+  href: string,
+): EvidenceDocPath | null {
   if (href.trim().startsWith('#')) return current
   const normalized = normalizeHref(href)
   if (!normalized) return null

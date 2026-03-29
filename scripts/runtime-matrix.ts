@@ -75,7 +75,7 @@ async function startDevServer(): Promise<{ proc: ReturnType<typeof spawn>; baseU
       exitedEarly,
     ]),
     30_000,
-    'Vite dev server ready'
+    'Vite dev server ready',
   )
 
   return { proc, baseUrl: baseUrl! }
@@ -84,14 +84,13 @@ async function startDevServer(): Promise<{ proc: ReturnType<typeof spawn>; baseU
 async function stopDevServer(proc: ReturnType<typeof spawn>): Promise<void> {
   if (proc.killed) return
   proc.kill('SIGTERM')
-  await Promise.race([
-    new Promise<void>((r) => proc.on('exit', () => r())),
-    sleep(2000),
-  ])
+  await Promise.race([new Promise<void>((r) => proc.on('exit', () => r())), sleep(2000)])
   if (!proc.killed) proc.kill('SIGKILL')
 }
 
-async function launchBrowser(baseUrl: string): Promise<{ browser: Browser; context: BrowserContext; page: Page; errors: string[] }> {
+async function launchBrowser(
+  baseUrl: string,
+): Promise<{ browser: Browser; context: BrowserContext; page: Page; errors: string[] }> {
   const errors: string[] = []
   const browser = await chromium.launch({
     headless: HEADLESS,
@@ -135,7 +134,10 @@ async function runFlow(page: Page, baseUrl: string): Promise<void> {
 
   // Start camera
   await page.getByRole('button', { name: /Start camera/i }).click()
-  await page.getByText('Kamera läuft', { exact: false }).waitFor({ timeout: 20_000 })
+  await page
+    .locator('.ie-statusRow')
+    .getByText('Active', { exact: false })
+    .waitFor({ timeout: 20_000 })
 
   // Enable audio
   const audioDetails = page.locator('details').filter({ hasText: 'Audio & microphone' }).first()
@@ -163,14 +165,19 @@ async function runFlow(page: Page, baseUrl: string): Promise<void> {
       statusText = (await audioStatus.textContent()) ?? ''
       audioIsOn = /Audio:\s*on/i.test(statusText)
       if (!audioIsOn) {
-        const alertText = await audioGroup.getByRole('alert').textContent().catch(() => null)
+        const alertText = await audioGroup
+          .getByRole('alert')
+          .textContent()
+          .catch(() => null)
         const detail = alertText ? ` (${alertText.trim()})` : ''
         if (REQUIRE_AUDIO) throw new Error(`Audio failed to start${detail}`)
         console.warn(`[runtime-matrix] WARN: audio not on${detail}`)
       }
     } catch (e) {
       if (REQUIRE_AUDIO) throw e
-      console.warn('[runtime-matrix] WARN: audio did not reach on/error within timeout; continuing without mic')
+      console.warn(
+        '[runtime-matrix] WARN: audio did not reach on/error within timeout; continuing without mic',
+      )
       audioIsOn = false
     }
   }
@@ -218,7 +225,10 @@ async function runFlow(page: Page, baseUrl: string): Promise<void> {
 
   // Stop everything
   await page.getByRole('button', { name: /^Stop Everything/i }).click()
-  await page.getByText('Kamera aus', { exact: false }).waitFor({ timeout: 10_000 })
+  await page
+    .locator('.ie-statusRow')
+    .getByText('Ready', { exact: false })
+    .waitFor({ timeout: 10_000 })
 }
 
 async function main(): Promise<void> {

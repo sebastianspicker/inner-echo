@@ -35,7 +35,7 @@ async function main(): Promise<void> {
 
   console.log(`[debug:inspect] report written: ${rel(path.relative(rootDir, reportPath))}`)
   console.log(
-    `[debug:inspect] summary: profiles=${report.summary.profiles} scenarios=${report.summary.scenarios} ok=${report.summary.ok} warnings=${report.summary.warnings} errors=${report.summary.errors}`
+    `[debug:inspect] summary: profiles=${report.summary.profiles} scenarios=${report.summary.scenarios} ok=${report.summary.ok} warnings=${report.summary.warnings} errors=${report.summary.errors}`,
   )
 
   if (report.warnings.length > 0) {

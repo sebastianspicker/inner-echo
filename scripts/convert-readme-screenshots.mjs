@@ -25,9 +25,7 @@ async function convertShot(baseName) {
   const webpPath = path.join(WEBP_DIR, `${baseName}.webp`)
 
   await fs.access(pngPath)
-  await sharp(pngPath)
-    .webp({ quality: 84, effort: 6 })
-    .toFile(webpPath)
+  await sharp(pngPath).webp({ quality: 84, effort: 6 }).toFile(webpPath)
 
   const stat = await fs.stat(webpPath)
   if (!stat.isFile() || stat.size <= 0) {

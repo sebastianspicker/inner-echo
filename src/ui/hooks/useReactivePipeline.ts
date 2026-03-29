@@ -79,7 +79,8 @@ export function useReactivePipeline({
         safeMode: safeModeRef.current,
       })
       const reactiveOptions = {
-        getAudioMetrics: () => audioEngineControlRef.current?.getMetrics?.() ?? { rms: 0, centroid: 0, flux: 0 },
+        getAudioMetrics: () =>
+          audioEngineControlRef.current?.getMetrics?.() ?? { rms: 0, centroid: 0, flux: 0 },
         getRms: () => audioEngineControlRef.current?.getRms?.() ?? 0,
         applyAudioOverrides: (overrides: Record<string, number>) => {
           audioEngineControlRef.current?.applyReactiveParams?.(overrides)
@@ -90,12 +91,18 @@ export function useReactivePipeline({
         getOverrides: (() => {
           const driver = createReactiveDriver(prof, { reducedMotion })
           const baseAfterReactive: Record<string, number | boolean> = {}
+          // Shared mutable objects reused each frame to avoid GC pressure.
+          // Contract: the returned IIFE is called exactly once per animation frame;
+          // callers must not hold references to outVideo/outAudio across frames.
           const outVideo: Record<string, number> = {}
           const outAudio: Record<string, number> = {}
           const clear = (obj: Record<string, unknown>): void => {
             for (const k of Object.keys(obj)) delete obj[k]
           }
-          const copy = (dst: Record<string, number | boolean>, src: Record<string, number | boolean>): void => {
+          const copy = (
+            dst: Record<string, number | boolean>,
+            src: Record<string, number | boolean>,
+          ): void => {
             for (const k in src) dst[k] = src[k]
           }
           const mergeNum = (dst: Record<string, number>, src: Record<string, number>): void => {
@@ -105,7 +112,7 @@ export function useReactivePipeline({
             delta: number,
             audio: { rms: number; centroid: number; flux: number },
             video: { motion: number; luminance: number; edge: number; instability: number },
-            baseControlValues: Record<string, number | boolean>
+            baseControlValues: Record<string, number | boolean>,
           ) => {
             const videoReactive = driver.getVideoOverrides(delta, audio.rms)
             const audioReactive = driver.getAudioOverrides(delta, audio.rms)
@@ -134,13 +141,7 @@ export function useReactivePipeline({
           }
         })(),
       }
-      const control = startOverlayLoop(
-        video,
-        canvas,
-        container,
-        nodes,
-        reactiveOptions
-      )
+      const control = startOverlayLoop(video, canvas, container, nodes, reactiveOptions)
       overlayControlRef.current = control
       const safetyCtx = getSafetyContext(prof)
       const safeModeNow = safeModeRef.current
@@ -148,7 +149,11 @@ export function useReactivePipeline({
       control.setParams({
         intensity: clampedIntensity,
         safeMode: safeModeNow,
-        controlValues: { ...controlValuesRef.current, intensity: clampedIntensity, safeMode: safeModeNow },
+        controlValues: {
+          ...controlValuesRef.current,
+          intensity: clampedIntensity,
+          safeMode: safeModeNow,
+        },
         stressMode: stressModeRef.current,
         safetyContext: safetyCtx,
       })

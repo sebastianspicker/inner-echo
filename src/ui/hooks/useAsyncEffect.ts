@@ -13,7 +13,7 @@ export interface AsyncEffectContext {
 export function useAsyncEffect(
   loadFn: (ctx: AsyncEffectContext) => Promise<void>,
   deps: DependencyList,
-  options?: { onError?: (err: unknown) => void }
+  options?: { onError?: (err: unknown) => void },
 ): void {
   useEffect(() => {
     let cancelled = false
@@ -28,6 +28,6 @@ export function useAsyncEffect(
     return () => {
       cancelled = true
     }
-  // biome-ignore lint/correctness/useExhaustiveDependencies: deps forwarded from caller
+    // biome-ignore lint/correctness/useExhaustiveDependencies: deps forwarded from caller
   }, deps)
 }

@@ -15,7 +15,7 @@ function getBrowserClipboard(): ClipboardWriter | null {
  */
 export async function copyTextToClipboard(
   text: string,
-  clipboardOverride?: ClipboardWriter | null
+  clipboardOverride?: ClipboardWriter | null,
 ): Promise<boolean> {
   const clipboard = clipboardOverride ?? getBrowserClipboard()
   if (!clipboard) return false
@@ -26,4 +26,3 @@ export async function copyTextToClipboard(
     return false
   }
 }
-

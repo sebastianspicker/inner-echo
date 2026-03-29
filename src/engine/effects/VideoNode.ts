@@ -1,15 +1,15 @@
 /**
  * Video Effect Node Interface
- * 
- * In Inner Echo, a "VideoNode" represents a single distinct visual effect 
- * (like Vignette, Grain, Blur, or Color Grading). 
- * 
+ *
+ * In Inner Echo, a "VideoNode" represents a single distinct visual effect
+ * (like Vignette, Grain, Blur, or Color Grading).
+ *
  * These nodes are intended to be chained together sequentially by the `webglPipeline.ts`.
- * Each node provides a Three.js `Material` (a shader) which reads an input texture, 
+ * Each node provides a Three.js `Material` (a shader) which reads an input texture,
  * applies its mathematical effect, and then the pipeline renders it to an output texture.
  */
 
-import type * as THREE from 'three'
+import type { Texture, Material } from 'three'
 
 /**
  * Parameters the pipeline passes to nodes each frame (intensity, safe mode, UV, control values).
@@ -29,7 +29,7 @@ export interface VideoNodeParams {
   /** UV offset for cover fit (set by pipeline). */
   uvOffset?: [number, number]
   /** Per-node control values from profile ui.controls, keyed e.g. "0.amount", "1.feedback". */
-  controlValues?: Record<string, number | boolean>
+  controlValues?: Record<string, number | boolean | string>
   /** This node's index in the video_stack (for resolving control keys). */
   nodeIndex?: number
 }
@@ -57,10 +57,7 @@ export interface VideoNode {
   /**
    * Return the material for this pass. inputTexture = current chain input; previousFrame only set for temporal nodes.
    */
-  getMaterial(
-    inputTexture: THREE.Texture,
-    previousFrameTexture?: THREE.Texture | null
-  ): THREE.Material
+  getMaterial(inputTexture: Texture, previousFrameTexture?: Texture | null): Material
 
   /**
    * Release WebGL resources (e.g. material, internal RTs). Called when the pipeline stops.

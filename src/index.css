@@ -57,26 +57,47 @@
 
 /* Gentle breathing animation for ambient life — slow and soothing */
 @keyframes ie-breathe {
-  0%, 100% { opacity: 0.65; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Soft fade-in for elements appearing */
 @keyframes ie-fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Soft scale-in for modals */
 @keyframes ie-scaleIn {
-  from { opacity: 0; transform: scale(0.97) translateY(8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 /* Backdrop fade */
 @keyframes ie-backdropIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 body {
@@ -86,7 +107,11 @@ body {
   letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
   background: var(--bg);
-  background-image: radial-gradient(ellipse at 50% 0%, rgba(123, 200, 192, 0.03) 0%, transparent 60%);
+  background-image: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(123, 200, 192, 0.03) 0%,
+    transparent 60%
+  );
   color: var(--text);
   overflow-x: hidden;
   overscroll-behavior-y: none;
@@ -101,8 +126,9 @@ body {
 :focus-visible {
   outline: 2px solid color-mix(in oklab, var(--accent) 60%, transparent);
   outline-offset: 3px;
-  transition: outline var(--duration-normal) var(--ease-gentle),
-              outline-offset var(--duration-normal) var(--ease-gentle);
+  transition:
+    outline var(--duration-normal) var(--ease-gentle),
+    outline-offset var(--duration-normal) var(--ease-gentle);
 }
 
 /* Premium Scrollbars */
@@ -162,14 +188,19 @@ input[type="range"]::-webkit-slider-thumb {
   background: var(--accent);
   border: 2px solid rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 0 0 var(--accent-glow);
-  transition: box-shadow var(--duration-normal) var(--ease-gentle),
-              transform var(--duration-fast) var(--ease-gentle);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.3),
+    0 0 0 0 var(--accent-glow);
+  transition:
+    box-shadow var(--duration-normal) var(--ease-gentle),
+    transform var(--duration-fast) var(--ease-gentle);
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.12);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 6px var(--accent-glow);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 0 6px var(--accent-glow);
 }
 
 input[type="range"]::-webkit-slider-thumb:active {
@@ -193,13 +224,14 @@ input[type="range"]::-moz-range-track {
 }
 
 input[type="range"]:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 6px var(--accent-glow);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 0 6px var(--accent-glow);
 }
 
 /* Reduce motion: no transitions/animations.
    !important is required here to override all animations for the prefers-reduced-motion accessibility query. */
 @media (prefers-reduced-motion: reduce) {
-
   *,
   *::before,
   *::after {

@@ -5,7 +5,12 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { OverlayDiagnostics, VideoMetrics } from '../engine/canvas'
-import type { AudioContextStatus, MicStatus, AudioMetrics, AudioEngineDebugState } from '../engine/audio'
+import type {
+  AudioContextStatus,
+  MicStatus,
+  AudioMetrics,
+  AudioEngineDebugState,
+} from '../engine/audio'
 import { copyTextToClipboard } from './clipboard'
 import { logger } from '../utils/logger'
 import './DebugPanel.css'
@@ -42,7 +47,10 @@ export interface DebugPanelProps {
   micGate?: number
 }
 
-function formatDiagnosticsText(props: DebugPanelProps, overlay: OverlayDiagnostics | undefined): string {
+function formatDiagnosticsText(
+  props: DebugPanelProps,
+  overlay: OverlayDiagnostics | undefined,
+): string {
   const audioMetrics = props.getAudioMetrics?.()
   const videoMetrics = props.getVideoMetrics?.()
   const audioDebug = props.getAudioDebugState?.()
@@ -68,9 +76,12 @@ function formatDiagnosticsText(props: DebugPanelProps, overlay: OverlayDiagnosti
     lines.push(`audio.rms: ${audioMetrics.rms.toFixed(3)}`)
     lines.push(`audio.centroid: ${audioMetrics.centroid.toFixed(3)}`)
     lines.push(`audio.flux: ${audioMetrics.flux.toFixed(3)}`)
-    if (typeof audioMetrics.micRms === 'number') lines.push(`mic.rms: ${audioMetrics.micRms.toFixed(3)}`)
-    if (typeof audioMetrics.micCentroid === 'number') lines.push(`mic.centroid: ${audioMetrics.micCentroid.toFixed(3)}`)
-    if (typeof audioMetrics.micFlux === 'number') lines.push(`mic.flux: ${audioMetrics.micFlux.toFixed(3)}`)
+    if (typeof audioMetrics.micRms === 'number')
+      lines.push(`mic.rms: ${audioMetrics.micRms.toFixed(3)}`)
+    if (typeof audioMetrics.micCentroid === 'number')
+      lines.push(`mic.centroid: ${audioMetrics.micCentroid.toFixed(3)}`)
+    if (typeof audioMetrics.micFlux === 'number')
+      lines.push(`mic.flux: ${audioMetrics.micFlux.toFixed(3)}`)
   }
   if (videoMetrics) {
     lines.push(`video.motion: ${videoMetrics.motion.toFixed(3)}`)
@@ -82,17 +93,19 @@ function formatDiagnosticsText(props: DebugPanelProps, overlay: OverlayDiagnosti
     lines.push(`audio.activeNodes: ${audioDebug.activeNodes.join(', ') || 'n/a'}`)
     lines.push(`audio.inputMode: ${audioDebug.inputMode}`)
     lines.push(`audio.micEnabled: ${audioDebug.micEnabled ? 'yes' : 'no'}`)
-    lines.push(`audio.micGateGain: ${audioDebug.micGateGain != null ? audioDebug.micGateGain.toFixed(3) : 'n/a'}`)
+    lines.push(
+      `audio.micGateGain: ${audioDebug.micGateGain != null ? audioDebug.micGateGain.toFixed(3) : 'n/a'}`,
+    )
   }
   if (appliedClamps) {
     lines.push(
-      `clamps.intensity: ${appliedClamps.intensityInput.toFixed(3)} -> ${appliedClamps.intensityEffective.toFixed(3)}`
+      `clamps.intensity: ${appliedClamps.intensityInput.toFixed(3)} -> ${appliedClamps.intensityEffective.toFixed(3)}`,
     )
     lines.push(`clamps.safeMode: ${appliedClamps.safeMode ? 'on' : 'off'}`)
     lines.push(`clamps.reducedMotion: ${appliedClamps.reducedMotion ? 'on' : 'off'}`)
     lines.push(`clamps.safeModeKeys: ${appliedClamps.safeModeClampKeys.join(', ') || 'none'}`)
     lines.push(
-      `clamps.reducedMotionDisabledNodes: ${appliedClamps.reducedMotionDisabledNodes.join(', ') || 'none'}`
+      `clamps.reducedMotionDisabledNodes: ${appliedClamps.reducedMotionDisabledNodes.join(', ') || 'none'}`,
     )
   }
   if (props.lastError) {
@@ -101,7 +114,10 @@ function formatDiagnosticsText(props: DebugPanelProps, overlay: OverlayDiagnosti
   return lines.join('\n')
 }
 
-function formatDiagnosticsJson(props: DebugPanelProps, overlay: OverlayDiagnostics | undefined): string {
+function formatDiagnosticsJson(
+  props: DebugPanelProps,
+  overlay: OverlayDiagnostics | undefined,
+): string {
   return JSON.stringify(
     {
       ts: new Date().toISOString(),
@@ -117,7 +133,7 @@ function formatDiagnosticsJson(props: DebugPanelProps, overlay: OverlayDiagnosti
       appliedClamps: props.getAppliedClamps?.() ?? null,
     },
     null,
-    2
+    2,
   )
 }
 
@@ -132,11 +148,23 @@ export function DebugPanel(props: DebugPanelProps) {
     getAudioDebugState,
     getAppliedClamps,
   } = props
-  const [overlay, setOverlay] = useState<OverlayDiagnostics | undefined>(() => getOverlayDiagnostics())
-  const [audioMetrics, setAudioMetrics] = useState<AudioMetrics | undefined>(() => getAudioMetrics?.())
-  const [videoMetrics, setVideoMetrics] = useState<VideoMetrics | undefined>(() => getVideoMetrics?.())
-  const [audioDebug, setAudioDebug] = useState<AudioEngineDebugState | undefined>(() => getAudioDebugState?.())
-  const [appliedClamps, setAppliedClamps] = useState<AppliedClampSnapshot | undefined>(() => getAppliedClamps?.())
+  const [throwTest, setThrowTest] = useState(false)
+  if (throwTest) throw new Error('Test error from Debug Panel (Phase 12)')
+  const [overlay, setOverlay] = useState<OverlayDiagnostics | undefined>(() =>
+    getOverlayDiagnostics(),
+  )
+  const [audioMetrics, setAudioMetrics] = useState<AudioMetrics | undefined>(() =>
+    getAudioMetrics?.(),
+  )
+  const [videoMetrics, setVideoMetrics] = useState<VideoMetrics | undefined>(() =>
+    getVideoMetrics?.(),
+  )
+  const [audioDebug, setAudioDebug] = useState<AudioEngineDebugState | undefined>(() =>
+    getAudioDebugState?.(),
+  )
+  const [appliedClamps, setAppliedClamps] = useState<AppliedClampSnapshot | undefined>(() =>
+    getAppliedClamps?.(),
+  )
   const [copied, setCopied] = useState(false)
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -156,7 +184,13 @@ export function DebugPanel(props: DebugPanelProps) {
     return () => {
       if (rafId != null) cancelAnimationFrame(rafId)
     }
-  }, [getOverlayDiagnostics, getAudioMetrics, getVideoMetrics, getAudioDebugState, getAppliedClamps])
+  }, [
+    getOverlayDiagnostics,
+    getAudioMetrics,
+    getVideoMetrics,
+    getAudioDebugState,
+    getAppliedClamps,
+  ])
 
   useEffect(() => {
     return () => {
@@ -204,10 +238,7 @@ export function DebugPanel(props: DebugPanelProps) {
   if (!import.meta.env.DEV) return null
 
   return (
-    <section
-      className="debug-panel"
-      aria-label="Debug panel (development only)"
-    >
+    <section className="debug-panel" aria-label="Debug panel (development only)">
       <div className="debug-panel__title">Debug (dev only)</div>
       <dl className="debug-panel__grid">
         <dt>renderer</dt>
@@ -282,7 +313,8 @@ export function DebugPanel(props: DebugPanelProps) {
           <>
             <dt>intensity</dt>
             <dd>
-              {appliedClamps.intensityInput.toFixed(2)} → {appliedClamps.intensityEffective.toFixed(2)}
+              {appliedClamps.intensityInput.toFixed(2)} →{' '}
+              {appliedClamps.intensityEffective.toFixed(2)}
             </dd>
             <dt>safe mode keys</dt>
             <dd>{appliedClamps.safeModeClampKeys.join(', ') || '—'}</dd>
@@ -316,9 +348,7 @@ export function DebugPanel(props: DebugPanelProps) {
         </button>
         <button
           type="button"
-          onClick={() => {
-            throw new Error('Test error from Debug Panel (Phase 12)')
-          }}
+          onClick={() => setThrowTest(true)}
           className="debug-panel__btn"
           aria-label="Throw test error to verify ErrorBoundary"
         >

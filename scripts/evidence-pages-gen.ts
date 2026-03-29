@@ -160,7 +160,8 @@ function parseEvidenceMatrix(root: string): Map<string, EvidenceMatrixRow> {
 function extractDois(text: string): string[] {
   const dois = new Set<string>()
   // Match either doi.org URLs or raw DOI tokens.
-  const re = /(https?:\/\/doi\.org\/(10\.\d{4,9}\/[-._;()/:A-Z0-9]+))|\b(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)\b/gi
+  const re =
+    /(https?:\/\/doi\.org\/(10\.\d{4,9}\/[-._;()/:A-Z0-9]+))|\b(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)\b/gi
   let m: RegExpExecArray | null
   while ((m = re.exec(text))) {
     const doi = (m[2] ?? m[3] ?? '').trim()
@@ -250,6 +251,15 @@ function parseCorpusSourcesByDimension(root: string): Map<string, ScientificSour
       if (inBib && /^##\s+/.test(line) && !/^##\s+Bibliography\b/i.test(line)) {
         flushPending()
         inBib = false
+        // Reset dimension so citations in generic sections are not attributed.
+        currentDim = null
+        continue
+      }
+
+      // Non-dimension ## section outside bibliography: reset currentDim to avoid
+      // attributing subsequent citations to the wrong dimension.
+      if (!inBib && /^##\s+/.test(line) && !fileFor && !h1) {
+        currentDim = null
         continue
       }
 
@@ -344,7 +354,7 @@ function motifPage(
   usedByConditions: Array<{ id: string; label: string; doc: string }>,
   matrixByDim: Map<string, EvidenceMatrixRow>,
   claimsByKey: Map<string, MotifClaim>,
-  sourcesByDim: Map<string, ScientificSource[]>
+  sourcesByDim: Map<string, ScientificSource[]>,
 ): string {
   const dimsList = usedByDims
     .slice()
@@ -355,7 +365,9 @@ function motifPage(
       const claim = claimsByKey.get(`${d.id}|${motif}`)?.label ?? 'mixed'
       const claimTitle = claimLabelTitle(claim)
       const claimSources = claimsByKey.get(`${d.id}|${motif}`)?.sources ?? []
-      const claimSrcPart = claimSources.length ? ` — claim sources: ${claimSources.map((s) => `\`${s}\``).join(', ')}` : ''
+      const claimSrcPart = claimSources.length
+        ? ` — claim sources: ${claimSources.map((s) => `\`${s}\``).join(', ')}`
+        : ''
       return `- **${d.label}** (\`${d.id}\`) — Evidence (dimension): **${d.strength}** — Claim: **${claimTitle}** — \`${d.doc}\`${corpusPart}${claimSrcPart}`
     })
     .join('\n')
@@ -438,7 +450,10 @@ function dimPage(dim: ExperienceDimensionDef, claimsByKey: Map<string, MotifClai
   const safety = dim.safety ?? []
   const rationale = dim.rationale_doc ?? `docs/references/dimensions/${dim.id}.md`
 
-  const motifs = [...video.map((v) => ({ kind: 'video', node: v })), ...audio.map((a) => ({ kind: 'audio', node: a }))]
+  const motifs = [
+    ...video.map((v) => ({ kind: 'video', node: v })),
+    ...audio.map((a) => ({ kind: 'audio', node: a })),
+  ]
 
   return `# ${dim.label}
 
@@ -467,19 +482,33 @@ Each motif below includes:
 
 | Motif (node) | What it does in the simulation | Claim label | Likelihood label | Sources |
 |---|---|---|---|---|
-${motifs.length ? motifs.map((m) => {
-  const isHyp = String(dim.evidence_strength ?? '').toLowerCase() === 'hypothesis'
-  const likelihood = strengthLabel(dim.evidence_strength)
-  const motifDoc = `docs/references/motifs/${m.node}.md`
-  // claim label comes from curated map; default to Mixed unless dimension is hypothesis.
-  const key = `${dim.id}|${m.node}`
-  const curated = claimsByKey.get(key)
-  const label: MotifClaimLabel = isHyp ? 'hypothesis' : (curated?.label ?? 'mixed')
-  const claim = claimLabelTitle(label)
-  const claimSources = curated?.sources?.length ? curated.sources.map((s) => `\`${s}\``).join(', ') : ''
-  const sources = [ `\`${rationale}\``, '`docs/references/EVIDENCE_MATRIX.md`', `\`${motifDoc}\`` ].concat(claimSources ? [claimSources] : []).join(', ')
-  return `| \`${m.node}\` | ${nodeSimulationSummary(m.node)} | **${claim}** | **${likelihood}** | ${sources} |`
-}).join('\n') : '| _none_ | _n/a_ | _n/a_ | _n/a_ | _n/a_ |'}
+${
+  motifs.length
+    ? motifs
+        .map((m) => {
+          const isHyp = String(dim.evidence_strength ?? '').toLowerCase() === 'hypothesis'
+          const likelihood = strengthLabel(dim.evidence_strength)
+          const motifDoc = `docs/references/motifs/${m.node}.md`
+          // claim label comes from curated map; default to Mixed unless dimension is hypothesis.
+          const key = `${dim.id}|${m.node}`
+          const curated = claimsByKey.get(key)
+          const label: MotifClaimLabel = isHyp ? 'hypothesis' : (curated?.label ?? 'mixed')
+          const claim = claimLabelTitle(label)
+          const claimSources = curated?.sources?.length
+            ? curated.sources.map((s) => `\`${s}\``).join(', ')
+            : ''
+          const sources = [
+            `\`${rationale}\``,
+            '`docs/references/EVIDENCE_MATRIX.md`',
+            `\`${motifDoc}\``,
+          ]
+            .concat(claimSources ? [claimSources] : [])
+            .join(', ')
+          return `| \`${m.node}\` | ${nodeSimulationSummary(m.node)} | **${claim}** | **${likelihood}** | ${sources} |`
+        })
+        .join('\n')
+    : '| _none_ | _n/a_ | _n/a_ | _n/a_ | _n/a_ |'
+}
 
 ## Evidence links (in-repo)
 
@@ -508,21 +537,27 @@ ${safety.length ? safety.map((s) => `- ${s}`).join('\n') : '- Keep modulation sm
 }
 
 function conditionPage(profile: Profile, dimsById: Map<string, ExperienceDimensionDef>): string {
-  const dims = (profile.experience_dimensions ?? []).slice().sort((a, b) => a.id.localeCompare(b.id))
+  const dims = (profile.experience_dimensions ?? [])
+    .slice()
+    .sort((a, b) => a.id.localeCompare(b.id))
   const warnings = profile.safety?.warnings ?? []
 
-  // Aggregate strength conservatively: hypothesis > low > medium > high.
-  let agg: 'high' | 'medium' | 'low' | 'hypothesis' | 'unrated' = 'unrated'
+  // Aggregate strength conservatively: weakest dimension wins.
+  // Priority (lower = weaker): hypothesis < low < medium < high.
+  const strengthRank: Record<string, number> = {
+    hypothesis: 0,
+    low: 1,
+    medium: 2,
+    high: 3,
+    unrated: 4,
+  }
+  const rankToStrength = ['hypothesis', 'low', 'medium', 'high', 'unrated'] as const
+  let minRank = strengthRank.unrated
   for (const d of dims) {
     const s = normalizeStrength(dimsById.get(d.id)?.evidence_strength)
-    if (s === 'hypothesis') {
-      agg = 'hypothesis'
-      break
-    }
-    if (s === 'low' && agg !== 'hypothesis') agg = agg === 'unrated' ? 'low' : agg === 'high' ? 'low' : agg === 'medium' ? 'low' : agg
-    if (s === 'medium' && (agg === 'unrated' || agg === 'high')) agg = 'medium'
-    if (s === 'high' && agg === 'unrated') agg = 'high'
+    minRank = Math.min(minRank, strengthRank[s] ?? strengthRank.unrated)
   }
+  const agg = rankToStrength[minRank] ?? 'unrated'
 
   const aggLabel = strengthLabel(agg === 'unrated' ? undefined : agg)
 
@@ -548,13 +583,19 @@ function conditionPage(profile: Profile, dimsById: Map<string, ExperienceDimensi
 
 ## Included experience dimensions
 
-${dims.length ? dims.map((d) => {
-  const def = dimsById.get(d.id)
-  const label = def?.label ?? d.id
-  const strength = strengthLabel(def?.evidence_strength)
-  const doc = def?.rationale_doc ?? `docs/references/dimensions/${d.id}.md`
-  return `- **${label}** (\`${d.id}\`, weight ${Math.round(d.weight * 100)}%) — Evidence: **${strength}** — \`${doc}\``
-}).join('\n') : '_No dimensions listed in profile._'}
+${
+  dims.length
+    ? dims
+        .map((d) => {
+          const def = dimsById.get(d.id)
+          const label = def?.label ?? d.id
+          const strength = strengthLabel(def?.evidence_strength)
+          const doc = def?.rationale_doc ?? `docs/references/dimensions/${d.id}.md`
+          return `- **${label}** (\`${d.id}\`, weight ${Math.round(d.weight * 100)}%) — Evidence: **${strength}** — \`${doc}\``
+        })
+        .join('\n')
+    : '_No dimensions listed in profile._'
+}
 
 ## Evidence links (in-repo)
 
@@ -577,7 +618,9 @@ ${warnings.length ? warnings.map((w) => `- ${w}`).join('\n') : '- Use Safe Mode 
 function main(): void {
   const root = process.cwd()
 
-  const dimsFile = readJsonFirstObject<ExperienceDimensionsFile>(path.join(root, 'src/conditions/experience-dimensions.json'))
+  const dimsFile = readJsonFirstObject<ExperienceDimensionsFile>(
+    path.join(root, 'src/conditions/experience-dimensions.json'),
+  )
   const dims = (dimsFile.dimensions ?? []).slice()
   const dimsById = new Map(dims.map((d) => [d.id, d]))
   const matrixByDim = parseEvidenceMatrix(root)
@@ -628,7 +671,10 @@ function main(): void {
   for (const motif of motifsList) {
     const usedByDims: Array<{ id: string; label: string; strength: string; doc: string }> = []
     for (const dim of dims) {
-      const nodes = [...(dim.motif_summary?.video_nodes ?? []), ...(dim.motif_summary?.audio_nodes ?? [])]
+      const nodes = [
+        ...(dim.motif_summary?.video_nodes ?? []),
+        ...(dim.motif_summary?.audio_nodes ?? []),
+      ]
       if (nodes.includes(motif)) {
         usedByDims.push({
           id: dim.id,
@@ -641,16 +687,21 @@ function main(): void {
     const usedByConditions: Array<{ id: string; label: string; doc: string }> = []
     for (const c of condMeta) {
       const any = c.dims.some((d) => usedByDims.some((u) => u.id === d))
-      if (any) usedByConditions.push({ id: c.id, label: c.label, doc: `docs/references/conditions/${c.id}.md` })
+      if (any)
+        usedByConditions.push({
+          id: c.id,
+          label: c.label,
+          doc: `docs/references/conditions/${c.id}.md`,
+        })
     }
     writeFileIfChanged(
       path.join(outMotifsDir, `${motif}.md`),
-      motifPage(motif, usedByDims, usedByConditions, matrixByDim, claimsByKey, sourcesByDim)
+      motifPage(motif, usedByDims, usedByConditions, matrixByDim, claimsByKey, sourcesByDim),
     )
   }
 
   console.log(
-    `[evidence-pages-gen] Wrote ${dims.length} dimension page(s), ${profileFiles.length} condition page(s), ${motifsList.length} motif page(s).`
+    `[evidence-pages-gen] Wrote ${dims.length} dimension page(s), ${profileFiles.length} condition page(s), ${motifsList.length} motif page(s).`,
   )
 }
 

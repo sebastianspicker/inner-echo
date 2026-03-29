@@ -27,33 +27,26 @@ export function useOverlayController(params: UseOverlayControllerParams): {
   getAudioDebugState: () => ReturnType<NonNullable<AudioEngineControl['getDebugState']>> | undefined
   getAppliedClamps: () => AppliedClampSnapshot | undefined
 } {
-  const {
-    overlayControlRef,
-    audioControlRef,
-    profile,
-    reducedMotion,
-    safeMode,
-    intensity,
-  } = params
+  const { overlayControlRef, audioControlRef, profile, reducedMotion, safeMode, intensity } = params
 
   const getOverlayDiagnostics = useCallback(
     () => overlayControlRef.current?.getDiagnostics?.(),
-    [overlayControlRef]
+    [overlayControlRef],
   )
 
   const getAudioDebugState = useCallback(
     () => audioControlRef.current?.getDebugState?.(),
-    [audioControlRef]
+    [audioControlRef],
   )
 
   const getAppliedClamps = useCallback((): AppliedClampSnapshot | undefined => {
     if (!profile) return undefined
     const effectiveIntensity = clampIntensity(profile, intensity, safeMode)
     const safeModeClampKeys = Object.keys(profile.safety.safe_mode_clamps ?? {}).sort((a, b) =>
-      a.localeCompare(b)
+      a.localeCompare(b),
     )
-    const reducedMotionDisabledNodes = Array.from(getReducedMotionDisableNodes(profile)).sort((a, b) =>
-      a.localeCompare(b)
+    const reducedMotionDisabledNodes = Array.from(getReducedMotionDisableNodes(profile)).sort(
+      (a, b) => a.localeCompare(b),
     )
     return {
       intensityInput: intensity,

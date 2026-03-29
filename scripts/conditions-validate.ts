@@ -26,7 +26,12 @@ const CATALOG_PATH = join(CONDITIONS_DIR, 'catalog.json')
 const PROFILES_DIR = join(CONDITIONS_DIR, 'profiles')
 
 function loadJson(path: string): unknown {
-  return JSON.parse(readFileSync(path, 'utf-8'))
+  try {
+    return JSON.parse(readFileSync(path, 'utf-8'))
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
+    throw new Error(`Failed to parse JSON at ${path}: ${msg}`)
+  }
 }
 
 function requireDoc(pathFromRepoRoot: string, failures: { count: number }): void {
@@ -79,7 +84,7 @@ function main(): void {
     const expectedVideoCount = profile.video_stack.length
     if (nodes.length !== expectedVideoCount) {
       console.error(
-        `[conditions-validate] video graph mismatch for ${profile.id}: built ${nodes.length} of ${expectedVideoCount}. (Unknown node?)`
+        `[conditions-validate] video graph mismatch for ${profile.id}: built ${nodes.length} of ${expectedVideoCount}. (Unknown node?)`,
       )
       failures.count++
     }
@@ -89,7 +94,7 @@ function main(): void {
       const resolved = resolveAnalyserTarget(m.target, profile, { reducedMotion: false })
       if (!resolved) {
         console.error(
-          `[conditions-validate] reactive target did not resolve for ${profile.id}: ${m.target}`
+          `[conditions-validate] reactive target did not resolve for ${profile.id}: ${m.target}`,
         )
         failures.count++
       }

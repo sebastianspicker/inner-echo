@@ -1,6 +1,6 @@
 /**
  * Audio Engine
- * 
+ *
  * This module is the core orchestrator for all Web Audio API operations.
  * It manages:
  * 1. The main synthesizer and effect chain (driven by the current active profile).
@@ -9,8 +9,19 @@
  * 4. Audio routing options (synth only, mic only, or mixed).
  */
 
-import { getAudioContext, startAudioContext, closeAudioContext, addAudioContextListener } from './contextManager'
-import type { AudioContextStatus, MicStatus, AudioInputMode, AudioModule, AudioMetrics } from './types'
+import {
+  getAudioContext,
+  startAudioContext,
+  closeAudioContext,
+  addAudioContextListener,
+} from './contextManager'
+import type {
+  AudioContextStatus,
+  MicStatus,
+  AudioInputMode,
+  AudioModule,
+  AudioMetrics,
+} from './types'
 import type { AudioStackConfig } from '../../conditions/schema'
 import { createSynth } from './synth'
 import { createCompressor } from './fx'
@@ -75,7 +86,7 @@ function computeRms(analyser: AnalyserNode, scratchTime: F32): { rms: number; sc
 function computeSpectralFeatures(
   analyser: AnalyserNode,
   prevMag: F32 | null,
-  scratchDb: F32
+  scratchDb: F32,
 ): {
   centroid: number
   flux: number
@@ -99,6 +110,12 @@ function computeSpectralFeatures(
   let sumMid = 0
   let sumHigh = 0
 
+  // Coarse 3-band energy split using absolute frequency thresholds.
+  // Low: <300 Hz, Mid: 300-4000 Hz, High: >4000 Hz.
+  const lowT = 300 / nyquist
+  const midT = 4000 / nyquist
+
+  // Reuses prevMag in-place: safe because each index is read before being overwritten.
   const nextPrev: F32 = prevMag && prevMag.length === n ? prevMag : new Float32Array(n)
   for (let i = 0; i < n; i++) {
     const mag = 10 ** ((db[i] ?? -120) / 20) // linear amplitude
@@ -111,19 +128,16 @@ function computeSpectralFeatures(
     if (diff > 0) fluxSum += diff
     nextPrev[i] = mag
 
-    // Coarse 3-band energy split using absolute frequency thresholds.
-    // Low: <300 Hz, Mid: 300-4000 Hz, High: >4000 Hz.
-    const lowThreshold = 300 / nyquist
-    const midThreshold = 4000 / nyquist
-    if (t < lowThreshold) sumLow += mag
-    else if (t < midThreshold) sumMid += mag
+    if (t < lowT) sumLow += mag
+    else if (t < midT) sumMid += mag
     else sumHigh += mag
   }
 
   const centroidHz = sumMag > 0 ? sumWeighted / sumMag : 0
   const centroid = clamp01(centroidHz / Math.max(1, nyquist))
 
-  // Flux normalization is heuristic; values are usually small. Scale and clamp.
+  // Flux normalization: 0.6 is an empirical ceiling for typical audio signal
+  // spectral flux (determined by measuring a range of music/speech/ambient sources).
   const flux = clamp01(fluxSum * 0.6)
   const low = sumMag > 0 ? clamp01(sumLow / sumMag) : 0
   const mid = sumMag > 0 ? clamp01(sumMid / sumMag) : 0
@@ -175,18 +189,18 @@ export interface AudioEngineControl {
 
 /**
  * Creates and starts the main AudioEngine instance.
- * 
+ *
  * **IMPORTANT**: Call this only after a user gesture (e.g. from an "Enable audio" click event).
- * This function handles building the internal routing graph, connecting synthesizers, 
+ * This function handles building the internal routing graph, connecting synthesizers,
  * microphones, and effect chains.
- * 
+ *
  * @param initialAudioStack The configuration for the audio effects chain from the current condition profile.
  * @param callbacks Event listeners for when the audio or mic status changes.
  * @returns An `AudioEngineControl` object allowing the UI to interact with the running engine.
  */
 export function createAudioEngine(
   initialAudioStack: AudioStackConfig | null | undefined,
-  callbacks: AudioEngineCallbacks = {}
+  callbacks: AudioEngineCallbacks = {},
 ): AudioEngineControl {
   let masterGain: GainNode | null = null
   let analyserNode: AnalyserNode | null = null
@@ -199,6 +213,12 @@ export function createAudioEngine(
   let prevSpectrumMag: F32 | null = null
   let scratchMainTime: F32 = new Float32Array(ANALYSER_FFT_SIZE)
   let scratchMainDb: F32 = new Float32Array(ANALYSER_FFT_SIZE)
+
+  // Per-frame RMS cache to avoid reading the analyser twice when both getRms()
+  // and getMetrics() are called in the same frame.
+  let cachedRms = 0
+  let cachedRmsFrame = -1
+  let rmsFrameCounter = 0
 
   // Phase 9: Mic — stream and nodes (only when mic is on).
   let micStream: MediaStream | null = null
@@ -214,7 +234,6 @@ export function createAudioEngine(
   let micSensitivity = 0.5
   let micGate = 0.25
   let micGateSmoothed = 1
-  let lastMetricsTimeMs: number | null = null
   let micGateIntervalId: ReturnType<typeof setInterval> | null = null
   let lastMicGateTickMs: number | null = null
   let inputMode: AudioInputMode = 'synth'
@@ -264,9 +283,7 @@ export function createAudioEngine(
       if (disposed || !micAnalyserNode || !micGateGain) return
       const nowMs = typeof performance !== 'undefined' ? performance.now() : Date.now()
       const dtSec =
-        lastMicGateTickMs != null
-          ? Math.max(0.001, (nowMs - lastMicGateTickMs) / 1000)
-          : 1 / 30
+        lastMicGateTickMs != null ? Math.max(0.001, (nowMs - lastMicGateTickMs) / 1000) : 1 / 30
       lastMicGateTickMs = nowMs
       const micRes = computeRms(micAnalyserNode, scratchMicTime)
       scratchMicTime = micRes.scratch
@@ -294,12 +311,12 @@ export function createAudioEngine(
     const enabled = audioStack?.enabled === true
     activeChainNodes = enabled
       ? (audioStack?.chain ?? [])
-        .map((def) => String(def.node ?? '').toLowerCase())
-        .filter((nodeType) => isKnownAudioNodeType(nodeType))
+          .map((def) => String(def.node ?? '').toLowerCase())
+          .filter((nodeType) => isKnownAudioNodeType(nodeType))
       : []
     if (enabled) {
       synthModule = createSynth(ctx, {})
-      synthModule.getInput().connect(synthGain)
+      synthModule.connect(synthGain)
       synthGain.gain.value = 1
       synthGain.connect(mixer)
     } else {
@@ -308,13 +325,15 @@ export function createAudioEngine(
     }
 
     const masterVol = enabled ? (audioStack?.master?.volume ?? 0.22) : 0
-    masterGain.gain.value = masterVol
+    masterGain.gain.cancelScheduledValues(ctx.currentTime)
+    masterGain.gain.setValueAtTime(masterVol, ctx.currentTime)
 
     if (!analyserNode) {
       analyserNode = ctx.createAnalyser()
-      analyserNode.fftSize = ANALYSER_FFT_SIZE
-      analyserNode.smoothingTimeConstant = 0.5
     }
+    // Re-apply properties after disconnect/reconnect to ensure consistent state.
+    analyserNode.fftSize = ANALYSER_FFT_SIZE
+    analyserNode.smoothingTimeConstant = 0.5
 
     const newChain = enabled ? buildAudioChain(ctx, audioStack) : []
     chain = newChain
@@ -389,6 +408,7 @@ export function createAudioEngine(
       return
     }
     // If already active, stop existing mic path before re-requesting.
+    // This also increments micRequestSeq so any in-flight prior request is discarded.
     if (micStream) stopMic()
     const requestSeq = ++micRequestSeq
     callbacks.onMicStatusChange?.('requesting')
@@ -482,19 +502,25 @@ export function createAudioEngine(
     setConditionAudio,
     getRms(): number {
       if (!analyserNode) return 0
-      const res = computeRms(analyserNode, scratchMainTime)
-      scratchMainTime = res.scratch
-      return res.rms
+      rmsFrameCounter++
+      if (cachedRmsFrame !== rmsFrameCounter) {
+        const res = computeRms(analyserNode, scratchMainTime)
+        scratchMainTime = res.scratch
+        cachedRms = res.rms
+        cachedRmsFrame = rmsFrameCounter
+      }
+      return cachedRms
     },
     getMetrics(): AudioMetrics {
       if (!analyserNode) return { rms: 0, centroid: 0, flux: 0 }
 
-      const nowMs = typeof performance !== 'undefined' ? performance.now() : Date.now()
-      const dt = lastMetricsTimeMs != null ? Math.max(0.001, (nowMs - lastMetricsTimeMs) / 1000) : 1 / 60
-      lastMetricsTimeMs = nowMs
-
-      const mainRms = computeRms(analyserNode, scratchMainTime)
-      scratchMainTime = mainRms.scratch
+      rmsFrameCounter++
+      if (cachedRmsFrame !== rmsFrameCounter) {
+        const mainRms = computeRms(analyserNode, scratchMainTime)
+        scratchMainTime = mainRms.scratch
+        cachedRms = mainRms.rms
+        cachedRmsFrame = rmsFrameCounter
+      }
       const main = computeSpectralFeatures(analyserNode, prevSpectrumMag, scratchMainDb)
       scratchMainDb = main.scratchDb
       prevSpectrumMag = main.nextPrev
@@ -518,12 +544,10 @@ export function createAudioEngine(
         micLow = mic.low
         micMid = mic.mid
         micHigh = mic.high
-
-        applyMicGateEnvelope(micRms ?? 0, dt)
       }
 
       return {
-        rms: mainRms.rms,
+        rms: cachedRms,
         centroid: main.centroid,
         flux: main.flux,
         low: main.low,

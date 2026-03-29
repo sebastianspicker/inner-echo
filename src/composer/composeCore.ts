@@ -1,4 +1,9 @@
-import type { Profile, VideoStackNodeDef, AudioStackConfig, AnalyserToParamDef } from '../conditions/schema'
+import type {
+  Profile,
+  VideoStackNodeDef,
+  AudioStackConfig,
+  AnalyserToParamDef,
+} from '../conditions/schema'
 import type {
   ComposerSettings,
   SelectedDimension,
@@ -17,9 +22,9 @@ import {
   AUDIO_ORDER_GROUP,
   normalizeNodeType,
   makeIdForNode,
+  deduplicateStackIds,
   motifsToVideoDefs,
   motifsToAudioDefs,
-  scaleNumericParams,
   type SourceId,
 } from './composeBlend'
 import { clampAudioParams, clampVideoParams, deriveComposedSafety } from './composeSafety'
@@ -67,7 +72,7 @@ export async function composeEffectiveProfileCore(
   presets: SelectedPreset[],
   dimensions: SelectedDimension[],
   settings: ComposerSettings,
-  sources: ComposeSources
+  sources: ComposeSources,
 ): Promise<ComposeResult> {
   const report: ComposeReport = {
     missingNodes: { video: [], audio: [] },
@@ -80,7 +85,7 @@ export async function composeEffectiveProfileCore(
     .filter((p) => p && typeof p === 'object' && 'profileId' in p)
     .map((p) => ({
       profileId: String(p.profileId ?? '').trim(),
-      weight: clamp01(typeof p.weight === 'number' ? p.weight : 0)
+      weight: clamp01(typeof p.weight === 'number' ? p.weight : 0),
     }))
     .filter((p) => p.profileId && p.profileId !== 'undefined' && p.weight > 0)
     .sort((a, b) => a.profileId.localeCompare(b.profileId))
@@ -89,7 +94,7 @@ export async function composeEffectiveProfileCore(
     .filter((d) => d && typeof d === 'object' && 'dimensionId' in d)
     .map((d) => ({
       dimensionId: String(d.dimensionId ?? '').trim(),
-      weight: clamp01(typeof d.weight === 'number' ? d.weight : 0)
+      weight: clamp01(typeof d.weight === 'number' ? d.weight : 0),
     }))
     .filter((d) => d.dimensionId && d.dimensionId !== 'undefined' && d.weight > 0)
     .sort((a, b) => a.dimensionId.localeCompare(b.dimensionId))
@@ -105,6 +110,9 @@ export async function composeEffectiveProfileCore(
         sumGain += getInteractionGain(a.dimensionId, b.dimensionId, settings.interactionAmount)
       }
       // Bounded: boost small weights a bit, but never exceed 1.
+      // Intentional: with 3+ co-selected dimensions sumGain may exceed 1,
+      // but clamp01 caps the effective weight so interaction effects never
+      // amplify beyond full strength — preventing runaway amplification.
       effectiveDimWeight.set(a.dimensionId, clamp01(a.weight * (1 + sumGain)))
     }
   } else {
@@ -115,7 +123,7 @@ export async function composeEffectiveProfileCore(
     cleanedPresets.map(async (p) => {
       const prof = await sources.loadPresetProfile(p.profileId)
       return { preset: p, profile: prof }
-    })
+    }),
   )
   const loadedProfiles: Array<{ preset: SelectedPreset; profile: Profile }> = []
   for (const { preset, profile: prof } of loadResults) {
@@ -134,25 +142,41 @@ export async function composeEffectiveProfileCore(
     const evidenceStrength = entry?.evidence_strength ?? dimDef?.evidence_strength
     report.evidence.dimensions.push({ dimensionId: d.dimensionId, rationaleDoc, evidenceStrength })
     if (!entry) {
-      report.evidence.gaps.push({ dimensionId: d.dimensionId, reason: 'No dimension-to-signal mapping entry found' })
+      report.evidence.gaps.push({
+        dimensionId: d.dimensionId,
+        reason: 'No dimension-to-signal mapping entry found',
+      })
     } else if (!rationaleDoc) {
-      report.evidence.gaps.push({ dimensionId: d.dimensionId, reason: 'No rationale_doc found for dimension' })
+      report.evidence.gaps.push({
+        dimensionId: d.dimensionId,
+        reason: 'No rationale_doc found for dimension',
+      })
     }
     if (String(evidenceStrength ?? '').toLowerCase() === 'hypothesis') {
-      report.warnings.push(`Dimension ${d.dimensionId} is marked as hypothesis (evidence gap); keep conservative defaults.`)
+      report.warnings.push(
+        `Dimension ${d.dimensionId} is marked as hypothesis (evidence gap); keep conservative defaults.`,
+      )
     }
   }
 
   const safetyBlocks = loadedProfiles.map((p) => p.profile.safety)
-  const derived = deriveComposedSafety(
-    safetyBlocks,
-    cleanedDims,
-    (dimId) => sources.getDimensionMappingEntry(dimId)
+  const derived = deriveComposedSafety(safetyBlocks, cleanedDims, (dimId) =>
+    sources.getDimensionMappingEntry(dimId),
   )
   const { mergedDisableNodes } = derived
 
-  type StackContrib = { w: number; params: Record<string, unknown>; source: SourceId; index: number; node: string; id: string }
-  const videoByKey = new Map<string, { node: string; id: string; contribs: StackContrib[]; minIndex: number }>()
+  type StackContrib = {
+    w: number
+    params: Record<string, unknown>
+    source: SourceId
+    index: number
+    node: string
+    id: string
+  }
+  const videoByKey = new Map<
+    string,
+    { node: string; id: string; contribs: StackContrib[]; minIndex: number }
+  >()
 
   for (const { preset, profile } of loadedProfiles) {
     for (let i = 0; i < (profile.video_stack ?? []).length; i++) {
@@ -164,7 +188,14 @@ export async function composeEffectiveProfileCore(
       const entry = videoByKey.get(key) ?? { node, id: key, contribs: [], minIndex: i }
       entry.node = node
       entry.minIndex = Math.min(entry.minIndex, i)
-      entry.contribs.push({ w: preset.weight, params, source: `preset:${preset.profileId}`, index: i, node, id: key })
+      entry.contribs.push({
+        w: preset.weight,
+        params,
+        source: `preset:${preset.profileId}`,
+        index: i,
+        node,
+        id: key,
+      })
       videoByKey.set(key, entry)
     }
   }
@@ -172,7 +203,8 @@ export async function composeEffectiveProfileCore(
   for (const d of cleanedDims) {
     const entry = sources.getDimensionMappingEntry(d.dimensionId)
     const motifs = entry?.video_motifs ?? []
-    const defs = motifsToVideoDefs(motifs)
+    const strength = clamp01(effectiveDimWeight.get(d.dimensionId) ?? d.weight)
+    const defs = motifsToVideoDefs(motifs, strength)
     for (let i = 0; i < defs.length; i++) {
       const def = defs[i]
       const node = normalizeNodeType(def.node)
@@ -181,11 +213,16 @@ export async function composeEffectiveProfileCore(
         continue
       }
       const key = makeIdForNode(def) || node
-      const strength = clamp01(effectiveDimWeight.get(d.dimensionId) ?? d.weight)
-      const scaledParams = scaleNumericParams(def.params ?? {}, strength)
       const e = videoByKey.get(key) ?? { node, id: key, contribs: [], minIndex: 1000 + i }
       e.minIndex = Math.min(e.minIndex, 1000 + i)
-      e.contribs.push({ w: strength, params: scaledParams, source: `dim:${d.dimensionId}`, index: 1000 + i, node, id: key })
+      e.contribs.push({
+        w: strength,
+        params: def.params ?? {},
+        source: `dim:${d.dimensionId}`,
+        index: 1000 + i,
+        node,
+        id: key,
+      })
       videoByKey.set(key, e)
     }
   }
@@ -200,11 +237,22 @@ export async function composeEffectiveProfileCore(
   }))
   sortStackKeys(videoItems)
 
-  let videoStack: VideoStackNodeDef[] = videoItems.map((it) => ({ id: it.id, node: it.node, params: it.params }))
+  let videoStack: VideoStackNodeDef[] = deduplicateStackIds(
+    videoItems.map((it) => ({ id: it.id, node: it.node, params: it.params })),
+  )
 
   const audioByKey = new Map<
     string,
-    { node: string; contribs: Array<{ w: number; params: Record<string, unknown>; source: SourceId; index: number }>; minIndex: number }
+    {
+      node: string
+      contribs: Array<{
+        w: number
+        params: Record<string, unknown>
+        source: SourceId
+        index: number
+      }>
+      minIndex: number
+    }
   >()
   const audioMasterVols: Array<{ w: number; v: number }> = []
   let anyAudioDeclared = false
@@ -232,7 +280,8 @@ export async function composeEffectiveProfileCore(
   for (const d of cleanedDims) {
     const entry = sources.getDimensionMappingEntry(d.dimensionId)
     const motifs = entry?.audio_motifs ?? []
-    const defs = motifsToAudioDefs(motifs)
+    const strength = clamp01(effectiveDimWeight.get(d.dimensionId) ?? d.weight)
+    const defs = motifsToAudioDefs(motifs, strength)
     if (defs.length) anyAudioDeclared = true
     for (let i = 0; i < defs.length; i++) {
       const def = defs[i]
@@ -242,11 +291,14 @@ export async function composeEffectiveProfileCore(
         continue
       }
       const key = node
-      const strength = clamp01(effectiveDimWeight.get(d.dimensionId) ?? d.weight)
-      const scaledParams = scaleNumericParams(def.params, strength)
       const e = audioByKey.get(key) ?? { node, contribs: [], minIndex: 1000 + i }
       e.minIndex = Math.min(e.minIndex, 1000 + i)
-      e.contribs.push({ w: strength, params: scaledParams, source: `dim:${d.dimensionId}`, index: 1000 + i })
+      e.contribs.push({
+        w: strength,
+        params: def.params,
+        source: `dim:${d.dimensionId}`,
+        index: 1000 + i,
+      })
       audioByKey.set(key, e)
     }
   }
@@ -260,7 +312,9 @@ export async function composeEffectiveProfileCore(
   }))
   sortStackKeys(audioItems)
 
-  const chain = audioItems.map((it) => ({ id: it.node, node: it.node, params: it.params }))
+  const chain = deduplicateStackIds(
+    audioItems.map((it) => ({ id: it.node, node: it.node, params: it.params })),
+  )
 
   const enabled = settings.audioEnabled && anyAudioDeclared
   const baseMaster = enabled ? mergeNumericWeighted(audioMasterVols) : 0
@@ -276,10 +330,13 @@ export async function composeEffectiveProfileCore(
     const list = profile.reactive?.analyser_to_params ?? []
     for (const m of list) reactiveAll.push(m)
   }
-  const reactiveKey = (m: AnalyserToParamDef) => `${m.source}|${m.target}|${m.scale ?? ''}|${m.offset ?? ''}|${JSON.stringify(m.clamp ?? [])}`
+  const reactiveKey = (m: AnalyserToParamDef) =>
+    `${m.source}|${m.target}|${m.scale ?? ''}|${m.offset ?? ''}|${JSON.stringify(m.clamp ?? [])}|${JSON.stringify(m.smoothing ?? {})}`
   const reactiveDedup = new Map<string, AnalyserToParamDef>()
   for (const m of reactiveAll) reactiveDedup.set(reactiveKey(m), m)
-  const reactive = Array.from(reactiveDedup.values()).sort((a, b) => a.target.localeCompare(b.target))
+  const reactive = Array.from(reactiveDedup.values()).sort((a, b) =>
+    a.target.localeCompare(b.target),
+  )
 
   if (settings.reducedMotion) {
     const disabled = new Set(mergedDisableNodes.map((s) => s.toLowerCase()))
@@ -298,7 +355,8 @@ export async function composeEffectiveProfileCore(
     summary: 'A composed metaphorical overlay built from selected presets and/or dimensions.',
     framing: {
       type: 'metaphor',
-      disclaimer: 'This is a metaphorical interaction field for reflection. It does not diagnose or replicate clinical reality.',
+      disclaimer:
+        'This is a metaphorical interaction field for reflection. It does not diagnose or replicate clinical reality.',
     },
     experience_dimensions: cleanedDims.map((d) => ({ id: d.dimensionId, weight: d.weight })),
     safety: derived.composedSafety,
@@ -306,7 +364,9 @@ export async function composeEffectiveProfileCore(
     audio_stack: clampedAudioStack,
     reactive: { analyser_to_params: reactive },
     ui: { controls: [] },
-    references: { dimensions: cleanedDims.map((d) => `docs/references/dimensions/${d.dimensionId}.md`) },
+    references: {
+      dimensions: cleanedDims.map((d) => `docs/references/dimensions/${d.dimensionId}.md`),
+    },
   } satisfies Profile
 
   for (const v of profile.video_stack) {

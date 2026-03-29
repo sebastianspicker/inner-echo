@@ -14,11 +14,7 @@ import { NODE_FACTORY } from '../conditions/graphBuilder'
 import { AUDIO_NODE_TYPE_KEYS } from './audio/audioGraphBuilder'
 
 /** All implemented video-node type names (derived from NODE_FACTORY keys). */
-export const IMPLEMENTED_VIDEO_NODES: ReadonlySet<string> = new Set(
-  Object.keys(NODE_FACTORY)
-)
+export const IMPLEMENTED_VIDEO_NODES: ReadonlySet<string> = new Set(Object.keys(NODE_FACTORY))
 
 /** All implemented audio-node type names (derived from FX_FACTORY keys). */
-export const IMPLEMENTED_AUDIO_NODES: ReadonlySet<string> = new Set(
-  AUDIO_NODE_TYPE_KEYS
-)
+export const IMPLEMENTED_AUDIO_NODES: ReadonlySet<string> = new Set(AUDIO_NODE_TYPE_KEYS)

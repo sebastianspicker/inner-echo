@@ -97,8 +97,8 @@ describe('presetSnapshot', () => {
       const valid = createPresetSnapshot(makePayload(), { name: 'Good' })
       const items = [
         valid,
-        { version: 1, broken: true },  // wrong version
-        { version: 2, id: 'x' },       // missing required fields
+        { version: 1, broken: true }, // wrong version
+        { version: 2, id: 'x' }, // missing required fields
         null,
         42,
         'string',
@@ -216,9 +216,7 @@ describe('presetSnapshot', () => {
           { profileId: 'anxiety', weight: 0.7 },
           { profileId: 'dpdr', weight: 0.3 },
         ],
-        dimensions: [
-          { dimensionId: 'intrusion', weight: 0.5 },
-        ],
+        dimensions: [{ dimensionId: 'intrusion', weight: 0.5 }],
         intensity: 0.6,
         safeMode: true,
         reducedMotion: true,
@@ -282,7 +280,9 @@ describe('presetSnapshot', () => {
     test('serializes snapshots to storage', () => {
       let stored: string | null = null
       const storage = {
-        setItem: (_key: string, value: string) => { stored = value },
+        setItem: (_key: string, value: string) => {
+          stored = value
+        },
       }
       const snap = createPresetSnapshot(makePayload(), { name: 'Written' })
       writePresetLibrary(storage, [snap])
@@ -296,7 +296,9 @@ describe('presetSnapshot', () => {
     test('writes empty array when no snapshots', () => {
       let stored: string | null = null
       const storage = {
-        setItem: (_key: string, value: string) => { stored = value },
+        setItem: (_key: string, value: string) => {
+          stored = value
+        },
       }
       writePresetLibrary(storage, [])
       expect(stored).toBe('[]')
@@ -319,17 +321,39 @@ describe('presetSnapshot', () => {
 
       const calls: Record<string, unknown> = {}
       const callbacks: ApplyPresetPayloadCallbacks = {
-        onModeChange: (v) => { calls.mode = v },
-        onConditionIdChange: (v) => { calls.conditionId = v },
-        onPresetsChange: (v) => { calls.presets = v },
-        onDimensionsChange: (v) => { calls.dimensions = v },
-        onIntensityChange: (v) => { calls.intensity = v },
-        onSafeModeChange: (v) => { calls.safeMode = v },
-        onReducedMotionChange: (v) => { calls.reducedMotion = v },
-        onAudioEnabledChange: (v) => { calls.audioEnabled = v },
-        onCouplingStrengthChange: (v) => { calls.couplingStrength = v },
-        onMaxFeedbackChange: (v) => { calls.maxFeedback = v },
-        onInteractionAmountChange: (v) => { calls.interactionAmount = v },
+        onModeChange: (v) => {
+          calls.mode = v
+        },
+        onConditionIdChange: (v) => {
+          calls.conditionId = v
+        },
+        onPresetsChange: (v) => {
+          calls.presets = v
+        },
+        onDimensionsChange: (v) => {
+          calls.dimensions = v
+        },
+        onIntensityChange: (v) => {
+          calls.intensity = v
+        },
+        onSafeModeChange: (v) => {
+          calls.safeMode = v
+        },
+        onReducedMotionChange: (v) => {
+          calls.reducedMotion = v
+        },
+        onAudioEnabledChange: (v) => {
+          calls.audioEnabled = v
+        },
+        onCouplingStrengthChange: (v) => {
+          calls.couplingStrength = v
+        },
+        onMaxFeedbackChange: (v) => {
+          calls.maxFeedback = v
+        },
+        onInteractionAmountChange: (v) => {
+          calls.interactionAmount = v
+        },
       }
 
       applyPresetPayload(payload, callbacks)

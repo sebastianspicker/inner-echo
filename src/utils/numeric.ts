@@ -1,6 +1,6 @@
 /**
  * Numeric Utilities
- * 
+ *
  * Shared math helpers used across the entire application (Engine, Canvas, Audio, UI).
  * Primarily used to strictly confine numbers to expected safe ranges (e.g., preventing
  * volume from going above 1.0 or below 0.0).
@@ -19,7 +19,7 @@ export function clamp01(x: number): number {
 /**
  * Apply exponential smoothing: smoothed += (target - smoothed) * (1 - exp(-dt / tau)).
  * Uses separate attack and release time constants for asymmetric response.
- * 
+ *
  * @param current - Current smoothed value
  * @param target - Target value to approach
  * @param dt - Time delta in seconds
@@ -32,7 +32,7 @@ export function smoothStep(
   target: number,
   dt: number,
   attack: number,
-  release: number
+  release: number,
 ): number {
   if (dt <= 0 || !Number.isFinite(dt)) return current
   const tau = target > current ? attack : release

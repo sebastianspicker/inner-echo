@@ -10,32 +10,14 @@ import {
   createTremolo,
 } from '../engine/audio/fx'
 import type { AudioModule } from '../engine/audio/types'
-import {
-  FakeAudioContext,
-  type FakeAudioBuffer,
-  hashBuffer,
-} from './fakeAudioContext'
+import { FakeAudioContext, type FakeAudioBuffer, hashBuffer } from './fakeAudioContext'
 import type {
   ContractNodeDefinition,
   ContractParamMetadata,
   ProbeHarness,
   RegistryNodeSummary,
 } from './types'
-import { getByPath } from './utils'
-
-function withSeededRandom<T>(seed: number, fn: () => T): T {
-  const prev = Math.random
-  let state = seed >>> 0
-  Math.random = () => {
-    state = (1664525 * state + 1013904223) >>> 0
-    return state / 0xffffffff
-  }
-  try {
-    return fn()
-  } finally {
-    Math.random = prev
-  }
-}
+import { getByPath, withSeededRandom } from './utils'
 
 class AudioProbeHarness implements ProbeHarness {
   readonly context: FakeAudioContext
@@ -79,7 +61,7 @@ function numberParam(
     probeLow?: number
     probeHigh?: number
     epsilon?: number
-  }
+  },
 ): ContractParamMetadata {
   return {
     type: 'number',
@@ -112,8 +94,7 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         max: 1.2,
       }),
     },
-    createHarness: () =>
-      new AudioProbeHarness((ctx) => createLowpass(ctx, {})),
+    createHarness: () => new AudioProbeHarness((ctx) => createLowpass(ctx, {})),
   },
   {
     kind: 'audio',
@@ -130,8 +111,7 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         max: 1.2,
       }),
     },
-    createHarness: () =>
-      new AudioProbeHarness((ctx) => createHighpass(ctx, {})),
+    createHarness: () => new AudioProbeHarness((ctx) => createHighpass(ctx, {})),
   },
   {
     kind: 'audio',
@@ -150,15 +130,12 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         max: 0.15,
         safeModeClampKey: 'max_tremolo_depth',
         readEffective(harness: ProbeHarness): unknown {
-          const v = (harness as AudioProbeHarness).readPath(
-            'created.gains.2.gain.value'
-          )
+          const v = (harness as AudioProbeHarness).readPath('created.gains.2.gain.value')
           return typeof v === 'number' ? -2 * v : v
         },
       },
     },
-    createHarness: () =>
-      new AudioProbeHarness((ctx) => createTremolo(ctx, {})),
+    createHarness: () => new AudioProbeHarness((ctx) => createTremolo(ctx, {})),
   },
   {
     kind: 'audio',
@@ -175,15 +152,12 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         min: 0,
         max: 0.12,
         readEffective(harness: ProbeHarness): unknown {
-          const v = (harness as AudioProbeHarness).readPath(
-            'created.gains.2.gain.value'
-          )
+          const v = (harness as AudioProbeHarness).readPath('created.gains.2.gain.value')
           return typeof v === 'number' ? v / 0.006 : v
         },
       },
     },
-    createHarness: () =>
-      new AudioProbeHarness((ctx) => createFlutter(ctx, {})),
+    createHarness: () => new AudioProbeHarness((ctx) => createFlutter(ctx, {})),
   },
   {
     kind: 'audio',
@@ -203,14 +177,13 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         probeHigh: 'brown',
         readEffective(harness: ProbeHarness): unknown {
           const buffer = (harness as AudioProbeHarness).readPath(
-            'created.bufferSources.0.buffer'
+            'created.bufferSources.0.buffer',
           ) as FakeAudioBuffer | null | undefined
           return hashBuffer(buffer)
         },
       },
     },
-    createHarness: () =>
-      new AudioProbeHarness((ctx) => createNoiseBed(ctx, {})),
+    createHarness: () => new AudioProbeHarness((ctx) => createNoiseBed(ctx, {})),
   },
   {
     kind: 'audio',
@@ -232,8 +205,7 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         max: 0.12,
       }),
     },
-    createHarness: () =>
-      new AudioProbeHarness((ctx) => createDelay(ctx, {})),
+    createHarness: () => new AudioProbeHarness((ctx) => createDelay(ctx, {})),
   },
   {
     kind: 'audio',
@@ -251,16 +223,16 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         max: 2.8,
         readEffective(harness: ProbeHarness): unknown {
           const h = harness as AudioProbeHarness
-          const buffer = h.readPath(
-            'created.convolvers.0.buffer'
-          ) as FakeAudioBuffer | null | undefined
+          const buffer = h.readPath('created.convolvers.0.buffer') as
+            | FakeAudioBuffer
+            | null
+            | undefined
           if (!buffer) return 0
           return buffer.length / h.context.sampleRate
         },
       },
     },
-    createHarness: () =>
-      new AudioProbeHarness((ctx) => createReverb(ctx, {})),
+    createHarness: () => new AudioProbeHarness((ctx) => createReverb(ctx, {})),
   },
   {
     kind: 'audio',
@@ -278,7 +250,7 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         max: 0.12,
         readEffective(harness: ProbeHarness): unknown {
           const v = (harness as AudioProbeHarness).readPath(
-            'created.constantSources.0.offset.value'
+            'created.constantSources.0.offset.value',
           )
           return typeof v === 'number' ? v * 2 : v
         },
@@ -289,8 +261,7 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         max: 220,
       }),
     },
-    createHarness: () =>
-      new AudioProbeHarness((ctx) => createPulseTone(ctx, {})),
+    createHarness: () => new AudioProbeHarness((ctx) => createPulseTone(ctx, {})),
   },
   {
     kind: 'audio',
@@ -323,16 +294,13 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         max: -6,
         safeModeClampKey: 'audio_ceiling_dbfs',
         readEffective(harness: ProbeHarness): unknown {
-          const g = (harness as AudioProbeHarness).readPath(
-            'created.gains.1.gain.value'
-          )
+          const g = (harness as AudioProbeHarness).readPath('created.gains.1.gain.value')
           if (typeof g !== 'number' || g <= 0) return -Infinity
           return 20 * Math.log10(g)
         },
       },
     },
-    createHarness: () =>
-      new AudioProbeHarness((ctx) => createCompressor(ctx, {})),
+    createHarness: () => new AudioProbeHarness((ctx) => createCompressor(ctx, {})),
   },
 ]
 

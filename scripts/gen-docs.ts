@@ -30,7 +30,8 @@ type Profile = z.infer<typeof profileSchema>
 function loadCatalog(): Catalog {
   const raw = JSON.parse(readFileSync(CATALOG_PATH, 'utf-8'))
   const parsed = catalogSchema.safeParse(raw)
-  if (!parsed.success) throw new Error(`Catalog validation failed: ${JSON.stringify(parsed.error.flatten())}`)
+  if (!parsed.success)
+    throw new Error(`Catalog validation failed: ${JSON.stringify(parsed.error.flatten())}`)
   return parsed.data
 }
 
@@ -129,7 +130,15 @@ function generatePresetSchemaJson(): string {
 }
 
 function generatePresetSchemaMd(schemaJson: string): string {
-  const required = ['id', 'label', 'summary', 'framing', 'experience_dimensions', 'safety', 'video_stack']
+  const required = [
+    'id',
+    'label',
+    'summary',
+    'framing',
+    'experience_dimensions',
+    'safety',
+    'video_stack',
+  ]
   const lines: string[] = [
     '# Preset (profile) JSON Schema (generated)',
     '',
