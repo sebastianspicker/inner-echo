@@ -35,6 +35,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'clover'],
+      exclude: ['scripts/**'],
       thresholds: {
         statements: 80,
         branches: 65,
