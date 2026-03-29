@@ -20,13 +20,21 @@ export function CameraStage({
   debugOverlay,
 }: CameraStageProps) {
   return (
-    <div ref={containerRef} className={`ie-stage${isActive ? ' ie-stage--active' : ''}`} aria-label="Camera stage">
+    <div
+      ref={containerRef}
+      className={`ie-stage${isActive ? ' ie-stage--active' : ''}`}
+      aria-label="Camera stage"
+    >
       <video ref={videoRef} className="ie-video" playsInline muted aria-label="Camera feed" />
       <canvas ref={canvasRef} className="ie-canvas" aria-hidden="true" />
       {import.meta.env.DEV && debugOverlay && audioStatus === 'on' && (
         <span ref={rmsDebugRef} className="ie-debugChip" data-phase="reactive" aria-hidden="true" />
       )}
-      {!isActive && <div className="ie-placeholder" aria-hidden="true">Take your time. Begin when you feel ready.</div>}
+      {!isActive && (
+        <div className="ie-placeholder" aria-hidden="true">
+          Take your time. Begin when you feel ready.
+        </div>
+      )}
     </div>
   )
 }

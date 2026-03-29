@@ -85,13 +85,13 @@ describe('profileLoadRace — concurrent compose calls', () => {
         [{ profileId: 'profile-a', weight: 1 }],
         [],
         DEFAULT_SETTINGS,
-        sources
+        sources,
       ),
       composeEffectiveProfileCore(
         [{ profileId: 'profile-b', weight: 1 }],
         [],
         DEFAULT_SETTINGS,
-        sources
+        sources,
       ),
     ])
 
@@ -128,12 +128,7 @@ describe('profileLoadRace — concurrent compose calls', () => {
 
     // Launch 10 concurrent compose calls
     const promises = Object.keys(profiles).map((id) =>
-      composeEffectiveProfileCore(
-        [{ profileId: id, weight: 1 }],
-        [],
-        DEFAULT_SETTINGS,
-        sources
-      )
+      composeEffectiveProfileCore([{ profileId: id, weight: 1 }], [], DEFAULT_SETTINGS, sources),
     )
 
     const results = await Promise.all(promises)
@@ -179,7 +174,7 @@ describe('profileLoadRace — concurrent compose calls', () => {
       [{ profileId: 'slow', weight: 1 }],
       [],
       DEFAULT_SETTINGS,
-      sources
+      sources,
     ).then((res) => {
       // Only apply if still the active sequence (simulates ctx.cancelled check)
       if (mySeq1 === seq) activeResult = res.profile
@@ -191,7 +186,7 @@ describe('profileLoadRace — concurrent compose calls', () => {
       [{ profileId: 'fast', weight: 1 }],
       [],
       DEFAULT_SETTINGS,
-      sources
+      sources,
     ).then((res) => {
       if (mySeq2 === seq) activeResult = res.profile
     })
@@ -229,13 +224,13 @@ describe('profileLoadRace — concurrent compose calls', () => {
         [{ profileId: 'missing', weight: 1 }],
         [],
         DEFAULT_SETTINGS,
-        sources
+        sources,
       ),
       composeEffectiveProfileCore(
         [{ profileId: 'valid', weight: 1 }],
         [],
         DEFAULT_SETTINGS,
-        sources
+        sources,
       ),
     ])
 

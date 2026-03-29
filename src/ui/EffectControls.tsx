@@ -16,7 +16,9 @@ export interface EffectControlsProps {
   onStressModeChange: (v: boolean) => void
   onReducedMotionChange: (v: boolean) => void
   onAudioEnabledChange: (v: boolean) => void
-  onControlValuesChange: (updater: (prev: Record<string, number | boolean>) => Record<string, number | boolean>) => void
+  onControlValuesChange: (
+    updater: (prev: Record<string, number | boolean>) => Record<string, number | boolean>,
+  ) => void
 }
 
 export function EffectControls({
@@ -39,8 +41,8 @@ export function EffectControls({
       <summary className="ie-summary">Controls</summary>
       <div className="ie-panelBody">
         <div className="ie-controlGroup" role="group" aria-label="Effect controls">
-          {profile?.ui?.controls?.length
-            ? (() => {
+          {profile?.ui?.controls?.length ? (
+            (() => {
               const resolved: ResolvedControl[] = []
               const controls = profile.ui?.controls ?? []
               for (const c of controls) {
@@ -57,7 +59,7 @@ export function EffectControls({
                         ? reducedMotion
                         : r.kind === 'audioEnabled'
                           ? audioEnabled
-                          : (controlValues[r.paramKey] ?? r.defaultValue) as number | boolean
+                          : ((controlValues[r.paramKey] ?? r.defaultValue) as number | boolean)
                 const onChange = (v: number | boolean) => {
                   if (r.kind === 'intensity') onIntensityChange(v as number)
                   else if (r.kind === 'safeMode') onSafeModeChange(v as boolean)
@@ -94,25 +96,25 @@ export function EffectControls({
                 )
               })
             })()
-            : (
-              <>
-                <LabeledSlider
-                  className="ie-control ie-control--range"
-                  label="Intensity"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={intensity}
-                  onChange={onIntensityChange}
-                />
-                <ToggleField
-                  className="ie-control ie-control--toggle"
-                  label="Safe Mode"
-                  checked={safeMode}
-                  onChange={onSafeModeChange}
-                />
-              </>
-            )}
+          ) : (
+            <>
+              <LabeledSlider
+                className="ie-control ie-control--range"
+                label="Intensity"
+                min={0}
+                max={1}
+                step={0.01}
+                value={intensity}
+                onChange={onIntensityChange}
+              />
+              <ToggleField
+                className="ie-control ie-control--toggle"
+                label="Safe Mode"
+                checked={safeMode}
+                onChange={onSafeModeChange}
+              />
+            </>
+          )}
           <ToggleField
             className="ie-control ie-control--toggle"
             label="Stress Mode (test FPS guard)"

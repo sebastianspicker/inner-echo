@@ -4,10 +4,7 @@ import type { CameraState } from '../../engine/video'
 /**
  * Tracks UI idleness while camera is active, for immersive auto-hide mode.
  */
-export function useImmersiveIdleState(
-  cameraState: CameraState,
-  timeoutMs = 4500
-): boolean {
+export function useImmersiveIdleState(cameraState: CameraState, timeoutMs = 4500): boolean {
   const [isIdle, setIsIdle] = useState(false)
 
   useEffect(() => {

@@ -10,7 +10,7 @@ describe('ui/evidenceHref', () => {
 
   it('strips hash fragments for docs paths', () => {
     expect(resolveEvidenceHref(current, 'docs/references/README.md#intro')).toBe(
-      'docs/references/README.md'
+      'docs/references/README.md',
     )
   })
 
@@ -22,4 +22,3 @@ describe('ui/evidenceHref', () => {
     expect(resolveEvidenceHref(current, 'https://example.com')).toBe(null)
   })
 })
-

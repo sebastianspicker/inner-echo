@@ -1,10 +1,10 @@
 /**
  * Canvas 2D Overlay Renderer (Fallback)
- * 
+ *
  * This module represents a simple 2D canvas renderer. It is primarily used as a fallback
  * or a baseline utility to draw the raw HTML `<video>` element feed directly onto a `<canvas>`
  * with CSS `object-fit: cover` logic applied in JavaScript.
- * 
+ *
  * In standard operation, the application uses `webglPipeline.ts` instead for complex shader effects.
  */
 
@@ -14,7 +14,7 @@
  */
 export function syncCanvasToContainer(
   canvas: HTMLCanvasElement | null,
-  container: HTMLElement | null
+  container: HTMLElement | null,
 ): void {
   if (!canvas || !container) return
   const w = container.clientWidth
@@ -34,7 +34,7 @@ function drawVideoCover(
   ctx: CanvasRenderingContext2D,
   video: HTMLVideoElement,
   width: number,
-  height: number
+  height: number,
 ): void {
   const vw = video.videoWidth
   const vh = video.videoHeight
@@ -61,9 +61,14 @@ function drawVideoCover(
 export function startOverlayLoop(
   video: HTMLVideoElement | null,
   canvas: HTMLCanvasElement | null,
-  container: HTMLElement | null
+  container: HTMLElement | null,
 ): () => void {
-  if (!video || !canvas || !container) return () => { }
+  if (!video || !canvas || !container) return () => {}
+
+  const maybeCtx = canvas.getContext('2d')
+  if (!maybeCtx) return () => {}
+  // Bind to a new const so TypeScript narrows the type inside the closure.
+  const ctx: CanvasRenderingContext2D = maybeCtx
 
   let rafId: number | null = null
   let stopped = false
@@ -78,12 +83,6 @@ export function startOverlayLoop(
     const w = canvas.width
     const h = canvas.height
     if (w <= 0 || h <= 0) {
-      rafId = requestAnimationFrame(loop)
-      return
-    }
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) {
       rafId = requestAnimationFrame(loop)
       return
     }

@@ -31,6 +31,18 @@ export function createVideoMetricsTracker(options?: {
   const attack = Math.max(0, options?.attack ?? 0.15)
   const release = Math.max(0, options?.release ?? 0.35)
 
+  if (typeof document === 'undefined') {
+    const noopMetrics: VideoMetrics = { motion: 0, luminance: 0, edge: 0, instability: 0 }
+    return {
+      stepFromCanvas() {
+        return noopMetrics
+      },
+      getLast() {
+        return noopMetrics
+      },
+      dispose() {},
+    }
+  }
   let off: HTMLCanvasElement | null = document.createElement('canvas')
   off.width = size
   off.height = size
@@ -145,4 +157,3 @@ export function createVideoMetricsTracker(options?: {
     },
   }
 }
-

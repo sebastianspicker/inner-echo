@@ -23,4 +23,3 @@ export function renderEvidenceMarkdown(md: string): { html: string; title: strin
   const title = titleMatch?.[1]?.trim() ?? 'Evidence'
   return { html, title }
 }
-

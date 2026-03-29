@@ -1,13 +1,13 @@
 /**
  * Application Logger
- * 
+ *
  * A simple wrapper around `console` methods that ensures debug information
  * is ONLY printed when the application is running in Development mode.
- * 
+ *
  * In Production mode:
  * - `debug`, `info`, and `warn` are silenced.
  * - `error` is always logged.
- * 
+ *
  * Critical security note: Never log sensitive user data, media streams, or device IDs.
  */
 
@@ -41,6 +41,9 @@ export const logger = {
     }
   },
 
+  // Intentionally suppressed in production: inner-echo is a client-only,
+  // privacy-first app with no telemetry. Production users see errors via the
+  // ErrorBoundary UI; warnings are only useful during development.
   warn(...args: unknown[]): void {
     if (isDev) {
       // eslint-disable-next-line no-console

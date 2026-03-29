@@ -16,7 +16,7 @@ export function useCatalog(): CatalogEntry[] | null {
       if (c?.conditions?.length) setCatalog(c.conditions)
     },
     [],
-    { onError: (err) => logger.error('loadCatalog failed', err) }
+    { onError: (err) => logger.error('loadCatalog failed', err) },
   )
   return catalog
 }

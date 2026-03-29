@@ -20,14 +20,10 @@ export interface ResolvedControl {
 /**
  * Resolve a control's target to a param key and default value using the profile.
  */
-export function resolveControl(
-  control: UIControl,
-  profile: Profile
-): ResolvedControl | null {
+export function resolveControl(control: UIControl, profile: Profile): ResolvedControl | null {
   const target = (control.target ?? control.id ?? '').toLowerCase()
   if (target === 'intensity' || (control.id === 'intensity' && !control.target)) {
-    const def = profile.safety
-      ?.intensity_default
+    const def = profile.safety?.intensity_default
     return {
       control,
       paramKey: 'intensity',
@@ -64,17 +60,16 @@ export function resolveControl(
       defaultValue: false,
     }
   }
-  const parsedTarget = parseScopedTarget(target, 'video')
-  if (parsedTarget) {
-    const { nodeId, param } = parsedTarget
+  const parsedVideoTarget = parseScopedTarget(target, 'video')
+  if (parsedVideoTarget) {
+    const { nodeId, param } = parsedVideoTarget
     const stack = Array.isArray(profile.video_stack) ? profile.video_stack : []
     const nodeIndex = getBuiltNodeIndex(profile, nodeId)
     if (nodeIndex === -1) return null
     // Find the raw stack entry that corresponds to this nodeId for reading default params.
     const rawIndex = stack.findIndex(
       (n) =>
-        (n.id ?? n.node ?? '').toLowerCase() === nodeId ||
-        (n.node ?? '').toLowerCase() === nodeId
+        (n.id ?? n.node ?? '').toLowerCase() === nodeId || (n.node ?? '').toLowerCase() === nodeId,
     )
     const entry = rawIndex >= 0 ? stack[rawIndex] : undefined
     const params = entry?.params
@@ -89,6 +84,32 @@ export function resolveControl(
       paramKey: `${nodeIndex}.${param}`,
       kind: 'node',
       nodeIndex,
+      defaultValue,
+    }
+  }
+  const parsedAudioTarget = parseScopedTarget(target, 'audio')
+  if (parsedAudioTarget) {
+    const { nodeId, param } = parsedAudioTarget
+    const chain = profile.audio_stack?.chain ?? []
+    const chainIndex = chain.findIndex(
+      (n) =>
+        ((n as { id?: string }).id ?? n.node ?? '').toLowerCase() === nodeId ||
+        (n.node ?? '').toLowerCase() === nodeId,
+    )
+    if (chainIndex === -1) return null
+    const entry = chain[chainIndex]
+    const params = entry?.params
+    const defaultValue =
+      params && typeof params[param] === 'number'
+        ? (params[param] as number)
+        : control.type === 'toggle'
+          ? false
+          : (control.min ?? 0)
+    return {
+      control,
+      paramKey: `audio.${chainIndex}.${param}`,
+      kind: 'node',
+      nodeIndex: chainIndex,
       defaultValue,
     }
   }

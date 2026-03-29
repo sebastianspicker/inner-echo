@@ -2,7 +2,7 @@
  * SSOT: edge_sharpen — subtle unsharp mask (single pass).
  */
 
-import * as THREE from 'three'
+import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import { applyUvParams, clamp, resolveNumberParam, QUAD_VERTEX_SHADER } from './paramUtils'
 
@@ -36,7 +36,7 @@ void main() {
 
 export class EdgeSharpenNode implements VideoNode {
   readonly nodeName = 'edge_sharpen'
-  private material: THREE.ShaderMaterial | null = null
+  private material: ShaderMaterial | null = null
 
   setParams(params: VideoNodeParams): void {
     if (!this.material) return
@@ -45,7 +45,7 @@ export class EdgeSharpenNode implements VideoNode {
     amount = clamp(amount, 0, 0.2)
     this.material.uniforms.u_amount.value = amount
     // Compute texel size from the input texture dimensions, fallback to a conservative default.
-    const tex = this.material.uniforms.u_map.value as THREE.Texture | null
+    const tex = this.material.uniforms.u_map.value as Texture | null
     const img = tex?.image as { width?: number; height?: number } | undefined
     const w = img?.width ?? 400
     const h = img?.height ?? 400
@@ -53,18 +53,18 @@ export class EdgeSharpenNode implements VideoNode {
     applyUvParams(this.material, params)
   }
 
-  getMaterial(inputTexture: THREE.Texture): THREE.Material {
+  getMaterial(inputTexture: Texture): Material {
     if (this.material) {
       this.material.uniforms.u_map.value = inputTexture
       return this.material
     }
-    this.material = new THREE.ShaderMaterial({
+    this.material = new ShaderMaterial({
       uniforms: {
         u_map: { value: inputTexture },
-        u_uvScale: { value: new THREE.Vector2(1, 1) },
-        u_uvOffset: { value: new THREE.Vector2(0, 0) },
+        u_uvScale: { value: new Vector2(1, 1) },
+        u_uvOffset: { value: new Vector2(0, 0) },
         u_amount: { value: 0 },
-        u_texelSize: { value: new THREE.Vector2(1 / 400, 1 / 400) },
+        u_texelSize: { value: new Vector2(1 / 400, 1 / 400) },
       },
       vertexShader: QUAD_VERTEX_SHADER,
       fragmentShader: FRAG,
@@ -78,4 +78,3 @@ export class EdgeSharpenNode implements VideoNode {
     this.material = null
   }
 }
-

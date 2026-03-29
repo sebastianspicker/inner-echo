@@ -92,10 +92,7 @@ export class FakeAudioBuffer {
     this.numberOfChannels = numberOfChannels
     this.length = length
     this.sampleRate = sampleRate
-    this.channels = Array.from(
-      { length: numberOfChannels },
-      () => new Float32Array(length)
-    )
+    this.channels = Array.from({ length: numberOfChannels }, () => new Float32Array(length))
   }
 
   getChannelData(channel: number): Float32Array {
@@ -199,11 +196,7 @@ export class FakeAudioContext {
     return n
   }
 
-  createBuffer(
-    numberOfChannels: number,
-    length: number,
-    sampleRate: number
-  ): FakeAudioBuffer {
+  createBuffer(numberOfChannels: number, length: number, sampleRate: number): FakeAudioBuffer {
     const b = new FakeAudioBuffer(numberOfChannels, length, sampleRate)
     this.buffers.push(b)
     return b

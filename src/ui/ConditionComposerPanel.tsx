@@ -2,7 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ConditionPicker } from './ConditionPicker'
 import type { CatalogEntry } from '../conditions/schema'
 import { loadProfile } from '../conditions/loader'
-import { getExperienceDimensions, type ExperienceDimensionDef, type ComposerMode, type SelectedDimension, type SelectedPreset } from '../composer'
+import {
+  getExperienceDimensions,
+  type ExperienceDimensionDef,
+  type ComposerMode,
+  type SelectedDimension,
+  type SelectedPreset,
+} from '../composer'
 import type { EvidenceDocPath } from '../evidence/docs'
 import { copyTextToClipboard } from './clipboard'
 import { useAsyncEffect } from './hooks/useAsyncEffect'
@@ -116,7 +122,10 @@ function applyPayload(props: ConditionComposerPanelProps, payload: PresetPayload
 
 export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   const dims = useMemo(() => getExperienceDimensions(), [])
-  const dimById = useMemo(() => new Map<string, ExperienceDimensionDef>(dims.map((d) => [d.id, d])), [dims])
+  const dimById = useMemo(
+    () => new Map<string, ExperienceDimensionDef>(dims.map((d) => [d.id, d])),
+    [dims],
+  )
 
   const [conditionStrength, setConditionStrength] = useState<Record<string, string>>({})
   const [conditionQuery, setConditionQuery] = useState('')
@@ -163,16 +172,26 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
         let rank = 0 // 0=unknown,1=high,2=med,3=low,4=hyp
         for (const d of dimsList) {
           const s = String(dimById.get(String(d?.id))?.evidence_strength ?? '').toLowerCase()
-          const r = s === 'hypothesis' ? 4 : s === 'low' ? 3 : s === 'medium' ? 2 : s === 'high' ? 1 : 0
+          const r =
+            s === 'hypothesis' ? 4 : s === 'low' ? 3 : s === 'medium' ? 2 : s === 'high' ? 1 : 0
           rank = Math.max(rank, r)
         }
-        out[id] = rank === 4 ? 'hypothesis' : rank === 3 ? 'low' : rank === 2 ? 'medium' : rank === 1 ? 'high' : ''
+        out[id] =
+          rank === 4
+            ? 'hypothesis'
+            : rank === 3
+              ? 'low'
+              : rank === 2
+                ? 'medium'
+                : rank === 1
+                  ? 'high'
+                  : ''
       }
       if (ctx.cancelled) return
       setConditionStrength(out)
     },
     [catalogIds, dimById],
-    { onError: (err) => logger.error('ConditionComposerPanel loadProfile failed', err) }
+    { onError: (err) => logger.error('ConditionComposerPanel loadProfile failed', err) },
   )
 
   useEffect(() => {
@@ -183,7 +202,13 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
       if (parsed.length === 0) {
         const legacyRaw = localStorage.getItem(LEGACY_PRESET_STORAGE_KEY)
         if (legacyRaw) {
-          const legacyParsed = migrateLegacyPresetPayload(JSON.parse(legacyRaw))
+          let legacyJson: unknown
+          try {
+            legacyJson = JSON.parse(legacyRaw)
+          } catch {
+            legacyJson = null
+          }
+          const legacyParsed = legacyJson != null ? migrateLegacyPresetPayload(legacyJson) : null
           if (legacyParsed) {
             const migrated = createPresetSnapshot(legacyParsed, {
               name: 'Migrated Preset',
@@ -216,7 +241,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
     if (!decoded.ok) return
     applyPayload(props, decoded.payload)
     setSaveStatusTimed('loaded')
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props, setSaveStatusTimed])
 
   const filteredCatalog = useMemo(() => {
@@ -224,7 +249,8 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
     const all = props.catalog ?? []
     if (!q) return all
     const next = all.filter((entry) => {
-      const hay = `${entry.label} ${entry.description ?? ''} ${entry.id} ${(entry.tags ?? []).join(' ')}`.toLowerCase()
+      const hay =
+        `${entry.label} ${entry.description ?? ''} ${entry.id} ${(entry.tags ?? []).join(' ')}`.toLowerCase()
       return hay.includes(q)
     })
     if (!next.some((entry) => entry.id === props.conditionId)) {
@@ -243,14 +269,29 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
     })
   }, [dims, dimensionQuery])
 
-  const currentPayload = toCurrentPayload(props)
+  const currentPayload = useMemo(
+    () => toCurrentPayload(props),
+    [
+      props.mode,
+      props.conditionId,
+      props.presets,
+      props.dimensions,
+      props.intensity,
+      props.safeMode,
+      props.reducedMotion,
+      props.audioEnabled,
+      props.couplingStrength,
+      props.maxFeedback,
+      props.interactionAmount,
+    ],
+  )
   const presetIds = new Set(props.presets.map((p) => p.profileId))
   const dimIds = new Set(props.dimensions.map((d) => d.dimensionId))
   const currentConditionBadge = strengthBadge(conditionStrength[props.conditionId])
 
   const selectedSnapshot = useMemo(
     () => library.find((item) => item.id === selectedLibraryId) ?? null,
-    [library, selectedLibraryId]
+    [library, selectedLibraryId],
   )
 
   const persistLibrary = (next: PresetSnapshotV2[]): void => {
@@ -366,7 +407,11 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
         />
 
         <div className="composer__toggles">
-          <ToggleField label="Safe Mode" checked={props.safeMode} onChange={props.onSafeModeChange} />
+          <ToggleField
+            label="Safe Mode"
+            checked={props.safeMode}
+            onChange={props.onSafeModeChange}
+          />
           <ToggleField
             label="Reduced Motion"
             checked={props.reducedMotion}
@@ -419,7 +464,8 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
             onChange={props.onInteractionAmountChange}
           />
           <p className="composer__hint">
-            These settings shape how elements of the experience interact with each other. Safety limits are always active to keep things comfortable.
+            These settings shape how elements of the experience interact with each other. Safety
+            limits are always active to keep things comfortable.
           </p>
         </div>
       </details>
@@ -474,7 +520,11 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
               Delete
             </button>
             <button type="button" onClick={handleCopy}>
-              {copyStatus === 'copied' ? 'Copied JSON!' : copyStatus === 'failed' ? 'Failed' : 'Copy JSON'}
+              {copyStatus === 'copied'
+                ? 'Copied JSON!'
+                : copyStatus === 'failed'
+                  ? 'Failed'
+                  : 'Copy JSON'}
             </button>
             <button type="button" onClick={handleCopyShareLink}>
               Share Link
@@ -516,9 +566,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
           />
           <div className="composer__row-meta">
             {currentConditionBadge && (
-              <span className={currentConditionBadge.className}>
-                {currentConditionBadge.label}
-              </span>
+              <span className={currentConditionBadge.className}>{currentConditionBadge.label}</span>
             )}
             <EvidenceButton
               doc={`docs/references/conditions/${props.conditionId}.md`}

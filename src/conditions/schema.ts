@@ -1,9 +1,9 @@
 /**
  * JSON Schema Validation (Zod)
- * 
+ *
  * This file defines the explicit shape and typing of all `.json` Condition Profiles
  * stored in the `public/profiles/` directory, as well as the main `catalog.json`.
- * 
+ *
  * It uses Zod to ensure that when we fetch a profile at runtime, it actually has
  * the required fields (like `id`, `label`, and a `video_stack` array). It helps
  * fail fast if someone writes invalid JSON or forgets a required property.
@@ -139,6 +139,9 @@ export const profileSafetySchema = z
     reduced_motion_policy: reducedMotionPolicySchema.optional(),
   })
   .passthrough()
+  .refine((s) => s.intensity_default <= s.intensity_max, {
+    message: 'intensity_default must be <= intensity_max',
+  })
 
 // ---------------------------------------------------------------------------
 // Experience Dimensions file (src/conditions/experience-dimensions.json)
@@ -179,19 +182,25 @@ export const motifDefSchema = z.object({
 })
 
 /** Safety block within a dimension-to-signal mapping entry. */
-export const dimensionMappingSafetySchema = z.object({
-  warnings: z.array(z.string()).optional(),
-  clamps: z.record(z.string(), z.unknown()).optional(),
-  reduced_motion: z.object({
-    disable_nodes: z.array(z.string()).optional(),
-    note: z.string().optional(),
-  }).passthrough().optional(),
-}).passthrough()
+export const dimensionMappingSafetySchema = z
+  .object({
+    warnings: z.array(z.string()).optional(),
+    clamps: z.record(z.string(), z.unknown()).optional(),
+    reduced_motion: z
+      .object({
+        disable_nodes: z.array(z.string()).optional(),
+        note: z.string().optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough()
 
 /** Single mapping entry for one experience dimension. */
 export const dimensionSignalMappingEntrySchema = z.object({
   evidence_strength: z.string().optional(),
   rationale_doc: z.string().optional(),
+  citations: z.array(z.string()).optional(),
   notes: z.string().optional(),
   safety: dimensionMappingSafetySchema.optional(),
   video_motifs: z.array(motifDefSchema).optional(),
@@ -209,27 +218,29 @@ export const dimensionToSignalMappingFileSchema = z.object({
 // ---------------------------------------------------------------------------
 
 /** Profile file (profiles/<id>.json). Required: id, label, video_stack. */
-export const profileSchema = z.object({
-  id: z.string().min(1),
-  label: z.string(),
-  summary: z.string(),
-  framing: framingSchema,
-  experience_dimensions: z.array(experienceDimensionSchema).max(20),
-  video_stack: z.array(videoStackNodeSchema).max(30),
-  audio_stack: audioStackSchema.optional(),
-  reactive: reactiveSchema.optional(),
-  safety: profileSafetySchema,
-  ui: z
-    .object({
-      controls: z.array(uiControlSchema).max(30).optional(),
-    })
-    .optional(),
-  references: z
-    .object({
-      dimensions: z.array(z.string()).optional(),
-    })
-    .optional(),
-}).passthrough()
+export const profileSchema = z
+  .object({
+    id: z.string().min(1),
+    label: z.string(),
+    summary: z.string(),
+    framing: framingSchema,
+    experience_dimensions: z.array(experienceDimensionSchema).max(20),
+    video_stack: z.array(videoStackNodeSchema).max(30),
+    audio_stack: audioStackSchema.optional(),
+    reactive: reactiveSchema.optional(),
+    safety: profileSafetySchema,
+    ui: z
+      .object({
+        controls: z.array(uiControlSchema).max(30).optional(),
+      })
+      .optional(),
+    references: z
+      .object({
+        dimensions: z.array(z.string()).optional(),
+      })
+      .optional(),
+  })
+  .passthrough()
 
 export type UIControl = z.infer<typeof uiControlSchema>
 export type AudioStackNodeDef = z.infer<typeof audioStackNodeSchema>

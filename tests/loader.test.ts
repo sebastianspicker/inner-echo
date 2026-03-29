@@ -25,9 +25,7 @@ const VALID_PROFILE = {
 
 // Valid catalog data matching catalogSchema
 const VALID_CATALOG = {
-  conditions: [
-    { id: 'test', label: 'Test Condition' },
-  ],
+  conditions: [{ id: 'test', label: 'Test Condition' }],
 }
 
 // We mock the loader module internals by mocking the entire module and re-implementing

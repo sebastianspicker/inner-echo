@@ -40,11 +40,7 @@ function getNumberFromRecord(obj: unknown, key: string): number | undefined {
   return typeof v === 'number' && Number.isFinite(v) ? v : undefined
 }
 
-export function resolveNumberParam(
-  params: VideoNodeParams,
-  key: string,
-  fallback: number
-): number {
+export function resolveNumberParam(params: VideoNodeParams, key: string, fallback: number): number {
   const controlValues = params.controlValues ?? {}
   const nodeIndex = params.nodeIndex ?? 0
   const k = `${nodeIndex}.${key}`
@@ -58,7 +54,7 @@ export function resolveNumberParam(
 export function resolveBooleanParam(
   params: VideoNodeParams,
   key: string,
-  fallback: boolean
+  fallback: boolean,
 ): boolean {
   const controlValues = params.controlValues ?? {}
   const nodeIndex = params.nodeIndex ?? 0
@@ -73,7 +69,7 @@ export function resolveBooleanParam(
 export function getGlobalClampNumber(
   params: VideoNodeParams,
   key: string,
-  fallback: number
+  fallback: number,
 ): number {
   return getNumberFromRecord(params.safetyContext?.global, key) ?? fallback
 }
@@ -81,8 +77,7 @@ export function getGlobalClampNumber(
 export function getSafeModeClampNumber(
   params: VideoNodeParams,
   key: string,
-  fallback: number
+  fallback: number,
 ): number {
   return getNumberFromRecord(params.safetyContext?.safeMode, key) ?? fallback
 }
-

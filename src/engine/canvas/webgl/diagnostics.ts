@@ -14,7 +14,10 @@ export interface WebGLDiagnostics {
   activeVideoNodes: string[]
 }
 
-export function createDiagnostics(activeVideoNodes: string[], initialRenderScale: number): WebGLDiagnostics {
+export function createDiagnostics(
+  activeVideoNodes: string[],
+  initialRenderScale: number,
+): WebGLDiagnostics {
   return {
     rendererMode: 'webgl',
     fps: 60,
@@ -33,7 +36,7 @@ export function createDiagnostics(activeVideoNodes: string[], initialRenderScale
 export function updateResourceDiagnostics(
   diagnostics: WebGLDiagnostics,
   renderTargetsCount: number,
-  temporalPairsCount: number
+  temporalPairsCount: number,
 ): void {
   diagnostics.resourceCounts = {
     renderTargets: renderTargetsCount,

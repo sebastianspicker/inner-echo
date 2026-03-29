@@ -1,6 +1,6 @@
 /**
  * Audio Synthesizer
- * 
+ *
  * This module provides a simple, built-in dual-oscillator synthesizer (with an optional noise bed).
  * It acts as the default audio source when the microphone is disabled.
  * The output is a single Web Audio `GainNode` that gets piped into the `AudioEngine`'s effects chain.
@@ -116,7 +116,9 @@ function createNoiseBuffer(context: BaseAudioContext, durationSeconds: number): 
     const white = Math.random() * 2 - 1
     b0 = 0.99886 * b0 + white * 0.0555179
     b1 = 0.99332 * b1 + white * 0.0750759
-    b2 = 0.96900 * b2 + white * 0.1538520
+    b2 = 0.969 * b2 + white * 0.153852
+    // Division by 3 is an intentional approximation (Kellett 3-pole pink noise);
+    // sufficient for an ambient noise bed where scientific accuracy is not required.
     data[i] = Math.max(-1, Math.min(1, (b0 + b1 + b2) / 3))
   }
   return buffer

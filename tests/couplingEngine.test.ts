@@ -185,7 +185,7 @@ describe('engine/reactive/couplingEngine', () => {
   // -----------------------------------------------------------------------
   // Profile with unknown nodes doesn't crash
   // -----------------------------------------------------------------------
-  it('profile with unknown/unrecognized nodes doesn\'t crash', () => {
+  it("profile with unknown/unrecognized nodes doesn't crash", () => {
     const profile = makeProfile({
       videoStack: [{ node: 'unknown_node_xyz', params: { amount: 0.1 } }],
       audioChain: [{ node: 'imaginary_fx', params: { level: 0.5 } }],
@@ -241,14 +241,20 @@ describe('engine/reactive/couplingEngine', () => {
     const video = zeroVideo()
 
     // Non-safe engine.
-    const engineNormal = createCouplingEngine(profile, defaultSettings({ couplingStrength: 1, safeMode: false }))
+    const engineNormal = createCouplingEngine(
+      profile,
+      defaultSettings({ couplingStrength: 1, safeMode: false }),
+    )
     let normalResult = engineNormal.step(1 / 60, audio, video, { '0.amount': 0.05 })
     for (let i = 0; i < 120; i++) {
       normalResult = engineNormal.step(1 / 60, audio, video, { '0.amount': 0.05 })
     }
 
     // Safe engine.
-    const engineSafe = createCouplingEngine(profile, defaultSettings({ couplingStrength: 1, safeMode: true }))
+    const engineSafe = createCouplingEngine(
+      profile,
+      defaultSettings({ couplingStrength: 1, safeMode: true }),
+    )
     let safeResult = engineSafe.step(1 / 60, audio, video, { '0.amount': 0.05 })
     for (let i = 0; i < 120; i++) {
       safeResult = engineSafe.step(1 / 60, audio, video, { '0.amount': 0.05 })
@@ -280,7 +286,14 @@ describe('engine/reactive/couplingEngine', () => {
 
     // Engine with mic RMS higher than main RMS.
     const engineMic = createCouplingEngine(profile, settings)
-    const audioMic: AudioMetrics = { rms: 0.1, centroid: 0.1, flux: 0.1, micRms: 0.9, micCentroid: 0.8, micFlux: 0.5 }
+    const audioMic: AudioMetrics = {
+      rms: 0.1,
+      centroid: 0.1,
+      flux: 0.1,
+      micRms: 0.9,
+      micCentroid: 0.8,
+      micFlux: 0.5,
+    }
     let micResult = engineMic.step(1 / 60, audioMic, zeroVideo(), { '0.amount': 0 })
     for (let i = 0; i < 120; i++) {
       micResult = engineMic.step(1 / 60, audioMic, zeroVideo(), { '0.amount': 0 })
@@ -332,15 +345,33 @@ describe('engine/reactive/couplingEngine', () => {
         { node: 'noise_bed', params: { level: 0.03 } },
       ],
     })
-    const engine = createCouplingEngine(profile, defaultSettings({ couplingStrength: 1, maxFeedback: 1 }))
+    const engine = createCouplingEngine(
+      profile,
+      defaultSettings({ couplingStrength: 1, maxFeedback: 1 }),
+    )
 
     // Extreme inputs.
-    const extremeAudio: AudioMetrics = { rms: 1, centroid: 1, flux: 1, micRms: 1, micCentroid: 1, micFlux: 1 }
+    const extremeAudio: AudioMetrics = {
+      rms: 1,
+      centroid: 1,
+      flux: 1,
+      micRms: 1,
+      micCentroid: 1,
+      micFlux: 1,
+    }
     const extremeVideo: VideoMetrics = { motion: 1, luminance: 1, edge: 1, instability: 1 }
 
-    let result = engine.step(1 / 60, extremeAudio, extremeVideo, { '0.amount': 0.5, '1.amount': 0.5, '2.amount': 0.5 })
+    let result = engine.step(1 / 60, extremeAudio, extremeVideo, {
+      '0.amount': 0.5,
+      '1.amount': 0.5,
+      '2.amount': 0.5,
+    })
     for (let i = 0; i < 200; i++) {
-      result = engine.step(1 / 60, extremeAudio, extremeVideo, { '0.amount': 0.5, '1.amount': 0.5, '2.amount': 0.5 })
+      result = engine.step(1 / 60, extremeAudio, extremeVideo, {
+        '0.amount': 0.5,
+        '1.amount': 0.5,
+        '2.amount': 0.5,
+      })
     }
 
     // All video values should be in [0, 1].

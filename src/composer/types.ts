@@ -40,6 +40,7 @@ export type ExperienceDimensionDef = {
 export type DimensionSignalMappingEntry = {
   evidence_strength?: string
   rationale_doc?: string
+  citations?: string[]
   notes?: string
   safety?: {
     warnings?: string[]
@@ -97,4 +98,3 @@ export type ComposerSettings = {
 }
 
 export { clamp01 } from '../utils/numeric'
-

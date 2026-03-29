@@ -21,7 +21,7 @@ const DEFAULT_CEILING = -6
 
 export function createCompressor(
   context: BaseAudioContext,
-  params: CompressorParams = {}
+  params: CompressorParams = {},
 ): AudioModule {
   const comp = context.createDynamicsCompressor()
   comp.threshold.value = clamp(params.threshold ?? DEFAULT_THRESHOLD, -40, -10)
@@ -52,10 +52,13 @@ export function createCompressor(
       const a = p.attack as number | undefined
       const rel = p.release as number | undefined
       const c = p.ceiling as number | undefined
-      if (typeof t === 'number') comp.threshold.setValueAtTime(clamp(t, -40, -10), context.currentTime)
+      if (typeof t === 'number')
+        comp.threshold.setValueAtTime(clamp(t, -40, -10), context.currentTime)
       if (typeof r === 'number') comp.ratio.setValueAtTime(clamp(r, 2, 12), context.currentTime)
-      if (typeof a === 'number') comp.attack.setValueAtTime(clamp(a, 0.001, 0.05), context.currentTime)
-      if (typeof rel === 'number') comp.release.setValueAtTime(clamp(rel, 0.05, 0.6), context.currentTime)
+      if (typeof a === 'number')
+        comp.attack.setValueAtTime(clamp(a, 0.001, 0.05), context.currentTime)
+      if (typeof rel === 'number')
+        comp.release.setValueAtTime(clamp(rel, 0.05, 0.6), context.currentTime)
       if (typeof c === 'number') {
         const ceilingDb = clamp(c, -24, -6)
         ceilingGain.gain.setValueAtTime(10 ** (ceilingDb / 20), context.currentTime)

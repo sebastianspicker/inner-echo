@@ -14,7 +14,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { parseFirstJsonObject } from '../src/utils/jsonObjectParser'
 
-type ExperienceDimensionDef = { id: string; rationale_doc?: string }
+type ExperienceDimensionDef = {
+  id: string
+  rationale_doc?: string
+  motif_summary?: { video_nodes?: string[]; audio_nodes?: string[] }
+}
 type ExperienceDimensionsFile = { dimensions: ExperienceDimensionDef[] }
 type DimensionToSignalMappingFile = { mapping: Record<string, { rationale_doc?: string }> }
 type Profile = { id: string }
@@ -51,7 +55,9 @@ function main(): void {
     if (!exists(root, f)) errors.push(`Missing required evidence file: ${f}`)
   }
 
-  const dimsFile = readJsonFirstObject<ExperienceDimensionsFile>(path.join(root, 'src/conditions/experience-dimensions.json'))
+  const dimsFile = readJsonFirstObject<ExperienceDimensionsFile>(
+    path.join(root, 'src/conditions/experience-dimensions.json'),
+  )
   const motifs = new Set<string>()
   for (const d of dimsFile.dimensions ?? []) {
     const doc = d.rationale_doc
@@ -63,16 +69,18 @@ function main(): void {
     // Ensure motif pages exist for every listed node motif.
     // We use the dimension pages generator output (docs/references/motifs/<node>.md).
     // Motifs are read from the SSOT dimension definitions (read-only).
-    const defAny = d as any
-    const video = (defAny?.motif_summary?.video_nodes ?? []) as unknown[]
-    const audio = (defAny?.motif_summary?.audio_nodes ?? []) as unknown[]
+    const video = (d.motif_summary?.video_nodes ?? []) as unknown[]
+    const audio = (d.motif_summary?.audio_nodes ?? []) as unknown[]
     for (const n of [...video, ...audio]) motifs.add(String(n))
   }
 
-  const mapFile = readJsonFirstObject<DimensionToSignalMappingFile>(path.join(root, 'src/conditions/dimension-to-signal-mapping.json'))
+  const mapFile = readJsonFirstObject<DimensionToSignalMappingFile>(
+    path.join(root, 'src/conditions/dimension-to-signal-mapping.json'),
+  )
   for (const [dimId, entry] of Object.entries(mapFile.mapping ?? {})) {
     if (!entry?.rationale_doc) continue
-    if (!exists(root, entry.rationale_doc)) errors.push(`Mapping "${dimId}" rationale_doc not found: ${entry.rationale_doc}`)
+    if (!exists(root, entry.rationale_doc))
+      errors.push(`Mapping "${dimId}" rationale_doc not found: ${entry.rationale_doc}`)
   }
 
   // Motif claim labels file validation (exists + sources exist).
@@ -85,11 +93,14 @@ function main(): void {
       for (const c of data.claims ?? []) {
         const sources = c.sources ?? []
         for (const s of sources) {
-          if (!exists(root, s)) errors.push(`Motif claim source missing (${c.dimensionId}|${c.motif}): ${s}`)
+          if (!exists(root, s))
+            errors.push(`Motif claim source missing (${c.dimensionId}|${c.motif}): ${s}`)
         }
       }
     } catch (e) {
-      errors.push(`Invalid JSON in docs/references/MOTIF_CLAIMS.json: ${e instanceof Error ? e.message : String(e)}`)
+      errors.push(
+        `Invalid JSON in docs/references/MOTIF_CLAIMS.json: ${e instanceof Error ? e.message : String(e)}`,
+      )
     }
   }
 
@@ -98,7 +109,8 @@ function main(): void {
   for (const file of profileFiles) {
     const prof = readJsonFirstObject<Profile>(path.join(profilesDir, file))
     const doc = `docs/references/conditions/${prof.id}.md`
-    if (!exists(root, doc)) errors.push(`Condition "${prof.id}" missing evidence summary page: ${doc}`)
+    if (!exists(root, doc))
+      errors.push(`Condition "${prof.id}" missing evidence summary page: ${doc}`)
   }
 
   for (const m of Array.from(motifs)) {

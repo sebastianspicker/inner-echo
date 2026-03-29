@@ -9,7 +9,9 @@ const STORAGE_KEY = 'inner-echo-onboarding-accepted'
 // Create a spec-compliant mock to use in these tests.
 const storageMap = new Map<string, string>()
 const storageMock: Storage = {
-  get length() { return storageMap.size },
+  get length() {
+    return storageMap.size
+  },
   clear: () => storageMap.clear(),
   getItem: (key: string) => storageMap.get(key) ?? null,
   key: (index: number) => [...storageMap.keys()][index] ?? null,

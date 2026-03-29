@@ -49,7 +49,7 @@ class HarnessAudioContext extends FakeAudioContext {
   // Wrap every node factory so the returned object has a `.context` pointing back
   // to this HarnessAudioContext — mirrors real Web Audio API behavior.
   private withContext<T>(node: T): T {
-    (node as Record<string, unknown>).context = this
+    ;(node as Record<string, unknown>).context = this
     return node
   }
 
@@ -204,10 +204,7 @@ describe('engine/audio/audioEngine', () => {
   // After init, getMetrics returns computed values from analyser
   // -----------------------------------------------------------------------
   it('after init, getRms reflects analyser data', async () => {
-    const control = createAudioEngine(
-      { enabled: true, master: { volume: 0.3 }, chain: [] },
-      {}
-    )
+    const control = createAudioEngine({ enabled: true, master: { volume: 0.3 }, chain: [] }, {})
     // Wait for async init to complete.
     await new Promise<void>((resolve) => setTimeout(resolve, 10))
 
@@ -227,10 +224,7 @@ describe('engine/audio/audioEngine', () => {
   // computeRms: silence produces 0
   // -----------------------------------------------------------------------
   it('getRms returns 0 for silent analyser data', async () => {
-    const control = createAudioEngine(
-      { enabled: true, master: { volume: 0.3 }, chain: [] },
-      {}
-    )
+    const control = createAudioEngine({ enabled: true, master: { volume: 0.3 }, chain: [] }, {})
     await new Promise<void>((resolve) => setTimeout(resolve, 10))
 
     const analyser = contextState.ctx!.getLastAnalyser()
@@ -243,10 +237,7 @@ describe('engine/audio/audioEngine', () => {
   // computeRms: known non-trivial input
   // -----------------------------------------------------------------------
   it('getRms produces correct value for known input', async () => {
-    const control = createAudioEngine(
-      { enabled: true, master: { volume: 0.3 }, chain: [] },
-      {}
-    )
+    const control = createAudioEngine({ enabled: true, master: { volume: 0.3 }, chain: [] }, {})
     await new Promise<void>((resolve) => setTimeout(resolve, 10))
 
     const analyser = contextState.ctx!.getLastAnalyser()
@@ -263,10 +254,7 @@ describe('engine/audio/audioEngine', () => {
   // getMetrics returns spectral features after init
   // -----------------------------------------------------------------------
   it('getMetrics returns spectral centroid and flux from analyser', async () => {
-    const control = createAudioEngine(
-      { enabled: true, master: { volume: 0.3 }, chain: [] },
-      {}
-    )
+    const control = createAudioEngine({ enabled: true, master: { volume: 0.3 }, chain: [] }, {})
     await new Promise<void>((resolve) => setTimeout(resolve, 10))
 
     const analyser = contextState.ctx!.getLastAnalyser()
@@ -295,10 +283,7 @@ describe('engine/audio/audioEngine', () => {
   // stop() is idempotent
   // -----------------------------------------------------------------------
   it('stop() can be called multiple times without error', async () => {
-    const control = createAudioEngine(
-      { enabled: true, master: { volume: 0.3 }, chain: [] },
-      {}
-    )
+    const control = createAudioEngine({ enabled: true, master: { volume: 0.3 }, chain: [] }, {})
     await new Promise<void>((resolve) => setTimeout(resolve, 10))
     expect(() => {
       control.stop()
@@ -310,10 +295,7 @@ describe('engine/audio/audioEngine', () => {
   // setConditionAudio rebuilds the chain
   // -----------------------------------------------------------------------
   it('setConditionAudio updates activeNodes in debug state', async () => {
-    const control = createAudioEngine(
-      { enabled: false, master: { volume: 0 }, chain: [] },
-      {}
-    )
+    const control = createAudioEngine({ enabled: false, master: { volume: 0 }, chain: [] }, {})
     await new Promise<void>((resolve) => setTimeout(resolve, 10))
 
     control.setConditionAudio({
@@ -377,8 +359,12 @@ describe('engine/audio/audioEngine', () => {
   // -----------------------------------------------------------------------
   it('applyReactiveParams with empty overrides does not throw', async () => {
     const control = createAudioEngine(
-      { enabled: true, master: { volume: 0.2 }, chain: [{ node: 'lowpass', params: { cutoff: 800 } }] },
-      {}
+      {
+        enabled: true,
+        master: { volume: 0.2 },
+        chain: [{ node: 'lowpass', params: { cutoff: 800 } }],
+      },
+      {},
     )
     await new Promise<void>((resolve) => setTimeout(resolve, 50))
     expect(() => control.applyReactiveParams({})).not.toThrow()
@@ -392,7 +378,7 @@ describe('engine/audio/audioEngine', () => {
   it('setConditionAudio(null) results in empty active nodes', async () => {
     const control = createAudioEngine(
       { enabled: true, master: { volume: 0.2 }, chain: [{ node: 'lowpass', params: {} }] },
-      {}
+      {},
     )
     await new Promise<void>((resolve) => setTimeout(resolve, 10))
     control.setConditionAudio(null)

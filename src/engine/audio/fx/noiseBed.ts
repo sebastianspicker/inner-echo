@@ -20,7 +20,11 @@ function normalizeColor(color: unknown): 'white' | 'pink' | 'brown' {
   return 'pink'
 }
 
-function createNoiseBuffer(context: BaseAudioContext, color: 'white' | 'pink' | 'brown', durationSeconds: number): AudioBuffer {
+function createNoiseBuffer(
+  context: BaseAudioContext,
+  color: 'white' | 'pink' | 'brown',
+  durationSeconds: number,
+): AudioBuffer {
   const sampleRate = context.sampleRate
   const length = Math.ceil(sampleRate * durationSeconds)
   const buffer = context.createBuffer(1, length, sampleRate)
@@ -45,12 +49,17 @@ function createNoiseBuffer(context: BaseAudioContext, color: 'white' | 'pink' | 
     pink0 = 0.99886 * pink0 + white * 0.0555179
     pink1 = 0.99332 * pink1 + white * 0.0750759
     pink2 = 0.969 * pink2 + white * 0.153852
+    // Division by 3 is an intentional approximation (Kellett 3-pole pink noise);
+    // sufficient for an ambient noise bed where scientific accuracy is not required.
     data[i] = clamp((pink0 + pink1 + pink2) / 3, -1, 1)
   }
   return buffer
 }
 
-export function createNoiseBed(context: BaseAudioContext, params: NoiseBedParams = {}): AudioModule {
+export function createNoiseBed(
+  context: BaseAudioContext,
+  params: NoiseBedParams = {},
+): AudioModule {
   const level = clamp(params.level ?? DEFAULT_LEVEL, 0, MAX_LEVEL)
   let color = normalizeColor(params.color)
 
@@ -67,7 +76,11 @@ export function createNoiseBed(context: BaseAudioContext, params: NoiseBedParams
   input.gain.value = 0
   input.connect(gain)
 
+  let replacePending = false
+
   function replaceSource(nextColor: 'white' | 'pink' | 'brown'): void {
+    if (replacePending) return
+    replacePending = true
     try {
       source.stop()
     } catch {
@@ -81,6 +94,7 @@ export function createNoiseBed(context: BaseAudioContext, params: NoiseBedParams
     newSource.connect(gain)
     newSource.start(0)
     source = newSource
+    replacePending = false
   }
 
   return {
@@ -92,7 +106,8 @@ export function createNoiseBed(context: BaseAudioContext, params: NoiseBedParams
     },
     setParams(p: Record<string, unknown>): void {
       const l = p.level as number | undefined
-      if (typeof l === 'number') gain.gain.setValueAtTime(clamp(l, 0, MAX_LEVEL), context.currentTime)
+      if (typeof l === 'number')
+        gain.gain.setValueAtTime(clamp(l, 0, MAX_LEVEL), context.currentTime)
       const c = p.color as string | undefined
       if (typeof c === 'string') {
         const nextColor = normalizeColor(c)

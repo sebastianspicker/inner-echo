@@ -69,10 +69,7 @@ describe('engine/audio/audioEngine', () => {
   })
 
   it('applies condition audio updates queued before async init completes', async () => {
-    const control = createAudioEngine(
-      { enabled: false, master: { volume: 0 }, chain: [] },
-      {}
-    )
+    const control = createAudioEngine({ enabled: false, master: { volume: 0 }, chain: [] }, {})
 
     control.setConditionAudio({
       enabled: true,

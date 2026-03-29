@@ -54,10 +54,11 @@
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
   cursor: pointer;
-  transition: background var(--duration-normal) var(--ease-gentle),
-              border-color var(--duration-normal) var(--ease-gentle),
-              transform var(--duration-normal) var(--ease-out-soft),
-              box-shadow var(--duration-normal) var(--ease-gentle);
+  transition:
+    background var(--duration-normal) var(--ease-gentle),
+    border-color var(--duration-normal) var(--ease-gentle),
+    transform var(--duration-normal) var(--ease-out-soft),
+    box-shadow var(--duration-normal) var(--ease-gentle);
 }
 
 .debug-panel__btn:hover:not(:disabled) {

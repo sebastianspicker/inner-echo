@@ -26,4 +26,3 @@ describe('ui/clipboard', () => {
     expect(ok).toBe(false)
   })
 })
-

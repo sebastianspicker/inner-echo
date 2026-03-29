@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import { composeEffectiveProfileCore, type ComposeSources } from '../src/composer/composeCore'
 import type { Profile } from '../src/conditions/schema'
-import type { ComposerSettings, DimensionSignalMappingEntry, ExperienceDimensionDef } from '../src/composer/types'
+import type {
+  ComposerSettings,
+  DimensionSignalMappingEntry,
+  ExperienceDimensionDef,
+} from '../src/composer/types'
 
 const MINIMAL_PROFILE: Profile = {
   id: 'minimal',
@@ -25,9 +29,7 @@ const MINIMAL_PROFILE: Profile = {
     enabled: true,
     input: 'synth',
     master: { volume: 0.5 },
-    chain: [
-      { id: 'tremolo', node: 'tremolo', params: { rate: 3, depth: 0.1 } },
-    ],
+    chain: [{ id: 'tremolo', node: 'tremolo', params: { rate: 3, depth: 0.1 } }],
   },
   reactive: { analyser_to_params: [] },
   ui: { controls: [] },
@@ -66,7 +68,7 @@ describe('composer/composeCore', () => {
       [{ profileId: 'minimal', weight: 1 }],
       [],
       DEFAULT_SETTINGS,
-      makeSources({ minimal: MINIMAL_PROFILE })
+      makeSources({ minimal: MINIMAL_PROFILE }),
     )
 
     expect(result.profile).toBeDefined()
@@ -84,7 +86,7 @@ describe('composer/composeCore', () => {
       [{ profileId: 'minimal', weight: 1 }],
       [],
       DEFAULT_SETTINGS,
-      makeSources({ minimal: MINIMAL_PROFILE })
+      makeSources({ minimal: MINIMAL_PROFILE }),
     )
 
     // video_stack should contain the nodes from the profile
@@ -100,12 +102,7 @@ describe('composer/composeCore', () => {
   })
 
   it('composeEffectiveProfileCore with empty presets and dimensions returns fallback', async () => {
-    const result = await composeEffectiveProfileCore(
-      [],
-      [],
-      DEFAULT_SETTINGS,
-      makeSources({})
-    )
+    const result = await composeEffectiveProfileCore([], [], DEFAULT_SETTINGS, makeSources({}))
 
     expect(result.profile).toBeDefined()
     expect(result.profile.id).toBe('composed')
@@ -121,7 +118,7 @@ describe('composer/composeCore', () => {
       [{ profileId: 'nonexistent', weight: 1 }],
       [],
       DEFAULT_SETTINGS,
-      makeSources({})
+      makeSources({}),
     )
 
     expect(result.report.missingPresets).toContain('nonexistent')
@@ -133,7 +130,7 @@ describe('composer/composeCore', () => {
       [{ profileId: 'minimal', weight: 1 }],
       [],
       { ...DEFAULT_SETTINGS, audioEnabled: false },
-      makeSources({ minimal: MINIMAL_PROFILE })
+      makeSources({ minimal: MINIMAL_PROFILE }),
     )
 
     expect(result.profile.audio_stack?.enabled).toBe(false)
@@ -144,7 +141,7 @@ describe('composer/composeCore', () => {
       [{ profileId: 'minimal', weight: 0 }],
       [],
       DEFAULT_SETTINGS,
-      makeSources({ minimal: MINIMAL_PROFILE })
+      makeSources({ minimal: MINIMAL_PROFILE }),
     )
 
     // A zero-weight preset should be filtered out before loading
@@ -157,16 +154,12 @@ describe('composer/composeCore', () => {
       ...MINIMAL_PROFILE,
       id: 'profile-a',
       label: 'Profile A',
-      video_stack: [
-        { id: 'grain', node: 'grain', params: { amount: 0.2 } },
-      ],
+      video_stack: [{ id: 'grain', node: 'grain', params: { amount: 0.2 } }],
       audio_stack: {
         enabled: true,
         input: 'synth',
         master: { volume: 0.4 },
-        chain: [
-          { id: 'tremolo', node: 'tremolo', params: { rate: 2, depth: 0.1 } },
-        ],
+        chain: [{ id: 'tremolo', node: 'tremolo', params: { rate: 2, depth: 0.1 } }],
       },
     }
 
@@ -182,9 +175,7 @@ describe('composer/composeCore', () => {
         enabled: true,
         input: 'synth',
         master: { volume: 0.8 },
-        chain: [
-          { id: 'tremolo', node: 'tremolo', params: { rate: 6, depth: 0.3 } },
-        ],
+        chain: [{ id: 'tremolo', node: 'tremolo', params: { rate: 6, depth: 0.3 } }],
       },
     }
 
@@ -196,7 +187,7 @@ describe('composer/composeCore', () => {
         ],
         [],
         DEFAULT_SETTINGS,
-        makeSources({ 'profile-a': PROFILE_A, 'profile-b': PROFILE_B })
+        makeSources({ 'profile-a': PROFILE_A, 'profile-b': PROFILE_B }),
       )
 
       expect(result.profile.video_stack.length).toBeGreaterThanOrEqual(1)
@@ -216,7 +207,7 @@ describe('composer/composeCore', () => {
         ],
         [],
         DEFAULT_SETTINGS,
-        makeSources({ 'profile-a': PROFILE_A, 'profile-b': PROFILE_B })
+        makeSources({ 'profile-a': PROFILE_A, 'profile-b': PROFILE_B }),
       )
 
       const nodeNames = result.profile.video_stack.map((n) => n.node)
@@ -231,7 +222,7 @@ describe('composer/composeCore', () => {
         ],
         [],
         DEFAULT_SETTINGS,
-        makeSources({ 'profile-a': PROFILE_A, 'profile-b': PROFILE_B })
+        makeSources({ 'profile-a': PROFILE_A, 'profile-b': PROFILE_B }),
       )
 
       const vol = result.profile.audio_stack?.master?.volume
@@ -247,19 +238,27 @@ describe('composer/composeCore', () => {
       const dimMapping: DimensionSignalMappingEntry = {
         evidence_strength: 'medium',
         rationale_doc: 'docs/test.md',
-        video_motifs: [
-          { node: 'grain', params_hint: { amount: '0.1 - 0.4' } },
-        ],
+        video_motifs: [{ node: 'grain', params_hint: { amount: '0.1 - 0.4' } }],
         audio_motifs: [],
       }
 
       const sources: ComposeSources = {
-        async loadPresetProfile() { return null },
+        async loadPresetProfile() {
+          return null
+        },
         getDimensionMappingEntry(dimId: string) {
           return dimId === 'intrusion' ? dimMapping : null
         },
         getExperienceDimensions() {
-          return [{ id: 'intrusion', label: 'Intrusion', description: 'test', evidence_strength: 'medium', rationale_doc: 'docs/test.md' }]
+          return [
+            {
+              id: 'intrusion',
+              label: 'Intrusion',
+              description: 'test',
+              evidence_strength: 'medium',
+              rationale_doc: 'docs/test.md',
+            },
+          ]
         },
       }
 
@@ -267,7 +266,7 @@ describe('composer/composeCore', () => {
         [],
         [{ dimensionId: 'intrusion', weight: 0.8 }],
         DEFAULT_SETTINGS,
-        sources
+        sources,
       )
 
       const grainNode = result.profile.video_stack.find((n) => n.node === 'grain')
@@ -277,13 +276,13 @@ describe('composer/composeCore', () => {
     it('adds dimension audio motifs to the chain', async () => {
       const dimMapping: DimensionSignalMappingEntry = {
         video_motifs: [],
-        audio_motifs: [
-          { node: 'reverb', params_hint: { decay: '0.5 - 2.0' } },
-        ],
+        audio_motifs: [{ node: 'reverb', params_hint: { decay: '0.5 - 2.0' } }],
       }
 
       const sources: ComposeSources = {
-        async loadPresetProfile() { return null },
+        async loadPresetProfile() {
+          return null
+        },
         getDimensionMappingEntry(dimId: string) {
           return dimId === 'derealization' ? dimMapping : null
         },
@@ -296,7 +295,7 @@ describe('composer/composeCore', () => {
         [],
         [{ dimensionId: 'derealization', weight: 0.7 }],
         DEFAULT_SETTINGS,
-        sources
+        sources,
       )
 
       const reverbNode = result.profile.audio_stack?.chain?.find((n) => n.node === 'reverb')
@@ -305,8 +304,12 @@ describe('composer/composeCore', () => {
 
     it('unmapped dimension is handled gracefully with evidence gap', async () => {
       const sources: ComposeSources = {
-        async loadPresetProfile() { return null },
-        getDimensionMappingEntry() { return null },
+        async loadPresetProfile() {
+          return null
+        },
+        getDimensionMappingEntry() {
+          return null
+        },
         getExperienceDimensions() {
           return [{ id: 'unknown_dim', label: 'Unknown', description: 'test' }]
         },
@@ -316,7 +319,7 @@ describe('composer/composeCore', () => {
         [],
         [{ dimensionId: 'unknown_dim', weight: 0.5 }],
         DEFAULT_SETTINGS,
-        sources
+        sources,
       )
 
       // Should report an evidence gap for the unmapped dimension
@@ -334,7 +337,7 @@ describe('composer/composeCore', () => {
         ],
         [],
         DEFAULT_SETTINGS,
-        makeSources({ exists: MINIMAL_PROFILE })
+        makeSources({ exists: MINIMAL_PROFILE }),
       )
 
       expect(result.report.missingPresets).toContain('does_not_exist')
@@ -360,7 +363,7 @@ describe('composer/composeCore', () => {
         ],
         [],
         DEFAULT_SETTINGS,
-        makeSources({ a: profileWithReactive, b: profileWithReactive })
+        makeSources({ a: profileWithReactive, b: profileWithReactive }),
       )
 
       // The same reactive mapping from both presets should be deduplicated
@@ -377,7 +380,9 @@ describe('composer/composeCore', () => {
       }
 
       const sources: ComposeSources = {
-        async loadPresetProfile() { return null },
+        async loadPresetProfile() {
+          return null
+        },
         getDimensionMappingEntry(dimId: string) {
           return dimId === 'test_dim' ? dimMapping : null
         },
@@ -390,7 +395,7 @@ describe('composer/composeCore', () => {
         [],
         [{ dimensionId: 'test_dim', weight: 0.5 }],
         DEFAULT_SETTINGS,
-        sources
+        sources,
       )
 
       expect(result.report.evidence.dimensions).toHaveLength(1)
@@ -407,7 +412,9 @@ describe('composer/composeCore', () => {
       }
 
       const sources: ComposeSources = {
-        async loadPresetProfile() { return null },
+        async loadPresetProfile() {
+          return null
+        },
         getDimensionMappingEntry(dimId: string) {
           return dimId === 'no_doc' ? dimMapping : null
         },
@@ -420,12 +427,14 @@ describe('composer/composeCore', () => {
         [],
         [{ dimensionId: 'no_doc', weight: 0.5 }],
         DEFAULT_SETTINGS,
-        sources
+        sources,
       )
 
-      expect(result.report.evidence.gaps.some(
-        (g) => g.dimensionId === 'no_doc' && g.reason.includes('rationale_doc')
-      )).toBe(true)
+      expect(
+        result.report.evidence.gaps.some(
+          (g) => g.dimensionId === 'no_doc' && g.reason.includes('rationale_doc'),
+        ),
+      ).toBe(true)
     })
 
     it('reports unimplemented video node types as missingNodes', async () => {
@@ -434,7 +443,9 @@ describe('composer/composeCore', () => {
       }
 
       const sources: ComposeSources = {
-        async loadPresetProfile() { return null },
+        async loadPresetProfile() {
+          return null
+        },
         getDimensionMappingEntry(dimId: string) {
           return dimId === 'dim1' ? dimMapping : null
         },
@@ -447,7 +458,7 @@ describe('composer/composeCore', () => {
         [],
         [{ dimensionId: 'dim1', weight: 0.5 }],
         DEFAULT_SETTINGS,
-        sources
+        sources,
       )
 
       expect(result.report.missingNodes.video).toContain('nonexistent_node_xyz')

@@ -51,9 +51,7 @@ describe('composer/composeBlend', () => {
     })
 
     it('filters out __proto__ key for prototype pollution safety', () => {
-      const result = mergeParams([
-        { w: 1, params: { __proto__: 'bad', safe: 1 }, source: 'a' },
-      ])
+      const result = mergeParams([{ w: 1, params: { __proto__: 'bad', safe: 1 }, source: 'a' }])
 
       expect(result.safe).toBe(1)
       expect(Object.keys(result)).not.toContain('__proto__')
@@ -90,7 +88,10 @@ describe('composer/composeBlend', () => {
     })
 
     it('leaves non-numeric values unchanged regardless of weight', () => {
-      const result = scaleNumericParams({ mode: 'pink', amount: 0.5 } as Record<string, unknown>, 0.5)
+      const result = scaleNumericParams(
+        { mode: 'pink', amount: 0.5 } as Record<string, unknown>,
+        0.5,
+      )
       expect(result.mode).toBe('pink')
       expect(result.amount).toBeCloseTo(0.25)
     })
@@ -218,9 +219,7 @@ describe('composer/composeBlend', () => {
 
   describe('motifsToVideoDefs', () => {
     it('converts motifs with params_hint containing numeric ranges', () => {
-      const result = motifsToVideoDefs([
-        { node: 'grain', params_hint: { amount: '0.1 - 0.5' } },
-      ])
+      const result = motifsToVideoDefs([{ node: 'grain', params_hint: { amount: '0.1 - 0.5' } }])
       expect(result).toHaveLength(1)
       expect(result[0].node).toBe('grain')
       // With strength=1, should pick the high end of the range
@@ -228,9 +227,7 @@ describe('composer/composeBlend', () => {
     })
 
     it('converts motifs with empty params_hint', () => {
-      const result = motifsToVideoDefs([
-        { node: 'vignette' },
-      ])
+      const result = motifsToVideoDefs([{ node: 'vignette' }])
       expect(result).toHaveLength(1)
       expect(result[0].node).toBe('vignette')
       expect(result[0].params).toEqual({})
@@ -255,25 +252,19 @@ describe('composer/composeBlend', () => {
     })
 
     it('normalizes node type to lowercase', () => {
-      const result = motifsToVideoDefs([
-        { node: '  GRAIN  ' },
-      ])
+      const result = motifsToVideoDefs([{ node: '  GRAIN  ' }])
       expect(result[0].node).toBe('grain')
     })
 
     it('resolves color string hints (pink/brown/white)', () => {
-      const result = motifsToVideoDefs([
-        { node: 'noise_bed', params_hint: { type: 'pink noise' } },
-      ])
+      const result = motifsToVideoDefs([{ node: 'noise_bed', params_hint: { type: 'pink noise' } }])
       expect(result[0].params.type).toBe('pink')
     })
   })
 
   describe('motifsToAudioDefs', () => {
     it('converts audio motifs to node+params format', () => {
-      const result = motifsToAudioDefs([
-        { node: 'reverb', params_hint: { decay: '0.5 - 2.0' } },
-      ])
+      const result = motifsToAudioDefs([{ node: 'reverb', params_hint: { decay: '0.5 - 2.0' } }])
       expect(result).toHaveLength(1)
       expect(result[0].node).toBe('reverb')
       expect(result[0].params.decay).toBeCloseTo(2.0)
@@ -304,10 +295,7 @@ describe('composer/composeBlend', () => {
     })
 
     it('merges boolean keys with logical OR', () => {
-      const result = mergeSafeModeClamps([
-        { enabled: false },
-        { enabled: true },
-      ])
+      const result = mergeSafeModeClamps([{ enabled: false }, { enabled: true }])
       expect(result.enabled).toBe(true)
     })
 
@@ -331,17 +319,12 @@ describe('composer/composeBlend', () => {
 
     it('mixed numeric and boolean values fall back to first value', () => {
       // When values are mixed types (not all numeric, not all boolean), uses first
-      const result = mergeSafeModeClamps([
-        { mixed: 0.5 },
-        { mixed: true as unknown },
-      ])
+      const result = mergeSafeModeClamps([{ mixed: 0.5 }, { mixed: true as unknown }])
       expect(result.mixed).toBe(0.5)
     })
 
     it('sorts keys alphabetically', () => {
-      const result = mergeSafeModeClamps([
-        { zebra: 1, alpha: 2 },
-      ])
+      const result = mergeSafeModeClamps([{ zebra: 1, alpha: 2 }])
       const keys = Object.keys(result)
       expect(keys).toEqual(['alpha', 'zebra'])
     })
@@ -349,9 +332,7 @@ describe('composer/composeBlend', () => {
 
   describe('mergeWarnings (additional)', () => {
     it('deduplicates identical warnings', () => {
-      const result = mergeWarnings([
-        ['Same warning', 'Same warning', 'Same warning'],
-      ])
+      const result = mergeWarnings([['Same warning', 'Same warning', 'Same warning']])
       expect(result).toEqual(['Same warning'])
     })
 
@@ -368,11 +349,7 @@ describe('composer/composeBlend', () => {
 
   describe('mergeDisableNodes (additional)', () => {
     it('returns union of all sets', () => {
-      const result = mergeDisableNodes([
-        ['grain'],
-        ['vignette'],
-        ['pulse'],
-      ])
+      const result = mergeDisableNodes([['grain'], ['vignette'], ['pulse']])
       expect(result).toEqual(['grain', 'pulse', 'vignette'])
     })
 

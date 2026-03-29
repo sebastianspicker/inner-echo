@@ -23,7 +23,7 @@ export function encodePresetToHash(payload: PresetPayload): string {
 }
 
 export function decodePresetFromHash(
-  hash: string
+  hash: string,
 ): { ok: true; payload: PresetPayload } | { ok: false; reason: string } {
   if (!hash.startsWith(HASH_PREFIX)) {
     return { ok: false, reason: 'missing-prefix' }

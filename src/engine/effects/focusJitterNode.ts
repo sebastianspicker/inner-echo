@@ -3,7 +3,7 @@
  * Params: amount, smoothing.
  */
 
-import * as THREE from 'three'
+import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -20,7 +20,7 @@ function lerp(a: number, b: number, t: number): number {
 
 export class FocusJitterNode implements VideoNode {
   readonly nodeName = 'focus_jitter'
-  private material: THREE.ShaderMaterial | null = null
+  private material: ShaderMaterial | null = null
   // biome-ignore lint/correctness/noUnusedPrivateClassMembers: used in tick()
   private t = 0
   private nextSampleIn = 0
@@ -74,19 +74,19 @@ export class FocusJitterNode implements VideoNode {
     this.material.uniforms.u_offset.value.set(this.currentX, this.currentY)
   }
 
-  getMaterial(inputTexture: THREE.Texture): THREE.Material {
+  getMaterial(inputTexture: Texture): Material {
     if (this.material) {
       this.material.uniforms.u_map.value = inputTexture
       return this.material
     }
-    this.material = new THREE.ShaderMaterial({
+    this.material = new ShaderMaterial({
       uniforms: {
         u_map: { value: inputTexture },
-        u_uvScale: { value: new THREE.Vector2(1, 1) },
-        u_uvOffset: { value: new THREE.Vector2(0, 0) },
+        u_uvScale: { value: new Vector2(1, 1) },
+        u_uvOffset: { value: new Vector2(0, 0) },
         u_amount: { value: 0 },
         u_smoothing: { value: 0.92 },
-        u_offset: { value: new THREE.Vector2(0, 0) },
+        u_offset: { value: new Vector2(0, 0) },
       },
       vertexShader: QUAD_VERTEX_SHADER,
       fragmentShader: `
@@ -111,4 +111,3 @@ void main() {
     this.material = null
   }
 }
-

@@ -167,7 +167,9 @@ async function expectCameraLabel(page, regex, timeoutMs) {
 async function ensureDetailsOpen(page, summaryText) {
   const summary = page.locator(`summary:has-text("${summaryText}")`).first()
   await summary.scrollIntoViewIfNeeded()
-  const isOpen = await summary.evaluate((el) => el.closest('details')?.hasAttribute('open') ?? false)
+  const isOpen = await summary.evaluate(
+    (el) => el.closest('details')?.hasAttribute('open') ?? false,
+  )
   if (!isOpen) {
     await summary.click()
   }
@@ -253,7 +255,10 @@ async function main() {
       await page.waitForTimeout(250)
       await captureShot(page, shot('06-audio-mic-controls'))
 
-      await page.locator('.ie-header').getByRole('button', { name: /evidence/i }).click()
+      await page
+        .locator('.ie-header')
+        .getByRole('button', { name: /evidence/i })
+        .click()
       await page.locator('.evidence-backdrop').waitFor({ state: 'visible', timeout: 3000 })
       await delay(150)
       await captureShot(page, shot('07-evidence-drawer'))
@@ -266,7 +271,10 @@ async function main() {
       await delay(150)
       await captureShot(page, shot('08-safety-toggles'))
 
-      await page.locator('.ie-header').getByRole('button', { name: /stop everything/i }).click()
+      await page
+        .locator('.ie-header')
+        .getByRole('button', { name: /stop everything/i })
+        .click()
       await expectCameraLabel(page, /(aus|fehler|verweigert|error)/i, 3000)
       await delay(200)
       await captureShot(page, shot('10-stop-everything-idle'))

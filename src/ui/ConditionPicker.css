@@ -22,9 +22,10 @@
   background: rgba(0, 0, 0, 0.14);
   color: var(--text);
   cursor: pointer;
-  transition: border-color var(--duration-normal) var(--ease-gentle),
-              background var(--duration-normal) var(--ease-gentle),
-              box-shadow var(--duration-normal) var(--ease-gentle);
+  transition:
+    border-color var(--duration-normal) var(--ease-gentle),
+    background var(--duration-normal) var(--ease-gentle),
+    box-shadow var(--duration-normal) var(--ease-gentle);
 }
 
 .condition-picker__select:hover {

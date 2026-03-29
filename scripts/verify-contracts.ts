@@ -20,9 +20,7 @@ function mdIssue(issue: ContractIssue): string {
   ]
     .filter(Boolean)
     .join(' | ')
-  const target = [issue.kind, issue.node, issue.param]
-    .filter(Boolean)
-    .join('.')
+  const target = [issue.kind, issue.node, issue.param].filter(Boolean).join('.')
   return `- [${issue.severity.toUpperCase()}] \`${issue.code}\` ${issue.message}${
     target ? ` (\`${target}\`)` : ''
   }${where ? ` — ${where}` : ''}`
@@ -30,9 +28,9 @@ function mdIssue(issue: ContractIssue): string {
 
 function mdRange(r: RangeCheckResult): string {
   return `- [${r.status.toUpperCase()}] \`${r.kind}.${r.node}.${r.param}\` min=${String(
-    r.min
+    r.min,
   )} max=${String(r.max)} observedMin=${String(
-    r.observedMin
+    r.observedMin,
   )} observedMax=${String(r.observedMax)} — ${r.message}`
 }
 
@@ -119,14 +117,10 @@ function main(): void {
   writeFileSync(jsonPath, JSON.stringify(report, null, 2), 'utf-8')
   writeFileSync(mdPath, toMarkdown(report), 'utf-8')
 
+  console.log(`[verify:contracts] report written: ${rel(path.relative(rootDir, jsonPath))}`)
+  console.log(`[verify:contracts] report written: ${rel(path.relative(rootDir, mdPath))}`)
   console.log(
-    `[verify:contracts] report written: ${rel(path.relative(rootDir, jsonPath))}`
-  )
-  console.log(
-    `[verify:contracts] report written: ${rel(path.relative(rootDir, mdPath))}`
-  )
-  console.log(
-    `[verify:contracts] summary: ok=${report.summary.ok} warnings=${report.summary.warnings} errors=${report.summary.errors}`
+    `[verify:contracts] summary: ok=${report.summary.ok} warnings=${report.summary.warnings} errors=${report.summary.errors}`,
   )
 
   if (report.warnings.length > 0) {

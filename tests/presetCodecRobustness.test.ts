@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  encodePresetToHash,
-  decodePresetFromHash,
-} from '../src/ui/presetShare'
+import { encodePresetToHash, decodePresetFromHash } from '../src/ui/presetShare'
 import {
   encodePresetPayload,
   decodePresetPayload,

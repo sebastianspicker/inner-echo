@@ -3,7 +3,7 @@
  * Params: depth, rate, smoothing.
  */
 
-import * as THREE from 'three'
+import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -37,7 +37,7 @@ void main() {
 
 export class PulseNode implements VideoNode {
   readonly nodeName = 'pulse'
-  private material: THREE.ShaderMaterial | null = null
+  private material: ShaderMaterial | null = null
   private phase = 0
   private smoothed = 0.5
   private rateHz = 1
@@ -84,16 +84,16 @@ export class PulseNode implements VideoNode {
     this.material.uniforms.u_pulse.value = this.smoothed
   }
 
-  getMaterial(inputTexture: THREE.Texture): THREE.Material {
+  getMaterial(inputTexture: Texture): Material {
     if (this.material) {
       this.material.uniforms.u_map.value = inputTexture
       return this.material
     }
-    this.material = new THREE.ShaderMaterial({
+    this.material = new ShaderMaterial({
       uniforms: {
         u_map: { value: inputTexture },
-        u_uvScale: { value: new THREE.Vector2(1, 1) },
-        u_uvOffset: { value: new THREE.Vector2(0, 0) },
+        u_uvScale: { value: new Vector2(1, 1) },
+        u_uvOffset: { value: new Vector2(0, 0) },
         u_depth: { value: 0 },
         u_pulse: { value: 0.5 },
       },
@@ -109,4 +109,3 @@ export class PulseNode implements VideoNode {
     this.material = null
   }
 }
-

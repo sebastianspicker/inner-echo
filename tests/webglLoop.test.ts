@@ -9,6 +9,7 @@ describe('engine/canvas/webgl/loop', () => {
       scaleCount: 3,
       avgFps: 20,
       stressMode: false,
+      prevStressMode: false,
       nowMs: 1000,
       lastScaleChangeMs: 500,
       cooldownMs: 900,
@@ -24,6 +25,7 @@ describe('engine/canvas/webgl/loop', () => {
       scaleCount: 3,
       avgFps: 60,
       stressMode: true,
+      prevStressMode: false,
       nowMs: 2000,
       lastScaleChangeMs: 0,
       cooldownMs: 900,
@@ -39,6 +41,7 @@ describe('engine/canvas/webgl/loop', () => {
       scaleCount: 3,
       avgFps: 45,
       stressMode: false,
+      prevStressMode: false,
       nowMs: 2000,
       lastScaleChangeMs: 0,
       cooldownMs: 900,
@@ -54,6 +57,7 @@ describe('engine/canvas/webgl/loop', () => {
       scaleCount: 3,
       avgFps: 10,
       stressMode: false,
+      prevStressMode: false,
       nowMs: 2000,
       lastScaleChangeMs: 0,
       cooldownMs: 900,
@@ -65,6 +69,7 @@ describe('engine/canvas/webgl/loop', () => {
       scaleCount: 3,
       avgFps: 40,
       stressMode: false,
+      prevStressMode: false,
       nowMs: 2000,
       lastScaleChangeMs: 0,
       cooldownMs: 900,
@@ -73,5 +78,21 @@ describe('engine/canvas/webgl/loop', () => {
     })
     expect(down).toBe(2)
     expect(up).toBe(0)
+  })
+
+  it('resets renderScaleIndex to 0 when stress mode is toggled off', () => {
+    const next = computeNextRenderScaleIndex({
+      currentIndex: 2,
+      scaleCount: 3,
+      avgFps: 15,
+      stressMode: false,
+      prevStressMode: true,
+      nowMs: 2000,
+      lastScaleChangeMs: 0,
+      cooldownMs: 900,
+      downThreshold: 28,
+      upThreshold: 33,
+    })
+    expect(next).toBe(0)
   })
 })

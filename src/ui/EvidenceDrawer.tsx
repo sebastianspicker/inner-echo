@@ -1,8 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react'
 import { listEvidenceDocPaths, loadEvidenceDoc, type EvidenceDocPath } from '../evidence/docs'
 import { renderEvidenceMarkdown } from '../evidence/markdown'
 import { useAsyncEffect } from './hooks/useAsyncEffect'
 import { resolveEvidenceHref } from './evidenceHref'
+import { logger } from '../utils/logger'
 import './EvidenceDrawer.css'
 
 export interface EvidenceDrawerProps {
@@ -68,11 +76,12 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
         setState({ status: 'ready', html, title, raw: md })
       } catch (err) {
         if (!ctx.cancelled) {
-          setState({ status: 'error', message: err instanceof Error ? err.message : String(err) })
+          logger.error('Failed to load evidence document', props.docPath, err)
+          setState({ status: 'error', message: 'Could not load evidence document.' })
         }
       }
     },
-    [props.open, props.docPath]
+    [props.open, props.docPath],
   )
 
   // Escape to close
@@ -87,7 +96,8 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
 
   useEffect(() => {
     if (!props.open) return
-    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
     const id = window.requestAnimationFrame(() => {
       closeButtonRef.current?.focus()
     })
@@ -108,8 +118,8 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
 
       const focusables = Array.from(
         root.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        )
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
       ).filter((el) => {
         if (el.getAttribute('aria-hidden') === 'true' || el.tabIndex < 0) return false
         // Filter out elements hidden via CSS (e.g. display:none or visibility:hidden)
@@ -148,7 +158,7 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     (e: React.MouseEvent) => {
       if (e.target === e.currentTarget) props.onClose()
     },
-    [props.onClose]
+    [props.onClose],
   )
 
   const handleNavKeyDown = useCallback((e: ReactKeyboardEvent<HTMLElement>) => {
@@ -169,21 +179,22 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     links[nextIndex].focus()
   }, [])
 
-  if (!props.open) return null
-
   return (
     <div
       ref={backdropRef}
       className="evidence-backdrop"
+      style={{ display: props.open ? undefined : 'none' }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="evidence-title"
       aria-label="Evidence viewer"
-      onMouseDown={handleBackdrop}
+      onClick={handleBackdrop}
     >
-      <div className="evidence-drawer" tabIndex={-1}>
+      <div className="evidence-drawer">
         <div className="evidence-top">
-          <div id="evidence-title" className="evidence-title">{state.status === 'ready' ? state.title : 'Evidence'}</div>
+          <div id="evidence-title" className="evidence-title">
+            {state.status === 'ready' ? state.title : 'Evidence'}
+          </div>
           <div className="evidence-actions">
             <button
               ref={closeButtonRef}
@@ -210,7 +221,11 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
                 <li key={p}>
                   <button
                     type="button"
-                    className={p === props.docPath ? 'evidence-navLink evidence-navLink--active' : 'evidence-navLink'}
+                    className={
+                      p === props.docPath
+                        ? 'evidence-navLink evidence-navLink--active'
+                        : 'evidence-navLink'
+                    }
                     onClick={() => {
                       props.onNavigate(p)
                     }}
@@ -221,7 +236,8 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
               ))}
             </ul>
             <div className="evidence-navHint">
-              Tip: use the “Evidence” buttons in the selector to jump directly to a dimension or condition page.
+              Tip: use the “Evidence” buttons in the selector to jump directly to a dimension or
+              condition page.
             </div>
           </nav>
 

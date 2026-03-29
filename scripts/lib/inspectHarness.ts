@@ -16,6 +16,7 @@ import {
   FakeAudioContext,
   type FakeCreatedNodes,
 } from '../../src/contractVerification/fakeAudioContext'
+import { withSeededRandom } from '../../src/contractVerification/utils'
 
 export type InspectSeverity = 'warning' | 'error'
 
@@ -97,20 +98,6 @@ function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value))
 }
 
-function withSeededRandom<T>(seed: number, fn: () => T): T {
-  const prev = Math.random
-  let state = seed >>> 0
-  Math.random = () => {
-    state = (1664525 * state + 1013904223) >>> 0
-    return state / 0xffffffff
-  }
-  try {
-    return fn()
-  } finally {
-    Math.random = prev
-  }
-}
-
 function toNodeName(value: unknown): string {
   if (!value || typeof value !== 'object') return 'unknown'
   const ctor = (value as { constructor?: { name?: string } }).constructor?.name
@@ -145,10 +132,7 @@ function loadProfiles(rootDir: string): {
       issues.push({
         severity: 'error',
         code: 'PROFILE_JSON_PARSE_ERROR',
-        message:
-          error instanceof Error
-            ? error.message
-            : `Failed to parse ${sourceFile}`,
+        message: error instanceof Error ? error.message : `Failed to parse ${sourceFile}`,
         sourceFile,
       })
       continue
@@ -177,11 +161,7 @@ function loadProfiles(rootDir: string): {
   return { profiles, issues }
 }
 
-function collectFiniteIssues(
-  value: unknown,
-  keyPath: string,
-  output: string[]
-): void {
+function collectFiniteIssues(value: unknown, keyPath: string, output: string[]): void {
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) output.push(keyPath)
     return
@@ -220,7 +200,7 @@ function collectAudioFiniteIssues(
   keyPath: string,
   output: string[],
   seen: Set<unknown>,
-  depth = 0
+  depth = 0,
 ): void {
   if (depth > 6) return
   if (typeof value === 'number') {
@@ -248,7 +228,7 @@ function collectAudioFiniteIssues(
 function recordIssue(
   sink: IssueSink,
   index: Map<string, IssuesByProfile>,
-  issue: InspectIssue
+  issue: InspectIssue,
 ): void {
   sink.push(issue)
   if (!issue.profileId) return
@@ -261,7 +241,7 @@ function recordIssue(
 function dynamicAudioParams(
   base: Record<string, unknown>,
   frame: number,
-  nodeIndex: number
+  nodeIndex: number,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   const wave = Math.sin((frame + 1) * (nodeIndex + 1) * 0.07)
@@ -281,7 +261,7 @@ function assertAudioDisposal(
   profileId: string,
   sourceFile: string,
   sink: IssueSink,
-  perProfile: Map<string, IssuesByProfile>
+  perProfile: Map<string, IssuesByProfile>,
 ): void {
   for (const osc of created.oscillators) {
     if (osc.started && !osc.stopped) {
@@ -326,7 +306,7 @@ function inspectVideoScenario(
   safeMode: boolean,
   frames: number,
   sink: IssueSink,
-  perProfile: Map<string, IssuesByProfile>
+  perProfile: Map<string, IssuesByProfile>,
 ): InspectScenarioResult {
   const { profile, profileId, sourceFile } = loaded
   const nodes = buildVideoNodes(profile, { reducedMotion })
@@ -344,11 +324,7 @@ function inspectVideoScenario(
         typeof profile.safety.intensity_default === 'number'
           ? profile.safety.intensity_default
           : 0.5
-      const intensity = clampIntensity(
-        profile,
-        base + Math.sin((frame + 1) * 0.1) * 0.15,
-        safeMode
-      )
+      const intensity = clampIntensity(profile, base + Math.sin((frame + 1) * 0.1) * 0.15, safeMode)
 
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
@@ -371,9 +347,11 @@ function inspectVideoScenario(
           ? node.getMaterial(input, previous)
           : node.getMaterial(input)
 
-        const uniforms = (material as THREE.ShaderMaterial & {
-          uniforms?: Record<string, { value: unknown }>
-        }).uniforms
+        const uniforms = (
+          material as THREE.ShaderMaterial & {
+            uniforms?: Record<string, { value: unknown }>
+          }
+        ).uniforms
 
         if (!uniforms) continue
 
@@ -406,9 +384,7 @@ function inspectVideoScenario(
       severity: 'error',
       code: 'VIDEO_SCENARIO_CRASH',
       message:
-        error instanceof Error
-          ? error.message
-          : `Video scenario crashed for profile ${profileId}`,
+        error instanceof Error ? error.message : `Video scenario crashed for profile ${profileId}`,
       profileId,
       sourceFile,
       details: { reducedMotion, safeMode },
@@ -458,7 +434,7 @@ function inspectAudioPipeline(
   loaded: LoadedProfile,
   frames: number,
   sink: IssueSink,
-  perProfile: Map<string, IssuesByProfile>
+  perProfile: Map<string, IssuesByProfile>,
 ): {
   enabled: boolean
   frames: number
@@ -468,7 +444,7 @@ function inspectAudioPipeline(
   const { profile, profileId, sourceFile } = loaded
   const audioStack = profile.audio_stack ?? { enabled: false }
   const chainDefs = (audioStack.chain ?? []).filter((def) =>
-    isKnownAudioNodeType(String(def.node).toLowerCase())
+    isKnownAudioNodeType(String(def.node).toLowerCase()),
   )
   const activeNodes = chainDefs.map((def) => String(def.node).toLowerCase())
 
@@ -482,11 +458,7 @@ function inspectAudioPipeline(
 
   try {
     chain = buildAudioChain(context as unknown as BaseAudioContext, audioStack)
-    connectAudioChain(
-      source as unknown as AudioNode,
-      chain,
-      destination as unknown as AudioNode
-    )
+    connectAudioChain(source as unknown as AudioNode, chain, destination as unknown as AudioNode)
 
     const created = context.collectSince(mark)
 
@@ -498,12 +470,7 @@ function inspectAudioPipeline(
       }
 
       const finiteIssues: string[] = []
-      collectAudioFiniteIssues(
-        created,
-        'audioCreated',
-        finiteIssues,
-        new Set<unknown>()
-      )
+      collectAudioFiniteIssues(created, 'audioCreated', finiteIssues, new Set<unknown>())
 
       if (finiteIssues.length > 0) {
         nonFiniteReadings += finiteIssues.length
@@ -528,9 +495,7 @@ function inspectAudioPipeline(
       severity: 'error',
       code: 'AUDIO_PIPELINE_CRASH',
       message:
-        error instanceof Error
-          ? error.message
-          : `Audio pipeline crashed for profile ${profileId}`,
+        error instanceof Error ? error.message : `Audio pipeline crashed for profile ${profileId}`,
       profileId,
       sourceFile,
     })
@@ -554,7 +519,7 @@ function inspectAudioPipeline(
 
 export async function runInspectHarness(
   rootDir: string,
-  options: InspectHarnessOptions = {}
+  options: InspectHarnessOptions = {},
 ): Promise<InspectHarnessReport> {
   const frames =
     typeof options.frames === 'number' && Number.isFinite(options.frames)
@@ -586,13 +551,13 @@ export async function runInspectHarness(
 
     withSeededRandom(seed++, () => {
       videoScenarios.push(
-        inspectVideoScenario(profile, false, false, frames, sink, perProfileIssueCounts)
+        inspectVideoScenario(profile, false, false, frames, sink, perProfileIssueCounts),
       )
     })
 
     withSeededRandom(seed++, () => {
       videoScenarios.push(
-        inspectVideoScenario(profile, true, true, frames, sink, perProfileIssueCounts)
+        inspectVideoScenario(profile, true, true, frames, sink, perProfileIssueCounts),
       )
     })
 
@@ -625,10 +590,7 @@ export async function runInspectHarness(
     issues.push({
       severity: 'error',
       code: 'UNHANDLED_REJECTION',
-      message:
-        reason instanceof Error
-          ? reason.message
-          : `Unhandled rejection: ${String(reason)}`,
+      message: reason instanceof Error ? reason.message : `Unhandled rejection: ${String(reason)}`,
     })
   }
 
@@ -638,7 +600,8 @@ export async function runInspectHarness(
   const errors = issues.filter((issue) => issue.severity === 'error')
 
   const scenarios = profileResults.length * 3
-  const ok = Math.max(0, scenarios - errors.length)
+  const failedScenarios = new Set(errors.map((e) => e.profileId ?? '')).size
+  const ok = Math.max(0, scenarios - failedScenarios)
 
   return {
     generatedAt: new Date().toISOString(),

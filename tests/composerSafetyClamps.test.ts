@@ -70,7 +70,7 @@ describe('composer safety clamp regressions', () => {
         getExperienceDimensions() {
           return []
         },
-      }
+      },
     )
 
     const temporal = res.profile.video_stack.find((n) => n.node === 'temporal_smear')

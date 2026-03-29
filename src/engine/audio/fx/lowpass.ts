@@ -33,7 +33,8 @@ export function createLowpass(context: BaseAudioContext, params: LowpassParams =
     setParams(p: Record<string, unknown>): void {
       const cutoff = p.cutoff as number | undefined
       const q = p.q as number | undefined
-      if (typeof cutoff === 'number') filter.frequency.setValueAtTime(clamp(cutoff, 300, 12000), context.currentTime)
+      if (typeof cutoff === 'number')
+        filter.frequency.setValueAtTime(clamp(cutoff, 300, 12000), context.currentTime)
       if (typeof q === 'number') filter.Q.setValueAtTime(clamp(q, 0.5, 1.2), context.currentTime)
     },
     dispose(): void {

@@ -77,7 +77,8 @@ export function AudioMicControls({
           {audioStatus === 'on' && (
             <div className="ie-controlSubgroup" role="group" aria-label="Microphone (optional)">
               <p className="ie-hint">
-                The microphone is entirely optional and stays local to your device. Nothing is ever recorded or shared. You can turn it off at any time.
+                The microphone is entirely optional and stays local to your device. Nothing is ever
+                recorded or shared. You can turn it off at any time.
               </p>
               <div className="ie-controlStatus" role="status" aria-live="polite">
                 Mic: {micStatus === 'off' && 'off'}
@@ -139,9 +140,13 @@ export function AudioMicControls({
                             name="audio-input-mode"
                             checked={inputMode === mode}
                             onChange={() => onInputModeChange(mode)}
-                            aria-label={mode === 'synth' ? 'Synth only' : mode === 'mic' ? 'Mic only' : 'Mix'}
+                            aria-label={
+                              mode === 'synth' ? 'Synth only' : mode === 'mic' ? 'Mic only' : 'Mix'
+                            }
                           />
-                          <span>{mode === 'synth' ? 'Synth only' : mode === 'mic' ? 'Mic only' : 'Mix'}</span>
+                          <span>
+                            {mode === 'synth' ? 'Synth only' : mode === 'mic' ? 'Mic only' : 'Mix'}
+                          </span>
                         </label>
                       ))}
                     </div>

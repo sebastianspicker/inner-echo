@@ -33,15 +33,11 @@ async function waitForServerReady(timeoutMs) {
 }
 
 function spawnDevServer() {
-  return spawn(
-    'npm',
-    ['run', 'dev', '--', '--host', HOST, '--port', String(PORT)],
-    {
-      cwd: process.cwd(),
-      stdio: 'pipe',
-      env: process.env,
-    }
-  )
+  return spawn('npm', ['run', 'dev', '--', '--host', HOST, '--port', String(PORT)], {
+    cwd: process.cwd(),
+    stdio: 'pipe',
+    env: process.env,
+  })
 }
 
 async function stopServer(proc) {
@@ -163,7 +159,9 @@ async function runSmoke(browserName, browser) {
     await page.evaluate(async () => {
       const select = document.querySelector('#condition-picker')
       if (!select) throw new Error('condition picker not found')
-      const values = Array.from(select.options).map((o) => o.value).slice(0, 4)
+      const values = Array.from(select.options)
+        .map((o) => o.value)
+        .slice(0, 4)
       for (const value of values) {
         select.value = value
         select.dispatchEvent(new Event('change', { bubbles: true }))
@@ -177,7 +175,7 @@ async function runSmoke(browserName, browser) {
     assert.equal(
       disallowedConsole.length,
       0,
-      `${browserName}: disallowed console output detected\n${disallowedConsole.join('\n')}`
+      `${browserName}: disallowed console output detected\n${disallowedConsole.join('\n')}`,
     )
   } finally {
     page.off('console', onConsole)
@@ -205,7 +203,7 @@ async function runSmoke(browserName, browser) {
     assert.equal(
       tooSmall.length,
       0,
-      `${browserName}: controls below 44px touch target: ${tooSmall.map((x) => `${x.text}:${x.h}`).join(', ')}`
+      `${browserName}: controls below 44px touch target: ${tooSmall.map((x) => `${x.text}:${x.h}`).join(', ')}`,
     )
   } finally {
     await mobile.context.close()

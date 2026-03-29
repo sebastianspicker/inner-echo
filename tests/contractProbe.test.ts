@@ -1,18 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { audioNodeDefinitions } from '../src/contractVerification/audioNodeRegistry'
 import { videoNodeDefinitions } from '../src/contractVerification/videoNodeRegistry'
-import type { ContractNodeDefinition, ContractParamMetadata } from '../src/contractVerification/types'
-
-function asNumber(value: unknown): number | null {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null
-}
-
-function differs(a: unknown, b: unknown, epsilon = 1e-6): boolean {
-  const na = asNumber(a)
-  const nb = asNumber(b)
-  if (na != null && nb != null) return Math.abs(na - nb) > epsilon
-  return JSON.stringify(a) !== JSON.stringify(b)
-}
+import type {
+  ContractNodeDefinition,
+  ContractParamMetadata,
+} from '../src/contractVerification/types'
+import { asNumber, differs, outOfRangeLow, outOfRangeHigh } from '../scripts/lib/verifyContracts'
 
 function probeLow(meta: ContractParamMetadata): unknown {
   if (meta.probeLow !== undefined) return meta.probeLow
@@ -34,15 +27,10 @@ function probeHigh(meta: ContractParamMetadata): unknown {
   return meta.defaultValue
 }
 
-function outOfRangeLow(min: number): number {
-  return min - Math.max(1, Math.abs(min) + 1)
-}
-
-function outOfRangeHigh(max: number): number {
-  return max + Math.max(1, Math.abs(max) + 1)
-}
-
-function runUsageProbe(def: ContractNodeDefinition, param: string): { changed: boolean; low: unknown; high: unknown; observedLow: unknown; observedHigh: unknown } {
+function runUsageProbe(
+  def: ContractNodeDefinition,
+  param: string,
+): { changed: boolean; low: unknown; high: unknown; observedLow: unknown; observedHigh: unknown } {
   const meta = def.params[param]
   const low = probeLow(meta)
   const high = probeHigh(meta)
@@ -73,7 +61,16 @@ function runUsageProbe(def: ContractNodeDefinition, param: string): { changed: b
   }
 }
 
-function runRangeProbe(def: ContractNodeDefinition, param: string): { pass: boolean; observedLow: number | null; observedHigh: number | null; min: number; max: number } | null {
+function runRangeProbe(
+  def: ContractNodeDefinition,
+  param: string,
+): {
+  pass: boolean
+  observedLow: number | null
+  observedHigh: number | null
+  min: number
+  max: number
+} | null {
   const meta = def.params[param]
   if (meta.type !== 'number' || typeof meta.min !== 'number' || typeof meta.max !== 'number') {
     return null
@@ -122,10 +119,8 @@ describe('contract probe coverage', () => {
         if (!usage.changed) {
           failures.push(
             `${def.kind}.${def.node}.${param} low=${String(usage.low)} high=${String(
-              usage.high
-            )} observedLow=${String(usage.observedLow)} observedHigh=${String(
-              usage.observedHigh
-            )}`
+              usage.high,
+            )} observedLow=${String(usage.observedLow)} observedHigh=${String(usage.observedHigh)}`,
           )
         }
       }
@@ -141,10 +136,8 @@ describe('contract probe coverage', () => {
         if (!usage.changed) {
           failures.push(
             `${def.kind}.${def.node}.${param} low=${String(usage.low)} high=${String(
-              usage.high
-            )} observedLow=${String(usage.observedLow)} observedHigh=${String(
-              usage.observedHigh
-            )}`
+              usage.high,
+            )} observedLow=${String(usage.observedLow)} observedHigh=${String(usage.observedHigh)}`,
           )
         }
       }
@@ -161,8 +154,8 @@ describe('contract probe coverage', () => {
         if (!range.pass) {
           failures.push(
             `${def.kind}.${def.node}.${param} min=${range.min} max=${range.max} observedLow=${String(
-              range.observedLow
-            )} observedHigh=${String(range.observedHigh)}`
+              range.observedLow,
+            )} observedHigh=${String(range.observedHigh)}`,
           )
         }
       }

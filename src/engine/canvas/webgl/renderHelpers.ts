@@ -1,4 +1,19 @@
-import * as THREE from 'three'
+import {
+  MeshBasicMaterial,
+  PlaneGeometry,
+  type Camera,
+  type Material,
+  type Mesh,
+  type Object3D,
+  type Scene,
+  type Texture,
+  type WebGLRenderer,
+  type WebGLRenderTarget,
+} from 'three'
+
+function isMesh(obj: Object3D | undefined): obj is Mesh {
+  return obj != null && 'isMesh' in obj && (obj as Mesh).isMesh === true
+}
 
 export function toNodeName(value: unknown): string {
   if (!value || typeof value !== 'object') return 'unknown'
@@ -14,28 +29,29 @@ export function toNodeName(value: unknown): string {
 }
 
 /** Passthrough material: displays input texture with no effect. */
-export function createPassthroughMaterial(inputTexture: THREE.Texture): THREE.Material {
-  return new THREE.MeshBasicMaterial({
+export function createPassthroughMaterial(inputTexture: Texture): Material {
+  return new MeshBasicMaterial({
     map: inputTexture,
     depthWrite: false,
   })
 }
 
 /** Fullscreen quad geometry (shared). */
-export function getQuadGeometry(): THREE.PlaneGeometry {
-  return new THREE.PlaneGeometry(2, 2)
+export function getQuadGeometry(): PlaneGeometry {
+  return new PlaneGeometry(2, 2)
 }
 
 /** Render a quad with the given material to the given target (or null = screen). */
 export function renderQuad(
-  renderer: THREE.WebGLRenderer,
-  scene: THREE.Scene,
-  camera: THREE.Camera,
-  material: THREE.Material,
-  target: THREE.WebGLRenderTarget | null
+  renderer: WebGLRenderer,
+  scene: Scene,
+  camera: Camera,
+  material: Material,
+  target: WebGLRenderTarget | null,
 ): void {
-  const mesh = scene.children[0] as THREE.Mesh
-  mesh.material = material
+  const child = scene.children[0]
+  if (!isMesh(child)) return
+  child.material = material
   renderer.setRenderTarget(target)
   renderer.render(scene, camera)
 }

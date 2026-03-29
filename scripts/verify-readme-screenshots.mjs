@@ -8,12 +8,16 @@ const PNG_DIR = path.join(ROOT, 'assets/readme/screenshots/png')
 const WEBP_DIR = path.join(ROOT, 'assets/readme/screenshots/webp')
 const README_PATH = path.join(ROOT, 'README.md')
 
-const ALLOWED_SECTIONS = new Set([
-  'core-flow',
-  'composition-modes',
-  'safety-controls',
-  'mobile-experience',
-])
+const SHOTS_PER_SECTION = {
+  'core-flow': 3,
+  'composition-modes': 3,
+  'safety-controls': 3,
+  'mobile-experience': 1,
+}
+
+const ALLOWED_SECTIONS = new Set(Object.keys(SHOTS_PER_SECTION))
+
+const EXPECTED_SHOT_COUNT = Object.values(SHOTS_PER_SECTION).reduce((a, b) => a + b, 0)
 
 function fail(message) {
   throw new Error(message)
@@ -83,8 +87,8 @@ async function main() {
   if (!manifest || !Array.isArray(manifest.shots)) {
     fail('Invalid manifest: shots array missing')
   }
-  if (manifest.shots.length !== 10) {
-    fail(`Expected 10 screenshot shots, found ${manifest.shots.length}`)
+  if (manifest.shots.length !== EXPECTED_SHOT_COUNT) {
+    fail(`Expected ${EXPECTED_SHOT_COUNT} screenshot shots, found ${manifest.shots.length}`)
   }
 
   const ids = new Set()
@@ -107,10 +111,14 @@ async function main() {
     const webpInfo = await fileInfo(webpPath)
 
     if (pngInfo.width < shot.minWidth || pngInfo.height < shot.minHeight) {
-      fail(`PNG below minimum dimensions for ${shot.baseName}: got ${pngInfo.width}x${pngInfo.height}`)
+      fail(
+        `PNG below minimum dimensions for ${shot.baseName}: got ${pngInfo.width}x${pngInfo.height}`,
+      )
     }
     if (webpInfo.width < shot.minWidth || webpInfo.height < shot.minHeight) {
-      fail(`WebP below minimum dimensions for ${shot.baseName}: got ${webpInfo.width}x${webpInfo.height}`)
+      fail(
+        `WebP below minimum dimensions for ${shot.baseName}: got ${webpInfo.width}x${webpInfo.height}`,
+      )
     }
 
     if (!readme.includes(`assets/readme/screenshots/webp/${shot.baseName}.webp`)) {

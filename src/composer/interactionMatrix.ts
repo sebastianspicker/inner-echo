@@ -25,8 +25,8 @@ const DEFAULT_INTERACTION_MATRIX: InteractionMatrix = {
   [key('hyperarousal', 'hypervigilance')]: 0.12,
   [key('rumination_loop', 'compulsive_loop')]: 0.12,
   [key('panic_peaks', 'hyperarousal')]: 0.14,
-  [key('cognitive_fog', 'attention_fragmentation')]: 0.10,
-  [key('derealization', 'depersonalization')]: 0.10,
+  [key('cognitive_fog', 'attention_fragmentation')]: 0.1,
+  [key('derealization', 'depersonalization')]: 0.1,
 }
 
 /**
@@ -37,9 +37,8 @@ export function getInteractionGain(
   a: DimensionId,
   b: DimensionId,
   interactionAmount: number,
-  matrix: InteractionMatrix = DEFAULT_INTERACTION_MATRIX
+  matrix: InteractionMatrix = DEFAULT_INTERACTION_MATRIX,
 ): number {
   const base = matrix[key(a, b)] ?? 0
   return clamp01(base) * clamp01(interactionAmount)
 }
-

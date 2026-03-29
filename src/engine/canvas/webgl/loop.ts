@@ -3,6 +3,8 @@ export interface RenderScaleDecisionInput {
   scaleCount: number
   avgFps: number
   stressMode: boolean
+  /** Whether stress mode was active on the previous frame. */
+  prevStressMode: boolean
   nowMs: number
   lastScaleChangeMs: number
   cooldownMs: number
@@ -16,12 +18,19 @@ export function computeNextRenderScaleIndex(input: RenderScaleDecisionInput): nu
     scaleCount,
     avgFps,
     stressMode,
+    prevStressMode,
     nowMs,
     lastScaleChangeMs,
     cooldownMs,
     downThreshold,
     upThreshold,
   } = input
+
+  // When stress mode is toggled off, immediately reset to full resolution so
+  // the render scale can recover without waiting for FPS to climb back up.
+  if (prevStressMode && !stressMode) {
+    return 0
+  }
 
   if (nowMs - lastScaleChangeMs < cooldownMs) {
     return currentIndex

@@ -21,7 +21,7 @@ export type { ComposeReport, ComposeResult, MissingNodesReport }
 export async function composeEffectiveProfile(
   presets: SelectedPreset[],
   dimensions: SelectedDimension[],
-  settings: ComposerSettings
+  settings: ComposerSettings,
 ): Promise<ComposeResult> {
   const res = await composeEffectiveProfileCore(presets, dimensions, settings, {
     loadPresetProfile: loadProfile,
@@ -32,11 +32,11 @@ export async function composeEffectiveProfile(
   if (!parsed.success) {
     logger.warn(
       '[composer] Composed profile failed schema validation; falling back to clean profile.',
-      parsed.error.flatten()
+      parsed.error.flatten(),
     )
     return {
       profile: createComposeFallbackProfile(
-        'Internal validation error: composed profile could not be loaded.'
+        'Internal validation error: composed profile could not be loaded.',
       ),
       report: {
         ...res.report,

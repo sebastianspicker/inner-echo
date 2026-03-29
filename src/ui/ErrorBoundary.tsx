@@ -1,13 +1,13 @@
 /**
  * ErrorBoundary Component
- * 
+ *
  * In React, standard try/catch blocks don't work for catching errors inside component rendering,
  * lifecycle methods, or child component constructors. Instead, React uses "Error Boundaries".
- * 
- * An Error Boundary is a special class component that catches JavaScript errors anywhere in its 
- * child component tree, logs those errors, and displays a fallback UI instead of crashing the 
+ *
+ * An Error Boundary is a special class component that catches JavaScript errors anywhere in its
+ * child component tree, logs those errors, and displays a fallback UI instead of crashing the
  * whole application.
- * 
+ *
  * This component wraps the main application to ensure that if a fatal UI error occurs,
  * the user gets a friendly "Reset App" button rather than a blank white screen.
  */
@@ -71,11 +71,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
    * the component tree from scratch.
    */
   handleReset = (): void => {
+    // Clear error state first so the boundary recovers even if onReset throws.
+    this.setState({ hasError: false, error: null })
     if (this.props.onReset) {
       this.props.onReset()
     }
-    // Clearing the error state forces the boundary to render `this.props.children` again.
-    this.setState({ hasError: false, error: null })
   }
 
   render(): ReactNode {
@@ -97,13 +97,36 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             WebkitBackdropFilter: 'blur(16px)',
           }}
         >
-          <h2 style={{ margin: '0 0 0.75rem', fontSize: '14px', letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'rgba(255, 255, 255, 0.86)', fontWeight: 650 }}>
+          <h2
+            style={{
+              margin: '0 0 0.75rem',
+              fontSize: '14px',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase' as const,
+              color: 'rgba(255, 255, 255, 0.86)',
+              fontWeight: 650,
+            }}
+          >
             Something unexpected happened
           </h2>
-          <p style={{ margin: '0 0 0.5rem', fontSize: '13px', lineHeight: '1.6', color: 'rgba(255, 255, 255, 0.58)' }}>
+          <p
+            style={{
+              margin: '0 0 0.5rem',
+              fontSize: '13px',
+              lineHeight: '1.6',
+              color: 'rgba(255, 255, 255, 0.58)',
+            }}
+          >
             This is not your fault. The experience ran into an issue it could not recover from.
           </p>
-          <p style={{ margin: '0 0 1.25rem', fontSize: '12px', color: 'rgba(255, 255, 255, 0.38)', fontFamily: 'ui-monospace, monospace' }}>
+          <p
+            style={{
+              margin: '0 0 1.25rem',
+              fontSize: '12px',
+              color: 'rgba(255, 255, 255, 0.38)',
+              fontFamily: 'ui-monospace, monospace',
+            }}
+          >
             {this.state.error.message}
           </p>
           <button

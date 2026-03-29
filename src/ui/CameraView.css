@@ -25,8 +25,10 @@
   box-shadow: var(--shadow-1);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  transition: opacity 0.5s var(--ease-gentle), filter 0.5s var(--ease-gentle),
-              transform 0.5s var(--ease-gentle);
+  transition:
+    opacity 0.5s var(--ease-gentle),
+    filter 0.5s var(--ease-gentle),
+    transform 0.5s var(--ease-gentle);
 }
 
 .ie-brand {
@@ -54,6 +56,13 @@
   letter-spacing: 0.04em;
 }
 
+/* Hide keyboard shortcut hints on touch-only devices */
+@media (hover: none) {
+  .keyboard-hint {
+    display: none;
+  }
+}
+
 .ie-headerRight {
   display: flex;
   flex-direction: column;
@@ -76,8 +85,9 @@
   border-radius: 999px;
   border: 1px solid var(--border);
   background: rgba(0, 0, 0, 0.18);
-  transition: border-color var(--duration-normal) var(--ease-gentle),
-              background var(--duration-normal) var(--ease-gentle);
+  transition:
+    border-color var(--duration-normal) var(--ease-gentle),
+    background var(--duration-normal) var(--ease-gentle);
 }
 
 .ie-pill:hover {
@@ -115,11 +125,12 @@
   font-size: 13px;
   letter-spacing: 0.03em;
   cursor: pointer;
-  transition: transform var(--duration-normal) var(--ease-out-soft),
-              background var(--duration-normal) var(--ease-gentle),
-              border-color var(--duration-normal) var(--ease-gentle),
-              box-shadow var(--duration-normal) var(--ease-gentle),
-              opacity var(--duration-normal) var(--ease-gentle);
+  transition:
+    transform var(--duration-normal) var(--ease-out-soft),
+    background var(--duration-normal) var(--ease-gentle),
+    border-color var(--duration-normal) var(--ease-gentle),
+    box-shadow var(--duration-normal) var(--ease-gentle),
+    opacity var(--duration-normal) var(--ease-gentle);
 }
 
 .ie-btn:hover:not(:disabled) {
@@ -146,7 +157,7 @@
 
 .ie-btn--danger:hover:not(:disabled) {
   border-color: color-mix(in oklab, var(--danger) 40%, var(--border));
-  background: color-mix(in oklab, rgba(240, 180, 180, 0.10) 70%, transparent);
+  background: color-mix(in oklab, rgba(240, 180, 180, 0.1) 70%, transparent);
   box-shadow: 0 4px 16px rgba(240, 180, 180, 0.06);
 }
 
@@ -203,13 +214,16 @@
   border: 1px solid var(--border);
   overflow: hidden;
   box-shadow: var(--shadow-2);
-  transition: box-shadow var(--duration-slow) var(--ease-gentle),
-              border-color var(--duration-slow) var(--ease-gentle);
+  transition:
+    box-shadow var(--duration-slow) var(--ease-gentle),
+    border-color var(--duration-slow) var(--ease-gentle);
 }
 
 .ie-stage--active {
   border-color: color-mix(in oklab, var(--accent) 20%, var(--border));
-  box-shadow: var(--shadow-2), 0 0 40px rgba(123, 200, 192, 0.04);
+  box-shadow:
+    var(--shadow-2),
+    0 0 40px rgba(123, 200, 192, 0.04);
 }
 
 .ie-video {
@@ -264,8 +278,10 @@
   overflow: hidden;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  transition: opacity 0.5s var(--ease-gentle), filter 0.5s var(--ease-gentle),
-              transform 0.5s var(--ease-gentle);
+  transition:
+    opacity 0.5s var(--ease-gentle),
+    filter 0.5s var(--ease-gentle),
+    transform 0.5s var(--ease-gentle);
 }
 
 /* Immersive Mode Support — gentle fade with transform */
@@ -275,8 +291,10 @@
   pointer-events: none;
   filter: blur(4px);
   transform: translateY(4px);
-  transition: opacity 2.5s var(--ease-gentle), filter 2.5s var(--ease-gentle),
-              transform 2.5s var(--ease-gentle);
+  transition:
+    opacity 2.5s var(--ease-gentle),
+    filter 2.5s var(--ease-gentle),
+    transform 2.5s var(--ease-gentle);
 }
 
 .ie-panelScroll {
@@ -322,7 +340,7 @@
 }
 
 .ie-summary::before {
-  content: '';
+  content: "";
   display: inline-block;
   width: 6px;
   height: 6px;
@@ -330,8 +348,9 @@
   border-bottom: 1.5px solid var(--muted);
   transform: rotate(-45deg);
   margin-right: 8px;
-  transition: transform var(--duration-normal) var(--ease-gentle),
-              border-color var(--duration-normal) var(--ease-gentle);
+  transition:
+    transform var(--duration-normal) var(--ease-gentle),
+    border-color var(--duration-normal) var(--ease-gentle);
   vertical-align: 1px;
 }
 
@@ -421,7 +440,7 @@ details[open] > .ie-summary::before {
 
 .ie-btn--accent {
   border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
-  background: color-mix(in oklab, rgba(123, 200, 192, 0.10) 70%, transparent);
+  background: color-mix(in oklab, rgba(123, 200, 192, 0.1) 70%, transparent);
 }
 
 .ie-btn--accent:hover:not(:disabled) {
@@ -548,6 +567,7 @@ details[open] > .ie-summary::before {
   ):focus-visible {
   outline: 2px solid color-mix(in oklab, var(--accent) 60%, transparent);
   outline-offset: 3px;
-  transition: outline var(--duration-normal) var(--ease-gentle),
-              outline-offset var(--duration-normal) var(--ease-gentle);
+  transition:
+    outline var(--duration-normal) var(--ease-gentle),
+    outline-offset var(--duration-normal) var(--ease-gentle);
 }

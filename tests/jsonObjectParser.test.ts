@@ -11,7 +11,7 @@ describe('utils/jsonObjectParser', () => {
           const mapping = (v as { mapping?: unknown }).mapping
           return mapping != null && typeof mapping === 'object'
         },
-      }
+      },
     )
     expect(value.mapping).toEqual({ a: 1 })
   })
@@ -26,11 +26,7 @@ describe('utils/jsonObjectParser', () => {
   })
 
   it('skips earlier object candidates that do not satisfy predicate', () => {
-    const text = [
-      'prefix text',
-      '{"note":"not-the-object"}',
-      '{"mapping":{"ok":true}}',
-    ].join('\n')
+    const text = ['prefix text', '{"note":"not-the-object"}', '{"mapping":{"ok":true}}'].join('\n')
 
     const value = parseFirstJsonObject<{ mapping: { ok: boolean } }>(text, {
       predicate(v) {
@@ -42,4 +38,3 @@ describe('utils/jsonObjectParser', () => {
     expect(value.mapping.ok).toBe(true)
   })
 })
-

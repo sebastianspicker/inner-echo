@@ -47,8 +47,9 @@
   min-height: 44px;
   padding: 2px 6px;
   border-radius: var(--r-sm);
-  transition: background var(--duration-normal) var(--ease-gentle),
-              color var(--duration-normal) var(--ease-gentle);
+  transition:
+    background var(--duration-normal) var(--ease-gentle),
+    color var(--duration-normal) var(--ease-gentle);
 }
 
 .composer__toggle:hover {
@@ -73,10 +74,11 @@
   font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  transition: background var(--duration-normal) var(--ease-gentle),
-              border-color var(--duration-normal) var(--ease-gentle),
-              transform var(--duration-normal) var(--ease-out-soft),
-              box-shadow var(--duration-normal) var(--ease-gentle);
+  transition:
+    background var(--duration-normal) var(--ease-gentle),
+    border-color var(--duration-normal) var(--ease-gentle),
+    transform var(--duration-normal) var(--ease-out-soft),
+    box-shadow var(--duration-normal) var(--ease-gentle);
 }
 
 .composer__quick-buttons button:hover {
@@ -117,12 +119,12 @@
   color: var(--text);
 }
 
-.composer__slider input[type='range'] {
+.composer__slider input[type="range"] {
   width: 100%;
   accent-color: var(--accent);
 }
 
-.composer__slider input[type='text'],
+.composer__slider input[type="text"],
 .composer__slider select {
   width: 100%;
   min-height: 40px;
@@ -131,17 +133,18 @@
   padding: 0 12px;
   background: rgba(0, 0, 0, 0.14);
   color: var(--text);
-  transition: border-color var(--duration-normal) var(--ease-gentle),
-              background var(--duration-normal) var(--ease-gentle),
-              box-shadow var(--duration-normal) var(--ease-gentle);
+  transition:
+    border-color var(--duration-normal) var(--ease-gentle),
+    background var(--duration-normal) var(--ease-gentle),
+    box-shadow var(--duration-normal) var(--ease-gentle);
 }
 
-.composer__slider input[type='text']:hover,
+.composer__slider input[type="text"]:hover,
 .composer__slider select:hover {
   border-color: var(--border-strong);
 }
 
-.composer__slider input[type='text']:focus,
+.composer__slider input[type="text"]:focus,
 .composer__slider select:focus {
   border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
   box-shadow: 0 0 0 3px var(--accent-glow);
@@ -177,7 +180,7 @@
 }
 
 .composer__advanced summary::before {
-  content: '';
+  content: "";
   display: inline-block;
   width: 6px;
   height: 6px;
@@ -185,8 +188,9 @@
   border-bottom: 1.5px solid var(--muted);
   transform: rotate(-45deg);
   margin-right: 8px;
-  transition: transform var(--duration-normal) var(--ease-gentle),
-              border-color var(--duration-normal) var(--ease-gentle);
+  transition:
+    transform var(--duration-normal) var(--ease-gentle),
+    border-color var(--duration-normal) var(--ease-gentle);
   vertical-align: 1px;
 }
 
@@ -230,8 +234,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  transition: border-color var(--duration-normal) var(--ease-gentle),
-              background var(--duration-normal) var(--ease-gentle);
+  transition:
+    border-color var(--duration-normal) var(--ease-gentle),
+    background var(--duration-normal) var(--ease-gentle);
 }
 
 .composer__row:hover {
@@ -327,11 +332,12 @@
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  transition: background var(--duration-normal) var(--ease-gentle),
-              border-color var(--duration-normal) var(--ease-gentle),
-              color var(--duration-normal) var(--ease-gentle),
-              transform var(--duration-normal) var(--ease-out-soft),
-              box-shadow var(--duration-normal) var(--ease-gentle);
+  transition:
+    background var(--duration-normal) var(--ease-gentle),
+    border-color var(--duration-normal) var(--ease-gentle),
+    color var(--duration-normal) var(--ease-gentle),
+    transform var(--duration-normal) var(--ease-out-soft),
+    box-shadow var(--duration-normal) var(--ease-gentle);
 }
 
 .composer__evidenceBtn:hover {

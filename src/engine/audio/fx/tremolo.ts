@@ -56,7 +56,8 @@ export function createTremolo(context: BaseAudioContext, params: TremoloParams =
     setParams(p: Record<string, unknown>): void {
       const r = p.rate as number | undefined
       const d = p.depth as number | undefined
-      if (typeof r === 'number') lfo.frequency.setValueAtTime(clamp(r, 0.1, MAX_RATE_HZ), context.currentTime)
+      if (typeof r === 'number')
+        lfo.frequency.setValueAtTime(clamp(r, 0.1, MAX_RATE_HZ), context.currentTime)
       if (typeof d === 'number') {
         const depthClamped = clamp(d, 0, MAX_DEPTH)
         depthGain.gain.setValueAtTime(-0.5 * depthClamped, context.currentTime)

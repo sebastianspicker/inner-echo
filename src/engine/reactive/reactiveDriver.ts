@@ -1,22 +1,19 @@
 /**
  * Reactive Driver Engine
- * 
+ *
  * This module is responsible for the "reactive" nature of the application.
  * It takes incoming live audio data (RMS amplitude) and maps it to specific video shader parameters.
- * 
+ *
  * How it works:
  * 1. It reads the current condition profile (`profile.reactive.analyser_to_params`).
  * 2. It tracks stateful smoothing envelopes (attack/release) for each mapped parameter.
- * 3. The main `CameraView` loop calls `getVideoOverrides()` and `getAudioOverrides()` every 
+ * 3. The main `CameraView` loop calls `getVideoOverrides()` and `getAudioOverrides()` every
  *    frame (60fps), which returns the calculated, smoothed, and clamped parameter overrides.
  */
 
 import type { Profile } from '../../conditions/schema'
 import { getProfileEntryForBuiltIndex } from '../../conditions/graphBuilder'
-import {
-  resolveAnalyserTarget,
-  type ResolvedMapping,
-} from './analyserToParamsResolver'
+import { resolveAnalyserTarget, type ResolvedMapping } from './analyserToParamsResolver'
 import { clamp, smoothStep } from '../../utils/numeric'
 import { logger } from '../../utils/logger'
 
@@ -25,9 +22,7 @@ interface MappingState extends ResolvedMapping {
   kind: 'video' | 'audio'
 }
 
-function normalizeClampRange(
-  range: [number, number] | undefined
-): { min: number; max: number } {
+function normalizeClampRange(range: [number, number] | undefined): { min: number; max: number } {
   const a = range?.[0]
   const b = range?.[1]
   if (typeof a !== 'number' || typeof b !== 'number') {
@@ -41,17 +36,17 @@ function normalizeClampRange(
 
 /**
  * Initializes a new reactive driver based on a given condition profile.
- * 
+ *
  * The driver sets up all internal state (current values, target values, smoothing speeds)
  * for every parameter that the profile wants to react to audio RMS.
- * 
+ *
  * @param profile The current active condition profile.
  * @param options Optional configuration (e.g., whether Reduced Motion is forcing temporal nodes off).
  * @returns An object containing `getVideoOverrides` and `getAudioOverrides` functions to be called per-frame.
  */
 export function createReactiveDriver(
   profile: Profile,
-  options?: { reducedMotion?: boolean }
+  options?: { reducedMotion?: boolean },
 ): {
   getVideoOverrides(delta: number, rms: number): Record<string, number>
   getAudioOverrides(delta: number, rms: number): Record<string, number>
@@ -72,7 +67,7 @@ export function createReactiveDriver(
     if (!resolved) {
       logger.warn(
         '[reactive] analyser_to_params: target not found or invalid, skipping:',
-        def.target
+        def.target,
       )
       continue
     }
@@ -80,9 +75,12 @@ export function createReactiveDriver(
     if (resolved.kind === 'video') {
       const [builtIndexStr, paramName] = resolved.paramKey.split('.')
       const builtIndex = Number(builtIndexStr)
-      const entry = getProfileEntryForBuiltIndex(profile, builtIndex, { reducedMotion: options?.reducedMotion })
+      const entry = getProfileEntryForBuiltIndex(profile, builtIndex, {
+        reducedMotion: options?.reducedMotion,
+      })
       const params = entry?.params
-      baseValue = params && typeof params[paramName] === 'number' ? (params[paramName] as number) : 0
+      baseValue =
+        params && typeof params[paramName] === 'number' ? (params[paramName] as number) : 0
     } else if (resolved.kind === 'audio') {
       // For audio overrides, default to 0 unless profile declares a numeric param.
       const parts = resolved.paramKey.split('.')
@@ -90,7 +88,8 @@ export function createReactiveDriver(
       const paramName = parts.slice(2).join('.')
       const chain = profile.audio_stack?.chain ?? []
       const params = chain[chainIndex]?.params
-      baseValue = params && typeof params[paramName] === 'number' ? (params[paramName] as number) : 0
+      baseValue =
+        params && typeof params[paramName] === 'number' ? (params[paramName] as number) : 0
     }
     const clampRange = normalizeClampRange(def.clamp)
     const clampMin = clampRange.min
@@ -112,7 +111,10 @@ export function createReactiveDriver(
   let videoOut: Record<string, number> = {}
   let audioOut: Record<string, number> = {}
 
-  function stepAll(delta: number, rms: number): { video: Record<string, number>; audio: Record<string, number> } {
+  function stepAll(
+    delta: number,
+    rms: number,
+  ): { video: Record<string, number>; audio: Record<string, number> } {
     videoOut = {}
     audioOut = {}
     for (const m of mappings) {
@@ -126,28 +128,29 @@ export function createReactiveDriver(
     return { video: videoOut, audio: audioOut }
   }
 
-  let lastStep: { video: Record<string, number>; audio: Record<string, number> } = { video: {}, audio: {} }
-  let frameDelta = -1
-  let frameRms = -1
+  let lastStep: { video: Record<string, number>; audio: Record<string, number> } = {
+    video: {},
+    audio: {},
+  }
+  let frameSeq = 0
+  let lastStepSeq = -1
   let audioConsumed = true
 
   return {
     getVideoOverrides(delta: number, rms: number) {
-      // Every call to getVideoOverrides starts a new frame and always re-steps.
-      frameDelta = delta
-      frameRms = rms
+      frameSeq++
+      lastStepSeq = frameSeq
       audioConsumed = false
       lastStep = stepAll(delta, rms)
       return { ...lastStep.video }
     },
     getAudioOverrides(delta: number, rms: number) {
-      // If the video side already stepped this frame with matching params, reuse.
-      if (!audioConsumed && !Number.isNaN(frameDelta) && delta === frameDelta && rms === frameRms) {
+      if (!audioConsumed && lastStepSeq === frameSeq) {
         audioConsumed = true
         return { ...lastStep.audio }
       }
-      // Otherwise, step with the provided params (standalone audio call or different params).
       lastStep = stepAll(delta, rms)
+      lastStepSeq = frameSeq
       return { ...lastStep.audio }
     },
   }

@@ -1,9 +1,9 @@
 /**
  * Camera Request Utility
- * 
+ *
  * A simple utility module to handle browser permissions and request the user's webcam feed.
  * It uses the native `navigator.mediaDevices.getUserMedia` API.
- * 
+ *
  * Note: This only requests the video track. Audio/Microphone is handled separately in `audioEngine.ts`
  * to ensure we don't accidentally ask for microphone permissions if the user only wants video.
  */
