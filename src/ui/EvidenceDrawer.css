@@ -9,6 +9,10 @@
   animation: ie-backdropIn var(--duration-normal) var(--ease-gentle) both;
 }
 
+.evidence-backdrop--hidden {
+  display: none;
+}
+
 .evidence-drawer {
   width: min(1100px, 100%);
   height: min(78vh, 820px);

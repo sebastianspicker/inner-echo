@@ -3,8 +3,8 @@ import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { chromium, firefox, webkit } from 'playwright'
 
-const HOST = '127.0.0.1'
-const PORT = 4173
+const HOST = process.env.HOST ?? '127.0.0.1'
+const PORT = Number(process.env.PORT ?? '4173')
 const BASE_URL = `http://${HOST}:${PORT}`
 const ONBOARDING_KEY = 'inner-echo-onboarding-accepted'
 
@@ -83,7 +83,18 @@ async function newContextPage(browser, viewport = { width: 1280, height: 720 }) 
     }
   }, ONBOARDING_KEY)
   await page.goto(BASE_URL, { waitUntil: 'networkidle' })
+  await waitForAppShell(page)
   return { context, page }
+}
+
+async function waitForAppShell(page) {
+  await page
+    .locator('section[aria-label="Inner Echo — camera and controls"]')
+    .waitFor({ state: 'visible', timeout: 5000 })
+  await page.getByRole('banner').waitFor({ state: 'visible', timeout: 5000 })
+  await page
+    .getByRole('status', { name: 'Runtime status' })
+    .waitFor({ state: 'visible', timeout: 5000 })
 }
 
 async function installFakeMedia(page) {
@@ -129,15 +140,29 @@ async function installFakeMedia(page) {
   })
 }
 
-async function expectCameraLabel(page, regex, timeoutMs) {
+async function readCameraStatus(page) {
+  return page.evaluate(() => {
+    const pills = Array.from(document.querySelectorAll('.ie-statusRow .ie-pill'))
+    const cameraPill = pills.find(
+      (pill) => pill.querySelector('.ie-pillKey')?.textContent?.trim().toLowerCase() === 'camera',
+    )
+    const status = cameraPill?.querySelector('.ie-pillVal')?.textContent?.trim()
+    if (!status) {
+      throw new Error('Camera status pill not found')
+    }
+    return status
+  })
+}
+
+async function expectCameraStatus(page, regex, timeoutMs) {
   const started = Date.now()
   while (Date.now() - started < timeoutMs) {
-    const label = await page.locator('.ie-pillVal').first().innerText()
-    if (regex.test(label)) return
+    const status = await readCameraStatus(page)
+    if (regex.test(status)) return
     await delay(100)
   }
-  const finalLabel = await page.locator('.ie-pillVal').first().innerText()
-  throw new Error(`Camera label did not match ${regex}; final="${finalLabel}"`)
+  const finalStatus = await readCameraStatus(page)
+  throw new Error(`Camera status did not match ${regex}; final="${finalStatus}"`)
 }
 
 async function runSmoke(browserName, browser) {
@@ -154,7 +179,7 @@ async function runSmoke(browserName, browser) {
   try {
     await installFakeMedia(page)
     await page.getByRole('button', { name: /^start camera$/i }).click()
-    await expectCameraLabel(page, /läuft/i, 3000)
+    await expectCameraStatus(page, /active/i, 3000)
 
     await page.evaluate(async () => {
       const select = document.querySelector('#condition-picker')
@@ -170,7 +195,7 @@ async function runSmoke(browserName, browser) {
     })
     await delay(250)
     await page.getByRole('button', { name: /stop everything/i }).click()
-    await expectCameraLabel(page, /(aus|fehler|verweigert|error)/i, 3000)
+    await expectCameraStatus(page, /ready/i, 3000)
 
     assert.equal(
       disallowedConsole.length,

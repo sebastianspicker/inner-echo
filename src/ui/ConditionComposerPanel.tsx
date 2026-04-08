@@ -88,22 +88,6 @@ function nowIso(): string {
   return new Date().toISOString()
 }
 
-function toCurrentPayload(props: ConditionComposerPanelProps): PresetPayload {
-  return createPresetPayload({
-    mode: props.mode,
-    conditionId: props.conditionId,
-    presets: props.presets,
-    dimensions: props.dimensions,
-    intensity: props.intensity,
-    safeMode: props.safeMode,
-    reducedMotion: props.reducedMotion,
-    audioEnabled: props.audioEnabled,
-    couplingStrength: props.couplingStrength,
-    maxFeedback: props.maxFeedback,
-    interactionAmount: props.interactionAmount,
-  })
-}
-
 function applyPayload(props: ConditionComposerPanelProps, payload: PresetPayload): void {
   applyPresetPayload(payload, {
     onModeChange: props.onModeChange,
@@ -121,6 +105,20 @@ function applyPayload(props: ConditionComposerPanelProps, payload: PresetPayload
 }
 
 export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
+  const {
+    mode,
+    conditionId,
+    presets,
+    dimensions,
+    intensity,
+    safeMode,
+    reducedMotion,
+    audioEnabled,
+    couplingStrength,
+    maxFeedback,
+    interactionAmount,
+  } = props
+
   const dims = useMemo(() => getExperienceDimensions(), [])
   const dimById = useMemo(
     () => new Map<string, ExperienceDimensionDef>(dims.map((d) => [d.id, d])),
@@ -158,6 +156,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   const [library, setLibrary] = useState<PresetSnapshotV2[]>([])
   const [selectedLibraryId, setSelectedLibraryId] = useState('')
   const [presetName, setPresetName] = useState(DEFAULT_PRESET_NAME)
+  const consumedSharedHashRef = useRef(false)
 
   const catalogIds = useMemo(() => (props.catalog ?? []).map((c) => c.id), [props.catalog])
   useAsyncEffect(
@@ -237,12 +236,43 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   }, [])
 
   useEffect(() => {
+    if (consumedSharedHashRef.current) return
+    consumedSharedHashRef.current = true
+
     const decoded = decodePresetFromHash(window.location.hash)
     if (!decoded.ok) return
-    applyPayload(props, decoded.payload)
+
+    applyPresetPayload(decoded.payload, {
+      onModeChange: props.onModeChange,
+      onConditionIdChange: props.onConditionIdChange,
+      onPresetsChange: props.onPresetsChange,
+      onDimensionsChange: props.onDimensionsChange,
+      onIntensityChange: props.onIntensityChange,
+      onSafeModeChange: props.onSafeModeChange,
+      onReducedMotionChange: props.onReducedMotionChange,
+      onAudioEnabledChange: props.onAudioEnabledChange,
+      onCouplingStrengthChange: props.onCouplingStrengthChange,
+      onMaxFeedbackChange: props.onMaxFeedbackChange,
+      onInteractionAmountChange: props.onInteractionAmountChange,
+    })
     setSaveStatusTimed('loaded')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props, setSaveStatusTimed])
+
+    const clearedUrl = `${window.location.pathname}${window.location.search}`
+    window.history.replaceState(window.history.state, '', clearedUrl)
+  }, [
+    props.onAudioEnabledChange,
+    props.onConditionIdChange,
+    props.onCouplingStrengthChange,
+    props.onDimensionsChange,
+    props.onIntensityChange,
+    props.onInteractionAmountChange,
+    props.onMaxFeedbackChange,
+    props.onModeChange,
+    props.onPresetsChange,
+    props.onReducedMotionChange,
+    props.onSafeModeChange,
+    setSaveStatusTimed,
+  ])
 
   const filteredCatalog = useMemo(() => {
     const q = conditionQuery.trim().toLowerCase()
@@ -270,19 +300,32 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   }, [dims, dimensionQuery])
 
   const currentPayload = useMemo(
-    () => toCurrentPayload(props),
+    () =>
+      createPresetPayload({
+        mode,
+        conditionId,
+        presets,
+        dimensions,
+        intensity,
+        safeMode,
+        reducedMotion,
+        audioEnabled,
+        couplingStrength,
+        maxFeedback,
+        interactionAmount,
+      }),
     [
-      props.mode,
-      props.conditionId,
-      props.presets,
-      props.dimensions,
-      props.intensity,
-      props.safeMode,
-      props.reducedMotion,
-      props.audioEnabled,
-      props.couplingStrength,
-      props.maxFeedback,
-      props.interactionAmount,
+      mode,
+      conditionId,
+      presets,
+      dimensions,
+      intensity,
+      safeMode,
+      reducedMotion,
+      audioEnabled,
+      couplingStrength,
+      maxFeedback,
+      interactionAmount,
     ],
   )
   const presetIds = new Set(props.presets.map((p) => p.profileId))

@@ -58,25 +58,23 @@ Even for static hosting, a strict CSP is recommended to reduce XSS and unauthori
 
 - `default-src 'self'` — only load resources from same origin.
 - `script-src 'self'` — scripts only from same origin (Vite/build output).
-- `style-src 'self' 'unsafe-inline'` — styles from same origin; inline styles are common in React (or use nonces if you move to a non-inline strategy).
+- `style-src 'self'` — styles only from same origin; keep runtime styling in CSS rather than inline attributes.
 - `img-src 'self' data:` — images from self and data URIs (e.g. placeholders).
 - `media-src 'self' blob:` — video/audio from self and blob (e.g. MediaStream).
-- `connect-src 'self'` — same-origin fetch/XHR only (Vite dev-server HMR requires `'self'`; tighten to `'none'` if you control all headers in production and have no same-origin requests).
-- `frame-ancestors 'none'` — prevent iframe embedding. Note: this directive is silently ignored in `<meta>` CSP delivery; it only works as an HTTP response header.
+- `connect-src 'self'` — same-origin fetch/XHR only (keep `'self'` for local docs/profile fetches).
+- `frame-ancestors 'none'` — prevent iframe embedding. Deliver CSP as an HTTP response header so this directive applies.
 
 Example HTTP header (server config or `public/_headers`):
 
 ```http
-Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';
 ```
 
-If you deliver CSP via a meta tag (defence-in-depth only — `frame-ancestors` won't apply):
+Development note: the local Vite dev server uses a looser header (`'unsafe-inline'` for scripts/styles) so the dev bootstrap and HMR can run. Keep that exception scoped to development only; preview and production should use the strict header above.
 
-```html
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
-```
+Avoid a CSP `<meta>` tag here. The app already relies on response headers, which prevents a stricter document-level meta policy from breaking the Vite dev bootstrap and keeps `frame-ancestors` enforceable.
 
-Tighten or relax directives (e.g. `worker-src`, `form-action`) as required by your deployment.
+Tighten or relax directives (for example `worker-src` or `form-action`) only if your deployment surface requires it.
 
 ---
 
@@ -95,7 +93,7 @@ Before releasing a build:
 - [ ] **Baseline quality gate**: Run `npm run check` and block release on any failure.
 - [ ] **No third-party requests**: Confirm no network calls (DevTools Network tab, or run with network disabled). No external scripts, fonts, or CDNs.
 - [ ] **Permissions**: Camera and mic only after user gesture; no `getUserMedia` or `AudioContext` on page load.
-- [ ] **CSP**: If possible, deploy with the recommended CSP (or equivalent) and verify the app still loads and runs.
+- [ ] **CSP**: Deploy the recommended header-delivered CSP (or equivalent) and verify both preview and browser smoke runs stay green without CSP violations.
 - [ ] **Permissions-Policy**: If you control headers, set camera/microphone to `(self)` (or stricter).
 - [ ] **Logs**: Ensure no sensitive data is logged (search for `console.*` and `logger.*`; no device IDs, no media, no PII).
 - [ ] **Debug panel**: Confirm the dev-only debug panel is not exposed in production (it is gated by `import.meta.env.DEV`; production builds should not include it).

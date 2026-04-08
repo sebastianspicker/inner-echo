@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
 } from 'react'
 import { listEvidenceDocPaths, loadEvidenceDoc, type EvidenceDocPath } from '../evidence/docs'
 import { renderEvidenceMarkdown } from '../evidence/markdown'
@@ -155,8 +156,18 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
   }, [props.open])
 
   const handleBackdrop = useCallback(
-    (e: React.MouseEvent) => {
+    (e: ReactMouseEvent<HTMLDivElement>) => {
       if (e.target === e.currentTarget) props.onClose()
+    },
+    [props.onClose],
+  )
+
+  const handleBackdropKeyDown = useCallback(
+    (e: ReactKeyboardEvent<HTMLDivElement>) => {
+      if (e.target !== e.currentTarget) return
+      if (e.key !== 'Enter' && e.key !== ' ') return
+      e.preventDefault()
+      props.onClose()
     },
     [props.onClose],
   )
@@ -182,13 +193,14 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
   return (
     <div
       ref={backdropRef}
-      className="evidence-backdrop"
-      style={{ display: props.open ? undefined : 'none' }}
+      className={props.open ? 'evidence-backdrop' : 'evidence-backdrop evidence-backdrop--hidden'}
       role="dialog"
       aria-modal="true"
       aria-labelledby="evidence-title"
       aria-label="Evidence viewer"
+      tabIndex={-1}
       onClick={handleBackdrop}
+      onKeyDown={handleBackdropKeyDown}
     >
       <div className="evidence-drawer">
         <div className="evidence-top">

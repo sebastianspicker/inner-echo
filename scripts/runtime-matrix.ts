@@ -14,8 +14,9 @@ import { spawn } from 'node:child_process'
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright'
 
 const DESIRED_PORT = Number(process.env.PORT ?? 5173)
-const REQUIRE_AUDIO = process.env.REQUIRE_AUDIO === '1'
-const REQUIRE_MIC = process.env.REQUIRE_MIC === '1'
+const argv = new Set(process.argv.slice(2))
+const REQUIRE_AUDIO = process.env.REQUIRE_AUDIO === '1' || argv.has('--require-audio')
+const REQUIRE_MIC = process.env.REQUIRE_MIC === '1' || argv.has('--require-mic')
 const HEADLESS = process.env.HEADLESS ? process.env.HEADLESS === '1' : true
 
 function sleep(ms: number): Promise<void> {
@@ -92,20 +93,18 @@ async function launchBrowser(
   baseUrl: string,
 ): Promise<{ browser: Browser; context: BrowserContext; page: Page; errors: string[] }> {
   const errors: string[] = []
-  const browser = await chromium.launch({
-    headless: HEADLESS,
-    chromiumSandbox: false,
-    args: [
-      '--use-fake-device-for-media-stream',
-      '--use-fake-ui-for-media-stream',
-      '--no-first-run',
-      '--no-default-browser-check',
-      // Make WebGL more reliable in headless / CI-like environments.
-      '--ignore-gpu-blocklist',
-      '--disable-gpu-sandbox',
-      '--use-gl=swiftshader',
-    ],
-  })
+  let browser: Browser
+  try {
+    browser = await chromium.launch({ channel: 'chrome', headless: HEADLESS })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (message.includes("Executable doesn't exist")) {
+      throw new Error(
+        'Chrome is not available for Playwright. Run `npm run browsers:install` and retry.',
+      )
+    }
+    throw error
+  }
   const context = await browser.newContext()
   await context.grantPermissions(['camera', 'microphone'], { origin: baseUrl })
   const page = await context.newPage()
@@ -122,14 +121,90 @@ async function launchBrowser(
   return { browser, context, page, errors }
 }
 
+async function installFakeMedia(page: Page): Promise<void> {
+  await page.evaluate(`
+    (() => {
+      const mediaDevices = navigator.mediaDevices;
+      if (!mediaDevices) return;
+      const w = window;
+
+      if (!w.__ieOrigGetUserMedia) {
+        w.__ieOrigGetUserMedia = mediaDevices.getUserMedia.bind(mediaDevices);
+      }
+
+      if (!w.__ieE2eCanvas) {
+        const c = document.createElement('canvas');
+        c.width = 640;
+        c.height = 480;
+        const ctx = c.getContext('2d');
+        let t = 0;
+        const tick = () => {
+          if (!ctx) return;
+          t += 0.03;
+          ctx.fillStyle = '#101827';
+          ctx.fillRect(0, 0, c.width, c.height);
+          ctx.fillStyle = '#7bc8c0';
+          const x = (Math.sin(t) * 0.4 + 0.5) * (c.width - 140);
+          ctx.fillRect(x, 170, 140, 100);
+          ctx.fillStyle = '#c7d2fe';
+          ctx.font = '20px sans-serif';
+          ctx.fillText('inner-echo runtime matrix cam', 16, 32);
+          w.__ieE2eRaf = requestAnimationFrame(tick);
+        };
+        tick();
+        w.__ieE2eCanvas = c;
+      }
+
+      if (!w.__ieE2eAudioRoot) {
+        const AudioContextCtor = w.AudioContext || w.webkitAudioContext;
+        if (AudioContextCtor) {
+          const audioCtx = new AudioContextCtor();
+          const oscillator = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          const destination = audioCtx.createMediaStreamDestination();
+          oscillator.type = 'sine';
+          oscillator.frequency.value = 220;
+          gain.gain.value = 0.0001;
+          oscillator.connect(gain);
+          gain.connect(destination);
+          oscillator.start();
+          w.__ieE2eAudioRoot = { audioCtx, oscillator, gain, destination };
+        } else {
+          w.__ieE2eAudioRoot = null;
+        }
+      }
+
+      mediaDevices.getUserMedia = async (constraints) => {
+        const wantsVideo = !!constraints.video;
+        const wantsAudio = !!constraints.audio;
+        if (wantsVideo) {
+          return w.__ieE2eCanvas.captureStream(30);
+        }
+        if (wantsAudio) {
+          const audioRoot = w.__ieE2eAudioRoot;
+          const audioTrack = audioRoot?.destination?.stream?.getAudioTracks?.()[0];
+          if (!audioTrack) {
+            throw new DOMException('Synthetic microphone unavailable in runtime matrix', 'NotSupportedError');
+          }
+          return new MediaStream([audioTrack.clone()]);
+        }
+        return w.__ieOrigGetUserMedia(constraints);
+      };
+    })()
+  `)
+}
+
 async function runFlow(page: Page, baseUrl: string): Promise<void> {
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded' })
+  await installFakeMedia(page)
 
   // Onboarding
-  const onboardingCheckbox = page.getByRole('checkbox', { name: /I have read and understood/i })
+  const onboardingCheckbox = page.getByRole('checkbox', {
+    name: /I understand and feel ready to begin/i,
+  })
   if (await onboardingCheckbox.isVisible().catch(() => false)) {
     await onboardingCheckbox.check()
-    await page.getByRole('button', { name: /Accept and continue/i }).click()
+    await page.getByRole('button', { name: /Begin your experience/i }).click()
   }
 
   // Start camera
@@ -199,8 +274,8 @@ async function runFlow(page: Page, baseUrl: string): Promise<void> {
   // Turn on mic via composer toggle (requests mic if audio is on)
   if (audioIsOn) {
     const micToggle = page.getByRole('checkbox', { name: /Microphone \(optional\)/i })
-    await micToggle.check()
     try {
+      await micToggle.check()
       await page.getByText('Mic: on', { exact: false }).waitFor({ timeout: 20_000 })
       // Calibrate mic (sliders exist only when mic is on)
       const micSensitivity = page.getByRole('slider', { name: /Mic sensitivity/i })
@@ -224,7 +299,7 @@ async function runFlow(page: Page, baseUrl: string): Promise<void> {
   }
 
   // Stop everything
-  await page.getByRole('button', { name: /^Stop Everything/i }).click()
+  await page.getByRole('button', { name: /stop everything/i }).click()
   await page
     .locator('.ie-statusRow')
     .getByText('Ready', { exact: false })

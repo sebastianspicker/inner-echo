@@ -14,6 +14,15 @@
 
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { logger } from '../utils/logger'
+import './ErrorBoundary.css'
+
+export const pageRecovery = {
+  reload(): void {
+    if (typeof window !== 'undefined') {
+      window.location.reload()
+    }
+  },
+}
 
 export interface ErrorBoundaryProps {
   children: ReactNode
@@ -75,7 +84,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.setState({ hasError: false, error: null })
     if (this.props.onReset) {
       this.props.onReset()
+      return
     }
+    pageRecovery.reload()
   }
 
   render(): ReactNode {
@@ -83,66 +94,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (this.state.hasError && this.state.error) {
       if (this.props.fallback) return this.props.fallback
       return (
-        <div
-          role="alert"
-          style={{
-            padding: '2rem',
-            maxWidth: '28rem',
-            margin: '3rem auto',
-            textAlign: 'center',
-            background: 'rgba(255, 255, 255, 0.04)',
-            borderRadius: '18px',
-            border: '1px solid rgba(255, 255, 255, 0.09)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-          }}
-        >
-          <h2
-            style={{
-              margin: '0 0 0.75rem',
-              fontSize: '14px',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase' as const,
-              color: 'rgba(255, 255, 255, 0.86)',
-              fontWeight: 650,
-            }}
-          >
-            Something unexpected happened
-          </h2>
-          <p
-            style={{
-              margin: '0 0 0.5rem',
-              fontSize: '13px',
-              lineHeight: '1.6',
-              color: 'rgba(255, 255, 255, 0.58)',
-            }}
-          >
+        <div role="alert" className="ie-errorBoundary">
+          <h2 className="ie-errorBoundaryTitle">Something unexpected happened</h2>
+          <p className="ie-errorBoundaryBody">
             This is not your fault. The experience ran into an issue it could not recover from.
           </p>
-          <p
-            style={{
-              margin: '0 0 1.25rem',
-              fontSize: '12px',
-              color: 'rgba(255, 255, 255, 0.38)',
-              fontFamily: 'ui-monospace, monospace',
-            }}
-          >
-            {this.state.error.message}
-          </p>
-          <button
-            type="button"
-            onClick={this.handleReset}
-            style={{
-              padding: '10px 18px',
-              fontSize: '13px',
-              fontWeight: 520,
-              cursor: 'pointer',
-              backgroundColor: 'rgba(123, 200, 192, 0.10)',
-              color: 'rgba(255, 255, 255, 0.86)',
-              border: '1px solid rgba(123, 200, 192, 0.25)',
-              borderRadius: '999px',
-            }}
-          >
+          <p className="ie-errorBoundaryMessage">{this.state.error.message}</p>
+          <button type="button" onClick={this.handleReset} className="ie-errorBoundaryAction">
             Start fresh
           </button>
         </div>

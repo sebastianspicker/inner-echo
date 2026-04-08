@@ -103,7 +103,18 @@ async function newContextPage(harness, viewport, onboardingAccepted) {
   }
 
   await page.goto(BASE_URL, { waitUntil: 'networkidle' })
+  await waitForAppShell(page)
   return { context, page }
+}
+
+async function waitForAppShell(page) {
+  await page
+    .locator('section[aria-label="Inner Echo — camera and controls"]')
+    .waitFor({ state: 'visible', timeout: 5000 })
+  await page.getByRole('banner').waitFor({ state: 'visible', timeout: 5000 })
+  await page
+    .getByRole('status', { name: 'Runtime status' })
+    .waitFor({ state: 'visible', timeout: 5000 })
 }
 
 async function installFakeMedia(page) {
@@ -153,15 +164,29 @@ async function installFakeMedia(page) {
   })
 }
 
-async function expectCameraLabel(page, regex, timeoutMs) {
+async function readCameraStatus(page) {
+  return page.evaluate(() => {
+    const pills = Array.from(document.querySelectorAll('.ie-statusRow .ie-pill'))
+    const cameraPill = pills.find(
+      (pill) => pill.querySelector('.ie-pillKey')?.textContent?.trim().toLowerCase() === 'camera',
+    )
+    const status = cameraPill?.querySelector('.ie-pillVal')?.textContent?.trim()
+    if (!status) {
+      throw new Error('Camera status pill not found')
+    }
+    return status
+  })
+}
+
+async function expectCameraStatus(page, regex, timeoutMs) {
   const started = Date.now()
   while (Date.now() - started < timeoutMs) {
-    const label = await page.locator('.ie-pillVal').first().innerText()
-    if (regex.test(label)) return
+    const status = await readCameraStatus(page)
+    if (regex.test(status)) return
     await delay(100)
   }
-  const finalLabel = await page.locator('.ie-pillVal').first().innerText()
-  throw new Error(`Camera label did not match ${regex}; final="${finalLabel}"`)
+  const finalStatus = await readCameraStatus(page)
+  throw new Error(`Camera status did not match ${regex}; final="${finalStatus}"`)
 }
 
 async function ensureDetailsOpen(page, summaryText) {
@@ -215,7 +240,7 @@ async function main() {
       const { page } = desktopCtx
       await installFakeMedia(page)
       await page.getByRole('button', { name: /^start camera$/i }).click()
-      await expectCameraLabel(page, /läuft/i, 3000)
+      await expectCameraStatus(page, /active/i, 3000)
       await delay(300)
 
       await captureShot(page, shot('02-hero-active'))
@@ -275,7 +300,7 @@ async function main() {
         .locator('.ie-header')
         .getByRole('button', { name: /stop everything/i })
         .click()
-      await expectCameraLabel(page, /(aus|fehler|verweigert|error)/i, 3000)
+      await expectCameraStatus(page, /ready/i, 3000)
       await delay(200)
       await captureShot(page, shot('10-stop-everything-idle'))
     } finally {
@@ -287,7 +312,7 @@ async function main() {
       const { page } = mobileCtx
       await installFakeMedia(page)
       await page.getByRole('button', { name: /^start camera$/i }).click()
-      await expectCameraLabel(page, /läuft/i, 3000)
+      await expectCameraStatus(page, /active/i, 3000)
       await delay(250)
       await captureShot(page, shot('09-mobile-home-390x844'))
     } finally {

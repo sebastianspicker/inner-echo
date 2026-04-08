@@ -7,14 +7,17 @@
   "author": "Sebastian Spicker",
   "scripts": {
     "dev": "vite",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "build": "tsc -b && vite build",
-    "lint": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit && biome check src/ tests/ scripts/",
+    "browsers:install": "npx playwright install chrome firefox webkit",
+    "lint": "biome check --error-on-warnings src/ tests/ scripts/",
     "lint:biome": "biome check src/ tests/ scripts/",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "npm run test:e2e:ui && npm run test:e2e:cross-browser",
     "test:e2e:ui": "node tests/e2e/ui-debug.e2e.mjs",
     "test:e2e:cross-browser": "node tests/e2e/cross-browser-smoke.e2e.mjs",
+    "test:e2e:preview": "node scripts/run-preview-smoke.mjs",
     "preview": "vite preview",
     "docs:gen": "tsx scripts/gen-docs.ts",
     "conditions:validate": "tsx scripts/conditions-validate.ts",
@@ -24,17 +27,18 @@
     "nodes:report": "tsx scripts/nodes-report.ts",
     "references:audit": "tsx scripts/references-audit.ts",
     "runtime:matrix": "tsx scripts/runtime-matrix.ts",
-    "debug:inspect": "npm run lint && npm test && npm run verify:contracts && tsx scripts/debug-inspect.ts",
+    "runtime:matrix:required": "tsx scripts/runtime-matrix.ts --require-audio --require-mic",
+    "debug:inspect": "npm run typecheck && npm run lint && npm test && npm run verify:contracts && tsx scripts/debug-inspect.ts",
     "verify:contracts": "tsx scripts/verify-contracts.ts",
-    "verify": "npm run build && npm test && npm run conditions:validate && npm run composer:validate && npm run evidence:verify && npm run verify:contracts",
-    "check": "npm run verify && npm run test:e2e",
+    "verify": "npm run build && npm run lint && npm test && npm run conditions:validate && npm run composer:validate && npm run evidence:verify && npm run verify:contracts",
+    "check": "npm run verify && npm run test:e2e && npm run test:e2e:preview && npm run runtime:matrix:required",
     "clean:local": "rm -rf dist reports tsconfig.tsbuildinfo",
     "screenshots:capture": "node tests/e2e/readme-screenshots.mjs",
     "screenshots:convert": "node scripts/convert-readme-screenshots.mjs",
     "screenshots:readme": "npm run screenshots:capture && npm run screenshots:convert",
     "screenshots:verify": "node scripts/verify-readme-screenshots.mjs",
     "release:rc:local": "npm run check",
-    "release:rc:checklist": "npm run clean:local && npm ci && npm run check && npm run screenshots:readme && npm run screenshots:verify"
+    "release:rc:checklist": "npm run clean:local && npm ci && npm run browsers:install && npm run check && npm run screenshots:readme && npm run screenshots:verify"
   },
   "dependencies": {
     "dompurify": "^3.3.1",
@@ -59,7 +63,7 @@
     "sharp": "^0.34.5",
     "tsx": "^4.19.2",
     "typescript": "~6.0.2",
-    "vite": "^8.0.2",
+    "vite": "^8.0.5",
     "vitest": "^4.0.18"
   }
 }

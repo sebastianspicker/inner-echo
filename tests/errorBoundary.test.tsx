@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
-import { ErrorBoundary } from '../src/ui/ErrorBoundary'
+import * as ErrorBoundaryModule from '../src/ui/ErrorBoundary'
 
 afterEach(cleanup)
 
@@ -24,18 +24,18 @@ describe('ui/ErrorBoundary', () => {
 
   it('renders children when there is no error', () => {
     render(
-      <ErrorBoundary>
+      <ErrorBoundaryModule.ErrorBoundary>
         <Bomb shouldThrow={false} />
-      </ErrorBoundary>,
+      </ErrorBoundaryModule.ErrorBoundary>,
     )
     expect(screen.getByText('All good')).toBeInTheDocument()
   })
 
   it('renders default fallback UI when a child throws', () => {
     render(
-      <ErrorBoundary>
+      <ErrorBoundaryModule.ErrorBoundary>
         <Bomb shouldThrow={true} />
-      </ErrorBoundary>,
+      </ErrorBoundaryModule.ErrorBoundary>,
     )
     expect(screen.getByRole('alert')).toBeInTheDocument()
     expect(screen.getByText('Something unexpected happened')).toBeInTheDocument()
@@ -45,9 +45,9 @@ describe('ui/ErrorBoundary', () => {
 
   it('renders custom fallback when provided', () => {
     render(
-      <ErrorBoundary fallback={<div data-testid="custom">Custom fallback</div>}>
+      <ErrorBoundaryModule.ErrorBoundary fallback={<div data-testid="custom">Custom fallback</div>}>
         <Bomb shouldThrow={true} />
-      </ErrorBoundary>,
+      </ErrorBoundaryModule.ErrorBoundary>,
     )
     expect(screen.getByTestId('custom')).toBeInTheDocument()
     expect(screen.queryByText('Something unexpected happened')).not.toBeInTheDocument()
@@ -56,12 +56,27 @@ describe('ui/ErrorBoundary', () => {
   it('calls onReset callback when Reset App is clicked', () => {
     const onReset = vi.fn()
     render(
-      <ErrorBoundary onReset={onReset}>
+      <ErrorBoundaryModule.ErrorBoundary onReset={onReset}>
         <Bomb shouldThrow={true} />
-      </ErrorBoundary>,
+      </ErrorBoundaryModule.ErrorBoundary>,
     )
     fireEvent.click(screen.getByRole('button', { name: /start fresh/i }))
     expect(onReset).toHaveBeenCalledOnce()
+  })
+
+  it('reloads the page when Reset App is clicked without custom onReset', () => {
+    const reloadSpy = vi
+      .spyOn(ErrorBoundaryModule.pageRecovery, 'reload')
+      .mockImplementation(() => {})
+
+    render(
+      <ErrorBoundaryModule.ErrorBoundary>
+        <Bomb shouldThrow={true} />
+      </ErrorBoundaryModule.ErrorBoundary>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /start fresh/i }))
+    expect(reloadSpy).toHaveBeenCalledOnce()
   })
 
   it('attempts to re-render children after reset (re-catches if child still throws)', () => {
@@ -70,9 +85,9 @@ describe('ui/ErrorBoundary', () => {
     // This proves the reset mechanism triggers re-rendering of children.
     const onReset = vi.fn()
     render(
-      <ErrorBoundary onReset={onReset}>
+      <ErrorBoundaryModule.ErrorBoundary onReset={onReset}>
         <Bomb shouldThrow={true} />
-      </ErrorBoundary>,
+      </ErrorBoundaryModule.ErrorBoundary>,
     )
     expect(screen.getByRole('alert')).toBeInTheDocument()
 
@@ -90,18 +105,18 @@ describe('ui/ErrorBoundary', () => {
     }
 
     render(
-      <ErrorBoundary>
+      <ErrorBoundaryModule.ErrorBoundary>
         <SpecificError />
-      </ErrorBoundary>,
+      </ErrorBoundaryModule.ErrorBoundary>,
     )
     expect(screen.getByText('Database connection failed')).toBeInTheDocument()
   })
 
   it('does not show fallback when no error occurs', () => {
     render(
-      <ErrorBoundary>
+      <ErrorBoundaryModule.ErrorBoundary>
         <p>Normal content</p>
-      </ErrorBoundary>,
+      </ErrorBoundaryModule.ErrorBoundary>,
     )
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(screen.queryByText('Something unexpected happened')).not.toBeInTheDocument()
