@@ -1,0 +1,1352 @@
+{
+  "version": "0.1.0",
+  "note": "Evidence-informed authoring hints: experience dimension → AV motifs. Metaphorical, non-diagnostic. Values are safe-by-default and should be clamped at runtime.",
+  "mapping": {
+    "hyperarousal": {
+      "evidence_strength": "high",
+      "rationale_doc": "docs/references/dimensions/hyperarousal.md",
+      "notes": "Tonic readiness/tension. Prefer persistent, low-amplitude texture + gentle dynamic control. Avoid dramatic motion or contrast.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "grain",
+          "params_hint": {
+            "amount": "0.10..0.25",
+            "speed": "0..0.15 (prefer static)",
+            "scale": "1.0..1.8"
+          }
+        },
+        {
+          "node": "edge_sharpen",
+          "params_hint": {
+            "amount": "0.04..0.10 (subtle)"
+          }
+        },
+        {
+          "node": "vignette",
+          "params_hint": {
+            "amount": "0.08..0.22 (static)",
+            "softness": "0.60..0.90"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-24..-14 dB",
+            "ratio": "2..4",
+            "attack": "0.01..0.05s",
+            "release": "0.12..0.35s",
+            "ceiling": "-6..-1 dBFS"
+          }
+        },
+        {
+          "node": "highpass",
+          "params_hint": {
+            "cutoff": "80..200 Hz",
+            "q": "0.5..0.9"
+          }
+        },
+        {
+          "node": "noise_bed",
+          "params_hint": {
+            "level": "0.01..0.05",
+            "color": "pink/brown"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "**Flicker, strobe, rapid luminance modulation**: not needed for tonic hyperarousal and increases seizure risk; violates accessibility expectations. citeturn10search0turn10search2",
+          "**Sudden loud transients / jump-cut audio spikes**: would conflate hyperarousal with startle-induction; startle is a defensive reflex to sudden stimuli and can be distressing. citeturn10search3turn13search6",
+          "Replace any “jitter” with **slow envelope** changes (<0.2 Hz) or static texture + intensity slider. citeturn11search10turn10search5"
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report.md"]
+    },
+    "hypervigilance": {
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/hypervigilance.md",
+      "notes": "Attentional scanning/threat monitoring. Use subtle narrowing and cue sensitivity without jump scares.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "vignette",
+          "params_hint": {
+            "amount": "0.10..0.26 (static)",
+            "softness": "0.70..0.95"
+          }
+        },
+        {
+          "node": "edge_sharpen",
+          "params_hint": {
+            "amount": "0.03..0.08 (non-flickering)"
+          }
+        },
+        {
+          "node": "grain",
+          "params_hint": {
+            "amount": "0.08..0.20",
+            "speed": "0..0.12"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "noise_bed",
+          "params_hint": {
+            "level": "0.01..0.04",
+            "color": "pink"
+          }
+        },
+        {
+          "node": "highpass",
+          "params_hint": {
+            "cutoff": "120..260 Hz (tiny tilt)",
+            "q": "0.6..0.9"
+          }
+        },
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-22..-14 dB",
+            "ratio": "2..4",
+            "ceiling": "-6..-2 dBFS"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "**Jump scares / abrupt cuts**: directly violate the repo safety note and are not necessary to represent vigilance/maintenance. citeturn46view0turn11search10",
+          "**Fast scanning camera motion** (pan/tilt, parallax): may cause vestibular discomfort and suggests “cinematic scanning” more than attention science. citeturn11search10turn11search7",
+          "Replace moving focus windows with **static composition + micro-contrast cueing** (slow fades) and allow user to disable all cueing (“Reduced Surprise”). citeturn11search10turn10search5"
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report.md"]
+    },
+    "panic_peaks": {
+      "evidence_strength": "high",
+      "rationale_doc": "docs/references/dimensions/panic_peaks.md",
+      "notes": "Phasic rise/fall alarm waves. Use clamped envelopes and smooth returns to baseline. No flashes, no loud transients.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "pulse",
+          "params_hint": {
+            "rate": "0.6..1.6 Hz",
+            "depth": "0.02..0.14 (clamped)",
+            "smoothing": "0.80..0.95"
+          }
+        },
+        {
+          "node": "vignette",
+          "params_hint": {
+            "amount": "0.12..0.34 (enveloped)",
+            "softness": "0.65..0.90"
+          }
+        },
+        {
+          "node": "soft_blur",
+          "params_hint": {
+            "amount": "0.00..0.16 (enveloped)"
+          }
+        },
+        {
+          "node": "grain",
+          "params_hint": {
+            "amount": "0.10..0.28",
+            "speed": "0..0.15"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "pulse_tone",
+          "params_hint": {
+            "rate": "0.8..1.6",
+            "mix": "0.03..0.10",
+            "base_freq": "90..160 Hz"
+          }
+        },
+        {
+          "node": "lowpass",
+          "params_hint": {
+            "cutoff": "1800..9000 (sweep)",
+            "q": "0.6..0.9"
+          }
+        },
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-26..-16 dB",
+            "ratio": "3..6",
+            "attack": "0.005..0.02s",
+            "release": "0.12..0.30s",
+            "ceiling": "-8..-2 dBFS"
+          }
+        },
+        {
+          "node": "reverb",
+          "params_hint": {
+            "mix": "0.02..0.08",
+            "decay": "0.8..1.8s"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "**Strobe / flicker / fast rhythmic flashes**: unnecessary for “wave” dynamics and presents seizure risk. citeturn10search0turn10search2",
+          "**Rapid zooms, camera shakes, heavy feedback trails**: more likely to induce cybersickness/vestibular discomfort than to represent panic phenomenology. citeturn11search7turn11search10",
+          "**Harsh audio distortion or sudden siren-like elements**: can function as a startle/provocation rather than a metaphor; violates safety-first intent. citeturn10search3turn39view0",
+          "Replace motion-heavy “swells” with **static imagery + slow luminance/contrast envelope** and offer a prominent Reduced Motion toggle. citeturn11search10turn10search5"
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report.md"]
+    },
+    "intrusion": {
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/intrusion.md",
+      "notes": "Unwanted content 'insertion'. Represent as abstract, low-opacity overlays and tiny audio recurrences—never literal content.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "interference",
+          "params_hint": {
+            "amount": "0.06..0.14 (micro-bursts)",
+            "banding": "0.03..0.09",
+            "smoothing": "0.85..0.95"
+          }
+        },
+        {
+          "node": "vignette",
+          "params_hint": {
+            "amount": "0.08..0.24 (brief pulse)",
+            "softness": "0.70..0.95"
+          }
+        },
+        {
+          "node": "grain",
+          "params_hint": {
+            "amount": "0.10..0.24",
+            "speed": "0..0.12"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "delay",
+          "params_hint": {
+            "time": "0.08..0.18s",
+            "feedback": "0.00..0.12",
+            "mix": "0.02..0.08"
+          }
+        },
+        {
+          "node": "noise_bed",
+          "params_hint": {
+            "level": "0.01..0.06 (brief swell)",
+            "color": "pink/brown"
+          }
+        },
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-26..-16 dB",
+            "ratio": "3..6",
+            "ceiling": "-8..-2 dBFS"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "Strobing glitches, hard jump-cuts, sudden loud hits, or high-contrast flash frames (startle + seizure/migraine risk; also too “this is what it looks like”).",
+          "Brewin, C. R., Gregory, J. D., Lipton, M., & Burgess, N. (2010). Intrusive images in psychological disorders: Characteristics, neural mechanisms, and treatment implications. *Psychological Review, 117*(1), 210–232. https://doi.org/10.1037/a0018113",
+          "Holmes, E. A., & Bourne, C. (2008). Inducing and modulating intrusive emotional memories: A review of the trauma film paradigm. *Acta Psychologica, 127*(3), 553–566. https://doi.org/10.1016/j.actpsy.2007.11.002",
+          "James, E. L., Lau-Zhu, A., Clark, I. A., Visser, R. M., Hagenaars, M. A., & Holmes, E. A. (2016). The trauma film paradigm as an experimental psychopathology model of psychological trauma: Intrusive memories and beyond. *Clinical Psychology Review, 47*, 106–142. https://doi.org/10.1016/j.cpr.2016.04.010",
+          "Brewin, C. R. (2015). Re-experiencing traumatic events in PTSD: New avenues in research on intrusive memories and flashbacks. *European Journal of Psychotraumatology, 6*, 27180. https://doi.org/10.3402/ejpt.v6.27180",
+          "Holmes, E. A., Brewin, C. R., & Hennessy, R. G. (2004). Trauma films, information processing, and intrusive memory development. *Journal of Experimental Psychology: General, 133*(1), 3–22. https://doi.org/10.1037/0096-3445.133.1.3",
+          "Kleim, B., Graham, B., Bryant, R. A., & Ehlers, A. (2013). Capturing intrusive re-experiencing in trauma survivors’ daily lives using ecological momentary assessment. *Journal of Abnormal Psychology, 122*(4), 998–1009. https://doi.org/10.1037/a0034957",
+          "Kuijpers, K. F., et al. (2022). Using a daily diary for monitoring intrusive memories of trauma: A convergent validity study. *International Journal of Methods in Psychiatric Research, 32*(1), e1936. https://doi.org/10.1002/mpr.1936",
+          "Creamer, M., Bell, R., & Failla, S. (2003). Psychometric properties of the Impact of Event Scale—Revised. *Behaviour Research and Therapy, 41*(12), 1489–1496. https://doi.org/10.1016/j.brat.2003.07.010"
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report-2.md"]
+    },
+    "rumination_loop": {
+      "evidence_strength": "high",
+      "rationale_doc": "docs/references/dimensions/rumination_loop.md",
+      "notes": "Sticky repetition. Prefer gentle, low-feedback recursion without hypnotic escalation or rhythmic insistence.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "feedback_loop",
+          "params_hint": {
+            "feedback": "0.06..0.16 (low)",
+            "decay": "0.90..0.97",
+            "jitter": "0.00..0.04"
+          }
+        },
+        {
+          "node": "grain",
+          "params_hint": {
+            "amount": "0.10..0.26",
+            "speed": "0..0.10"
+          }
+        },
+        {
+          "node": "vignette",
+          "params_hint": {
+            "amount": "0.06..0.22",
+            "softness": "0.70..0.95"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "delay",
+          "params_hint": {
+            "time": "0.12..0.28s",
+            "feedback": "0.04..0.14 (low)",
+            "mix": "0.02..0.08"
+          }
+        },
+        {
+          "node": "tremolo",
+          "params_hint": {
+            "rate": "0.4..1.2 Hz",
+            "depth": "0.03..0.10"
+          }
+        },
+        {
+          "node": "lowpass",
+          "params_hint": {
+            "cutoff": "2600..8000",
+            "q": "0.6..0.9"
+          }
+        },
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-22..-14 dB",
+            "ratio": "2..4",
+            "ceiling": "-8..-2 dBFS"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "High-contrast repeating spirals, strong rhythmic pulses, escalating feedback trails (hypnotic/trigger risk; stylistic more than evidence-aligned).",
+          "Nolen-Hoeksema, S., Wisco, B. E., & Lyubomirsky, S. (2008). Rethinking rumination. *Perspectives on Psychological Science, 3*(5), 400–424. https://doi.org/10.1111/j.1745-6924.2008.00088.x",
+          "Treynor, W., Gonzalez, R., & Nolen-Hoeksema, S. (2003). Rumination reconsidered: A psychometric analysis. *Cognitive Therapy and Research, 27*, 247–259. https://doi.org/10.1023/A:1023910315561",
+          "Ehring, T., Zetsche, U., Weidacker, K., Wahl, K., Schönfeld, S., & Ehlers, A. (2011). The Perseverative Thinking Questionnaire (PTQ): Validation of a content-independent measure of repetitive negative thinking. *Journal of Behavior Therapy and Experimental Psychiatry, 42*(2), 225–232. https://doi.org/10.1016/j.jbtep.2010.12.003",
+          "Kovács, L. N., Takacs, Z. K., Tóth, Z., Simon, E., Schmelowszky, Á., & Kökönyei, G. (2020). Rumination in major depressive and bipolar disorder – A meta-analysis. *Journal of Affective Disorders, 276*, 1131–1141. https://doi.org/10.1016/j.jad.2020.07.131",
+          "Zhou, H.-X., Zheng, Q., Zhang, H., & Zang, Y.-F. (2020). Rumination and the default mode network: Meta-analysis of brain imaging studies and implications for depression. *NeuroImage, 206*, 116287. https://doi.org/10.1016/j.neuroimage.2019.116287",
+          "Ehring, T., et al. (2024). Repetitive negative thinking as a transdiagnostic cognitive process. *Nature Reviews Psychology.* https://doi.org/10.1038/s44159-024-00399-6"
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report-2.md"]
+    },
+    "compulsive_loop": {
+      "evidence_strength": "high",
+      "rationale_doc": "docs/references/dimensions/compulsive_loop.md",
+      "notes": "Repeat-to-relieve loop. Use subtle repetition cues and structure hints without caricature or “quirky” aesthetics.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "feedback_loop",
+          "params_hint": {
+            "feedback": "0.08..0.18",
+            "decay": "0.88..0.96",
+            "jitter": "0.00..0.04"
+          }
+        },
+        {
+          "node": "grid_hint",
+          "params_hint": {
+            "amount": "0.02..0.08 (very subtle)"
+          }
+        },
+        {
+          "node": "vignette",
+          "params_hint": {
+            "amount": "0.06..0.22",
+            "softness": "0.75..0.95"
+          }
+        },
+        {
+          "node": "grain",
+          "params_hint": {
+            "amount": "0.08..0.22",
+            "speed": "0..0.10"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "delay",
+          "params_hint": {
+            "time": "0.10..0.20s",
+            "feedback": "0.04..0.12",
+            "mix": "0.02..0.08"
+          }
+        },
+        {
+          "node": "lowpass",
+          "params_hint": {
+            "cutoff": "2200..7000",
+            "q": "0.6..0.9"
+          }
+        },
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-22..-14 dB",
+            "ratio": "2..4",
+            "ceiling": "-8..-2 dBFS"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "Escalating feedback, fast repeats, comedic “loop gag,” or harsh ticking sounds (trigger + stigma risk).",
+          "Bandelow, B., et al. (2023). WFSBP guidelines for the pharmacological treatment of anxiety, obsessive–compulsive and posttraumatic stress disorders (Part II: OCD/PTSD). *World Journal of Biological Psychiatry, 24*(2), 118–134. https://doi.org/10.1080/15622975.2022.2086296",
+          "NICE. (2005, updated). Obsessive-compulsive disorder and body dysmorphic disorder: Treatment (CG31). https://www.nice.org.uk/Guidance/CG31",
+          "Gillan, C. M., Robbins, T. W., Sahakian, B. J., van den Heuvel, O. A., & van Wingen, G. (2016). The role of habit in compulsivity. *European Neuropsychopharmacology, 26*(5), 828–840. https://doi.org/10.1016/j.euroneuro.2015.12.033",
+          "Gillan, C. M., & Robbins, T. W. (2014). Goal-directed learning and obsessive–compulsive disorder. *Philosophical Transactions of the Royal Society B, 369*(1655), 20130475. https://doi.org/10.1098/rstb.2013.0475",
+          "Gillan, C. M., et al. (2011). Disruption in the balance between goal-directed behavior and habit learning in obsessive–compulsive disorder. *American Journal of Psychiatry.* https://doi.org/10.1176/appi.ajp.2011.10071062",
+          "Vaghi, M. M., et al. (2024). Action sequence learning, habits, and automaticity in obsessive–compulsive disorder. *eLife.* https://doi.org/10.7554/eLife.87346"
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report-2.md"]
+    },
+    "emotional_numbing": {
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/emotional_numbing.md",
+      "notes": "Muted affect/reward. Keep it subtle to avoid a stereotypical 'depression filter'.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "color_grade",
+          "params_hint": {
+            "contrast": "-0.12..0.06",
+            "saturation": "-0.25..-0.06",
+            "brightness": "-0.06..0.03"
+          }
+        },
+        {
+          "node": "soft_blur",
+          "params_hint": {
+            "amount": "0.03..0.12"
+          }
+        },
+        {
+          "node": "vignette",
+          "params_hint": {
+            "amount": "0.06..0.18",
+            "softness": "0.70..0.95"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "lowpass",
+          "params_hint": {
+            "cutoff": "2600..6500",
+            "q": "0.6..0.9"
+          }
+        },
+        {
+          "node": "noise_bed",
+          "params_hint": {
+            "level": "0.005..0.03",
+            "color": "brown/pink"
+          }
+        },
+        {
+          "node": "reverb",
+          "params_hint": {
+            "mix": "0.02..0.06",
+            "decay": "0.8..1.8s"
+          }
+        },
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-22..-14 dB",
+            "ratio": "2..4",
+            "ceiling": "-10..-4 dBFS"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "Heavy grayscale, harsh muffling/occlusion, or dramatic “dead world” aesthetics (stylish, risks stigmatizing, may feel like a claim of what a disorder “looks like”).",
+          "Litz, B. T. (1992). Emotional numbing in combat-related post-traumatic stress disorder: A critical review and reformulation. *Clinical Psychology Review, 12*(4), 417–432. https://doi.org/10.1016/0272-7358(92)90125-R",
+          "Nawijn, L., et al. (2021). The reward system and post-traumatic stress disorder: Does trauma affect reward functioning? *Biological Psychiatry: Cognitive Neuroscience and Neuroimaging.* https://doi.org/10.1177/2470547021996006",
+          "Nawijn, L., & others. (2021). Reward processing and circuit dysregulation in posttraumatic stress disorder. *Frontiers in Psychiatry.* https://doi.org/10.3389/fpsyt.2021.559401",
+          "Stevens, J. S., et al. (2014). Reduced amygdala and ventral striatal activity to happy faces in PTSD: Associations with emotional numbing. *PLOS ONE, 9*(7), e103653. https://doi.org/10.1371/journal.pone.0103653",
+          "Abdallah, C. G., et al. (2023). Neural valuation of rewards and punishments in posttraumatic stress disorder. *Translational Psychiatry.* https://doi.org/10.1038/s41398-023-02388-4",
+          "Jacob, S. N., Dodge, C. P., & Vasterling, J. J. (2019). Posttraumatic stress disorder and neurocognition: A bidirectional relationship? *Clinical Psychology Review, 72*, 101747. https://doi.org/10.1016/j.cpr.2019.101747"
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report-2.md"]
+    },
+    "cognitive_fog": {
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/cognitive_fog.md",
+      "notes": "Reduced clarity/effort. Prefer blur/haze and gentle spectral dulling while preserving readability.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "haze",
+          "params_hint": {
+            "amount": "0.06..0.18"
+          }
+        },
+        {
+          "node": "soft_blur",
+          "params_hint": {
+            "amount": "0.05..0.18"
+          }
+        },
+        {
+          "node": "color_grade",
+          "params_hint": {
+            "contrast": "-0.12..0.04",
+            "saturation": "-0.12..0.03",
+            "brightness": "-0.03..0.03"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "lowpass",
+          "params_hint": {
+            "cutoff": "2200..5200",
+            "q": "0.6..0.9"
+          }
+        },
+        {
+          "node": "noise_bed",
+          "params_hint": {
+            "level": "0.01..0.04",
+            "color": "pink"
+          }
+        },
+        {
+          "node": "reverb",
+          "params_hint": {
+            "mix": "0.03..0.07",
+            "decay": "1.0..2.2s"
+          }
+        },
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-22..-14 dB",
+            "ratio": "2..4",
+            "ceiling": "-10..-4 dBFS"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "Strong ghosting/temporal trails or camera-like drift (reads as derealization; increases nausea risk).",
+          "Denno, P., Zhao, S., Husain, M., & Hampshire, A. (2025). Defining brain fog across medical conditions. *Trends in Neurosciences.* https://doi.org/10.1016/j.tins.2025.01.003",
+          "Denno, P., & Hampshire, A. (2025). Defining Brain Fog – A Transdiagnostic Narrative Review. *European Psychiatry (Abstracts).* https://doi.org/10.1192/j.eurpsy.2025.1226",
+          "Jacob, S. N., Dodge, C. P., & Vasterling, J. J. (2019). Posttraumatic stress disorder and neurocognition: A bidirectional relationship? *Clinical Psychology Review, 72*, 101747. https://doi.org/10.1016/j.cpr.2019.101747",
+          "Vasterling, J. J., & Arditte Hall, K. A. (2018). Neurocognitive and information processing biases in posttraumatic stress disorder. *Current Psychiatry Reports, 20*, 106. https://doi.org/10.1007/s11920-018-0964-1",
+          "Dossi, G., Delvecchio, G., Prunas, C., Soares, J. C., & Brambilla, P. (2020). Neural bases of cognitive impairments in post-traumatic stress disorders: A mini-review of fMRI findings. *Frontiers in Psychiatry, 11*, 176. https://doi.org/10.3389/fpsyt.2020.00176",
+          "(Meta-analysis) Assessing neurocognitive outcomes in PTSD: A multilevel meta-analytical approach. *European Journal of Psychotraumatology.* https://doi.org/10.1080/20008066.2025.2469978",
+          "Topiwala, A., et al. (2021). Subjective cognitive complaints in questionnaire: Relationship with brain structure, cognitive performance and depressive symptoms. *The American Journal of Geriatric Psychiatry, 29*(3), 217–226. https://doi.org/10.1016/j.jagp.2020.07.002",
+          "Chung, C., et al. (2024). Cognitive Failures Questionnaire 2.0: Validation and improved measurement invariance. *Personality and Individual Differences, 224*, 112472. https://doi.org/10.1016/j.paid.2023.112472"
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report-2.md"]
+    },
+    "time_dilation": {
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/time_dilation.md",
+      "notes": "Uneven time flow. Use faint afterimage and micro-timing variance—avoid disorientation.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "temporal_smear",
+          "params_hint": {
+            "decay": "0.92..0.98",
+            "feedback": "0.04..0.12",
+            "jitter": "0.00..0.06"
+          }
+        },
+        {
+          "node": "pulse",
+          "params_hint": {
+            "rate": "0.15..0.45 Hz (slow)",
+            "depth": "0.01..0.08",
+            "smoothing": "0.85..0.97"
+          }
+        },
+        {
+          "node": "grain",
+          "params_hint": {
+            "amount": "0.06..0.18",
+            "speed": "0..0.08"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "flutter",
+          "params_hint": {
+            "rate": "0.30..0.80",
+            "depth": "0.02..0.08"
+          }
+        },
+        {
+          "node": "delay",
+          "params_hint": {
+            "time": "0.10..0.25s",
+            "feedback": "0.00..0.10",
+            "mix": "0.01..0.06"
+          }
+        },
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-22..-14 dB",
+            "ratio": "2..4",
+            "ceiling": "-10..-4 dBFS"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "**Flutter/wow (very low depth):** micro-instability in pitch/time can metaphorically match temporal unevenness.",
+          "**Short delay (very low mix):** tiny temporal echo without rhythmic repetition.",
+          "**Limiter/compressor:** prevents sudden shocks and reduces fatigue.",
+          "Provide Reduced Motion: disable smear/jitter; keep only gentle audio flutter at minimal depth.",
+          "Cap any feedback or smear; forbid flicker and abrupt time skips.",
+          "Offer immediate “stabilize time” toggle (repo safety note)."
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report-2.md"]
+    },
+    "derealization": {
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/derealization.md",
+      "notes": "World feels unreal/behind glass. Use veil + tiny channel separation; avoid heavy glitch aesthetics.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "haze",
+          "params_hint": {
+            "amount": "0.06..0.18"
+          }
+        },
+        {
+          "node": "chroma_aberration",
+          "params_hint": {
+            "amount": "0.03..0.09 (very low)"
+          }
+        },
+        {
+          "node": "temporal_smear",
+          "params_hint": {
+            "decay": "0.93..0.98",
+            "feedback": "0.03..0.10",
+            "jitter": "0.00..0.05"
+          }
+        },
+        {
+          "node": "color_grade",
+          "params_hint": {
+            "contrast": "-0.10..0.05",
+            "saturation": "-0.15..-0.02"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "flutter",
+          "params_hint": {
+            "rate": "0.35..0.85",
+            "depth": "0.03..0.08"
+          }
+        },
+        {
+          "node": "lowpass",
+          "params_hint": {
+            "cutoff": "2200..6500",
+            "q": "0.6..0.9"
+          }
+        },
+        {
+          "node": "reverb",
+          "params_hint": {
+            "mix": "0.03..0.08",
+            "decay": "1.0..2.4s"
+          }
+        },
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-22..-14 dB",
+            "ratio": "2..4",
+            "ceiling": "-10..-4 dBFS"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "Strong warping, fisheye distortions, fast drifting camera motion, or high-contrast glitching (trigger/sensationalism risk).",
+          "Merritt Millman, L. S., Huang, X., Wainipitapong, S., Medford, N., & Pick, S. (2024). Behavioural, autonomic, and neural responsivity in depersonalisation-derealisation disorder: A systematic review of experimental evidence. *Neuroscience & Biobehavioral Reviews.* https://doi.org/10.1016/j.neubiorev.2024.105783",
+          "Sierra, M., & Berrios, G. E. (2000). The Cambridge Depersonalisation Scale: A new instrument for the measurement of depersonalisation. *Psychiatry Research, 93*(2), 153–164. https://doi.org/10.1016/S0165-1781(00)00100-1",
+          "Horn, M., Fovet, T., Vaiva, G., Thomas, P., Amad, A., & D’Hondt, F. (2020). Emotional response in depersonalization: A systematic review of electrodermal activity studies. *Journal of Affective Disorders.* https://doi.org/10.1016/j.jad.2020.07.064",
+          "Dalenberg, C. J., et al. (2023). The prevalence of depersonalisation and derealisation: A systematic review. *Journal of Trauma & Dissociation.* https://doi.org/10.1080/15299732.2022.2079796",
+          "BMC Psychiatry (2024). Unraveling the brain dynamics of depersonalization–derealization disorder. *BMC Psychiatry.* https://doi.org/10.1186/s12888-024-06096-1",
+          "Medford, N., & Sierra, M. (2000s). Understanding and treating depersonalisation disorder. *Advances in Psychiatric Treatment.* (Use Cambridge Core publisher page for stable link; DOI varies by version.) https://www.cambridge.org/core/journals/advances-in-psychiatric-treatment/article/understanding-and-treating-depersonalisation-disorder/6216AE06994D1094873145C016CC1F57"
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report-2.md"]
+    },
+    "depersonalization": {
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/depersonalization.md",
+      "notes": "Self-distance / reduced agency. Must stay optional and non-impairing; avoid body horror or identity claims.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "vignette",
+          "params_hint": {
+            "amount": "0.08..0.22 (static)",
+            "softness": "0.75..0.95"
+          }
+        },
+        {
+          "node": "soft_blur",
+          "params_hint": {
+            "amount": "0.03..0.12"
+          }
+        },
+        {
+          "node": "chroma_aberration",
+          "params_hint": {
+            "amount": "0.02..0.06 (micro)"
+          }
+        },
+        {
+          "node": "color_grade",
+          "params_hint": {
+            "contrast": "-0.06..0.06",
+            "saturation": "-0.12..0.00"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "reverb",
+          "params_hint": {
+            "mix": "0.03..0.09",
+            "decay": "0.9..2.3s"
+          }
+        },
+        {
+          "node": "lowpass",
+          "params_hint": {
+            "cutoff": "2800..7500",
+            "q": "0.6..0.9"
+          }
+        },
+        {
+          "node": "flutter",
+          "params_hint": {
+            "rate": "0.25..0.70",
+            "depth": "0.02..0.06"
+          }
+        },
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-22..-14 dB",
+            "ratio": "2..4",
+            "ceiling": "-10..-4 dBFS"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "**Mild room/reverb + lowpass (gentle):** can make “self voice” feel slightly distant without disorientation.",
+          "**Very low chorus/detune (optional, minimal):** suggests self-distance; keep subtle to avoid dizziness.",
+          "**Limiter/compressor:** reduce startling peaks.",
+          "Follow repo safety note: no unsettling body distortions; user-controlled; subtle.",
+          "Reduced Motion: keep effects static; disable input-latency metaphor if it risks frustration—replace with gentler grading."
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report-2.md"]
+    },
+    "sensory_overload": {
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/sensory_overload.md",
+      "notes": "Filtering fails; too much at once. Add density via textures (not flashes) + strong dynamics safety.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "grain",
+          "params_hint": {
+            "amount": "0.16..0.34",
+            "speed": "0..0.12",
+            "scale": "1.0..1.6"
+          }
+        },
+        {
+          "node": "interference",
+          "params_hint": {
+            "amount": "0.08..0.16 (non-strobing)",
+            "banding": "0.03..0.10",
+            "smoothing": "0.85..0.95"
+          }
+        },
+        {
+          "node": "edge_sharpen",
+          "params_hint": {
+            "amount": "0.03..0.10 (optional)"
+          }
+        },
+        {
+          "node": "vignette",
+          "params_hint": {
+            "amount": "0.04..0.16",
+            "softness": "0.70..0.95"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "noise_bed",
+          "params_hint": {
+            "level": "0.02..0.08 (user-mutable)",
+            "color": "broadband/pink"
+          }
+        },
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-28..-18 dB",
+            "ratio": "4..8",
+            "attack": "0.003..0.02s",
+            "release": "0.10..0.25s",
+            "ceiling": "-12..-6 dBFS"
+          }
+        },
+        {
+          "node": "lowpass",
+          "params_hint": {
+            "cutoff": "2500..8000",
+            "q": "0.6..0.9"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "Follow repo safety note: never default to harsh intensity; provide quick calming toggles.",
+          "Reduced Motion: keep “overload” represented via static layering, not motion.",
+          "Provide instant “Calm Mode” (lowpass + remove extra layers)."
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report-2.md"]
+    },
+    "attention_fragmentation": {
+      "evidence_strength": "medium",
+      "rationale_doc": "docs/references/dimensions/attention_fragmentation.md",
+      "notes": "Unstable focus. Prefer small focus instability and safe modulation, no rapid camera motion.",
+      "safety": {
+        "warnings": [
+          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Provide Stop / Safe Mode / Reduced Motion.",
+          "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
+        ],
+        "clamps": {
+          "no_strobe": true,
+          "max_flash_hz": 3,
+          "max_luminance_delta_per_frame": 0.25,
+          "max_global_contrast": 0.25,
+          "max_chroma": 0.12,
+          "max_feedback": 0.18,
+          "max_jitter": 0.06,
+          "max_pulse_depth": 0.18,
+          "audio_ceiling_dbfs": -6,
+          "max_tremolo_rate_hz": 4,
+          "max_tremolo_depth": 0.15,
+          "max_noise_level": 0.08
+        },
+        "reduced_motion": {
+          "prefer_static_over_time_feedback": true,
+          "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+          "note": "Reduced Motion should remove time-based feedback/jitter and keep a calmer, mostly static overlay."
+        }
+      },
+      "video_motifs": [
+        {
+          "node": "focus_jitter",
+          "params_hint": {
+            "amount": "0.04..0.12",
+            "smoothing": "0.88..0.96 (high)"
+          }
+        },
+        {
+          "node": "grain",
+          "params_hint": {
+            "amount": "0.08..0.20",
+            "speed": "0..0.10"
+          }
+        },
+        {
+          "node": "edge_sharpen",
+          "params_hint": {
+            "amount": "0.03..0.08"
+          }
+        }
+      ],
+      "audio_motifs": [
+        {
+          "node": "tremolo",
+          "params_hint": {
+            "rate": "1..4 Hz",
+            "depth": "0.04..0.12"
+          }
+        },
+        {
+          "node": "compressor_limiter",
+          "params_hint": {
+            "threshold": "-24..-14 dB",
+            "ratio": "3..6",
+            "ceiling": "-10..-4 dBFS"
+          }
+        },
+        {
+          "node": "highpass",
+          "params_hint": {
+            "cutoff": "90..220 Hz (tiny)",
+            "q": "0.6..0.9"
+          }
+        }
+      ],
+      "avoid": {
+        "behaviors": [
+          "Fast camera shake, rapid cuts, flicker patterns, hard panning audio (trigger/nausea risk).",
+          "Shi, R., Sharpe, L., & Abbott, M. (2019). A meta-analysis of the relationship between anxiety and attentional control. *Clinical Psychology Review, 72*, 101754. https://doi.org/10.1016/j.cpr.2019.101754",
+          "Eysenck, M. W., Derakshan, N., Santos, R., & Calvo, M. G. (2007). Anxiety and cognitive performance: Attentional Control Theory. (Theory paper; use publisher copy.) https://tu-dresden.de/mn/psychologie/ifap/allgpsy/ressourcen/dateien/lehre/pruefungsliteratur_KN_2013/Eysenck-2007.pdf",
+          "Ólafsson, R. P., Smári, J., Guðmundsdóttir, F., Ólafsdóttir, G., Harðardóttir, H. L., & Einarsson, S. M. (2011). Self reported attentional control with the Attentional Control Scale: Factor structure and relationship with symptoms of anxiety and depression. *Journal of Anxiety Disorders, 25*(6), 777–782. https://doi.org/10.1016/j.janxdis.2011.03.013",
+          "Fan, J., McCandliss, B. D., Sommer, T., Raz, A., & Posner, M. I. (2002). Testing the efficiency and independence of attentional networks. *Journal of Cognitive Neuroscience, 14*(3), 340–347. https://direct.mit.edu/jocn/article/14/3/340/3628/Testing-the-Efficiency-and-Independence-of",
+          "Zhao, X., et al. (2020). Impact of chronic stress on attention control: Evidence from attention network task and ERPs. *Neuroscience Bulletin.* https://doi.org/10.1007/s12264-020-00549-9"
+        ],
+        "video_nodes_risky": [
+          "pulse",
+          "temporal_smear",
+          "feedback_loop",
+          "interference",
+          "focus_jitter"
+        ],
+        "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
+      },
+      "citations": ["Scientific/deep-research-report-2.md"]
+    }
+  }
+}
