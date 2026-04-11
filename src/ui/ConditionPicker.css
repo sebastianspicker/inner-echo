@@ -1,0 +1,45 @@
+.condition-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.condition-picker__label {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+.condition-picker__select {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.14);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-normal) var(--ease-gentle),
+    background var(--duration-normal) var(--ease-gentle),
+    box-shadow var(--duration-normal) var(--ease-gentle);
+}
+
+.condition-picker__select:hover {
+  border-color: var(--border-strong);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* focus handled by :focus-visible global rule */
+
+.condition-picker__description {
+  margin: 0;
+  padding-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  font-style: italic;
+}
