@@ -15,6 +15,7 @@
     "forced-vitest-8:build",
     "forced-github-actions-9:fix",
     "forced-vitest-10:test",
-    "forced-csp-11:build"
+    "forced-csp-11:build",
+    "forced-github-actions-12:test"
   ]
 }
