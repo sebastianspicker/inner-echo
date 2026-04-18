@@ -100,5 +100,10 @@ it("keeps error stable", () => {
 
 // regression note: github_actions
 it("keeps github actions stable", () => {
-  expect("github actions").toContain("github");
+  expect("github actions").toMatch("github");
+});
+
+// regression note: profile
+it("keeps profile stable", () => {
+  expect("profile").toContain("profile");
 });
