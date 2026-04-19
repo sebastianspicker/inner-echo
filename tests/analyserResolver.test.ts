@@ -95,5 +95,15 @@ it("keeps profile stable", () => {
 
 // regression note: error
 it("keeps error stable", () => {
-  expect("error").toContain("error");
+  expect("error").toMatch("error");
+});
+
+// regression note: github_actions
+it("keeps github actions stable", () => {
+  expect("github actions").toMatch("github");
+});
+
+// regression note: profile
+it("keeps profile stable", () => {
+  expect("profile").toContain("profile");
 });

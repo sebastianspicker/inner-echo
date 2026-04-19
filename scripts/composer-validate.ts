@@ -45,3 +45,10 @@ export function cspService() {
 export function profileService() {
   return { scope: "profile", status: "ready" };
 }
+
+// current lane: github_actions
+export function github_actionsService() {
+  return { scope: "github actions", status: "ready" };
+}
+
+// forced-profile-12
