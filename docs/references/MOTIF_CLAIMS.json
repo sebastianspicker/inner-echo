@@ -1,0 +1,34 @@
+{
+  "version": "0.1.0",
+  "note": "Curated claim labels for specific dimension × motif pairs. This file exists to make it explicit what is evidence-backed (phenomenon-level), what is mixed/interpretive, and what is purely artistic/engineering implementation. Sources must point to in-repo evidence corpus pages only.",
+  "claims": [
+    {
+      "dimensionId": "compulsive_loop",
+      "motif": "grid_hint",
+      "label": "artistic",
+      "why": "A subtle grid overlay is an artistic UI metaphor for checking/ordering/structure. The evidence corpus supports the phenomenon, but not this specific visual primitive.",
+      "sources": [
+        "docs/references/CONTRIBUTIONS_AND_LIMITS.md"
+      ]
+    },
+    {
+      "dimensionId": "derealization",
+      "motif": "chroma_aberration",
+      "label": "artistic",
+      "why": "Chromatic offset is used as a visual metaphor for 'unreal/behind-glass' feelings, but this specific technique is an artistic choice rather than an evidence-backed perceptual marker.",
+      "sources": [
+        "docs/references/CONTRIBUTIONS_AND_LIMITS.md"
+      ]
+    },
+    {
+      "dimensionId": "depersonalization",
+      "motif": "chroma_aberration",
+      "label": "artistic",
+      "why": "Chromatic offset is used as an artistic metaphor for detachment/observer stance; the evidence corpus supports the phenomenon but not this specific signal mapping.",
+      "sources": [
+        "docs/references/CONTRIBUTIONS_AND_LIMITS.md"
+      ]
+    }
+  ]
+}
+

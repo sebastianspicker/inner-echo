@@ -1,39 +1,53 @@
-# 00_Doc_Inventory
+# Documentation Inventory
 
+Purpose: current, source-backed inventory of maintained documentation and generated artifacts.
 
-## Context
-This page keeps the current 00_doc_inventory guidance concise after earlier rough notes.
+## Canonical docs
 
-## Features
-- Turned the first runtime sketch into something runnable.
+| Path | Status | Notes |
+|---|---|---|
+| `README.md` | canonical | Project overview and local dev entrypoint. |
+| `docs/00_OVERVIEW.md` | canonical | Navigation index for docs. |
+| `docs/10_PRODUCT.md` | canonical | Product goals, scope, and non-goals. |
+| `docs/20_ARCHITECTURE.md` | canonical | Runtime architecture and module boundaries. |
+| `docs/30_SAFETY_ETHICS.md` | canonical | Safety, ethics, and UX guardrails. |
+| `docs/40_CONDITIONS.md` | canonical | Condition model and evidence linkage. |
+| `docs/RELIABILITY.md` | canonical | Browser support and fallback expectations. |
+| `docs/SECURITY.md` | canonical | Privacy/security constraints and release checks. |
+| `docs/RELEASE_RC.md` | canonical | Single-pass release-candidate runbook and tagging workflow. |
+| `docs/CONTRACT_VERIFICATION.md` | canonical | Contract verification expectations. |
+| `docs/MIGRATION_NOTES.md` | canonical | Where prior docs moved and what was removed. |
+| `docs/CHANGELOG.md` | canonical | High-level repository documentation changelog. |
 
-- Earlier scratch notes were compressed into the current guidance.
+## Evidence docs
 
-## Notes Folded Into Current Flow
-Early notes are still uneven and may be folded into clearer sections later.
+| Path | Status | Notes |
+|---|---|---|
+| `docs/references/README.md` | canonical | Evidence methodology and boundaries. |
+| `docs/references/INDEX.md` | canonical | Human navigation index for evidence docs. |
+| `docs/references/EVIDENCE_MATRIX.md` | canonical | Dimension-to-motif evidence matrix. |
+| `docs/references/dimensions/*.md` | canonical | Dimension rationale pages. |
+| `docs/references/conditions/*.md` | canonical | Condition evidence summaries. |
+| `docs/references/motifs/*.md` | canonical | Motif evidence summaries. |
+| `docs/references/reports/*.md` | canonical | Long-form research synthesis corpus. |
+| `docs/REFERENCES_AUDIT.md` | canonical | Generated/maintained reference wiring report. |
 
-## Usage
-- Rewrote the vitest explanation around the maintained behavior.
+## Generated docs
 
-- Earlier scratch notes were compressed into the current guidance.
+| Path | Status | Notes |
+|---|---|---|
+| `docs/generated/README.md` | generated | Generation workflow contract. |
+| `docs/generated/conditions-catalog.md` | generated | Derived from `src/conditions/**`. |
+| `docs/generated/preset-schema.json` | generated | Derived schema output. |
+| `docs/generated/preset-schema.md` | generated | Human-readable schema output. |
 
-## Caveats
-Some setup details still depend on the current local workflow and may change again.
+## Historical docs
 
-## Revision Notes
-Latest pass: video during steady build work (forced-video-5).
+No historical docs are intentionally retained in-repo at this time.
 
-## Reliability
-- Tightened csp where the earlier behavior was brittle.
+## Cleanup policy
 
-- Earlier scratch notes were compressed into the current guidance.
-
-## Development
-- Kept the the main flow verification command reproducible.
-
-- Earlier scratch notes were compressed into the current guidance.
-
-## Architecture
-- Moved profile behind a narrower boundary.
-
-- Earlier scratch notes were compressed into the current guidance.
+- Keep canonical docs internally link-consistent.
+- Keep generated docs reproducible from scripts; do not hand-edit.
+- Keep historical docs explicitly labeled as historical, not canonical.
+- Remove duplicate stubs/phase scraps when they are superseded.

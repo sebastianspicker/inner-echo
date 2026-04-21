@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "description": "Release-candidate README screenshots generated with deterministic fake-media harness.",
+  "shots": [
+    {
+      "id": "01-onboarding",
+      "baseName": "01-onboarding",
+      "section": "core-flow",
+      "purpose": "Initial onboarding modal before consent.",
+      "viewport": { "width": 1440, "height": 900 },
+      "preferredFormat": "webp",
+      "fallbackFormat": "png",
+      "minWidth": 1440,
+      "minHeight": 900,
+      "captionKey": "onboarding"
+    },
+    {
+      "id": "02-hero-active",
+      "baseName": "02-hero-active",
+      "section": "core-flow",
+      "purpose": "Active camera state with synthetic video feed.",
+      "viewport": { "width": 1440, "height": 900 },
+      "preferredFormat": "webp",
+      "fallbackFormat": "png",
+      "minWidth": 1440,
+      "minHeight": 900,
+      "captionKey": "hero-active"
+    },
+    {
+      "id": "03-preset-mode",
+      "baseName": "03-preset-mode",
+      "section": "composition-modes",
+      "purpose": "Preset mode with condition picker and evidence badge.",
+      "viewport": { "width": 1440, "height": 900 },
+      "preferredFormat": "webp",
+      "fallbackFormat": "png",
+      "minWidth": 1440,
+      "minHeight": 900,
+      "captionKey": "preset-mode"
+    },
+    {
+      "id": "04-multimorbid-mode",
+      "baseName": "04-multimorbid-mode",
+      "section": "composition-modes",
+      "purpose": "Multimorbid preset stacking with weighted controls.",
+      "viewport": { "width": 1440, "height": 900 },
+      "preferredFormat": "webp",
+      "fallbackFormat": "png",
+      "minWidth": 1440,
+      "minHeight": 900,
+      "captionKey": "multimorbid-mode"
+    },
+    {
+      "id": "05-symptom-mode",
+      "baseName": "05-symptom-mode",
+      "section": "composition-modes",
+      "purpose": "Symptom-first mode with dimension filtering and weights.",
+      "viewport": { "width": 1440, "height": 900 },
+      "preferredFormat": "webp",
+      "fallbackFormat": "png",
+      "minWidth": 1440,
+      "minHeight": 900,
+      "captionKey": "symptom-mode"
+    },
+    {
+      "id": "06-audio-mic-controls",
+      "baseName": "06-audio-mic-controls",
+      "section": "safety-controls",
+      "purpose": "Audio and microphone controls in local-only mode.",
+      "viewport": { "width": 1440, "height": 900 },
+      "preferredFormat": "webp",
+      "fallbackFormat": "png",
+      "minWidth": 1440,
+      "minHeight": 900,
+      "captionKey": "audio-mic-controls"
+    },
+    {
+      "id": "07-evidence-drawer",
+      "baseName": "07-evidence-drawer",
+      "section": "safety-controls",
+      "purpose": "Evidence drawer navigation and in-repo research context.",
+      "viewport": { "width": 1440, "height": 900 },
+      "preferredFormat": "webp",
+      "fallbackFormat": "png",
+      "minWidth": 1440,
+      "minHeight": 900,
+      "captionKey": "evidence-drawer"
+    },
+    {
+      "id": "08-safety-toggles",
+      "baseName": "08-safety-toggles",
+      "section": "safety-controls",
+      "purpose": "Safe Mode and Reduced Motion guardrails.",
+      "viewport": { "width": 1440, "height": 900 },
+      "preferredFormat": "webp",
+      "fallbackFormat": "png",
+      "minWidth": 1440,
+      "minHeight": 900,
+      "captionKey": "safety-toggles"
+    },
+    {
+      "id": "09-mobile-home-390x844",
+      "baseName": "09-mobile-home-390x844",
+      "section": "mobile-experience",
+      "purpose": "Single-column mobile layout and primary controls.",
+      "viewport": { "width": 390, "height": 844 },
+      "preferredFormat": "webp",
+      "fallbackFormat": "png",
+      "minWidth": 390,
+      "minHeight": 844,
+      "captionKey": "mobile-home"
+    },
+    {
+      "id": "10-stop-everything-idle",
+      "baseName": "10-stop-everything-idle",
+      "section": "core-flow",
+      "purpose": "Idle state after Stop Everything for safety reset.",
+      "viewport": { "width": 1440, "height": 900 },
+      "preferredFormat": "webp",
+      "fallbackFormat": "png",
+      "minWidth": 1440,
+      "minHeight": 900,
+      "captionKey": "stop-everything-idle"
+    }
+  ]
+}
