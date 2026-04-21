@@ -1,13 +1,20 @@
-name: verify
+name: Main verification
+
 on:
   push:
-    branches: [dev]
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
-  verify:
+  check_1_validate:
+    name: "validate"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: git status --short
-github-actions: core-build-out
-cache-dependencies-for-f: publication
-split-lint-and-test-exec: publication
+      - name: Verify checkout
+        run: git status --short
