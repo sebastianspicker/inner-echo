@@ -187,14 +187,20 @@ async function expectCameraStatus(page, regex, timeoutMs) {
   throw new Error(`Camera status did not match ${regex}; final="${finalStatus}"`)
 }
 
+function isDisallowedWebglConsole(type, text) {
+  return (
+    /THREE\.WebGLProgram|Shader Error|INVALID_OPERATION/i.test(text) ||
+    (type === 'error' && /WebGL/i.test(text))
+  )
+}
+
 async function collectConsole(page, run) {
   const all = []
   const webglLike = []
-  const re = /(WebGL|THREE\.WebGLProgram|Shader Error|INVALID_OPERATION)/i
   const onConsole = (msg) => {
     const text = `${msg.type().toUpperCase()} ${msg.text()}`
     all.push(text)
-    if (re.test(text)) webglLike.push(text)
+    if (isDisallowedWebglConsole(msg.type(), text)) webglLike.push(text)
   }
   page.on('console', onConsole)
   try {
@@ -231,7 +237,7 @@ const tests = [
         assert.equal(
           capture.webglLike.length,
           0,
-          `Expected no WebGL/shader console noise, got ${capture.webglLike.length}`,
+          `Expected no WebGL/shader console noise, got ${capture.webglLike.length}\n${capture.webglLike.join('\n')}`,
         )
       } finally {
         await context.close()
@@ -302,7 +308,7 @@ const tests = [
         assert.equal(
           capture.webglLike.length,
           0,
-          `Expected no WebGL/shader console noise during mode transitions, got ${capture.webglLike.length}`,
+          `Expected no WebGL/shader console noise during mode transitions, got ${capture.webglLike.length}\n${capture.webglLike.join('\n')}`,
         )
       } finally {
         await context.close()

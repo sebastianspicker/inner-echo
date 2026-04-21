@@ -165,13 +165,19 @@ async function expectCameraStatus(page, regex, timeoutMs) {
   throw new Error(`Camera status did not match ${regex}; final="${finalStatus}"`)
 }
 
+function isDisallowedConsole(type, text) {
+  return (
+    type === 'error' ||
+    /THREE\.WebGLProgram|Shader Error|INVALID_OPERATION|TypeError|ReferenceError/i.test(text)
+  )
+}
+
 async function runSmoke(browserName, browser) {
   const { context, page } = await newContextPage(browser)
   const disallowedConsole = []
-  const re = /(WebGL|THREE\.WebGLProgram|Shader Error|INVALID_OPERATION|TypeError|ReferenceError)/i
   const onConsole = (msg) => {
     const text = msg.text()
-    if (msg.type() === 'error' || re.test(text)) {
+    if (isDisallowedConsole(msg.type(), text)) {
       disallowedConsole.push(`${msg.type().toUpperCase()} ${text}`)
     }
   }
