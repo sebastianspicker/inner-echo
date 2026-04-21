@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- viewport-fit=cover allows the app to draw into mobile safe areas (like the iOS notch) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- Content-Security-Policy is delivered via HTTP headers; avoid a stricter meta policy that breaks dev bootstrap. -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <title>Inner Echo</title>
+</head>
+
+<body>
+  <!-- Fallback for users/environments where JavaScript is strictly disabled -->
+  <noscript>
+    <strong>We're sorry but Inner Echo doesn't work properly without JavaScript enabled. Please enable it to
+      continue.</strong>
+  </noscript>
+  <!-- Main mounting point for the React application -->
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>
