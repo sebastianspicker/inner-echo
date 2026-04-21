@@ -120,10 +120,9 @@ describe('engine/effects/interferenceNode burst scheduling', () => {
       }),
     )
 
-    // Trigger first burst with mocked random
-    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0)
     node.tick(1) // burst starts (burstTimer = 0.12)
-    vi.restoreAllMocks()
+    randomSpy.mockReturnValue(1)
 
     // Drain burst with small ticks to avoid retriggering inside a single big tick
     for (let i = 0; i < 10; i++) node.tick(0.02) // 0.2s total → burst (0.12s) expires, gapTimer=0.35
@@ -132,10 +131,9 @@ describe('engine/effects/interferenceNode burst scheduling', () => {
     // Drain gap timer with small ticks
     for (let i = 0; i < 20; i++) node.tick(0.02) // 0.4s → gap (0.35s) expires
 
-    // Now trigger a new burst
-    vi.spyOn(Math, 'random').mockReturnValue(0)
+    randomSpy.mockReturnValue(0)
     node.tick(0.02) // p = clamp(1*0.02, 0, 0.5)=0.02 → 0 < 0.02 → burst starts
-    vi.restoreAllMocks()
+    randomSpy.mockRestore()
 
     node.tick(0.01) // into burst → u_burst > 0
     expect(mat.uniforms.u_burst.value).toBeGreaterThan(0)
