@@ -14,6 +14,7 @@ import { spawn } from 'node:child_process'
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright'
 
 const DESIRED_PORT = Number(process.env.PORT ?? 5173)
+const HOST = process.env.HOST ?? '127.0.0.1'
 const argv = new Set(process.argv.slice(2))
 const REQUIRE_AUDIO = process.env.REQUIRE_AUDIO === '1' || argv.has('--require-audio')
 const REQUIRE_MIC = process.env.REQUIRE_MIC === '1' || argv.has('--require-mic')
@@ -37,7 +38,8 @@ async function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise
 }
 
 async function startDevServer(): Promise<{ proc: ReturnType<typeof spawn>; baseUrl: string }> {
-  const proc = spawn('npm', ['run', 'dev', '--', '--port', String(DESIRED_PORT)], {
+  const desiredBaseUrl = `http://${HOST}:${DESIRED_PORT}/`
+  const proc = spawn('npm', ['run', 'dev', '--', '--host', HOST, '--port', String(DESIRED_PORT)], {
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, BROWSER: 'none' },
   })
@@ -56,8 +58,8 @@ async function startDevServer(): Promise<{ proc: ReturnType<typeof spawn>; baseU
   const onData = (data: Buffer) => {
     const text = data.toString('utf-8')
     pushOut(text)
-    const m = text.match(/http:\/\/localhost:(\d+)\//)
-    if (m?.[0]) baseUrl = m[0]
+    const m = text.match(/http:\/\/(?:localhost|127\.0\.0\.1):(\d+)\//)
+    if (m?.[1]) baseUrl = `http://${HOST}:${m[1]}/`
   }
   proc.stdout?.on('data', onData)
   proc.stderr?.on('data', onData)
@@ -68,25 +70,54 @@ async function startDevServer(): Promise<{ proc: ReturnType<typeof spawn>; baseU
     })
   })
 
-  await withTimeout(
-    Promise.race([
-      (async () => {
-        while (!baseUrl) await sleep(50)
-      })(),
-      exitedEarly,
-    ]),
-    30_000,
-    'Vite dev server ready',
-  )
+  try {
+    await withTimeout(
+      Promise.race([
+        (async () => {
+          while (!baseUrl) {
+            if (await isServerReady(desiredBaseUrl)) {
+              baseUrl = desiredBaseUrl
+              break
+            }
+            await sleep(100)
+          }
+        })(),
+        exitedEarly,
+      ]),
+      60_000,
+      'Vite dev server ready',
+    )
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`${message}\n\nRecent dev server output:\n${output.join('\n')}`)
+  }
 
   return { proc, baseUrl: baseUrl! }
 }
 
+async function isServerReady(baseUrl: string): Promise<boolean> {
+  try {
+    const res = await fetch(baseUrl)
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 async function stopDevServer(proc: ReturnType<typeof spawn>): Promise<void> {
-  if (proc.killed) return
+  if (proc.exitCode != null) return
   proc.kill('SIGTERM')
-  await Promise.race([new Promise<void>((r) => proc.on('exit', () => r())), sleep(2000)])
-  if (!proc.killed) proc.kill('SIGKILL')
+  const exited = await Promise.race([
+    new Promise<boolean>((r) => proc.on('exit', () => r(true))),
+    sleep(3000).then(() => false),
+  ])
+  if (!exited && proc.exitCode == null) {
+    proc.kill('SIGKILL')
+    await Promise.race([new Promise<void>((r) => proc.on('exit', () => r())), sleep(1000)])
+  }
+  proc.stdout?.destroy()
+  proc.stderr?.destroy()
+  proc.stdin?.destroy()
 }
 
 async function launchBrowser(

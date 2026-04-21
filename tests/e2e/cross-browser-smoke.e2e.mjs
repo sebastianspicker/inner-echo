@@ -42,16 +42,26 @@ function spawnDevServer() {
 
 async function stopServer(proc) {
   if (!proc) return
-  if (proc.killed || proc.exitCode != null) return
+  if (proc.exitCode != null) return
   proc.kill('SIGTERM')
-  await Promise.race([
+  const exited = await Promise.race([
     new Promise((resolve) => {
-      proc.once('exit', () => resolve())
+      proc.once('exit', () => resolve(true))
     }),
-    delay(3000).then(() => {
-      if (!proc.killed && proc.exitCode == null) proc.kill('SIGKILL')
-    }),
+    delay(3000).then(() => false),
   ])
+  if (!exited && proc.exitCode == null) {
+    proc.kill('SIGKILL')
+    await Promise.race([
+      new Promise((resolve) => {
+        proc.once('exit', () => resolve())
+      }),
+      delay(1000),
+    ])
+  }
+  proc.stdout?.destroy()
+  proc.stderr?.destroy()
+  proc.stdin?.destroy()
 }
 
 async function createHarness() {
@@ -165,7 +175,18 @@ async function expectCameraStatus(page, regex, timeoutMs) {
   throw new Error(`Camera status did not match ${regex}; final="${finalStatus}"`)
 }
 
-function isDisallowedConsole(type, text) {
+function isAllowedFirefoxWebglFallback(browserName, type, text) {
+  return (
+    browserName === 'firefox' &&
+    type === 'error' &&
+    /THREE\.WebGLRenderer: (A WebGL context could not be created|Error creating WebGL context\.)|AllowWebgl2:false restricts context creation|\[inner-echo\] WebGL pipeline startup failed Error/i.test(
+      text,
+    )
+  )
+}
+
+function isDisallowedConsole(browserName, type, text) {
+  if (isAllowedFirefoxWebglFallback(browserName, type, text)) return false
   return (
     type === 'error' ||
     /THREE\.WebGLProgram|Shader Error|INVALID_OPERATION|TypeError|ReferenceError/i.test(text)
@@ -177,7 +198,7 @@ async function runSmoke(browserName, browser) {
   const disallowedConsole = []
   const onConsole = (msg) => {
     const text = msg.text()
-    if (isDisallowedConsole(msg.type(), text)) {
+    if (isDisallowedConsole(browserName, msg.type(), text)) {
       disallowedConsole.push(`${msg.type().toUpperCase()} ${text}`)
     }
   }

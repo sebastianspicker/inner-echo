@@ -33,16 +33,26 @@ function spawnPreviewServer() {
 
 async function stopServer(proc) {
   if (!proc) return
-  if (proc.killed || proc.exitCode != null) return
+  if (proc.exitCode != null) return
   proc.kill('SIGTERM')
-  await Promise.race([
+  const exited = await Promise.race([
     new Promise((resolve) => {
-      proc.once('exit', () => resolve())
+      proc.once('exit', () => resolve(true))
     }),
-    delay(3000).then(() => {
-      if (!proc.killed && proc.exitCode == null) proc.kill('SIGKILL')
-    }),
+    delay(3000).then(() => false),
   ])
+  if (!exited && proc.exitCode == null) {
+    proc.kill('SIGKILL')
+    await Promise.race([
+      new Promise((resolve) => {
+        proc.once('exit', () => resolve())
+      }),
+      delay(1000),
+    ])
+  }
+  proc.stdout?.destroy()
+  proc.stderr?.destroy()
+  proc.stdin?.destroy()
 }
 
 async function main() {
@@ -60,7 +70,7 @@ async function main() {
       child.once('error', reject)
     })
 
-    process.exit(exitCode)
+    process.exitCode = exitCode
   } finally {
     await stopServer(serverProc)
   }
