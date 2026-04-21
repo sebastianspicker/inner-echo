@@ -2,9 +2,11 @@
 
 ## Reporting a vulnerability
 
-If you find a security issue, please do not open a public GitHub issue.
+If you find a security issue, please **do not open a public GitHub issue**.
 
-Email the details to **sebastian.spicker@googlemail.com** with:
+Prefer [GitHub's private vulnerability reporting](https://github.com/sebastianspicker/inner-echo/security/advisories/new) so the disclosure stays confidential until a fix is ready.
+
+Alternatively, email the details to **sebastian.spicker@googlemail.com** with:
 - a description of the issue,
 - steps to reproduce or a proof of concept,
 - any suggested fix if you have one.

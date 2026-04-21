@@ -46,7 +46,7 @@ export function EffectControls({
               const resolved: ResolvedControl[] = []
               const controls = profile.ui?.controls ?? []
               for (const c of controls) {
-                const r = resolveControl(c, profile)
+                const r = resolveControl(c, profile, { reducedMotion })
                 if (r) resolved.push(r)
               }
               return resolved.map((r) => {

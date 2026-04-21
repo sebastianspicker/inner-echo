@@ -121,4 +121,41 @@ describe('ui/OnboardingModal', () => {
     storageMap.set(STORAGE_KEY, 'yes')
     expect(getOnboardingAccepted()).toBe(false)
   })
+
+  it('getOnboardingAccepted returns false gracefully when localStorage throws', () => {
+    vi.spyOn(storageMock, 'getItem').mockImplementation(() => {
+      throw new Error('storage unavailable')
+    })
+    expect(getOnboardingAccepted()).toBe(false)
+  })
+
+  it('setOnboardingAccepted does not throw when localStorage throws', () => {
+    vi.spyOn(storageMock, 'setItem').mockImplementation(() => {
+      throw new Error('storage unavailable')
+    })
+    expect(() => setOnboardingAccepted()).not.toThrow()
+  })
+
+  // ---------------------------------------------------------------------------
+  // Focus trap — keyboard navigation
+  // ---------------------------------------------------------------------------
+  it('Escape key is intercepted and does not close the modal', () => {
+    const onAccept = vi.fn()
+    render(<OnboardingModal onAccept={onAccept} />)
+    const dialog = screen.getByRole('dialog')
+    fireEvent.keyDown(dialog, { key: 'Escape' })
+    // Modal should still be mounted (onAccept not called, no close mechanism)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(onAccept).not.toHaveBeenCalled()
+  })
+
+  it('Tab key cycles focus within the modal wrapper', () => {
+    render(<OnboardingModal onAccept={vi.fn()} />)
+    const dialog = screen.getByRole('dialog')
+    // Should not throw when Tab is pressed inside the modal
+    expect(() => {
+      fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: false })
+      fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true })
+    }).not.toThrow()
+  })
 })

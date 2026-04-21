@@ -197,6 +197,19 @@ describe('engine/reactive/couplingEngine', () => {
     expect(result).toBeDefined()
   })
 
+  it('treats mixed-case video node types as valid during index building', () => {
+    const profile = makeProfile({
+      videoStack: [{ node: 'GrAiN', id: 'grain', params: { amount: 0.05 } }],
+    })
+    const engine = createCouplingEngine(profile, defaultSettings())
+
+    const result = engine.step(1 / 60, { rms: 0.8, centroid: 0.5, flux: 0.3 }, zeroVideo(), {
+      '0.amount': 0.05,
+    })
+
+    expect(result.video['0.amount']).toBeTypeOf('number')
+  })
+
   // -----------------------------------------------------------------------
   // setSettings updates coupling strength
   // -----------------------------------------------------------------------
@@ -385,5 +398,86 @@ describe('engine/reactive/couplingEngine', () => {
       expect(v).toBeGreaterThanOrEqual(0)
       expect(Number.isFinite(v)).toBe(true)
     }
+  })
+
+  // -----------------------------------------------------------------------
+  // safeMode applies 0.6 damping to coupling strength
+  // -----------------------------------------------------------------------
+  it('safeMode reduces output magnitude compared to non-safe mode', () => {
+    const profile = makeProfile({
+      videoStack: [{ node: 'grain', params: { amount: 0.5 } }],
+    })
+    const highAudio: AudioMetrics = { rms: 1, centroid: 1, flux: 1 }
+    const highVideo: VideoMetrics = { motion: 1, luminance: 1, edge: 1, instability: 1 }
+
+    const engineNormal = createCouplingEngine(
+      profile,
+      defaultSettings({ couplingStrength: 1, safeMode: false }),
+    )
+    const engineSafe = createCouplingEngine(
+      profile,
+      defaultSettings({ couplingStrength: 1, safeMode: true }),
+    )
+
+    // Run enough steps for smoothing to converge
+    let normalResult = engineNormal.step(1 / 60, highAudio, highVideo, {})
+    let safeResult = engineSafe.step(1 / 60, highAudio, highVideo, {})
+    for (let i = 0; i < 120; i++) {
+      normalResult = engineNormal.step(1 / 60, highAudio, highVideo, {})
+      safeResult = engineSafe.step(1 / 60, highAudio, highVideo, {})
+    }
+
+    // Safe mode output should be <= normal output for all video keys
+    for (const key of Object.keys(normalResult.video)) {
+      expect(safeResult.video[key] ?? 0).toBeLessThanOrEqual((normalResult.video[key] ?? 0) + 1e-6)
+    }
+  })
+
+  // -----------------------------------------------------------------------
+  // setSettings with reducedMotion change triggers rebuildVideoKeys
+  // -----------------------------------------------------------------------
+  it('setSettings with changed reducedMotion does not throw and produces valid output', () => {
+    const profile = makeProfile({
+      videoStack: [
+        { node: 'grain', params: { amount: 0.2 } },
+        { node: 'pulse', params: { depth: 0.1 } },
+      ],
+    })
+    const engine = createCouplingEngine(profile, defaultSettings({ reducedMotion: false }))
+
+    // Changing reducedMotion should call rebuildVideoKeys internally
+    expect(() => {
+      engine.setSettings(defaultSettings({ reducedMotion: true }))
+    }).not.toThrow()
+
+    const result = engine.step(1 / 60, zeroAudio(), zeroVideo(), {})
+    expect(result).toBeDefined()
+    expect(result.video).toBeDefined()
+    expect(result.audio).toBeDefined()
+  })
+
+  // -----------------------------------------------------------------------
+  // setSettings with unchanged reducedMotion does NOT call rebuildVideoKeys
+  // -----------------------------------------------------------------------
+  it('setSettings with same reducedMotion value does not error', () => {
+    const profile = makeProfile({
+      videoStack: [{ node: 'grain', params: { amount: 0.2 } }],
+    })
+    const engine = createCouplingEngine(profile, defaultSettings({ reducedMotion: false }))
+    // Same value — should be a no-op for rebuild
+    expect(() => {
+      engine.setSettings(defaultSettings({ reducedMotion: false }))
+    }).not.toThrow()
+  })
+
+  // -----------------------------------------------------------------------
+  // step() with profile that has no audio chain (no audio mappings)
+  // -----------------------------------------------------------------------
+  it('step() with empty audio chain returns empty audio output', () => {
+    const profile = makeProfile({ videoStack: [{ node: 'grain', params: { amount: 0.1 } }] })
+    const engine = createCouplingEngine(profile, defaultSettings({ couplingStrength: 1 }))
+    const result = engine.step(1 / 60, zeroAudio(), zeroVideo(), {})
+    // Audio output should be empty (no audio chain nodes)
+    expect(Object.keys(result.audio).length).toBe(0)
   })
 })

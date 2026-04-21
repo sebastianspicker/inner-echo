@@ -27,6 +27,7 @@ service-account*.json
 .codex/
 .cursor/
 .claude/
+.kilo/
 .agents/
 progress.md
 AUDIT.md

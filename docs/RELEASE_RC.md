@@ -10,7 +10,7 @@ This runbook defines the single-pass RC process for `inner-echo`.
 
 ## Preconditions
 
-- Work from a `codex/*` prep branch.
+- Work from a dedicated prep branch.
 - Ensure no unintended tracked-file diffs are present.
 - Ensure README screenshot manifest exists at `assets/readme/screenshots/manifest.json`.
 
