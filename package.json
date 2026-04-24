@@ -41,11 +41,11 @@
     "release:rc:checklist": "npm run clean:local && npm ci && npm run browsers:install && npm run check && npm run screenshots:readme && npm run screenshots:verify"
   },
   "dependencies": {
-    "dompurify": "^3.3.1",
-    "marked": "^17.0.5",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "three": "^0.183.2",
+    "dompurify": "^3.4.1",
+    "marked": "^18.0.2",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "three": "^0.184.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -55,7 +55,7 @@
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@types/three": "^0.183.1",
+    "@types/three": "^0.184.0",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.1",
     "jsdom": "^29.0.1",
