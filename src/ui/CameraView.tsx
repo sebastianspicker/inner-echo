@@ -16,7 +16,7 @@
  * without triggering full React re-renders.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import { useCatalog } from './hooks/useCatalog'
 import { useProfileLoad } from './hooks/useProfileLoad'
 import { useImmersiveIdleState } from './hooks/useImmersiveIdleState'
@@ -50,12 +50,26 @@ import {
 import { getCameraErrorMessage } from './cameraMessages'
 import { ConditionComposerPanel } from './ConditionComposerPanel'
 import { OnboardingModal, getOnboardingAccepted } from './OnboardingModal'
-import { DebugPanel } from './DebugPanel'
-// TODO: Lazy-load EvidenceDrawer via React.lazy to code-split marked + DOMPurify
-// out of the main chunk. Currently they are bundled eagerly (~50 KB combined).
-import { EvidenceDrawer } from './EvidenceDrawer'
 import type { EvidenceDocPath } from '../evidence/docs'
 import type { ComposerMode, SelectedDimension, SelectedPreset } from '../composer'
+
+const DebugPanel = lazy(async () => {
+  const mod = await import('./DebugPanel')
+  return { default: mod.DebugPanel }
+})
+
+const EvidenceDrawer = lazy(async () => {
+  const mod = await import('./EvidenceDrawer')
+  return { default: mod.EvidenceDrawer }
+})
+
+function LazyPanelFallback() {
+  return (
+    <div className="ie-hint" role="status" aria-live="polite">
+      Loading…
+    </div>
+  )
+}
 
 const DEFAULT_INTENSITY = 0.5
 const DEFAULT_CONDITION_ID = 'none'
@@ -832,20 +846,22 @@ export function CameraView() {
                   <span>Debug overlay (dev)</span>
                 </label>
                 {debugOverlay && (
-                  <DebugPanel
-                    getOverlayDiagnostics={getOverlayDiagnostics}
-                    audioStatus={audioStatus}
-                    micStatus={micStatus}
-                    lastError={errorMessage ?? audioError ?? micError}
-                    getAudioMetrics={() => audioEngineControlRef.current?.getMetrics?.()}
-                    getVideoMetrics={() => videoMetricsRef.current ?? undefined}
-                    getAudioDebugState={getAudioDebugState}
-                    getAppliedClamps={getAppliedClamps}
-                    couplingStrength={couplingStrength}
-                    maxFeedback={maxFeedback}
-                    micSensitivity={micSensitivity}
-                    micGate={micGate}
-                  />
+                  <Suspense fallback={<LazyPanelFallback />}>
+                    <DebugPanel
+                      getOverlayDiagnostics={getOverlayDiagnostics}
+                      audioStatus={audioStatus}
+                      micStatus={micStatus}
+                      lastError={errorMessage ?? audioError ?? micError}
+                      getAudioMetrics={() => audioEngineControlRef.current?.getMetrics?.()}
+                      getVideoMetrics={() => videoMetricsRef.current ?? undefined}
+                      getAudioDebugState={getAudioDebugState}
+                      getAppliedClamps={getAppliedClamps}
+                      couplingStrength={couplingStrength}
+                      maxFeedback={maxFeedback}
+                      micSensitivity={micSensitivity}
+                      micGate={micGate}
+                    />
+                  </Suspense>
                 )}
                 {debugOverlay && activeVideoNodeIds.length > 0 && (
                   <p className="ie-hint" role="status">
@@ -858,12 +874,14 @@ export function CameraView() {
         </aside>
       </div>
 
-      <EvidenceDrawer
-        open={evidenceOpen}
-        docPath={evidenceDocPath}
-        onNavigate={setEvidenceDocPath}
-        onClose={() => setEvidenceOpen(false)}
-      />
+      <Suspense fallback={<LazyPanelFallback />}>
+        <EvidenceDrawer
+          open={evidenceOpen}
+          docPath={evidenceDocPath}
+          onNavigate={setEvidenceDocPath}
+          onClose={() => setEvidenceOpen(false)}
+        />
+      </Suspense>
     </section>
   )
 }
