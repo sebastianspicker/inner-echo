@@ -1,0 +1,45 @@
+.ie-errorBoundary {
+  padding: 2rem;
+  max-width: 28rem;
+  margin: 3rem auto;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.ie-errorBoundaryTitle {
+  margin: 0 0 0.75rem;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 650;
+}
+
+.ie-errorBoundaryBody {
+  margin: 0 0 0.5rem;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.ie-errorBoundaryMessage {
+  margin: 0 0 1.25rem;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.38);
+  font-family: var(--font-mono);
+}
+
+.ie-errorBoundaryAction {
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 520;
+  cursor: pointer;
+  background-color: rgba(123, 200, 192, 0.1);
+  color: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(123, 200, 192, 0.25);
+  border-radius: 999px;
+}
