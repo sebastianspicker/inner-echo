@@ -41,6 +41,9 @@ This project is a local-only browser app with no server, no user accounts, and n
 - **AudioContext**: Start only after user gesture (browser requirement); no audio autoplay.
 
 All permission-triggering actions must be bound to a concrete user gesture event (click, touch).
+Passive state imports such as shared URL hashes, localStorage migrations, or startup defaults must
+not enable camera, microphone, or audio. A shared preset may restore visual/composer state, but audio
+and microphone controls must remain opt-in after the import.
 
 For static hosting or when you control response headers, you can restrict feature usage with **Permissions-Policy** (formerly Feature-Policy), for example:
 
@@ -93,8 +96,10 @@ Tighten or relax directives (for example `worker-src` or `form-action`) only if 
 Before releasing a build:
 
 - [ ] **Baseline quality gate**: Run `npm run check` and block release on any failure.
+- [ ] **Dependency audit**: Run `npm audit --audit-level=moderate` and remediate reported advisories before release.
 - [ ] **No third-party requests**: Confirm no network calls (DevTools Network tab, or run with network disabled). No external scripts, fonts, or CDNs.
 - [ ] **Permissions**: Camera and mic only after user gesture; no `getUserMedia` or `AudioContext` on page load.
+- [ ] **Passive imports**: Shared preset URLs and localStorage migrations do not auto-enable camera, microphone, or audio.
 - [ ] **CSP**: Deploy the recommended header-delivered CSP (or equivalent) and verify both preview and browser smoke runs stay green without CSP violations.
 - [ ] **Permissions-Policy**: If you control headers, set camera/microphone to `(self)` (or stricter).
 - [ ] **Logs**: Ensure no sensitive data is logged (search for `console.*` and `logger.*`; no device IDs, no media, no PII).
