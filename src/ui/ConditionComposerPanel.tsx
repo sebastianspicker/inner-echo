@@ -161,9 +161,12 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   const catalogIds = useMemo(() => (props.catalog ?? []).map((c) => c.id), [props.catalog])
   useAsyncEffect(
     async (ctx) => {
+      const profiles = await Promise.all(catalogIds.map((id) => loadProfile(id)))
+      if (ctx.cancelled) return
       const out: Record<string, string> = {}
-      for (const id of catalogIds) {
-        const prof = await loadProfile(id)
+      for (let i = 0; i < catalogIds.length; i++) {
+        const id = catalogIds[i]
+        const prof = profiles[i]
         const dimsList = Array.isArray(prof?.experience_dimensions)
           ? prof.experience_dimensions
           : []
@@ -186,7 +189,6 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
                   ? 'high'
                   : ''
       }
-      if (ctx.cancelled) return
       setConditionStrength(out)
     },
     [catalogIds, dimById],
@@ -242,7 +244,13 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
     const decoded = decodePresetFromHash(window.location.hash)
     if (!decoded.ok) return
 
-    applyPresetPayload(decoded.payload, {
+    // Shared links are not a user gesture; keep audio opt-in after import.
+    const sharedPayload: PresetPayload = {
+      ...decoded.payload,
+      audioEnabled: false,
+    }
+
+    applyPresetPayload(sharedPayload, {
       onModeChange: props.onModeChange,
       onConditionIdChange: props.onConditionIdChange,
       onPresetsChange: props.onPresetsChange,

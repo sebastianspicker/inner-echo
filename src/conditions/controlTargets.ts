@@ -5,7 +5,7 @@
 
 import type { Profile, UIControl } from './schema'
 import { parseScopedTarget } from '../utils/targetPath'
-import { getBuiltNodeIndex } from './graphBuilder'
+import { getBuiltNodeIndex, type BuildVideoNodesOptions } from './graphBuilder'
 
 export interface ResolvedControl {
   control: UIControl
@@ -20,7 +20,11 @@ export interface ResolvedControl {
 /**
  * Resolve a control's target to a param key and default value using the profile.
  */
-export function resolveControl(control: UIControl, profile: Profile): ResolvedControl | null {
+export function resolveControl(
+  control: UIControl,
+  profile: Profile,
+  options?: BuildVideoNodesOptions,
+): ResolvedControl | null {
   const target = (control.target ?? control.id ?? '').toLowerCase()
   if (target === 'intensity' || (control.id === 'intensity' && !control.target)) {
     const def = profile.safety?.intensity_default
@@ -64,7 +68,7 @@ export function resolveControl(control: UIControl, profile: Profile): ResolvedCo
   if (parsedVideoTarget) {
     const { nodeId, param } = parsedVideoTarget
     const stack = Array.isArray(profile.video_stack) ? profile.video_stack : []
-    const nodeIndex = getBuiltNodeIndex(profile, nodeId)
+    const nodeIndex = getBuiltNodeIndex(profile, nodeId, options)
     if (nodeIndex === -1) return null
     // Find the raw stack entry that corresponds to this nodeId for reading default params.
     const rawIndex = stack.findIndex(

@@ -43,6 +43,7 @@ export const NODE_FACTORY: Record<string, () => VideoNode> = {
   vignette: () => new VignetteNode(),
   chromatic_aberration: () => new ChromaticAberrationNode(),
   // SSOT canonical name
+  // Legacy alias: some profiles and dimension mappings use "chroma_aberration" as a short form.
   chroma_aberration: () => new ChromaticAberrationNode(),
   temporal_smear: () => new TemporalSmearNode(),
   color_grade: () => new ColorGradeNode(),

@@ -57,7 +57,7 @@ Many mental health experiences are difficult to understand from the outside beca
 
 **Out of scope (not now):** Recording/export/sharing; accounts/backends; diagnostic questionnaires; "exact simulation" claims.
 
-**Acceptance criteria:** Camera starts/stops reliably; condition switching live; Safe Mode and Reduced Motion behave as designed; Stop Everything shuts down all resources; no console errors on happy path. See [MVP.md](MVP.md) for full list (retained for reference).
+**Acceptance criteria:** Camera starts/stops reliably; condition switching live; Safe Mode and Reduced Motion behave as designed; Stop Everything shuts down all resources; no console errors on happy path.
 
 ---
 
@@ -83,7 +83,7 @@ See [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md) for full safety and ethics.
 
 ## User stories (summary)
 
-Epics: E1 Camera & rendering, E2 Conditions & presets, E3 Safety & accessibility, E4 Audio & modulation (optional), E5 Knowledge base / authoring. Full stories and acceptance criteria: [USER_STORIES.md](USER_STORIES.md) (retained for reference).
+Epics: E1 Camera & rendering, E2 Conditions & presets, E3 Safety & accessibility, E4 Audio & modulation (optional), E5 Knowledge base / authoring.
 
 ---
 

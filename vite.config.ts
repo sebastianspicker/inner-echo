@@ -37,10 +37,10 @@ export default defineConfig({
       reporter: ['text', 'html', 'clover'],
       exclude: ['scripts/**'],
       thresholds: {
-        statements: 80,
-        branches: 65,
+        statements: 85,
+        branches: 70,
         functions: 85,
-        lines: 80,
+        lines: 87,
       },
     },
   },

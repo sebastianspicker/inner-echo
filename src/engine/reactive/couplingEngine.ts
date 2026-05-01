@@ -99,7 +99,7 @@ function buildVideoNodeIndex(profile: Profile, reducedMotion: boolean): Map<stri
     const nodeType = def.node
     if (!nodeType || typeof nodeType !== 'string') continue
     if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) continue
-    if (!NODE_FACTORY[nodeType]) continue
+    if (!NODE_FACTORY[nodeType.toLowerCase()]) continue
     const entryId = (def.id ?? nodeType).toLowerCase()
     const entryType = nodeType.toLowerCase()
     for (const key of [entryId, entryType]) {

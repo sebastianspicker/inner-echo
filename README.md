@@ -66,8 +66,11 @@ Open `http://127.0.0.1:5173` (or the Vite host shown in your terminal).
 ```mermaid
 flowchart LR
   U["User in Browser"] --> UI["React UI (src/ui)"]
+  UI --> COMP["Condition Composer (src/composer)"]
   UI --> ENG["Runtime Engine (src/engine)"]
   UI --> EVID["Evidence Viewer (docs/references)"]
+
+  COMP --> ENG
 
   ENG --> COND["Condition Profiles (src/conditions)"]
   ENG --> CAM["Camera Stream"]
@@ -99,8 +102,12 @@ flowchart TD
   SYNTH --> AFX["Audio FX chain"]
   MIC --> AFX
   AFX --> ANALYSER["Analyser metrics"]
-  ANALYSER --> REACTIVE["Reactive mapping"]
+  ANALYSER --> REACTIVE["Reactive mapping (audio → video)"]
   REACTIVE --> VSTACK
+
+  VSTACK --> VMETRICS["Video metrics"]
+  VMETRICS --> COUPLING["Coupling engine (video → audio)"]
+  COUPLING --> AFX
 
   STOP["Stop Everything"] --> VCANVAS
   STOP --> ACTX
