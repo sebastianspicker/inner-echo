@@ -104,7 +104,7 @@ describe('ui/ConditionComposerPanel shared preset hash', () => {
     vi.unstubAllGlobals()
   })
 
-  it('applies a shared preset hash only once and clears it after import', async () => {
+  it('applies a shared preset hash only once without enabling audio and clears it after import', async () => {
     const payload: PresetPayload = {
       mode: 'multimorbid',
       conditionId: 'panic',
@@ -128,7 +128,7 @@ describe('ui/ConditionComposerPanel shared preset hash', () => {
     })
     expect(props.__spies.onModeChange).toHaveBeenCalledWith('multimorbid')
     expect(props.__spies.onConditionIdChange).toHaveBeenCalledWith('panic')
-    expect(props.__spies.onAudioEnabledChange).toHaveBeenCalledWith(true)
+    expect(props.__spies.onAudioEnabledChange).toHaveBeenCalledWith(false)
     expect(window.location.hash).toBe('')
 
     rerender(<ConditionComposerPanel {...props} conditionId="anxiety" />)

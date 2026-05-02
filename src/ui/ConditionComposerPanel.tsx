@@ -244,7 +244,13 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
     const decoded = decodePresetFromHash(window.location.hash)
     if (!decoded.ok) return
 
-    applyPresetPayload(decoded.payload, {
+    // Shared links are not a user gesture; keep audio opt-in after import.
+    const sharedPayload: PresetPayload = {
+      ...decoded.payload,
+      audioEnabled: false,
+    }
+
+    applyPresetPayload(sharedPayload, {
       onModeChange: props.onModeChange,
       onConditionIdChange: props.onConditionIdChange,
       onPresetsChange: props.onPresetsChange,
