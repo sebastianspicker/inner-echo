@@ -12,6 +12,7 @@ export interface UseReactivePipelineParams {
   profile: Profile | null
   videoRef: MutableRefObject<HTMLVideoElement | null>
   canvasRef: MutableRefObject<HTMLCanvasElement | null>
+  fallbackCanvasRef: MutableRefObject<HTMLCanvasElement | null>
   containerRef: MutableRefObject<HTMLDivElement | null>
   overlayControlRef: MutableRefObject<OverlayControl | null>
   audioEngineControlRef: MutableRefObject<AudioEngineControl | null>
@@ -37,6 +38,7 @@ export function useReactivePipeline({
   profile,
   videoRef,
   canvasRef,
+  fallbackCanvasRef,
   containerRef,
   overlayControlRef,
   audioEngineControlRef,
@@ -62,6 +64,7 @@ export function useReactivePipeline({
 
     const video = videoRef.current
     const canvas = canvasRef.current
+    const fallbackCanvas = fallbackCanvasRef.current
     const container = containerRef.current
     if (!video || !canvas || !container || !profile) {
       onOverlayStateChange?.({ rendererMode: 'unavailable', effectsActive: false, error: null })
@@ -153,6 +156,7 @@ export function useReactivePipeline({
       const control = canvasRuntime.startOverlayLoop(
         video,
         canvas,
+        fallbackCanvas,
         container,
         nodes,
         reactiveOptions,

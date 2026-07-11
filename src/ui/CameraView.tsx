@@ -163,6 +163,7 @@ export function CameraView() {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const fallbackCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const overlayControlRef = useRef<OverlayControl | null>(null)
   const audioEngineControlRef = useRef<AudioEngineControl | null>(null)
   const rmsDebugRef = useRef<HTMLSpanElement | null>(null)
@@ -346,6 +347,12 @@ export function CameraView() {
         if (ctx2d) ctx2d.clearRect(0, 0, canvas.width, canvas.height)
       }
     }
+    const fallbackCanvas = fallbackCanvasRef.current
+    const fallbackContext = fallbackCanvas?.getContext('2d')
+    if (fallbackCanvas && fallbackContext) {
+      fallbackContext.clearRect(0, 0, fallbackCanvas.width, fallbackCanvas.height)
+      fallbackCanvas.hidden = true
+    }
     setCameraState('idle')
     setErrorMessage(null)
   }, [])
@@ -514,6 +521,7 @@ export function CameraView() {
     profile,
     videoRef,
     canvasRef,
+    fallbackCanvasRef,
     containerRef,
     overlayControlRef,
     audioEngineControlRef,
@@ -680,7 +688,8 @@ export function CameraView() {
                 <CameraStage
                   containerRef={containerRef}
                   videoRef={videoRef}
-                  canvasRef={canvasRef}
+                  webglCanvasRef={canvasRef}
+                  fallbackCanvasRef={fallbackCanvasRef}
                   rmsDebugRef={rmsDebugRef}
                   isActive={cameraController.isActive}
                   audioStatus={audioStatus}

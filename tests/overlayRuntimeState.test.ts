@@ -18,6 +18,7 @@ import type { WebGLOverlayCallbacks } from '../src/engine/canvas/webglPipeline'
 
 const video = {} as HTMLVideoElement
 const canvas = {} as HTMLCanvasElement
+const fallbackCanvas = {} as HTMLCanvasElement
 const container = {} as HTMLElement
 
 function webglControl() {
@@ -50,9 +51,17 @@ describe('canvas overlay runtime state', () => {
     startWebGLOverlayLoopMock.mockReturnValue(webglControl())
     const onStateChange = vi.fn<(state: OverlayRuntimeState) => void>()
 
-    const control = startOverlayLoop(video, canvas, container, [{} as VideoNode], null, {
-      onStateChange,
-    })
+    const control = startOverlayLoop(
+      video,
+      canvas,
+      fallbackCanvas,
+      container,
+      [{} as VideoNode],
+      null,
+      {
+        onStateChange,
+      },
+    )
 
     expect(onStateChange).toHaveBeenLastCalledWith({
       rendererMode: 'webgl',
@@ -67,9 +76,17 @@ describe('canvas overlay runtime state', () => {
     start2DOverlayLoopMock.mockReturnValue(vi.fn())
     const onStateChange = vi.fn<(state: OverlayRuntimeState) => void>()
 
-    const control = startOverlayLoop(video, canvas, container, [{} as VideoNode], null, {
-      onStateChange,
-    })
+    const control = startOverlayLoop(
+      video,
+      canvas,
+      fallbackCanvas,
+      container,
+      [{} as VideoNode],
+      null,
+      {
+        onStateChange,
+      },
+    )
 
     expect(onStateChange).toHaveBeenLastCalledWith({
       rendererMode: '2d',
@@ -87,9 +104,17 @@ describe('canvas overlay runtime state', () => {
     })
     start2DOverlayLoopMock.mockReturnValue(null)
     const onStateChange = vi.fn<(state: OverlayRuntimeState) => void>()
-    const control = startOverlayLoop(video, canvas, container, [{} as VideoNode], null, {
-      onStateChange,
-    })
+    const control = startOverlayLoop(
+      video,
+      canvas,
+      fallbackCanvas,
+      container,
+      [{} as VideoNode],
+      null,
+      {
+        onStateChange,
+      },
+    )
     const error = new Error('WebGL context lost. Render loop stopped.')
 
     callbacks?.onFatalRuntimeError?.(error)
@@ -109,7 +134,9 @@ describe('canvas overlay runtime state', () => {
   it('reports unavailable when required runtime elements are absent', () => {
     const onStateChange = vi.fn<(state: OverlayRuntimeState) => void>()
 
-    const control = startOverlayLoop(null, canvas, container, [], null, { onStateChange })
+    const control = startOverlayLoop(null, canvas, fallbackCanvas, container, [], null, {
+      onStateChange,
+    })
 
     expect(onStateChange).toHaveBeenCalledWith({
       rendererMode: 'unavailable',

@@ -64,7 +64,8 @@ export interface OverlayControl {
  */
 export function startOverlayLoop(
   video: HTMLVideoElement | null,
-  canvas: HTMLCanvasElement | null,
+  webglCanvas: HTMLCanvasElement | null,
+  fallbackCanvas: HTMLCanvasElement | null,
   container: HTMLElement | null,
   nodes: VideoNode[] = [],
   reactiveOptions?: ReactiveLoopOptions | null,
@@ -90,7 +91,13 @@ export function startOverlayLoop(
     activeVideoNodes: [],
   })
 
-  if (!video || !canvas || !container) {
+  const showCanvas = (active: HTMLCanvasElement | null): void => {
+    if (webglCanvas) webglCanvas.hidden = active !== webglCanvas
+    if (fallbackCanvas) fallbackCanvas.hidden = active !== fallbackCanvas
+  }
+
+  if (!video || !container) {
+    showCanvas(null)
     const diagnostics = getInactiveDiagnostics('unavailable')
     runtimeCallbacks?.onStateChange?.({
       rendererMode: diagnostics.rendererMode,
@@ -102,13 +109,19 @@ export function startOverlayLoop(
 
   let delegateStop: OverlayControl['stop'] = () => {}
   let delegateSetParams: OverlayControl['setParams'] = noOpSetParams
-  let delegateGetDiagnostics: NonNullable<OverlayControl['getDiagnostics']> = get2dDiagnostics
+  let delegateGetDiagnostics: NonNullable<OverlayControl['getDiagnostics']> = () =>
+    getInactiveDiagnostics('raw')
+  let stopped = false
+  let fallbackInstalled = false
 
   const install2dFallback = (error: Error | null = null): void => {
-    const stop2d = start2DOverlayLoop(video, canvas, container)
+    if (stopped || fallbackInstalled) return
+    fallbackInstalled = true
+    const stop2d = start2DOverlayLoop(video, fallbackCanvas, container)
     delegateStop = stop2d ?? (() => {})
     delegateSetParams = noOpSetParams
     delegateGetDiagnostics = stop2d ? get2dDiagnostics : () => getInactiveDiagnostics('raw')
+    showCanvas(stop2d ? fallbackCanvas : null)
     runtimeCallbacks?.onStateChange?.({
       rendererMode: stop2d ? '2d' : 'raw',
       effectsActive: false,
@@ -116,7 +129,7 @@ export function startOverlayLoop(
     })
   }
 
-  if (USE_WEBGL) {
+  if (USE_WEBGL && webglCanvas) {
     let switchedTo2d = false
     const callbacks: WebGLOverlayCallbacks = {
       onFatalRuntimeError(error) {
@@ -127,20 +140,26 @@ export function startOverlayLoop(
     }
     const control = startWebGLOverlayLoop(
       video,
-      canvas,
+      webglCanvas,
       container,
       nodes,
       reactiveOptions ?? undefined,
       callbacks,
     )
     if (control) {
+      showCanvas(webglCanvas)
       delegateStop = () => control.stop()
       delegateSetParams = (params) => control.setParams(params)
       const effectsActive = nodes.length > 0
       delegateGetDiagnostics = () => ({ ...control.getDiagnostics(), effectsActive })
       runtimeCallbacks?.onStateChange?.({ rendererMode: 'webgl', effectsActive, error: null })
       return {
-        stop: () => delegateStop(),
+        stop: () => {
+          if (stopped) return
+          stopped = true
+          delegateStop()
+          showCanvas(null)
+        },
         setParams: (params) => delegateSetParams(params),
         getDiagnostics: () => delegateGetDiagnostics(),
       }
@@ -149,7 +168,12 @@ export function startOverlayLoop(
 
   install2dFallback()
   return {
-    stop: () => delegateStop(),
+    stop: () => {
+      if (stopped) return
+      stopped = true
+      delegateStop()
+      showCanvas(null)
+    },
     setParams: (params) => delegateSetParams(params),
     getDiagnostics: () => delegateGetDiagnostics(),
   }

@@ -63,10 +63,16 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog || !props.open) return
-    if (!dialog.open) dialog.showModal()
+    if (!dialog.open) {
+      if (typeof dialog.showModal === 'function') dialog.showModal()
+      else dialog.setAttribute('open', '')
+    }
     closeButtonRef.current?.focus()
     return () => {
-      if (dialog.open) dialog.close()
+      if (dialog.open) {
+        if (typeof dialog.close === 'function') dialog.close()
+        else dialog.removeAttribute('open')
+      }
     }
   }, [props.open])
 
