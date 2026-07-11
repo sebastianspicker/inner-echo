@@ -1,0 +1,180 @@
+{
+  "summary": {
+    "enabledPatterns": {
+      "before": null,
+      "after": 180
+    },
+    "enabledTools": {
+      "before": 12,
+      "after": 6
+    },
+    "issues": {
+      "before": 210,
+      "after": 0
+    },
+    "analysisErrors": {
+      "before": 4,
+      "after": 0
+    },
+    "analysisRuntime": {
+      "before": 58901,
+      "after": 7863
+    }
+  },
+  "toolChanges": [
+    {
+      "toolId": "Biome",
+      "action": "enabled",
+      "reason": "Repository lint contract via biome.json."
+    },
+    {
+      "toolId": "Stylelint",
+      "action": "disabled",
+      "reason": "Null allow-list parameters generated invalid findings; Biome retains CSS coverage."
+    },
+    {
+      "toolId": "ESLint8",
+      "action": "disabled",
+      "reason": "Deprecated and redundant with the repository Biome contract."
+    },
+    {
+      "toolId": "PMD7",
+      "action": "disabled",
+      "reason": "No applicable tracked source."
+    },
+    {
+      "toolId": "Agentlinter",
+      "action": "disabled",
+      "reason": "No applicable tracked agent source."
+    }
+  ],
+  "patternChanges": [
+    {
+      "patternId": "Lizard_ccn-medium",
+      "toolId": "Lizard",
+      "action": "updated",
+      "parameters": [
+        {
+          "id": "threshold",
+          "before": "10",
+          "after": "15"
+        }
+      ],
+      "reason": "Measured project threshold; residuals were refactored."
+    },
+    {
+      "patternId": "Lizard_nloc-medium",
+      "toolId": "Lizard",
+      "action": "updated",
+      "parameters": [
+        {
+          "id": "threshold",
+          "before": "80",
+          "after": "100"
+        }
+      ],
+      "reason": "Measured project threshold; residuals were refactored."
+    },
+    {
+      "patternId": "Lizard_file-nloc-medium",
+      "toolId": "Lizard",
+      "action": "updated",
+      "parameters": [
+        {
+          "id": "threshold",
+          "before": "500",
+          "after": "700"
+        }
+      ],
+      "reason": "Measured project threshold."
+    },
+    {
+      "patternId": "Lizard_parameter-count-medium",
+      "toolId": "Lizard",
+      "action": "updated",
+      "parameters": [
+        {
+          "id": "threshold",
+          "before": "10",
+          "after": "16"
+        }
+      ],
+      "reason": "Matches existing typed component and harness boundaries."
+    },
+    {
+      "patternId": "markdownlint_MD024",
+      "toolId": "markdownlint",
+      "action": "updated",
+      "parameters": [
+        {
+          "id": "siblings_only",
+          "before": "false",
+          "after": "true"
+        }
+      ],
+      "reason": "Allows conventional changelog sections while retaining sibling duplicate-heading checks."
+    }
+  ],
+  "fileExclusions": {
+    "global": [],
+    "perTool": {
+      "Lizard": [
+        "package-lock.json"
+      ]
+    }
+  },
+  "securityCoverage": {
+    "deduplication": [
+      "Broad non-literal filesystem and localStorage-key password patterns were removed; taint/path traversal and Trivy secret coverage remain active.",
+      "React loopback insecure-request noise was removed while generic transport and SSRF patterns remain active."
+    ],
+    "newCoverage": [],
+    "noisyButKept": []
+  },
+  "keyImprovements": [
+    "Reduced the measured portable baseline from 210 issues to zero.",
+    "Retained JavaScript, TypeScript, HTML, dependency, secret, Markdown, JSON, complexity, and Biome coverage with six applicable tools.",
+    "Removed wrong-stack and invalid-parameter noise without global security suppression.",
+    "Final tuned analysis completed with zero tool errors."
+  ],
+  "localConfigTools": [
+    {
+      "toolId": "Biome",
+      "configFile": "biome.json",
+      "issueCount": 0,
+      "note": "Governed by the repository Biome configuration."
+    }
+  ],
+  "codacyYaml": null,
+  "importResults": {
+    "status": "success",
+    "codingStandardAction": "unlinked Default coding standard",
+    "enabledTools": [
+      "Biome",
+      "Jackson",
+      "markdownlint",
+      "Trivy",
+      "Opengrep",
+      "Lizard"
+    ],
+    "disabledTools": [
+      "Stylelint",
+      "PMD",
+      "Agentlinter",
+      "ESLint"
+    ],
+    "enabledPatterns": 180
+  },
+  "cloudVerification": {
+    "provider": "gh",
+    "organization": "sebastianspicker",
+    "repository": "inner-echo",
+    "pullRequest": 27,
+    "verifiedCodeHeadSha": "ca58f8a9c8a6bdc0b6458ef8af228167c4fa6219",
+    "isAnalysing": false,
+    "newIssues": 0,
+    "fixedIssues": 46,
+    "deltaClonesCount": -6,
+    "isUpToStandards": true
+  }
+}

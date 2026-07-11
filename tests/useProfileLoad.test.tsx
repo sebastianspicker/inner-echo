@@ -73,13 +73,13 @@ function deferred<T>() {
   return { promise, resolve }
 }
 
-describe('ui/hooks/useProfileLoad', () => {
-  afterEach(() => {
-    cleanup()
-    loadProfileMock.mockReset()
-    composeEffectiveProfileMock.mockReset()
-  })
+afterEach(() => {
+  cleanup()
+  loadProfileMock.mockReset()
+  composeEffectiveProfileMock.mockReset()
+})
 
+describe('ui/hooks/useProfileLoad preset loading', () => {
   it('loads a preset profile without requiring an audio preference setter', async () => {
     loadProfileMock.mockResolvedValue(makeProfile('anxiety'))
     const params = makeParams({ audioEnabled: true })
@@ -90,7 +90,9 @@ describe('ui/hooks/useProfileLoad', () => {
       expect(result.current.profile?.id).toBe('anxiety')
     })
   })
+})
 
+describe('ui/hooks/useProfileLoad stale requests', () => {
   it('clears loading state when a stale preset load resolves after a newer selection', async () => {
     const slow = deferred<Profile>()
     const fast = deferred<Profile>()
@@ -131,7 +133,9 @@ describe('ui/hooks/useProfileLoad', () => {
     })
     expect(result.current.profile?.id).toBe('fast')
   })
+})
 
+describe('ui/hooks/useProfileLoad composition fallback', () => {
   it('uses an explicit fallback instead of stale profile state when composition rejects', async () => {
     loadProfileMock.mockResolvedValue(makeProfile('anxiety'))
     composeEffectiveProfileMock.mockRejectedValue(new Error('compose failed'))

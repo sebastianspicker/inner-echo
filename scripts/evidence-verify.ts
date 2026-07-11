@@ -26,23 +26,16 @@ type MotifClaimsFile = {
   claims?: Array<{ dimensionId?: string; motif?: string; label?: string; sources?: string[] }>
 }
 
-function readJsonFirstObject<T>(filePath: string): T {
+const readJsonFirstObject = <T>(filePath: string): T => {
   const text = fs.readFileSync(filePath, 'utf-8')
   return parseFirstJsonObject(text) as T
 }
 
-function exists(root: string, p: string): boolean {
+const exists = (root: string, p: string): boolean => {
   return fs.existsSync(path.join(root, p))
 }
 
-function assert(condition: boolean, message: string): void {
-  if (!condition) throw new Error(message)
-}
-
-function main(): void {
-  const root = process.cwd()
-  const errors: string[] = []
-
+const validateRequiredFiles = (root: string, errors: string[]): void => {
   const requiredFiles = [
     'docs/references/README.md',
     'docs/references/INDEX.md',
@@ -51,10 +44,11 @@ function main(): void {
     'docs/references/CONTRIBUTIONS_AND_LIMITS.md',
     'docs/REFERENCES_AUDIT.md',
   ]
-  for (const f of requiredFiles) {
-    if (!exists(root, f)) errors.push(`Missing required evidence file: ${f}`)
-  }
+  for (const file of requiredFiles)
+    if (!exists(root, file)) errors.push(`Missing required evidence file: ${file}`)
+}
 
+const collectDimensionMotifs = (root: string, errors: string[]): Set<string> => {
   const dimsFile = readJsonFirstObject<ExperienceDimensionsFile>(
     path.join(root, 'src/conditions/experience-dimensions.json'),
   )
@@ -73,17 +67,10 @@ function main(): void {
     const audio = (d.motif_summary?.audio_nodes ?? []) as unknown[]
     for (const n of [...video, ...audio]) motifs.add(String(n))
   }
+  return motifs
+}
 
-  const mapFile = readJsonFirstObject<DimensionToSignalMappingFile>(
-    path.join(root, 'src/conditions/dimension-to-signal-mapping.json'),
-  )
-  for (const [dimId, entry] of Object.entries(mapFile.mapping ?? {})) {
-    if (!entry?.rationale_doc) continue
-    if (!exists(root, entry.rationale_doc))
-      errors.push(`Mapping "${dimId}" rationale_doc not found: ${entry.rationale_doc}`)
-  }
-
-  // Motif claim labels file validation (exists + sources exist).
+const validateMotifClaims = (root: string, errors: string[]): void => {
   const claimsPath = path.join(root, 'docs/references/MOTIF_CLAIMS.json')
   if (!fs.existsSync(claimsPath)) {
     errors.push('Missing motif claims file: docs/references/MOTIF_CLAIMS.json')
@@ -103,7 +90,9 @@ function main(): void {
       )
     }
   }
+}
 
+const validateProfilePages = (root: string, errors: string[]): void => {
   const profilesDir = path.join(root, 'src/conditions/profiles')
   const profileFiles = fs.readdirSync(profilesDir).filter((f) => f.endsWith('.json'))
   for (const file of profileFiles) {
@@ -112,11 +101,24 @@ function main(): void {
     if (!exists(root, doc))
       errors.push(`Condition "${prof.id}" missing evidence summary page: ${doc}`)
   }
+}
 
-  for (const m of Array.from(motifs)) {
+const validateMotifPages = (root: string, motifs: Set<string>, errors: string[]): void => {
+  for (const m of motifs) {
     const doc = `docs/references/motifs/${m}.md`
     if (!exists(root, doc)) errors.push(`Motif "${m}" missing evidence page: ${doc}`)
   }
+}
+
+const main = (): void => {
+  const root = process.cwd()
+  const errors: string[] = []
+  validateRequiredFiles(root, errors)
+  const motifs = collectDimensionMotifs(root, errors)
+  validateMappingDocs(root, errors)
+  validateMotifClaims(root, errors)
+  validateProfilePages(root, errors)
+  validateMotifPages(root, motifs, errors)
 
   if (errors.length) {
     console.error('[evidence-verify] FAIL')
@@ -125,6 +127,17 @@ function main(): void {
   }
 
   console.log('[evidence-verify] OK')
+}
+
+const validateMappingDocs = (root: string, errors: string[]): void => {
+  const mapFile = readJsonFirstObject<DimensionToSignalMappingFile>(
+    path.join(root, 'src/conditions/dimension-to-signal-mapping.json'),
+  )
+  for (const [dimId, entry] of Object.entries(mapFile.mapping ?? {})) {
+    if (!entry?.rationale_doc) continue
+    if (!exists(root, entry.rationale_doc))
+      errors.push(`Mapping "${dimId}" rationale_doc not found: ${entry.rationale_doc}`)
+  }
 }
 
 try {

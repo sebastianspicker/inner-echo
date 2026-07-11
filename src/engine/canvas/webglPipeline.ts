@@ -81,6 +81,14 @@ export interface WebGLOverlayCallbacks {
   onFatalRuntimeError?(error: Error): void
 }
 
+function mergePipelineParams(current: VideoPipelineParams, next: VideoPipelineParams): void {
+  current.intensity = next.intensity ?? current.intensity
+  current.safeMode = next.safeMode ?? current.safeMode
+  current.controlValues = next.controlValues ?? current.controlValues
+  current.stressMode = next.stressMode ?? current.stressMode
+  current.safetyContext = next.safetyContext ?? current.safetyContext
+}
+
 /** Optional reactive/coupling callbacks used by the frame loop. */
 export interface ReactiveLoopOptions {
   /** Preferred: audio metrics (RMS + spectral). */
@@ -151,11 +159,7 @@ export function startWebGLOverlayLoop(
   const usePassthrough = nodes.length === 0
 
   function setParams(params: VideoPipelineParams): void {
-    currentParams.intensity = params.intensity ?? currentParams.intensity
-    currentParams.safeMode = params.safeMode ?? currentParams.safeMode
-    currentParams.controlValues = params.controlValues ?? currentParams.controlValues
-    currentParams.stressMode = params.stressMode ?? currentParams.stressMode
-    currentParams.safetyContext = params.safetyContext ?? currentParams.safetyContext
+    mergePipelineParams(currentParams, params)
   }
 
   function cleanupResources(): void {

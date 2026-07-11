@@ -27,6 +27,9 @@ describe('README screenshot manifest', () => {
     const names = new Set<string>()
 
     for (const shot of manifest.shots) {
+      expect(shot.id).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+      expect(shot.baseName).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+      expect(shot.captionKey).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
       expect(shot.id.length).toBeGreaterThan(0)
       expect(shot.baseName.length).toBeGreaterThan(0)
       expect(shot.captionKey.length).toBeGreaterThan(0)

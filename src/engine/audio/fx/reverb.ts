@@ -4,6 +4,7 @@
 
 import type { AudioModule } from '../types'
 import { clamp } from '../../../utils/numeric'
+import { fastRandom } from '../../../utils/fastRandom'
 
 export interface ReverbParams {
   /** Wet mix 0..1 (keep low). */
@@ -25,7 +26,7 @@ function makeImpulse(context: BaseAudioContext, decaySeconds: number): AudioBuff
       const t = i / sr
       // Exponential decay + gentle high-frequency damping via power.
       const env = Math.exp(-t / Math.max(0.001, decaySeconds * 0.55))
-      const noise = (Math.random() * 2 - 1) * (1 - i / length) ** 1.5
+      const noise = (fastRandom() * 2 - 1) * (1 - i / length) ** 1.5
       data[i] = noise * env
     }
   }

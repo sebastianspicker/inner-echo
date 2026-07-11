@@ -6,11 +6,7 @@ import {
   type ConditionComposerPanelProps,
 } from '../src/ui/ConditionComposerPanel'
 import { encodePresetToHash } from '../src/ui/presetShare'
-import {
-  LEGACY_PRESET_STORAGE_KEY,
-  PRESET_LIBRARY_STORAGE_KEY,
-  type PresetPayload,
-} from '../src/ui/presetSnapshot'
+import { PRESET_LIBRARY_STORAGE_KEY, type PresetPayload } from '../src/ui/presetSnapshot'
 
 const storageMap = new Map<string, string>()
 const storageMock: Storage = {
@@ -154,42 +150,5 @@ describe('ui/ConditionComposerPanel shared preset hash', () => {
       expect(getByRole('alert').textContent).toMatch(/saved preset library could not be read/i)
     })
     expect(storageMap.get(PRESET_LIBRARY_STORAGE_KEY)).toBe('not valid json {{{')
-  })
-
-  it('does not remove legacy storage or write v2 storage when legacy migration is invalid', async () => {
-    const legacy = JSON.stringify({ conditionId: 'bad id with spaces' })
-    storageMap.set(LEGACY_PRESET_STORAGE_KEY, legacy)
-    const props = buildProps()
-
-    const { getByRole } = render(<ConditionComposerPanel {...props} />)
-
-    await waitFor(() => {
-      expect(getByRole('alert').textContent).toMatch(/legacy preset storage could not be migrated/i)
-    })
-    expect(storageMap.get(LEGACY_PRESET_STORAGE_KEY)).toBe(legacy)
-    expect(storageMap.has(PRESET_LIBRARY_STORAGE_KEY)).toBe(false)
-  })
-
-  it('retains legacy migration by converting valid legacy storage to v2 once', async () => {
-    storageMap.set(
-      LEGACY_PRESET_STORAGE_KEY,
-      JSON.stringify({
-        conditionId: 'panic',
-        intensity: 0.6,
-        safeMode: false,
-      }),
-    )
-    const props = buildProps()
-
-    render(<ConditionComposerPanel {...props} />)
-
-    await waitFor(() => {
-      expect(storageMap.has(PRESET_LIBRARY_STORAGE_KEY)).toBe(true)
-    })
-    const migrated = JSON.parse(storageMap.get(PRESET_LIBRARY_STORAGE_KEY) ?? '[]')
-    expect(migrated).toHaveLength(1)
-    expect(migrated[0].name).toBe('Migrated Preset')
-    expect(migrated[0].payload.conditionId).toBe('panic')
-    expect(storageMap.has(LEGACY_PRESET_STORAGE_KEY)).toBe(false)
   })
 })

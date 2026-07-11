@@ -31,6 +31,29 @@ export interface OnboardingModalProps {
   onAccept: () => void
 }
 
+function trapModalFocus(wrapper: HTMLDivElement) {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      return
+    }
+    if (e.key !== 'Tab') return
+    const focusable = wrapper.querySelectorAll<HTMLElement>(
+      'button:not([disabled]):not([aria-hidden="true"]), [href]:not([aria-hidden="true"]), input:not([disabled]):not([aria-hidden="true"]), select:not([aria-hidden="true"]), textarea:not([aria-hidden="true"]), [tabindex]:not([tabindex="-1"]):not([aria-hidden="true"])',
+    )
+    if (!focusable.length) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    const boundary = e.shiftKey ? first : last
+    if (document.activeElement === boundary) {
+      e.preventDefault()
+      ;(e.shiftKey ? last : first)?.focus()
+    }
+  }
+  wrapper.addEventListener('keydown', handleKeyDown)
+  return () => wrapper.removeEventListener('keydown', handleKeyDown)
+}
+
 export function OnboardingModal({ onAccept }: OnboardingModalProps) {
   const [understood, setUnderstood] = useState(false)
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -58,34 +81,7 @@ export function OnboardingModal({ onAccept }: OnboardingModalProps) {
     if (!wrapper) return
     checkboxRef.current?.focus()
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        // Do not close on Escape — user must accept to proceed
-        return
-      }
-      if (e.key === 'Tab') {
-        const focusable = wrapper.querySelectorAll<HTMLElement>(
-          'button:not([disabled]):not([aria-hidden="true"]), [href]:not([aria-hidden="true"]), input:not([disabled]):not([aria-hidden="true"]), select:not([aria-hidden="true"]), textarea:not([aria-hidden="true"]), [tabindex]:not([tabindex="-1"]):not([aria-hidden="true"])',
-        )
-        if (focusable.length === 0) return
-        const first = focusable[0]
-        const last = focusable[focusable.length - 1]
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            e.preventDefault()
-            last?.focus()
-          }
-        } else {
-          if (document.activeElement === last) {
-            e.preventDefault()
-            first?.focus()
-          }
-        }
-      }
-    }
-    wrapper.addEventListener('keydown', handleKeyDown)
-    return () => wrapper.removeEventListener('keydown', handleKeyDown)
+    return trapModalFocus(wrapper)
   }, [])
 
   return (

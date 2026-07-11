@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { setTimeout as delay } from 'node:timers/promises'
 import { chromium } from 'playwright'
-import { createDevServerHarness, destroyServerHarness } from './serverHarness.mjs'
+import { createBrowserServerHarness, destroyBrowserServerHarness } from './serverHarness.mjs'
 
 const HOST = process.env.HOST ?? '127.0.0.1'
 const PORT = Number(process.env.PORT ?? '4173')
@@ -9,9 +9,7 @@ const BASE_URL = `http://${HOST}:${PORT}`
 const ONBOARDING_KEY = 'inner-echo-onboarding-accepted'
 
 async function createHarness() {
-  const server = await createDevServerHarness(BASE_URL, HOST, PORT)
-  const browser = await launchChromium()
-  return { browser, ...server }
+  return createBrowserServerHarness(BASE_URL, HOST, PORT, launchChromium)
 }
 
 async function launchChromium() {
@@ -29,8 +27,7 @@ async function launchChromium() {
 }
 
 async function destroyHarness(h) {
-  await h.browser.close()
-  await destroyServerHarness(h)
+  await destroyBrowserServerHarness(h)
 }
 
 async function newContextPage(h, viewport = { width: 1280, height: 720 }) {
@@ -175,7 +172,9 @@ async function expectCanvasNonBlank(page, timeoutMs) {
   const started = Date.now()
   while (Date.now() - started < timeoutMs) {
     const stats = await page.evaluate(() => {
-      const canvas = document.querySelector('canvas')
+      const canvas = Array.from(document.querySelectorAll('canvas')).find(
+        (candidate) => !candidate.hidden,
+      )
       if (!canvas || canvas.width === 0 || canvas.height === 0) return null
       const ctx = canvas.getContext('2d', { willReadFrequently: true })
       if (!ctx) return null
@@ -390,7 +389,7 @@ const tests = [
     },
   },
   {
-    name: 'WebGL context loss does not report a false Canvas2D fallback',
+    name: 'WebGL context loss activates the live Canvas2D fallback',
     run: async (h) => {
       const { context, page } = await newContextPage(h)
       try {
@@ -403,7 +402,8 @@ const tests = [
           if (!canvas) throw new Error('overlay canvas not found')
           canvas.dispatchEvent(new Event('webglcontextlost', { cancelable: true }))
         })
-        await expectDebugValue(page, 'renderer', /^unavailable$/i, 3000)
+        await expectDebugValue(page, 'renderer', /^2d$/i, 3000)
+        await expectCanvasNonBlank(page, 3000)
       } finally {
         await context.close()
       }
@@ -628,23 +628,25 @@ const tests = [
 ]
 
 async function main() {
-  const harness = await createHarness()
+  let harness = null
   const failures = []
-
-  for (const test of tests) {
-    const started = Date.now()
-    try {
-      await test.run(harness)
-      const elapsed = Date.now() - started
-      console.log(`PASS ${test.name} (${elapsed}ms)`)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      failures.push(`${test.name}: ${message}`)
-      console.error(`FAIL ${test.name}: ${message}`)
+  try {
+    harness = await createHarness()
+    for (const test of tests) {
+      const started = Date.now()
+      try {
+        await test.run(harness)
+        const elapsed = Date.now() - started
+        console.log(`PASS ${test.name} (${elapsed}ms)`)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        failures.push(`${test.name}: ${message}`)
+        console.error(`FAIL ${test.name}: ${message}`)
+      }
     }
+  } finally {
+    if (harness) await destroyHarness(harness)
   }
-
-  await destroyHarness(harness)
 
   if (failures.length > 0) {
     console.error('\nE2E failures:')

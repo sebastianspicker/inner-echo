@@ -13,12 +13,15 @@ import {
 import { useAsyncEffect } from './useAsyncEffect'
 import { logger } from '../../utils/logger'
 
-function mergeControlValuesWithDefaults(
+const GLOBAL_CONTROL_KEYS = ['intensity', 'safeMode', 'reducedMotion', 'audioEnabled'] as const
+
+function mergeGlobalControlsWithDefaults(
   defaults: Record<string, number | boolean>,
   previous: Record<string, number | boolean>,
 ): Record<string, number | boolean> {
   const next: Record<string, number | boolean> = { ...defaults }
-  for (const [key, fallback] of Object.entries(defaults)) {
+  for (const key of GLOBAL_CONTROL_KEYS) {
+    const fallback = defaults[key]
     const prev = previous[key]
     if (typeof prev === typeof fallback) {
       next[key] = prev
@@ -32,7 +35,6 @@ export interface UseProfileLoadParams {
   composerMode: ComposerMode
   selectedPresets: SelectedPreset[]
   selectedDimensions: SelectedDimension[]
-  setIntensity: (v: number) => void
   intensity: number
   safeMode: boolean
   reducedMotion: boolean
@@ -53,7 +55,6 @@ export function useProfileLoad(params: UseProfileLoadParams): {
     composerMode,
     selectedPresets,
     selectedDimensions,
-    setIntensity,
     intensity,
     safeMode,
     reducedMotion,
@@ -86,10 +87,6 @@ export function useProfileLoad(params: UseProfileLoadParams): {
         setComposeReport(null)
         const defaults = getDefaultControlValues(prof, { reducedMotion })
         setControlValues(defaults)
-        const safe = prof.safety
-        if (typeof safe?.intensity_default === 'number') {
-          setIntensity(safe.intensity_default)
-        }
       } catch (err) {
         if (!ctx.cancelled) {
           setComposeReport(null)
@@ -101,7 +98,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
         setLoadingCount((c) => Math.max(0, c - 1))
       }
     },
-    [conditionId, composerMode, setIntensity],
+    [conditionId, composerMode],
     { onError: (err) => logger.error('loadProfile failed', err) },
   )
 
@@ -109,7 +106,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
     if (!profile) return
     setControlValues((prev) => {
       const next = getDefaultControlValues(profile, { reducedMotion })
-      for (const key of ['intensity', 'safeMode', 'audioEnabled'] as const) {
+      for (const key of GLOBAL_CONTROL_KEYS) {
         if (typeof prev[key] === typeof next[key]) next[key] = prev[key]
       }
       return next
@@ -137,7 +134,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
         setProfile(res.profile)
         setComposeReport(res.report)
         const defaults = getDefaultControlValues(res.profile, { reducedMotion })
-        setControlValues((prev) => mergeControlValuesWithDefaults(defaults, prev))
+        setControlValues((prev) => mergeGlobalControlsWithDefaults(defaults, prev))
       } catch (err) {
         if (!ctx.cancelled) {
           const fallback = createComposeFallbackProfile(

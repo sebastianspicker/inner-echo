@@ -82,9 +82,10 @@ Important hidden coupling:
   call this intentional: it translates profile JSON into live `VideoNode`s.
 - Profile `video_stack` order must match built-node indices used by UI controls,
   reactive mappings, and WebGL per-node control keys such as `0.amount`.
-- `ReactiveLoopOptions.getRms` in `webglPipeline.ts` is a back-compat path; the
-  current preferred path is `getAudioMetrics`.
-- `src/composer/composeCore.ts` re-exports some types for backward compatibility.
+- `webglPipeline.ts` consumes structured audio metrics through `getAudioMetrics`;
+  the legacy `getRms` path has been removed.
+- Composer types come from the composer type surface rather than compatibility
+  re-exports in `composeCore.ts`.
 - `ConditionComposerPanel` intentionally disables `audioEnabled` when applying a
   shared URL hash because a passive import is not a user gesture.
 
@@ -337,8 +338,8 @@ multimorbid/symptom mode -> composeEffectiveProfile(...) -> validated Profile or
   `videoMetricsRef`, overlay control ref.
 - Can fail: WebGL startup error, context loss, repeated GL errors, invalid dimensions,
   node disposal errors, missing metadata.
-- Failure surfaced: WebGL logs error/warning and switches to Canvas2D fallback;
-  fallback has no shader effects and `setParams` is a no-op.
+- Failure surfaced: WebGL logs error/warning, hides its canvas, and switches to
+  the dedicated Canvas2D fallback; if 2D cannot start, raw live video is exposed.
 - Tests: `webglLoop.test.ts`, `webglParams.test.ts`, `videoEffectNodes.test.ts`,
   `interferenceNode.test.ts`, contract tests, E2E WebGL console checks.
 - Wrong result without crash: Canvas2D fallback can make the app appear functional
@@ -448,13 +449,10 @@ multimorbid/symptom mode -> composeEffectiveProfile(...) -> validated Profile or
 
 ## Compatibility and Deprecation Layers
 
-- `src/ui/presetSnapshot.ts`: `migrateLegacyPresetPayload` and legacy key
-  `ie_custom_preset`.
-- `src/ui/ConditionComposerPanel.tsx`: migrates legacy preset storage into v2 library.
-- `src/engine/canvas/webglPipeline.ts`: `ReactiveLoopOptions.getRms` back-compat fallback.
-- `src/composer/composeCore.ts`: type re-exports for backward compatibility.
-- `src/conditions/graphBuilder.ts`: `chroma_aberration` alias for canonical
-  `chromatic_aberration`.
+- Removed in this remediation: the pre-v2 preset migration, `ReactiveLoopOptions.getRms`,
+  flat reactive overrides, and `composeCore.ts` type re-exports.
+- `src/conditions/graphBuilder.ts`: the deprecated `chroma_aberration` spelling
+  is normalized at the input boundary and is scheduled for removal in `0.2.0`.
 - `src/engine/audio/contextManager.ts`: `webkitAudioContext` fallback for older Safari.
 
 Do not remove these without proving current persisted hashes/localStorage, docs,

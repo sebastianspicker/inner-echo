@@ -5,6 +5,7 @@
 
 import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
+import { fastRandom } from '../../utils/fastRandom'
 import {
   applyUvParams,
   clamp,
@@ -128,7 +129,7 @@ export class IntrusionBurstNode implements VideoNode {
     this.material.uniforms.u_burst.value = 0
     if (this.burstGapTimer <= 0 && this.burstProbPerSec > 0) {
       const p = clamp(this.burstProbPerSec * delta, 0, 0.5)
-      if (Math.random() < p) this.burstTimer = this.burstDuration
+      if (fastRandom() < p) this.burstTimer = this.burstDuration
     }
   }
 

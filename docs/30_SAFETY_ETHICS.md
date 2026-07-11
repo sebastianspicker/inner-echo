@@ -101,6 +101,6 @@ See [SECURITY.md](SECURITY.md) for Permissions-Policy, CSP, and release checklis
 Experience → signal mappings are hypotheses supported by references/Scientific where indicated; otherwise they are labeled as evidence gaps. Examples of supported motifs (see [references/EVIDENCE_MATRIX.md](references/EVIDENCE_MATRIX.md)):
 
 - **Hyperarousal:** grain, edge_sharpen, vignette (video); compressor_limiter, highpass, noise_bed (audio). Avoid flicker and sudden loud transients. Source: evidence corpus (`docs/references/**`).
-- **Derealization:** haze, chroma_aberration (low), temporal_smear (low); lowpass, flutter, reverb. Avoid strong warping or glitch aesthetics. Source: evidence corpus (`docs/references/**`).
+- **Derealization:** haze, chromatic_aberration (low), temporal_smear (low); lowpass, flutter, reverb. Avoid strong warping or glitch aesthetics. Source: evidence corpus (`docs/references/**`).
 
 Do not present any mapping as a clinical or diagnostic claim.
