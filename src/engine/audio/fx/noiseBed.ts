@@ -4,7 +4,6 @@
 
 import type { AudioModule } from '../types'
 import { clamp } from '../../../utils/numeric'
-import { fastRandom } from '../../../utils/fastRandom'
 
 export interface NoiseBedParams {
   level?: number
@@ -35,7 +34,7 @@ function createNoiseBuffer(
   let pink2 = 0
   let brown = 0
   for (let i = 0; i < length; i++) {
-    const white = fastRandom() * 2 - 1
+    const white = Math.random() * 2 - 1
     if (color === 'white') {
       data[i] = white
       continue

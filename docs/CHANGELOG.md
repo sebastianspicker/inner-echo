@@ -1,15 +1,28 @@
 # Changelog
 
-## Unreleased
+## 2026-07-11 — Current local checkout (unreleased)
 
-- **Compatibility:** profile changes now preserve only global intensity, Safe Mode,
-  Reduced Motion, and audio-enabled controls; profile-local controls reset to the
-  incoming profile defaults.
-- **Compatibility:** stopped reading and migrating the retired `ie_custom_preset`
-  key. Existing storage is left untouched; only `ie_custom_presets_v2` is read.
-- **Deprecation:** `chroma_aberration` remains accepted at the profile input
-  boundary with one warning and will be removed in `0.2.0`; use
-  `chromatic_aberration`.
+### Public-alpha interface
+
+- Replaced modal onboarding with an in-flow, versioned welcome and explicit setup-before-camera flow.
+- Made experience dimensions the default path, with curated collections and advanced collection combination progressively disclosed while preserving saved/hash payload compatibility.
+- Kept Safe Mode, Reduced Motion, Start camera, and Stop Everything continuously reachable; removed idle control hiding and global single-character shortcuts.
+- Added truthful catalog, profile, permission, renderer, raw-preview, sound, and microphone states with scoped recovery actions.
+- Updated the Method & Evidence dialog, focus behavior, responsive structure, touch targets, contrast, and restrained media-lab visual system.
+- Deferred the audiovisual runtime from the initial entry bundle.
+
+### Repository and privacy cleanup
+
+- Expanded `.gitignore` for private environment values, credential/key formats, local analysis tools, editor/agent state, archives, reports, coverage, build output, and ad-hoc captures.
+- Kept `.env.example`, generated contract documentation, and the manifest-backed README screenshot set as intentional public artifacts.
+- Removed duplicate legacy screenshots and superseded local audit/index files that contained stale checkout-specific details.
+- Removed a personal contact address and unsupported response-time promise from public security documentation; clarified same-origin delivery and the absence of an offline cache.
+- Refreshed product, reliability, release, conditions, UX, and documentation-inventory text to match the local implementation.
+
+### Local verification evidence
+
+- Typecheck, 61-file/741-test Vitest run, coverage thresholds, production build, 208 contract checks, Chrome/Firefox/WebKit Playwright flows, and the ten-file screenshot manifest passed during the public-alpha overhaul.
+- The repository-wide lint gate still has one pre-existing formatting finding in `src/engine/canvas/videoMetrics.ts`; this cleanup does not alter that unrelated engine file.
 
 ## 2026-03-25
 

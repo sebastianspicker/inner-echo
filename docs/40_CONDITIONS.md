@@ -35,13 +35,15 @@ Evidence strength (dimension-level) is in [references/EVIDENCE_MATRIX.md](refere
 
 ---
 
-## Condition Composer (multimorbid + symptom-first)
+## Guided setup and composition
 
-The app supports a Condition Composer that can produce an effective overlay in three modes:
+The app exposes three user-facing setup modes:
 
-- **Preset (single)**: select one condition profile (classic flow).
-- **Multimorbid (stacked presets)**: select multiple condition profiles and blend them with per-preset weights.
-- **Symptom-first (dimensions)**: select experience dimensions directly and blend motif suggestions into an overlay (no pre-designed condition required).
+- **Experience dimensions**: the default guided path; select dimensions directly and blend motif suggestions without choosing a diagnosis-labelled profile.
+- **Curated collections**: select one contextual condition profile.
+- **Combine collections**: an advanced path that blends multiple curated collections with per-collection weights.
+
+Saved-preset schema v2 and shared URL payloads retain the internal wire values `symptom`, `preset`, and `multimorbid` for compatibility. Those implementation terms are not the public labels.
 
 Important framing:
 
@@ -53,7 +55,7 @@ Important framing:
 
 ### Nonlinear interaction option
 
-In Advanced settings, Interaction Amount introduces a conservative, code-defined interaction matrix that can slightly amplify certain dimension pairs (e.g. `hyperarousal` + `intrusion`). It's always clamped by safety limits.
+In advanced composition, Interaction Amount introduces a conservative, code-defined interaction matrix that can slightly amplify certain dimension pairs (e.g. `hyperarousal` + `intrusion`). It is always clamped by safety limits.
 
 ---
 

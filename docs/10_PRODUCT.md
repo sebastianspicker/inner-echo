@@ -2,6 +2,8 @@
 
 Canonical product doc. Merged from PRD, MVP, and user-story scope. Non-diagnostic, metaphorical framing only.
 
+For the public product position, audience, personality, anti-references, and accessibility commitment, see [`../PRODUCT.md`](../PRODUCT.md). This document remains the detailed implementation scope and MVP contract.
+
 ---
 
 ## Problem and solution
@@ -42,7 +44,7 @@ Many mental health experiences are difficult to understand from the outside beca
 ## Key features
 
 1. Webcam overlay rendering (Three.js VideoTexture)
-2. Condition selection (data-driven profiles from `src/conditions/`)
+2. Experience-dimension setup with contextual curated collections from `src/conditions/`
 3. Visual effect stacks (video nodes)
 4. Global Intensity, Safe Mode, Reduced Motion, Stop Everything
 5. Optional: audio synth and modulation (Audio → Video)
@@ -51,7 +53,7 @@ Many mental health experiences are difficult to understand from the outside beca
 
 ## MVP scope
 
-**In scope (MUST):** Webcam via `getUserMedia`; at least two data-driven conditions; video overlay stack (e.g. grain, vignette, chroma); condition picker from `catalog.json`; Intensity, Safe Mode, Reduced Motion, Stop Everything; onboarding/consent; no network calls; no storage/upload; microphone not default.
+**In scope (MUST):** Webcam via `getUserMedia`; data-driven experience dimensions and curated collections; video overlay stack (e.g. grain, vignette, chroma); Intensity, Safe Mode, Reduced Motion, Stop Everything; an explicit welcome/privacy preflight; no runtime network calls; no media recording or upload; disclosed local welcome/preset storage; microphone off by default.
 
 **MVP+ (optional):** WebAudio synth and FX chain; RMS analyser and modulation into video; dev-only debug panel.
 

@@ -1,12 +1,15 @@
 # Documentation Inventory
 
-Purpose: current, source-backed inventory of maintained documentation and generated artifacts.
+Purpose: current, source-backed inventory of maintained documentation and generated artifacts in the local checkout as of 2026-07-11.
 
 ## Canonical docs
 
 | Path | Status | Notes |
 |---|---|---|
 | `README.md` | canonical | Project overview and local dev entrypoint. |
+| `PRODUCT.md` | canonical | Public product position, audience, boundaries, and accessibility commitment. |
+| `DESIGN.md` | canonical | Public-alpha visual system and UI guardrails. |
+| `docs/frontend-ux-audit.md` | canonical | Source-reviewed public-alpha UX baseline and verification priorities. |
 | `docs/00_OVERVIEW.md` | canonical | Navigation index for docs. |
 | `docs/10_PRODUCT.md` | canonical | Product goals, scope, and non-goals. |
 | `docs/20_ARCHITECTURE.md` | canonical | Runtime architecture and module boundaries. |
@@ -46,9 +49,17 @@ Purpose: current, source-backed inventory of maintained documentation and genera
 |---|---|---|
 | `docs/archive/` | local archive | Historical migration, audit, plan, status, and ledger artifacts retained only for local context. This directory is ignored and should not be committed or used as active navigation. |
 
+## Public repository boundary
+
+- `assets/readme/screenshots/` is the only maintained public screenshot set. Its manifest is verified by `npm run screenshots:verify`.
+- `.env.example` contains non-secret local defaults. All other `.env*` files and common credential/key formats are ignored at any repository depth.
+- `.codacy/`, `.codegraph/`, `.serena/`, `.impeccable/`, `.codex/`, editor metadata, `reports/`, `coverage/`, `dist/`, and ad-hoc `screenshots/` are local-only.
+- Generated documentation under `docs/generated/` is public because it is reproducible from repository contracts. Build and analysis output is not public documentation.
+
 ## Cleanup policy
 
 - Keep canonical docs internally link-consistent.
 - Keep generated docs reproducible from scripts; do not hand-edit.
 - Keep historical and completed remediation artifacts out of active docs; archive them locally or delete them when superseded.
 - Remove duplicate stubs, phase scraps, plan files, ledgers, and status files when they are superseded.
+- Do not publish absolute workstation paths, private contact details, credentials, local tool state, or raw camera material.

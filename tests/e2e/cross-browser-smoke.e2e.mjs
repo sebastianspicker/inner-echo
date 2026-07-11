@@ -6,7 +6,7 @@ import { createDevServerHarness, destroyServerHarness } from './serverHarness.mj
 const HOST = process.env.HOST ?? '127.0.0.1'
 const PORT = Number(process.env.PORT ?? '4173')
 const BASE_URL = `http://${HOST}:${PORT}`
-const ONBOARDING_KEY = 'inner-echo-onboarding-accepted'
+const ONBOARDING_KEY = 'inner-echo-welcome-acknowledged-v2'
 
 const BROWSERS = [
   { name: 'chrome', launcher: chromium, launchOptions: { channel: 'chrome' } },
@@ -39,7 +39,7 @@ async function newContextPage(browser, viewport = { width: 1280, height: 720 }) 
 
 async function waitForAppShell(page) {
   await page
-    .locator('section[aria-label="Inner Echo — camera and controls"]')
+    .locator('section[aria-label="Inner Echo"]')
     .waitFor({ state: 'visible', timeout: 5000 })
   await page.getByRole('banner').waitFor({ state: 'visible', timeout: 5000 })
   await page
@@ -164,6 +164,7 @@ async function runSmoke(browserName, browser) {
   page.on('console', onConsole)
   try {
     await installFakeMedia(page)
+    await page.getByRole('radio', { name: /^curated collections$/i }).check()
     await page.getByRole('button', { name: /^start camera$/i }).click()
     await expectCameraStatus(page, /active/i, 3000)
 

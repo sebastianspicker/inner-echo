@@ -169,7 +169,7 @@ export function DebugPanel(props: DebugPanelProps) {
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Poll overlay diagnostics in dev so we don't need to lift overlay ref into React state.
-  function pollDiagnostics(): (() => void) | undefined {
+  useEffect(() => {
     if (!import.meta.env.DEV) return
     let rafId: number | null = null
     function tick(): void {
@@ -184,8 +184,7 @@ export function DebugPanel(props: DebugPanelProps) {
     return () => {
       if (rafId != null) cancelAnimationFrame(rafId)
     }
-  }
-  useEffect(pollDiagnostics, [
+  }, [
     getOverlayDiagnostics,
     getAudioMetrics,
     getVideoMetrics,
@@ -193,15 +192,14 @@ export function DebugPanel(props: DebugPanelProps) {
     getAppliedClamps,
   ])
 
-  function clearCopiedTimer(): () => void {
+  useEffect(() => {
     return () => {
       if (copiedTimeoutRef.current) {
         clearTimeout(copiedTimeoutRef.current)
         copiedTimeoutRef.current = null
       }
     }
-  }
-  useEffect(clearCopiedTimer, [])
+  }, [])
 
   const handleCopy = useCallback(() => {
     const text = formatDiagnosticsText(props, overlay)

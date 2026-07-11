@@ -9,20 +9,19 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useCatalog } from './hooks/useCatalog'
 import { useProfileLoad } from './hooks/useProfileLoad'
-import { useImmersiveIdleState } from './hooks/useImmersiveIdleState'
 import { useCameraController } from './hooks/useCameraController'
-import { useAudioController } from './hooks/useAudioController'
 import { useOverlayController } from './hooks/useOverlayController'
 import { useReactivePipeline } from './hooks/useReactivePipeline'
 import { logger } from '../utils/logger'
-import { profileHasTemporalNodes, TEMPORAL_NODE_TYPES } from '../conditions/graphBuilder'
+import { profileHasTemporalNodes, TEMPORAL_NODE_TYPES } from '../conditions/motionPolicy'
 import { CameraHeader } from './CameraHeader'
 import { CameraStage } from './CameraStage'
 import { AudioMicControls } from './AudioMicControls'
 import { EffectControls } from './EffectControls'
+import { SafetyControls } from './SafetyControls'
 
 import type { CatalogEntry, Profile } from '../conditions/schema'
-import type { OverlayControl, VideoMetrics } from '../engine/canvas'
+import type { OverlayControl, OverlayRuntimeState, VideoMetrics } from '../engine/canvas'
 import {
   clampIntensity,
   getReducedMotionDisableNodes,
@@ -31,7 +30,6 @@ import {
 import { requestVideoStream, stopVideoStream, type CameraState } from '../engine/video'
 import {
   startAudioContext,
-  closeAudioContext,
   createAudioEngine,
   type AudioEngineControl,
   type AudioContextStatus,
@@ -40,7 +38,7 @@ import {
 } from '../engine/audio'
 import { getCameraErrorMessage } from './cameraMessages'
 import { ConditionComposerPanel } from './ConditionComposerPanel'
-import { OnboardingModal, getOnboardingAccepted } from './OnboardingModal'
+import { WelcomeStep, getWelcomeAcknowledged } from './WelcomeStep'
 import { DebugPanel } from './DebugPanel'
 import type { EvidenceDocPath } from '../evidence/docs'
 import type { ComposerMode, SelectedDimension, SelectedPreset } from '../composer'
@@ -88,34 +86,8 @@ function clearVideoTrackEndHandlers(stream: MediaStream | null | undefined): voi
   }
 }
 
-function clearRuntimeCanvas(
-  canvas: HTMLCanvasElement | null,
-  webglCanvas: HTMLCanvasElement | null,
-): void {
-  if (!canvas || canvas.width <= 0 || canvas.height <= 0) return
-  const gl =
-    canvas === webglCanvas ? (canvas.getContext('webgl2') ?? canvas.getContext('webgl')) : null
-  if (gl) {
-    gl.clearColor(0, 0, 0, 0)
-    gl.clear(gl.COLOR_BUFFER_BIT)
-  } else {
-    canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height)
-  }
-  canvas.hidden = true
-}
-
-function isEditableTarget(target: EventTarget | null): boolean {
-  const node = target as HTMLElement | null
-  if (!node) return false
-  return (
-    ['input', 'textarea', 'select'].includes(node.tagName.toLowerCase()) || node.isContentEditable
-  )
-}
-
 function profileHasEnabledAudio(profile: Profile | null): boolean {
-  if (!profile) return false
-  if (!profile.audio_stack) return false
-  return profile.audio_stack.enabled === true
+  return profile?.audio_stack?.enabled === true
 }
 
 function selectAudioStack(
@@ -123,26 +95,25 @@ function selectAudioStack(
   profileHasAudio: boolean,
   audioRequested: boolean,
 ): Profile['audio_stack'] | null {
-  if (profileHasAudio) return profile?.audio_stack
-  if (!audioRequested) return { enabled: false }
-  return profile?.audio_stack ?? null
+  if (profileHasAudio) return profile?.audio_stack ?? { enabled: false }
+  if (audioRequested) return profile?.audio_stack ?? null
+  return { enabled: false }
 }
 
 function selectMasterVolume(profile: Profile | null, audioRequested: boolean): number {
-  if (!audioRequested) return 0
-  return profile?.audio_stack?.master?.volume ?? 0.22
+  return audioRequested ? (profile?.audio_stack?.master?.volume ?? 0.22) : 0
 }
 
 export function CameraView() {
-  const catalog = useCatalog()
+  const catalogLoad = useCatalog()
   const [conditionId, setConditionId] = useState(DEFAULT_CONDITION_ID)
-  const [composerMode, setComposerMode] = useState<ComposerMode>('preset')
+  const [composerMode, setComposerMode] = useState<ComposerMode>('symptom')
   const [selectedPresets, setSelectedPresets] = useState<SelectedPreset[]>([])
   const [selectedDimensions, setSelectedDimensions] = useState<SelectedDimension[]>([])
   const [cameraState, setCameraState] = useState<CameraState>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [intensity, setIntensity] = useState(DEFAULT_INTENSITY)
-  const [safeMode, setSafeMode] = useState(false)
+  const [safeMode, setSafeMode] = useState(true)
   const [stressMode, setStressMode] = useState(false)
   const [audioStatus, setAudioStatus] = useState<AudioContextStatus>('off')
   const [audioError, setAudioError] = useState<string | null>(null)
@@ -151,9 +122,10 @@ export function CameraView() {
   const [micStatus, setMicStatus] = useState<MicStatus>('off')
   const [micError, setMicError] = useState<string | null>(null)
   const [inputMode, setInputMode] = useState<AudioInputMode>('synth')
-  const [onboardingAccepted, setOnboardingAccepted] = useState(getOnboardingAccepted)
-  const [reducedMotion, setReducedMotion] = useState(false)
-  const [micEnabled, setMicEnabled] = useState(false)
+  const [welcomeAcknowledged, setWelcomeAcknowledged] = useState(getWelcomeAcknowledged)
+  const [reducedMotion, setReducedMotion] = useState(
+    () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
+  )
   const [micSensitivity, setMicSensitivity] = useState(0.5)
   const [micGate, setMicGate] = useState(0.25)
   const [couplingStrength, setCouplingStrength] = useState(0.5)
@@ -161,23 +133,37 @@ export function CameraView() {
   const [interactionAmount, setInteractionAmount] = useState(0.15)
   const [debugOverlay, setDebugOverlay] = useState(false)
   const [evidenceOpen, setEvidenceOpen] = useState(false)
+  const [overlayState, setOverlayState] = useState<OverlayRuntimeState>({
+    rendererMode: 'unavailable',
+    effectsActive: false,
+    error: null,
+  })
   const [evidenceDocPath, setEvidenceDocPath] = useState<EvidenceDocPath>(
     'docs/references/README.md',
   )
 
-  const { profile, composeReport, controlValues, setControlValues, isProfileLoading } =
-    useProfileLoad({
-      conditionId,
-      composerMode,
-      selectedPresets,
-      selectedDimensions,
-      intensity,
-      safeMode,
-      reducedMotion,
-      audioEnabled,
-      maxFeedback,
-      interactionAmount,
-    })
+  const {
+    profile,
+    composeReport,
+    controlValues,
+    setControlValues,
+    isProfileLoading,
+    profileLoadStatus,
+    profileLoadError,
+    retryProfileLoad,
+  } = useProfileLoad({
+    conditionId,
+    composerMode,
+    selectedPresets,
+    selectedDimensions,
+    setIntensity,
+    intensity,
+    safeMode,
+    reducedMotion,
+    audioEnabled,
+    maxFeedback,
+    interactionAmount,
+  })
 
   // Render-loop consumers should read settings from refs to avoid stale captures.
   // By using mutable refs, the WebGL render loop running at 60fps can read the latest UI slider
@@ -194,19 +180,18 @@ export function CameraView() {
   const streamRef = useRef<MediaStream | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const webglCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const fallbackCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const overlayControlRef = useRef<OverlayControl | null>(null)
   const audioEngineControlRef = useRef<AudioEngineControl | null>(null)
   const rmsDebugRef = useRef<HTMLSpanElement | null>(null)
   const videoMetricsRef = useRef<VideoMetrics | null>(null)
   const cameraRequestSeqRef = useRef(0)
-  const audioStartGenerationRef = useRef(0)
+  const audioRequestSeqRef = useRef(0)
   const reducedMotionPrevRef = useRef(reducedMotion)
   const profilePrevRef = useRef<Profile | null>(null)
   const profileRef = useRef<Profile | null>(profile)
   const audioEnabledRef = useRef(audioEnabled)
-  const audioDesiredOnRef = useRef(false)
   const cameraStateRef = useRef<CameraState>(cameraState)
 
   inputModeRef.current = inputMode
@@ -261,43 +246,7 @@ export function CameraView() {
    * Primary entry point to turn the camera on.
    * Prompts the user for device permissions via WebRTC `getUserMedia`.
    */
-  const handleVideoPlaybackFailure = (
-    err: unknown,
-    stream: MediaStream,
-    video: HTMLVideoElement,
-    requestSeq: number,
-  ): void => {
-    if (requestSeq !== cameraRequestSeqRef.current) return
-    if (import.meta.env?.DEV) logger.warn('video.play failed', err)
-    stopVideoStream(stream)
-    streamRef.current = null
-    video.srcObject = null
-    setCameraState('error')
-    setErrorMessage(
-      'The camera could not start playback. Please try clicking anywhere on the page and then restarting the camera.',
-    )
-  }
-
-  const activateVideoStream = (stream: MediaStream, requestSeq: number): void => {
-    streamRef.current = stream
-    for (const track of stream.getVideoTracks()) {
-      track.onended = () => handleCameraStreamInterrupted(stream, CAMERA_STREAM_INTERRUPTED_MESSAGE)
-    }
-    const video = videoRef.current
-    if (!video) {
-      setCameraState('active')
-      return
-    }
-    video.srcObject = stream
-    video
-      .play()
-      .then(() => {
-        if (requestSeq === cameraRequestSeqRef.current) setCameraState('active')
-      })
-      .catch((err) => handleVideoPlaybackFailure(err, stream, video, requestSeq))
-  }
-
-  const handleStart = async (): Promise<void> => {
+  const handleStart = useCallback(async () => {
     const requestSeq = ++cameraRequestSeqRef.current
     setErrorMessage(null)
     setCameraState('requesting')
@@ -309,7 +258,40 @@ export function CameraView() {
     }
 
     if (result.ok) {
-      activateVideoStream(result.stream, requestSeq)
+      streamRef.current = result.stream
+      const stream = result.stream
+      for (const track of stream.getVideoTracks()) {
+        track.onended = () => {
+          handleCameraStreamInterrupted(stream, CAMERA_STREAM_INTERRUPTED_MESSAGE)
+        }
+      }
+      const video = videoRef.current
+      if (video) {
+        video.srcObject = stream
+        video
+          .play()
+          .then(() => {
+            if (requestSeq !== cameraRequestSeqRef.current) return
+            setCameraState('active')
+          })
+          .catch((err) => {
+            if (requestSeq !== cameraRequestSeqRef.current) return
+            // Autoplay may be restricted; playsInline + srcObject often still shows first frame
+            if (import.meta.env?.DEV) {
+              logger.warn('video.play failed', err)
+            }
+            // Stop the camera stream since playback failed
+            stopVideoStream(stream)
+            streamRef.current = null
+            if (video) video.srcObject = null
+            setCameraState('error')
+            setErrorMessage(
+              'The camera could not start playback. Please try clicking anywhere on the page and then restarting the camera.',
+            )
+          })
+      } else {
+        setCameraState('active')
+      }
     } else {
       streamRef.current = null
       const isDenied =
@@ -317,7 +299,7 @@ export function CameraView() {
       setCameraState(isDenied ? 'denied' : 'error')
       setErrorMessage(getCameraErrorMessage(result.error))
     }
-  }
+  }, [handleCameraStreamInterrupted])
 
   useEffect(() => {
     const mediaDevices = navigator.mediaDevices
@@ -352,7 +334,7 @@ export function CameraView() {
     // Invalidate any in-flight camera request; stale streams are closed when they resolve.
     cameraRequestSeqRef.current += 1
     // Invalidate any in-flight audio start request.
-    audioStartGenerationRef.current += 1
+    audioRequestSeqRef.current += 1
     if (overlayControlRef.current) {
       overlayControlRef.current.stop()
       overlayControlRef.current = null
@@ -363,7 +345,6 @@ export function CameraView() {
     setAudioError(null)
     setMicStatus('off')
     setMicError(null)
-    setMicEnabled(false)
     clearVideoTrackEndHandlers(streamRef.current)
     stopVideoStream(streamRef.current ?? undefined)
     streamRef.current = null
@@ -371,9 +352,25 @@ export function CameraView() {
     if (video) {
       video.srcObject = null
     }
-    audioDesiredOnRef.current = false
-    clearRuntimeCanvas(webglCanvasRef.current, webglCanvasRef.current)
-    clearRuntimeCanvas(fallbackCanvasRef.current, webglCanvasRef.current)
+    const canvas = canvasRef.current
+    if (canvas && canvas.width > 0 && canvas.height > 0) {
+      // The canvas may be a WebGL context; trying getContext('2d') on a WebGL canvas
+      // returns null or throws. Try WebGL first, fall back to 2d.
+      const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl')
+      if (gl) {
+        gl.clearColor(0, 0, 0, 0)
+        gl.clear(gl.COLOR_BUFFER_BIT)
+      } else {
+        const ctx2d = canvas.getContext('2d')
+        if (ctx2d) ctx2d.clearRect(0, 0, canvas.width, canvas.height)
+      }
+    }
+    const fallbackCanvas = fallbackCanvasRef.current
+    const fallbackContext = fallbackCanvas?.getContext('2d')
+    if (fallbackCanvas && fallbackContext) {
+      fallbackContext.clearRect(0, 0, fallbackCanvas.width, fallbackCanvas.height)
+      fallbackCanvas.hidden = true
+    }
     setCameraState('idle')
     setErrorMessage(null)
   }, [])
@@ -382,8 +379,7 @@ export function CameraView() {
   useEffect(() => {
     return () => {
       cameraRequestSeqRef.current += 1
-      audioStartGenerationRef.current += 1
-      audioDesiredOnRef.current = false
+      audioRequestSeqRef.current += 1
       overlayControlRef.current?.stop()
       overlayControlRef.current = null
       audioEngineControlRef.current?.stop()
@@ -400,21 +396,17 @@ export function CameraView() {
     setMicStatus(status)
     setMicError(error ?? null)
     if (status === 'on') {
-      setMicEnabled(true)
       setInputMode('mix')
       audioEngineControlRef.current?.setInputMode('mix')
       return
     }
-    if (!['off', 'denied', 'error'].includes(status)) return
-    setMicEnabled(false)
-    if (inputModeRef.current === 'synth') return
+    if (!['off', 'denied', 'error'].includes(status) || inputModeRef.current === 'synth') return
     setInputMode('synth')
     audioEngineControlRef.current?.setInputMode('synth')
   }
 
-  function installAudioEngine(forceEnabled: boolean, startGeneration: number): void {
-    const previousControl = audioEngineControlRef.current
-    if (previousControl) previousControl.stop()
+  function installAudioEngine(forceEnabled: boolean, requestSeq: number): void {
+    audioEngineControlRef.current?.stop()
     audioEngineControlRef.current = null
     const currentProfile = profileRef.current
     const currentAudioEnabled = forceEnabled || audioEnabledRef.current
@@ -429,7 +421,7 @@ export function CameraView() {
       },
       onMicStatusChange: handleMicStatusChange,
     })
-    if (startGeneration !== audioStartGenerationRef.current) {
+    if (requestSeq !== audioRequestSeqRef.current) {
       control.stop()
       return
     }
@@ -446,43 +438,48 @@ export function CameraView() {
   const finishAudioStart = (
     status: AudioContextStatus,
     forceEnabled: boolean,
-    startGeneration: number,
+    requestSeq: number,
   ): void => {
-    if (startGeneration !== audioStartGenerationRef.current || !audioDesiredOnRef.current) {
-      if (!audioDesiredOnRef.current) void closeAudioContext()
-      return
-    }
-    if (status === 'on') installAudioEngine(forceEnabled, startGeneration)
+    if (requestSeq !== audioRequestSeqRef.current) return
+    if (status === 'on') installAudioEngine(forceEnabled, requestSeq)
     else setAudioStatus(status)
   }
 
-  const failAudioStart = (error: unknown, startGeneration: number): void => {
-    if (startGeneration !== audioStartGenerationRef.current) return
+  const failAudioStart = (error: unknown, requestSeq: number): void => {
+    if (requestSeq !== audioRequestSeqRef.current) return
     setAudioStatus('error')
     setAudioError(error instanceof Error ? error.message : String(error))
   }
 
-  const startAudio = (forceEnabled: boolean): void => {
-    const startGeneration = ++audioStartGenerationRef.current
-    audioDesiredOnRef.current = true
+  function startAudio(forceEnabled: boolean): void {
+    const requestSeq = ++audioRequestSeqRef.current
     setAudioError(null)
     setAudioStatus('starting')
     startAudioContext()
-      .then((status) => finishAudioStart(status, forceEnabled, startGeneration))
-      .catch((error) => failAudioStart(error, startGeneration))
+      .then((status) => finishAudioStart(status, forceEnabled, requestSeq))
+      .catch((error) => failAudioStart(error, requestSeq))
   }
 
   const handleEnableAudio = (): void => {
     startAudio(false)
   }
 
+  const handleDisableAudio = useCallback(() => {
+    audioRequestSeqRef.current += 1
+    audioEngineControlRef.current?.stop()
+    audioEngineControlRef.current = null
+    setAudioEnabled(false)
+    setAudioStatus('off')
+    setAudioError(null)
+    setMicStatus('off')
+    setMicError(null)
+    setInputMode('synth')
+  }, [])
+
   const handleAudioEnabledChange = (enabled: boolean): void => {
-    audioDesiredOnRef.current = enabled
     setAudioEnabled(enabled)
-    if (enabled && audioStatus !== 'on') {
+    if (enabled && audioStatus !== 'on' && audioStatus !== 'starting') {
       startAudio(true)
-    } else if (!enabled && audioStatus === 'starting') {
-      audioStartGenerationRef.current += 1
     }
   }
 
@@ -493,7 +490,6 @@ export function CameraView() {
 
   const handleEnableMic = useCallback(() => {
     setMicError(null)
-    setMicEnabled(true)
     setInputMode('mix')
     audioEngineControlRef.current?.setInputMode('mix')
     audioEngineControlRef.current?.requestMic()
@@ -505,37 +501,8 @@ export function CameraView() {
       setInputMode('synth')
       audioEngineControlRef.current?.setInputMode('synth')
     }
-    setMicEnabled(false)
     setMicStatus('off')
     setMicError(null)
-  }, [])
-
-  const { toggleMic: handleMicEnabledChange } = useAudioController({
-    audioStatus,
-    enableMic: handleEnableMic,
-    disableMic: handleDisableMic,
-    setMicEnabled,
-    setMicError,
-  })
-
-  const handleQuickPreset = useCallback((preset: 'calm' | 'balanced' | 'intense') => {
-    // Conservative defaults; clamps still apply at runtime.
-    if (preset === 'calm') {
-      setIntensity(0.25)
-      setCouplingStrength(0.2)
-      setInteractionAmount(0.1)
-      setMaxFeedback(0.25)
-    } else if (preset === 'balanced') {
-      setIntensity(0.5)
-      setCouplingStrength(0.5)
-      setInteractionAmount(0.15)
-      setMaxFeedback(0.35)
-    } else {
-      setIntensity(0.8)
-      setCouplingStrength(0.75)
-      setInteractionAmount(0.25)
-      setMaxFeedback(0.45)
-    }
   }, [])
 
   const handleInputModeChange = useCallback((mode: AudioInputMode) => {
@@ -569,7 +536,7 @@ export function CameraView() {
     reducedMotion,
     profile,
     videoRef,
-    webglCanvasRef,
+    canvasRef,
     fallbackCanvasRef,
     containerRef,
     overlayControlRef,
@@ -581,6 +548,7 @@ export function CameraView() {
     intensityRef,
     controlValuesRef,
     stressModeRef,
+    onOverlayStateChange: setOverlayState,
   })
 
   // Push params to the overlay when they change (only has effect when WebGL is active).
@@ -598,18 +566,17 @@ export function CameraView() {
   }, [intensity, safeMode, controlValues, stressMode, profile])
 
   // When condition changes and audio is on, rewire audio graph (with ramp).
-  function updateConditionAudio(): void {
+  useEffect(() => {
     if (audioStatus !== 'on' || !audioEngineControlRef.current) return
     const audioStack = audioEnabled ? (profile?.audio_stack ?? null) : { enabled: false }
     audioEngineControlRef.current.setConditionAudio(audioStack)
     const vol = audioEnabled ? (profile?.audio_stack?.master?.volume ?? 0.22) : 0
     setMasterVolume(vol)
     audioEngineControlRef.current.setMasterVolume(vol)
-  }
-  useEffect(updateConditionAudio, [profile?.audio_stack, audioStatus, audioEnabled])
+  }, [profile?.audio_stack, audioStatus, audioEnabled])
 
   // Dev-only live RMS display; avoid React state so the audio meter does not re-render each frame.
-  function updateRmsDebug(): (() => void) | undefined {
+  useEffect(() => {
     if (!import.meta.env.DEV || audioStatus !== 'on' || !debugOverlay) return
     let rafId: number | null = null
     function tick(): void {
@@ -623,10 +590,8 @@ export function CameraView() {
     return () => {
       if (rafId != null) cancelAnimationFrame(rafId)
     }
-  }
-  useEffect(updateRmsDebug, [audioStatus, debugOverlay])
+  }, [audioStatus, debugOverlay])
 
-  const isIdle = useImmersiveIdleState(cameraState)
   const cameraController = useCameraController({
     cameraState,
     audioStatus,
@@ -635,292 +600,333 @@ export function CameraView() {
     onStop: handleStop,
   })
 
-  function bindKeyboardShortcuts(): () => void {
-    const onKeyDown = (e: KeyboardEvent): void => {
-      if (isEditableTarget(e.target)) return
-      const key = e.key.toLowerCase()
-      if (key === 'k') {
-        e.preventDefault()
-        if (cameraController.isActive || cameraController.isRequesting) cameraController.stop()
-        else if (onboardingAccepted) cameraController.start()
-      } else if (key === 'e') {
-        e.preventDefault()
-        openEvidence('docs/references/README.md')
-      } else if (key === 'd' && import.meta.env.DEV) {
-        e.preventDefault()
-        setDebugOverlay((prev) => !prev)
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }
-  useEffect(bindKeyboardShortcuts, [cameraController, onboardingAccepted, openEvidence])
-
   const warnings: string[] = profile?.safety?.warnings ?? []
   const showReducedMotionHint = reducedMotion && profile != null && profileHasTemporalNodes(profile)
   const activeVideoNodeIds = getActiveVideoNodeIds(profile, reducedMotion)
   const profileDefinesReducedMotionControl = (profile?.ui?.controls ?? []).some(
     (c) => c.id === 'reduced_motion',
   )
+  const effectsLabel =
+    cameraState !== 'active'
+      ? 'Off'
+      : overlayState.effectsActive
+        ? 'Active'
+        : overlayState.rendererMode === 'webgl'
+          ? 'Clean preview'
+          : overlayState.rendererMode === '2d' || overlayState.rendererMode === 'raw'
+            ? 'Raw preview'
+            : 'Unavailable'
 
   return (
-    <section
-      className={`ie-shell ${isIdle ? 'ie-shell--idle' : ''}`}
-      aria-label="Inner Echo — camera and controls"
-    >
-      {!onboardingAccepted && <OnboardingModal onAccept={() => setOnboardingAccepted(true)} />}
-
+    <section className="ie-shell" aria-label="Inner Echo">
       <CameraHeader
         cameraState={cameraState}
         audioStatus={audioStatus}
         audioEnabled={audioEnabled}
-        isRequesting={cameraController.isRequesting}
-        isActive={cameraController.isActive}
+        effectsLabel={effectsLabel}
         canStop={cameraController.canStop}
-        onboardingAccepted={onboardingAccepted}
         onOpenEvidence={openEvidence}
-        onStart={cameraController.start}
         onStop={cameraController.stop}
       />
 
-      {errorMessage && (
-        <div className="ie-callout ie-callout--error" role="alert" aria-label="Camera notice">
-          <div className="ie-calloutTitle">A gentle note</div>
-          <div className="ie-calloutBody">{errorMessage}</div>
-        </div>
-      )}
+      <div className="ie-liveRegion" role="status" aria-live="polite" aria-atomic="true">
+        Camera {cameraState}. Effects {effectsLabel}. Sound {audioStatus}.
+      </div>
 
-      {warnings.length > 0 && (
-        <div
-          className="ie-callout ie-callout--warn"
-          role="region"
-          aria-label="Things to be aware of"
-        >
-          <div className="ie-calloutTitle">Please be aware</div>
-          <ul className="ie-calloutList">
-            {warnings.map((w) => (
-              <li key={w}>{w}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="ie-layout" aria-label="Main layout">
-        <CameraStage
-          containerRef={containerRef}
-          videoRef={videoRef}
-          webglCanvasRef={webglCanvasRef}
-          fallbackCanvasRef={fallbackCanvasRef}
-          rmsDebugRef={rmsDebugRef}
-          isActive={cameraController.isActive}
-          audioStatus={audioStatus}
-          debugOverlay={debugOverlay}
-        />
-
-        <aside className="ie-panel" aria-label="Controls panel">
-          <div className="ie-panelScroll">
-            {!onboardingAccepted && (
-              <p id="onboarding-required-desc" className="ie-hint" role="status">
-                Please review the welcome message above before beginning.
-              </p>
-            )}
-
-            <div className="ie-panelSection" aria-label="Condition and settings">
-              {isProfileLoading && (
-                <p className="ie-hint" role="status" aria-live="polite">
-                  Preparing your experience\u2026
-                </p>
-              )}
-              <ConditionComposerPanel
-                catalog={catalog ?? DEFAULT_PICKER_OPTIONS}
-                mode={composerMode}
-                onModeChange={setComposerMode}
-                conditionId={conditionId}
-                onConditionIdChange={setConditionId}
-                presets={selectedPresets}
-                onPresetsChange={setSelectedPresets}
-                dimensions={selectedDimensions}
-                onDimensionsChange={setSelectedDimensions}
-                intensity={intensity}
-                onIntensityChange={setIntensity}
-                safeMode={safeMode}
-                onSafeModeChange={setSafeMode}
-                reducedMotion={reducedMotion}
-                onReducedMotionChange={setReducedMotion}
-                audioEnabled={audioEnabled}
-                onAudioEnabledChange={handleAudioEnabledChange}
-                micEnabled={micEnabled}
-                onMicEnabledChange={handleMicEnabledChange}
-                micRequiresAudio={audioStatus !== 'on'}
-                micRequiresAudioHint="To use the microphone, please enable audio first. Both are entirely optional."
-                couplingStrength={couplingStrength}
-                onCouplingStrengthChange={setCouplingStrength}
-                maxFeedback={maxFeedback}
-                onMaxFeedbackChange={setMaxFeedback}
-                interactionAmount={interactionAmount}
-                onInteractionAmountChange={setInteractionAmount}
-                debugOverlay={debugOverlay}
-                onDebugOverlayChange={setDebugOverlay}
-                onQuickPreset={handleQuickPreset}
-                onOpenEvidence={openEvidence}
-              />
-
-              {!profileDefinesReducedMotionControl && showReducedMotionHint && (
-                <p className="ie-hint" role="status">
-                  Reduced Motion is on. Some animated effects have been gently paused for your
-                  comfort.
-                </p>
-              )}
-            </div>
-
-            {import.meta.env.DEV && (
-              <details className="ie-panelSection">
-                <summary className="ie-summary">Composer report (dev)</summary>
-                <div className="ie-panelBody">
-                  {composerMode === 'preset' && (
-                    <p className="ie-hint">
-                      Only shown in Multimorbid or Symptom-first mode. In Preset mode a single
-                      condition is loaded; no composition report.
-                    </p>
-                  )}
-                  {composerMode !== 'preset' && composeReport && (
-                    <>
-                      {composeReport.missingPresets.length > 0 && (
-                        <>
-                          <div className="ie-subsectionTitle">Missing presets</div>
-                          <ul className="ie-codeList">
-                            {composeReport.missingPresets.map((id) => (
-                              <li key={id}>
-                                <code>{id}</code>
-                              </li>
-                            ))}
-                          </ul>
-                        </>
-                      )}
-                      {(composeReport.missingNodes.video.length > 0 ||
-                        composeReport.missingNodes.audio.length > 0) && (
-                        <>
-                          <div className="ie-subsectionTitle">Missing nodes (not applied)</div>
-                          <ul className="ie-codeList">
-                            {composeReport.missingNodes.video.map((n) => (
-                              <li key={`v-${n}`}>
-                                video: <code>{n}</code>
-                              </li>
-                            ))}
-                            {composeReport.missingNodes.audio.map((n) => (
-                              <li key={`a-${n}`}>
-                                audio: <code>{n}</code>
-                              </li>
-                            ))}
-                          </ul>
-                        </>
-                      )}
-                      {composeReport.evidence.gaps.length > 0 && (
-                        <>
-                          <div className="ie-subsectionTitle">Evidence gaps</div>
-                          <ul className="ie-codeList">
-                            {composeReport.evidence.gaps.map((g) => (
-                              <li key={`${g.dimensionId}-${g.reason}`}>
-                                <code>{g.dimensionId}</code>: {g.reason}
-                              </li>
-                            ))}
-                          </ul>
-                        </>
-                      )}
-                      {composeReport.missingPresets.length === 0 &&
-                        composeReport.missingNodes.video.length === 0 &&
-                        composeReport.missingNodes.audio.length === 0 &&
-                        (composeReport.evidence.gaps?.length ?? 0) === 0 && (
-                          <p className="ie-hint">
-                            Composition applied. No missing presets or nodes.
-                          </p>
-                        )}
-                    </>
-                  )}
-                </div>
-              </details>
-            )}
-
-            <AudioMicControls
-              audioStatus={audioStatus}
-              audioEnabled={audioEnabled}
-              audioError={audioError}
-              masterVolume={masterVolume}
-              micStatus={micStatus}
-              micError={micError}
-              micSensitivity={micSensitivity}
-              micGate={micGate}
-              inputMode={inputMode}
-              onEnableAudio={handleEnableAudio}
-              onEnableMic={handleEnableMic}
-              onDisableMic={handleDisableMic}
-              onMasterVolumeChange={handleMasterVolumeChange}
-              onMicSensitivityChange={(v) => {
-                setMicSensitivity(v)
-                audioEngineControlRef.current?.setMicSensitivity?.(v)
-              }}
-              onMicGateChange={(v) => {
-                setMicGate(v)
-                audioEngineControlRef.current?.setMicGate?.(v)
-              }}
-              onInputModeChange={handleInputModeChange}
-            />
-
-            {cameraController.isActive && (
-              <EffectControls
-                profile={profile}
-                intensity={intensity}
-                safeMode={safeMode}
-                stressMode={stressMode}
-                reducedMotion={reducedMotion}
-                audioEnabled={audioEnabled}
-                controlValues={controlValues}
-                onIntensityChange={setIntensity}
-                onSafeModeChange={setSafeMode}
-                onStressModeChange={setStressMode}
-                onReducedMotionChange={setReducedMotion}
-                onAudioEnabledChange={handleAudioEnabledChange}
-                onControlValuesChange={setControlValues}
-              />
-            )}
-
-            {import.meta.env.DEV && (
-              <div className="ie-panelSection" role="group" aria-label="Debug (development only)">
-                <label className="ie-toggle">
-                  <input
-                    type="checkbox"
-                    aria-label="Debug overlay (dev)"
-                    checked={debugOverlay}
-                    onChange={(e) => setDebugOverlay(e.target.checked)}
-                  />
-                  <span>Debug overlay (dev)</span>
-                </label>
-                {debugOverlay && (
-                  <DebugPanel
-                    getOverlayDiagnostics={getOverlayDiagnostics}
-                    audioStatus={audioStatus}
-                    micStatus={micStatus}
-                    lastError={errorMessage ?? audioError ?? micError}
-                    getAudioMetrics={() => audioEngineControlRef.current?.getMetrics?.()}
-                    getVideoMetrics={() => videoMetricsRef.current ?? undefined}
-                    getAudioDebugState={getAudioDebugState}
-                    getAppliedClamps={getAppliedClamps}
-                    couplingStrength={couplingStrength}
-                    maxFeedback={maxFeedback}
-                    micSensitivity={micSensitivity}
-                    micGate={micGate}
-                  />
-                )}
-                {debugOverlay && activeVideoNodeIds.length > 0 && (
-                  <p className="ie-hint" role="status">
-                    Active video nodes: {activeVideoNodeIds.join(', ')}
-                  </p>
-                )}
+      <main className="ie-main">
+        {!welcomeAcknowledged ? (
+          <WelcomeStep
+            onContinue={() => setWelcomeAcknowledged(true)}
+            onOpenEvidence={openEvidence}
+          />
+        ) : (
+          <>
+            {errorMessage && (
+              <div className="ie-callout ie-callout--error" role="alert" aria-label="Camera notice">
+                <div className="ie-calloutTitle">Camera problem</div>
+                <div className="ie-calloutBody">{errorMessage}</div>
               </div>
             )}
-          </div>
-        </aside>
-      </div>
+
+            {catalogLoad.status === 'error' && (
+              <div className="ie-callout ie-callout--error" role="alert">
+                <div className="ie-calloutTitle">Setup unavailable</div>
+                <div className="ie-calloutBody">
+                  {catalogLoad.error} A limited fallback list is available.{' '}
+                  <button type="button" className="ie-inlineAction" onClick={catalogLoad.retry}>
+                    Retry catalog
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {profileLoadStatus === 'error' && (
+              <div className="ie-callout ie-callout--error" role="alert">
+                <div className="ie-calloutTitle">Experience fallback active</div>
+                <div className="ie-calloutBody">
+                  {profileLoadError}{' '}
+                  <button type="button" className="ie-inlineAction" onClick={retryProfileLoad}>
+                    Retry experience
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {cameraState === 'active' &&
+              !overlayState.effectsActive &&
+              overlayState.rendererMode !== 'webgl' && (
+                <div className="ie-callout ie-callout--warn" role="status">
+                  <div className="ie-calloutTitle">Effects unavailable</div>
+                  <div className="ie-calloutBody">
+                    Showing the unmodified camera preview. Comfort and Stop controls remain
+                    available.
+                  </div>
+                </div>
+              )}
+
+            {warnings.length > 0 && (
+              <div
+                className="ie-callout ie-callout--warn"
+                role="region"
+                aria-label="Things to be aware of"
+              >
+                <div className="ie-calloutTitle">Please be aware</div>
+                <ul className="ie-calloutList">
+                  {warnings.map((w) => (
+                    <li key={w}>{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="ie-layout" aria-label="Experience workspace">
+              <div className="ie-stageColumn">
+                <CameraStage
+                  containerRef={containerRef}
+                  videoRef={videoRef}
+                  webglCanvasRef={canvasRef}
+                  fallbackCanvasRef={fallbackCanvasRef}
+                  rmsDebugRef={rmsDebugRef}
+                  isActive={cameraController.isActive}
+                  audioStatus={audioStatus}
+                  debugOverlay={debugOverlay}
+                />
+                <SafetyControls
+                  intensity={intensity}
+                  safeMode={safeMode}
+                  reducedMotion={reducedMotion}
+                  isRequesting={cameraController.isRequesting}
+                  isActive={cameraController.isActive}
+                  canStart={welcomeAcknowledged}
+                  canStop={cameraController.canStop}
+                  onIntensityChange={setIntensity}
+                  onSafeModeChange={setSafeMode}
+                  onReducedMotionChange={setReducedMotion}
+                  onStart={cameraController.start}
+                  onStop={cameraController.stop}
+                />
+              </div>
+
+              <aside className="ie-panel" aria-label="Controls panel">
+                <div className="ie-panelScroll">
+                  <div className="ie-panelSection" aria-label="Condition and settings">
+                    {isProfileLoading && (
+                      <p className="ie-hint" role="status" aria-live="polite">
+                        Preparing your experience\u2026
+                      </p>
+                    )}
+                    <ConditionComposerPanel
+                      catalog={catalogLoad.catalog ?? DEFAULT_PICKER_OPTIONS}
+                      mode={composerMode}
+                      onModeChange={setComposerMode}
+                      conditionId={conditionId}
+                      onConditionIdChange={setConditionId}
+                      presets={selectedPresets}
+                      onPresetsChange={setSelectedPresets}
+                      dimensions={selectedDimensions}
+                      onDimensionsChange={setSelectedDimensions}
+                      intensity={intensity}
+                      onIntensityChange={setIntensity}
+                      safeMode={safeMode}
+                      onSafeModeChange={setSafeMode}
+                      reducedMotion={reducedMotion}
+                      onReducedMotionChange={setReducedMotion}
+                      audioEnabled={audioEnabled}
+                      onAudioEnabledChange={handleAudioEnabledChange}
+                      couplingStrength={couplingStrength}
+                      onCouplingStrengthChange={setCouplingStrength}
+                      maxFeedback={maxFeedback}
+                      onMaxFeedbackChange={setMaxFeedback}
+                      interactionAmount={interactionAmount}
+                      onInteractionAmountChange={setInteractionAmount}
+                      onOpenEvidence={openEvidence}
+                    />
+
+                    {!profileDefinesReducedMotionControl && showReducedMotionHint && (
+                      <p className="ie-hint" role="status">
+                        Reduced Motion is on. Motion-heavy and temporal effects are disabled.
+                      </p>
+                    )}
+                  </div>
+
+                  {import.meta.env.DEV && (
+                    <details className="ie-panelSection">
+                      <summary className="ie-summary">Composer report (dev)</summary>
+                      <div className="ie-panelBody">
+                        {composerMode === 'preset' && (
+                          <p className="ie-hint">
+                            Only shown when combining collections or choosing experience dimensions.
+                            A single curated collection does not need a composition report.
+                          </p>
+                        )}
+                        {composerMode !== 'preset' && composeReport && (
+                          <>
+                            {composeReport.missingPresets.length > 0 && (
+                              <>
+                                <div className="ie-subsectionTitle">Missing presets</div>
+                                <ul className="ie-codeList">
+                                  {composeReport.missingPresets.map((id) => (
+                                    <li key={id}>
+                                      <code>{id}</code>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </>
+                            )}
+                            {(composeReport.missingNodes.video.length > 0 ||
+                              composeReport.missingNodes.audio.length > 0) && (
+                              <>
+                                <div className="ie-subsectionTitle">
+                                  Missing nodes (not applied)
+                                </div>
+                                <ul className="ie-codeList">
+                                  {composeReport.missingNodes.video.map((n) => (
+                                    <li key={`v-${n}`}>
+                                      video: <code>{n}</code>
+                                    </li>
+                                  ))}
+                                  {composeReport.missingNodes.audio.map((n) => (
+                                    <li key={`a-${n}`}>
+                                      audio: <code>{n}</code>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </>
+                            )}
+                            {composeReport.evidence.gaps.length > 0 && (
+                              <>
+                                <div className="ie-subsectionTitle">Evidence gaps</div>
+                                <ul className="ie-codeList">
+                                  {composeReport.evidence.gaps.map((g) => (
+                                    <li key={`${g.dimensionId}-${g.reason}`}>
+                                      <code>{g.dimensionId}</code>: {g.reason}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </>
+                            )}
+                            {composeReport.missingPresets.length === 0 &&
+                              composeReport.missingNodes.video.length === 0 &&
+                              composeReport.missingNodes.audio.length === 0 &&
+                              (composeReport.evidence.gaps?.length ?? 0) === 0 && (
+                                <p className="ie-hint">
+                                  Composition applied. No missing presets or nodes.
+                                </p>
+                              )}
+                          </>
+                        )}
+                      </div>
+                    </details>
+                  )}
+
+                  <AudioMicControls
+                    audioStatus={audioStatus}
+                    audioEnabled={audioEnabled}
+                    audioError={audioError}
+                    masterVolume={masterVolume}
+                    micStatus={micStatus}
+                    micError={micError}
+                    micSensitivity={micSensitivity}
+                    micGate={micGate}
+                    inputMode={inputMode}
+                    onEnableAudio={handleEnableAudio}
+                    onDisableAudio={handleDisableAudio}
+                    onEnableMic={handleEnableMic}
+                    onDisableMic={handleDisableMic}
+                    onMasterVolumeChange={handleMasterVolumeChange}
+                    onMicSensitivityChange={(v) => {
+                      setMicSensitivity(v)
+                      audioEngineControlRef.current?.setMicSensitivity?.(v)
+                    }}
+                    onMicGateChange={(v) => {
+                      setMicGate(v)
+                      audioEngineControlRef.current?.setMicGate?.(v)
+                    }}
+                    onInputModeChange={handleInputModeChange}
+                  />
+
+                  {cameraController.isActive && (
+                    <EffectControls
+                      profile={profile}
+                      intensity={intensity}
+                      safeMode={safeMode}
+                      stressMode={stressMode}
+                      reducedMotion={reducedMotion}
+                      audioEnabled={audioEnabled}
+                      controlValues={controlValues}
+                      onIntensityChange={setIntensity}
+                      onSafeModeChange={setSafeMode}
+                      onStressModeChange={setStressMode}
+                      onReducedMotionChange={setReducedMotion}
+                      onAudioEnabledChange={handleAudioEnabledChange}
+                      onControlValuesChange={setControlValues}
+                    />
+                  )}
+
+                  {import.meta.env.DEV && (
+                    <div
+                      className="ie-panelSection"
+                      role="group"
+                      aria-label="Debug (development only)"
+                    >
+                      <label className="ie-toggle">
+                        <input
+                          type="checkbox"
+                          aria-label="Debug overlay (dev)"
+                          checked={debugOverlay}
+                          onChange={(e) => setDebugOverlay(e.target.checked)}
+                        />
+                        <span>Debug overlay (dev)</span>
+                      </label>
+                      {debugOverlay && (
+                        <DebugPanel
+                          getOverlayDiagnostics={getOverlayDiagnostics}
+                          audioStatus={audioStatus}
+                          micStatus={micStatus}
+                          lastError={errorMessage ?? audioError ?? micError}
+                          getAudioMetrics={() => audioEngineControlRef.current?.getMetrics?.()}
+                          getVideoMetrics={() => videoMetricsRef.current ?? undefined}
+                          getAudioDebugState={getAudioDebugState}
+                          getAppliedClamps={getAppliedClamps}
+                          couplingStrength={couplingStrength}
+                          maxFeedback={maxFeedback}
+                          micSensitivity={micSensitivity}
+                          micGate={micGate}
+                        />
+                      )}
+                      {debugOverlay && activeVideoNodeIds.length > 0 && (
+                        <p className="ie-hint" role="status">
+                          Active video nodes: {activeVideoNodeIds.join(', ')}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </aside>
+            </div>
+          </>
+        )}
+      </main>
 
       {evidenceOpen && (
         <Suspense fallback={null}>

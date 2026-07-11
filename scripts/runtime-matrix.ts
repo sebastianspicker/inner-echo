@@ -4,18 +4,17 @@
  * Launches Vite dev server and drives the UI in a headless browser with fake camera/mic.
  * Asserts:
  * - no page errors / console errors
- * - onboarding can be accepted
+ * - welcome disclosure can be continued without starting media
  * - camera can start and stop ("Stop Everything")
- * - composer modes can be exercised (preset, multimorbid, symptom-first; hybrid by switching)
+ * - setup modes can be exercised (curated collections, combined collections, dimensions)
  * - audio can be enabled; mic can be enabled; calibration sliders work
  */
 
 import { spawn } from 'node:child_process'
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright'
-import { validateLoopbackHost, validatePort } from '../tests/e2e/serverHarness.mjs'
 
-const DESIRED_PORT = validatePort(process.env.PORT ?? 5173)
-const HOST = validateLoopbackHost(process.env.HOST ?? '127.0.0.1')
+const DESIRED_PORT = Number(process.env.PORT ?? 5173)
+const HOST = process.env.HOST ?? '127.0.0.1'
 const argv = new Set(process.argv.slice(2))
 const REQUIRE_AUDIO = process.env.REQUIRE_AUDIO === '1' || argv.has('--require-audio')
 const REQUIRE_MIC = process.env.REQUIRE_MIC === '1' || argv.has('--require-mic')
@@ -61,7 +60,7 @@ async function startDevServer(): Promise<{ proc: ReturnType<typeof spawn>; baseU
     const text = data.toString('utf-8')
     pushOut(text)
     const m = text.match(/http:\/\/(?:localhost|127\.0\.0\.1):(\d+)\//)
-    if (m?.[1]) baseUrl = `http://${HOST}:${validatePort(m[1])}/`
+    if (m?.[1]) baseUrl = `http://${HOST}:${m[1]}/`
   }
   proc.stdout?.on('data', onData)
   proc.stderr?.on('data', onData)
@@ -231,13 +230,11 @@ async function runFlow(page: Page, baseUrl: string): Promise<void> {
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded' })
   await installFakeMedia(page)
 
-  // Onboarding
-  const onboardingCheckbox = page.getByRole('checkbox', {
-    name: /I understand and feel ready to begin/i,
-  })
-  if (await onboardingCheckbox.isVisible().catch(() => false)) {
-    await onboardingCheckbox.check()
-    await page.getByRole('button', { name: /Begin your experience/i }).click()
+  // Continue through the in-flow welcome. This persists acknowledgement but
+  // deliberately does not request camera, microphone, or audio.
+  const continueToSetup = page.getByRole('button', { name: /Continue to setup/i })
+  if (await continueToSetup.isVisible().catch(() => false)) {
+    await continueToSetup.click()
   }
 
   // Start camera
@@ -290,37 +287,39 @@ async function runFlow(page: Page, baseUrl: string): Promise<void> {
     }
   }
 
-  // Switch to multimorbid and select two presets
-  await page.getByRole('radio', { name: 'Multimorbid' }).check()
-  const mm = page.getByRole('group', { name: /Multimorbid preset stack/i })
+  // Switch to combined collections and select two collections.
+  await page.getByRole('radio', { name: 'Combine collections' }).check()
+  const mm = page.getByRole('group', { name: /Combined curated collections/i })
   const mmBoxes = mm.getByRole('checkbox')
   await mmBoxes.nth(0).check()
   await mmBoxes.nth(1).check()
 
-  // Switch to symptom-first and select two dimensions (hybrid test: presets remain selected)
-  await page.getByRole('radio', { name: 'Symptom-first' }).check()
-  const sym = page.getByRole('group', { name: /Symptom-first dimensions/i })
+  // Switch to experience dimensions and select two dimensions. Previously
+  // selected collections remain available when switching back.
+  await page.getByRole('radio', { name: 'Experience dimensions' }).check()
+  const sym = page.getByRole('group', { name: /Experience dimensions/i })
   const symBoxes = sym.getByRole('checkbox')
   await symBoxes.nth(0).check()
   await symBoxes.nth(1).check()
 
-  // Turn on mic via composer toggle (requests mic if audio is on)
+  // Turn on mic through the explicit audio surface (requests mic if audio is on).
   if (audioIsOn) {
-    const micToggle = page.getByRole('checkbox', { name: /Microphone \(optional\)/i })
+    const micGroup = page.getByRole('group', { name: /Microphone \(optional\)/i })
+    const enableMic = micGroup.getByRole('button', { name: /Enable microphone/i })
     try {
-      await micToggle.check()
-      await page.getByText('Mic: on', { exact: false }).waitFor({ timeout: 20_000 })
+      await enableMic.click()
+      await micGroup.getByText('Mic: on', { exact: false }).waitFor({ timeout: 20_000 })
       // Calibrate mic (sliders exist only when mic is on)
       const micSensitivity = page.getByRole('slider', { name: /Mic sensitivity/i })
       await micSensitivity.evaluate((el) => {
         const input = el as HTMLInputElement
-        input.value = '70'
+        input.value = '0.7'
         input.dispatchEvent(new Event('input', { bubbles: true }))
       })
       const micGate = page.getByRole('slider', { name: /Noise gate/i })
       await micGate.evaluate((el) => {
         const input = el as HTMLInputElement
-        input.value = '35'
+        input.value = '0.35'
         input.dispatchEvent(new Event('input', { bubbles: true }))
       })
     } catch (e) {

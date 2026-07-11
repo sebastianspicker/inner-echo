@@ -1,6 +1,6 @@
 /**
  * User-facing camera status and error messages.
- * Language is kept warm and reassuring for a therapeutic context.
+ * Messages identify the failure and give a concrete recovery action.
  */
 
 import type { CameraState } from '../engine/video'
@@ -32,7 +32,7 @@ export function getCameraErrorMessage(error: DOMException): string {
     case 'OverconstrainedError':
       return 'The requested camera settings are not supported by your device. The experience will still work with default settings.'
     case 'AbortError':
-      return 'Camera access was interrupted. You can try again whenever you feel ready.'
+      return 'Camera access was interrupted. Check the device connection, then try again.'
     case 'NotSupportedError':
       return 'Camera access is not available in this browser. For the best experience, try a recent version of Chrome, Firefox, or Safari.'
     default:

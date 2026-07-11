@@ -67,19 +67,21 @@ function makeParams(overrides: Partial<UseProfileLoadParams> = {}): UseProfileLo
 
 function deferred<T>() {
   let resolve!: (value: T) => void
-  const promise = new Promise<T>((res) => {
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((res, rej) => {
     resolve = res
+    reject = rej
   })
-  return { promise, resolve }
+  return { promise, resolve, reject }
 }
 
-afterEach(() => {
-  cleanup()
-  loadProfileMock.mockReset()
-  composeEffectiveProfileMock.mockReset()
-})
+describe('ui/hooks/useProfileLoad', () => {
+  afterEach(() => {
+    cleanup()
+    loadProfileMock.mockReset()
+    composeEffectiveProfileMock.mockReset()
+  })
 
-describe('ui/hooks/useProfileLoad preset loading', () => {
   it('loads a preset profile without requiring an audio preference setter', async () => {
     loadProfileMock.mockResolvedValue(makeProfile('anxiety'))
     const params = makeParams({ audioEnabled: true })
@@ -90,9 +92,7 @@ describe('ui/hooks/useProfileLoad preset loading', () => {
       expect(result.current.profile?.id).toBe('anxiety')
     })
   })
-})
 
-describe('ui/hooks/useProfileLoad stale requests', () => {
   it('clears loading state when a stale preset load resolves after a newer selection', async () => {
     const slow = deferred<Profile>()
     const fast = deferred<Profile>()
@@ -121,7 +121,12 @@ describe('ui/hooks/useProfileLoad stale requests', () => {
 
     await waitFor(() => {
       expect(result.current.profile?.id).toBe('fast')
+      expect(result.current.profileLoadStatus).toBe('ready')
     })
+
+    // The obsolete request is still pending, but it must not keep the current
+    // selection in a loading state.
+    expect(result.current.isProfileLoading).toBe(false)
 
     await act(async () => {
       slow.resolve(makeProfile('slow'))
@@ -132,10 +137,9 @@ describe('ui/hooks/useProfileLoad stale requests', () => {
       expect(result.current.isProfileLoading).toBe(false)
     })
     expect(result.current.profile?.id).toBe('fast')
+    expect(result.current.profileLoadStatus).toBe('ready')
   })
-})
 
-describe('ui/hooks/useProfileLoad composition fallback', () => {
   it('uses an explicit fallback instead of stale profile state when composition rejects', async () => {
     loadProfileMock.mockResolvedValue(makeProfile('anxiety'))
     composeEffectiveProfileMock.mockRejectedValue(new Error('compose failed'))
@@ -164,9 +168,47 @@ describe('ui/hooks/useProfileLoad composition fallback', () => {
     await waitFor(() => {
       expect(result.current.profile?.id).toBe('composed_fallback')
       expect(result.current.isProfileLoading).toBe(false)
+      expect(result.current.profileLoadStatus).toBe('error')
+      expect(result.current.profileLoadError).toMatch(/clean fallback/i)
     })
     expect(result.current.profile?.id).not.toBe('anxiety')
     expect(result.current.profile?.video_stack).toEqual([])
     expect(result.current.composeReport).toBeNull()
+  })
+
+  it('retries a rejected preset load and clears the explicit error state on success', async () => {
+    loadProfileMock
+      .mockRejectedValueOnce(new Error('profile unavailable'))
+      .mockResolvedValueOnce(makeProfile('anxiety'))
+    const params = makeParams()
+
+    const { result } = renderHook(() => useProfileLoad(params))
+
+    await waitFor(() => {
+      expect(result.current.profileLoadStatus).toBe('error')
+      expect(result.current.profile?.id).toBe('none')
+    })
+
+    act(() => result.current.retryProfileLoad())
+
+    await waitFor(() => {
+      expect(result.current.profileLoadStatus).toBe('ready')
+      expect(result.current.profileLoadError).toBeNull()
+      expect(result.current.profile?.id).toBe('anxiety')
+    })
+    expect(loadProfileMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not report ready when the preset loader returns no profile', async () => {
+    loadProfileMock.mockResolvedValue(null)
+    const params = makeParams()
+
+    const { result } = renderHook(() => useProfileLoad(params))
+
+    await waitFor(() => {
+      expect(result.current.profileLoadStatus).toBe('error')
+      expect(result.current.isProfileLoading).toBe(false)
+      expect(result.current.profile?.id).toBe('none')
+    })
   })
 })

@@ -35,7 +35,7 @@ export function CameraStage({
       )}
       {!isActive && (
         <div className="ie-placeholder" aria-hidden="true">
-          Take your time. Begin when you feel ready.
+          Camera is off. Review setup and comfort controls before starting.
         </div>
       )}
     </div>

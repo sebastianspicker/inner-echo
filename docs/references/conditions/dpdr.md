@@ -25,7 +25,7 @@
 
 These motifs are used by the included dimensions. Each motif is an **artistic/engineering implementation** of a metaphor; the evidence applies primarily to the dimension phenomena.
 
-- `chromatic_aberration` — Minor RGB channel offset near edges (very low). — `docs/references/motifs/chromatic_aberration.md`
+- `chroma_aberration` — Minor RGB channel offset near edges (very low). — `docs/references/motifs/chromatic_aberration.md`
 - `color_grade` — Adjusts saturation/contrast/tonal balance (clamped). — `docs/references/motifs/color_grade.md`
 - `compressor_limiter` — Reduces peaks and smooths dynamics (safety-first). — `docs/references/motifs/compressor_limiter.md`
 - `delay` — Short echo with low feedback/mix (clamped). — `docs/references/motifs/delay.md`

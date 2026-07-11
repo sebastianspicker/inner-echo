@@ -1,15 +1,17 @@
 import assert from 'node:assert/strict'
 import { setTimeout as delay } from 'node:timers/promises'
 import { chromium } from 'playwright'
-import { createBrowserServerHarness, destroyBrowserServerHarness } from './serverHarness.mjs'
+import { createDevServerHarness, destroyServerHarness } from './serverHarness.mjs'
 
 const HOST = process.env.HOST ?? '127.0.0.1'
 const PORT = Number(process.env.PORT ?? '4173')
 const BASE_URL = `http://${HOST}:${PORT}`
-const ONBOARDING_KEY = 'inner-echo-onboarding-accepted'
+const ONBOARDING_KEY = 'inner-echo-welcome-acknowledged-v2'
 
 async function createHarness() {
-  return createBrowserServerHarness(BASE_URL, HOST, PORT, launchChromium)
+  const server = await createDevServerHarness(BASE_URL, HOST, PORT)
+  const browser = await launchChromium()
+  return { browser, ...server }
 }
 
 async function launchChromium() {
@@ -27,7 +29,8 @@ async function launchChromium() {
 }
 
 async function destroyHarness(h) {
-  await destroyBrowserServerHarness(h)
+  await h.browser.close()
+  await destroyServerHarness(h)
 }
 
 async function newContextPage(h, viewport = { width: 1280, height: 720 }) {
@@ -55,7 +58,7 @@ async function newFirstRunPage(h, viewport = { width: 1280, height: 720 }) {
 
 async function waitForAppShell(page) {
   await page
-    .locator('section[aria-label="Inner Echo — camera and controls"]')
+    .locator('section[aria-label="Inner Echo"]')
     .waitFor({ state: 'visible', timeout: 5000 })
   await page.getByRole('banner').waitFor({ state: 'visible', timeout: 5000 })
   await page
@@ -172,9 +175,7 @@ async function expectCanvasNonBlank(page, timeoutMs) {
   const started = Date.now()
   while (Date.now() - started < timeoutMs) {
     const stats = await page.evaluate(() => {
-      const canvas = Array.from(document.querySelectorAll('canvas')).find(
-        (candidate) => !candidate.hidden,
-      )
+      const canvas = document.querySelector('.ie-canvas:not([hidden])')
       if (!canvas || canvas.width === 0 || canvas.height === 0) return null
       const ctx = canvas.getContext('2d', { willReadFrequently: true })
       if (!ctx) return null
@@ -266,44 +267,75 @@ async function collectConsole(page, run) {
 
 const tests = [
   {
-    name: 'first-run onboarding gates camera access until consent is accepted',
+    name: 'first-run welcome separates disclosure, setup, and camera activation',
     run: async (h) => {
       const { context, page } = await newFirstRunPage(h)
       try {
-        const onboarding = page.getByRole('dialog', { name: /welcome to inner echo/i })
-        await onboarding.waitFor({ state: 'visible', timeout: 5000 })
+        const welcome = page.getByRole('heading', { name: /explore experience/i })
+        await welcome.waitFor({ state: 'visible', timeout: 5000 })
+        assert.equal(await page.getByRole('button', { name: /^start camera$/i }).count(), 0)
 
+        await page.getByRole('button', { name: /continue to setup/i }).click()
+        await welcome.waitFor({ state: 'hidden', timeout: 3000 })
         const startCameraButton = page.getByRole('button', { name: /^start camera$/i })
-        assert.equal(
-          await startCameraButton.isDisabled(),
-          true,
-          'Start camera must be disabled before onboarding acceptance',
-        )
-
-        const beginButton = page.getByRole('button', { name: /^begin your experience$/i })
-        assert.equal(
-          await beginButton.isDisabled(),
-          true,
-          'Begin must require the consent checkbox',
-        )
-
-        await page.keyboard.press('Escape')
-        await onboarding.waitFor({ state: 'visible', timeout: 1000 })
-
-        await page.getByRole('checkbox', { name: /ready to begin/i }).check()
-        assert.equal(await beginButton.isEnabled(), true, 'Begin should enable after consent')
-        await beginButton.click()
-        await onboarding.waitFor({ state: 'hidden', timeout: 3000 })
         assert.equal(
           await startCameraButton.isEnabled(),
           true,
-          'Start camera should be enabled after onboarding acceptance',
+          'Start camera should be enabled after the separate welcome step',
         )
         assert.equal(
           await page.evaluate((key) => localStorage.getItem(key), ONBOARDING_KEY),
           'true',
-          'Onboarding acceptance should persist in localStorage',
+          'Welcome acknowledgement should persist in localStorage',
         )
+      } finally {
+        await context.close()
+      }
+    },
+  },
+  {
+    name: 'comfort defaults inherit system reduced motion without starting media',
+    run: async (h) => {
+      const context = await h.browser.newContext({
+        viewport: { width: 390, height: 844 },
+        reducedMotion: 'reduce',
+      })
+      const page = await context.newPage()
+      await page.addInitScript((key) => localStorage.setItem(key, 'true'), ONBOARDING_KEY)
+      try {
+        await page.goto(BASE_URL, { waitUntil: 'networkidle' })
+        await waitForAppShell(page)
+        assert.equal(await page.getByLabel('Safe Mode').isChecked(), true)
+        assert.equal(await page.getByLabel('Reduced Motion').isChecked(), true)
+        await expectCameraStatus(page, /ready/i, 3000)
+        assert.match(
+          await page.getByRole('status', { name: 'Runtime status' }).innerText(),
+          /audio\s+off/i,
+        )
+      } finally {
+        await context.close()
+      }
+    },
+  },
+  {
+    name: 'stop remains reachable after inactivity at 320px without horizontal overflow',
+    run: async (h) => {
+      const { context, page } = await newContextPage(h, { width: 320, height: 720 })
+      try {
+        await installFakeMedia(page)
+        await startCamera(page)
+        await delay(5200)
+        const stop = page.getByRole('button', {
+          name: /stop camera, microphone, sound, and effects/i,
+        })
+        assert.equal(await stop.isVisible(), true)
+        assert.equal(await stop.isEnabled(), true)
+        assert.equal(
+          await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+          true,
+        )
+        await stop.click()
+        await expectCameraStatus(page, /ready/i, 3000)
       } finally {
         await context.close()
       }
@@ -314,18 +346,15 @@ const tests = [
     run: async (h) => {
       const { context, page } = await newContextPage(h)
       try {
-        await page.getByRole('button', { name: /^open evidence & method$/i }).click()
-        await page
-          .locator('.evidence-backdrop:not(.evidence-backdrop--hidden)')
-          .waitFor({ state: 'visible', timeout: 5000 })
+        await page.getByRole('button', { name: /^open method and evidence$/i }).click()
+        await page.locator('dialog.evidence-dialog').waitFor({ state: 'visible', timeout: 5000 })
         await expectElementText(page, '#evidence-title', /evidence & method/i, 5000)
         await expectElementText(page, '.evidence-content', /non-diagnostic disclaimer/i, 5000)
 
-        await page.getByRole('button', { name: /^close evidence viewer$/i }).click()
-        await page
-          .locator('.evidence-backdrop.evidence-backdrop--hidden')
-          .waitFor({ state: 'hidden', timeout: 3000 })
+        await page.getByRole('button', { name: /^close$/i }).click()
+        await page.locator('dialog.evidence-dialog').waitFor({ state: 'hidden', timeout: 3000 })
 
+        await page.getByLabel('Curated collections').check()
         await page.locator('#condition-picker').selectOption('anxiety')
         await page
           .getByRole('button', {
@@ -345,6 +374,7 @@ const tests = [
       const { context, page } = await newContextPage(h)
       try {
         await installFakeMedia(page)
+        await page.getByRole('radio', { name: /^curated collections$/i }).check()
         await startCamera(page)
         const capture = await collectConsole(page, async () => {
           await page.evaluate(async () => {
@@ -389,7 +419,7 @@ const tests = [
     },
   },
   {
-    name: 'WebGL context loss activates the live Canvas2D fallback',
+    name: 'WebGL context loss reports 2D preview instead of active effects',
     run: async (h) => {
       const { context, page } = await newContextPage(h)
       try {
@@ -403,7 +433,6 @@ const tests = [
           canvas.dispatchEvent(new Event('webglcontextlost', { cancelable: true }))
         })
         await expectDebugValue(page, 'renderer', /^2d$/i, 3000)
-        await expectCanvasNonBlank(page, 3000)
       } finally {
         await context.close()
       }
@@ -417,8 +446,8 @@ const tests = [
         await installFakeMedia(page)
         await startCamera(page)
         const capture = await collectConsole(page, async () => {
-          await page.getByRole('radio', { name: /^multimorbid$/i }).check()
-          const multimorbid = page.locator('[aria-label="Multimorbid preset stack"]')
+          await page.getByRole('radio', { name: /^combine collections$/i }).check()
+          const multimorbid = page.locator('[aria-label="Combined curated collections"]')
           await assert.doesNotReject(async () => {
             await multimorbid.waitFor({ state: 'visible', timeout: 3000 })
           })
@@ -436,8 +465,8 @@ const tests = [
           }
           await waitForAnimationFrames(page, 2)
 
-          await page.getByRole('radio', { name: /^symptom-first$/i }).check()
-          const symptom = page.locator('[aria-label="Symptom-first dimensions"]')
+          await page.getByRole('radio', { name: /^experience dimensions$/i }).check()
+          const symptom = page.locator('[aria-label="Experience dimensions"]')
           await assert.doesNotReject(async () => {
             await symptom.waitFor({ state: 'visible', timeout: 3000 })
           })
@@ -460,7 +489,7 @@ const tests = [
             'Expected symptom summary to list selected dimensions',
           )
 
-          await page.getByRole('radio', { name: /^preset$/i }).check()
+          await page.getByRole('radio', { name: /^curated collections$/i }).check()
           await assert.doesNotReject(async () => {
             await page.locator('#condition-picker').waitFor({ state: 'visible', timeout: 3000 })
           })
@@ -523,26 +552,15 @@ const tests = [
     },
   },
   {
-    name: 'microphone toggle is disabled until audio is enabled and hint is visible',
+    name: 'sound and microphone controls have one explicit gesture-gated surface',
     run: async (h) => {
       const { context, page } = await newContextPage(h)
       try {
-        const result = await page.evaluate(() => {
-          const toggleLabels = Array.from(
-            document.querySelectorAll('.composer__toggles .composer__toggle'),
-          )
-          const micLabel = toggleLabels.find((l) =>
-            (l.textContent ?? '').toLowerCase().includes('microphone'),
-          )
-          const micInput = micLabel?.querySelector('input[type="checkbox"]')
-          const hint = document.querySelector('.composer__micPrereqHint')
-          return {
-            micDisabled: !!micInput?.disabled,
-            hintVisible: !!hint,
-          }
-        })
-        assert.equal(result.micDisabled, true, 'Mic toggle should be disabled when audio is off')
-        assert.equal(result.hintVisible, true, 'Mic precondition hint should be visible')
+        assert.equal(await page.getByLabel('Audio (optional)').count(), 0)
+        assert.equal(await page.getByLabel('Microphone (optional)').count(), 0)
+        await page.getByText('Audio & microphone', { exact: true }).click()
+        await page.getByRole('button', { name: /^enable audio$/i }).waitFor({ state: 'visible' })
+        assert.equal(await page.getByRole('button', { name: /enable microphone/i }).count(), 0)
       } finally {
         await context.close()
       }
@@ -628,25 +646,23 @@ const tests = [
 ]
 
 async function main() {
-  let harness = null
+  const harness = await createHarness()
   const failures = []
-  try {
-    harness = await createHarness()
-    for (const test of tests) {
-      const started = Date.now()
-      try {
-        await test.run(harness)
-        const elapsed = Date.now() - started
-        console.log(`PASS ${test.name} (${elapsed}ms)`)
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err)
-        failures.push(`${test.name}: ${message}`)
-        console.error(`FAIL ${test.name}: ${message}`)
-      }
+
+  for (const test of tests) {
+    const started = Date.now()
+    try {
+      await test.run(harness)
+      const elapsed = Date.now() - started
+      console.log(`PASS ${test.name} (${elapsed}ms)`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      failures.push(`${test.name}: ${message}`)
+      console.error(`FAIL ${test.name}: ${message}`)
     }
-  } finally {
-    if (harness) await destroyHarness(harness)
   }
+
+  await destroyHarness(harness)
 
   if (failures.length > 0) {
     console.error('\nE2E failures:')
