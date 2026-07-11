@@ -1,5 +1,5 @@
 /**
- * Phase 7: Compressor/limiter (DynamicsCompressorNode) for safe ceiling.
+ * Compressor/limiter (DynamicsCompressorNode) for a safe output ceiling.
  */
 
 import type { AudioModule } from '../types'

@@ -79,4 +79,21 @@ describe('ui/ConditionPicker', () => {
     const options = screen.queryAllByRole('option')
     expect(options).toHaveLength(0)
   })
+
+  it('keeps a selected condition visible when it is missing from the catalog', () => {
+    render(<ConditionPicker catalog={mockCatalog} value="panic" onChange={vi.fn()} />)
+    const select = screen.getByRole('combobox', { name: /experience/i })
+    expect(select).toHaveValue('panic')
+    expect(screen.getByRole('option', { name: 'panic (unavailable)' })).toBeInTheDocument()
+    expect(
+      screen.getByText('Selected experience is unavailable in the current catalog.'),
+    ).toBeInTheDocument()
+  })
+
+  it('keeps a selected condition visible when the catalog is absent', () => {
+    render(<ConditionPicker catalog={null} value="panic" onChange={vi.fn()} />)
+    const options = screen.getAllByRole('option')
+    expect(options).toHaveLength(1)
+    expect(options[0]).toHaveValue('panic')
+  })
 })

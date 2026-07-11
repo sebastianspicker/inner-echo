@@ -12,6 +12,7 @@
 
 import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
+import { fastRandom } from '../../utils/fastRandom'
 import {
   applyUvParams,
   clamp,
@@ -47,7 +48,7 @@ void main() {
   float n = hash(vec2(uv.y * 93.7, uv.x * 17.3)) - 0.5;
 
   float strength = u_amount * (0.65 + 0.35 * u_burst);
-  float lift = (band - 0.5) * 0.14 * strength + n * 0.06 * strength;
+  float lift = (band - 0.5) * 0.46 * strength + n * 0.16 * strength;
   color.rgb += lift;
 
   gl_FragColor = clamp(color, 0.0, 1.0);
@@ -127,7 +128,7 @@ export class InterferenceNode implements VideoNode {
     if (this.burstGapTimer <= 0 && this.burstProbPerSec > 0) {
       // Poisson-like: probability per second.
       const p = clamp(this.burstProbPerSec * delta, 0, 0.5)
-      if (Math.random() < p) {
+      if (fastRandom() < p) {
         this.burstTimer = this.burstDuration
       }
     }

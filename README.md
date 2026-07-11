@@ -1,5 +1,7 @@
 # inner-echo
 
+[![CI](https://github.com/sebastianspicker/inner-echo/actions/workflows/ci.yml/badge.svg)](https://github.com/sebastianspicker/inner-echo/actions/workflows/ci.yml)
+
 Privacy-first, client-only webcam overlay app for metaphor-based experience framing.
 
 ## At a Glance (Public-Facing)
@@ -21,6 +23,14 @@ It is built to be:
 - deterministic test and screenshot pipelines (Playwright + Vitest)
 
 No backend is required for core runtime behavior.
+
+For code orientation, start with:
+- [`src/app/App.tsx`](src/app/App.tsx) — mounts the application shell.
+- [`src/ui/CameraView.tsx`](src/ui/CameraView.tsx) — coordinates UI state, camera/audio permissions, and runtime controllers.
+- [`src/ui/hooks/useProfileLoad.ts`](src/ui/hooks/useProfileLoad.ts) — loads preset profiles or composer output.
+- [`src/ui/hooks/useReactivePipeline.ts`](src/ui/hooks/useReactivePipeline.ts) — starts the video overlay loop and AV coupling layer.
+- [`src/conditions/graphBuilder.ts`](src/conditions/graphBuilder.ts) — translates profile JSON into executable video nodes.
+- [`src/engine/audio/audioEngine.ts`](src/engine/audio/audioEngine.ts) and [`src/engine/canvas/webglPipeline.ts`](src/engine/canvas/webglPipeline.ts) — own WebAudio and WebGL runtime resources.
 
 ## What This Repository Is
 
@@ -54,12 +64,31 @@ Canonical references:
 
 ## Quick Start
 
+Prerequisite: Node.js 22, matching CI.
+
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
 Open `http://127.0.0.1:5173` (or the Vite host shown in your terminal).
+
+Useful local checks:
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run verify
+```
+
+Browser E2E checks use Playwright with a deterministic synthetic camera stream:
+
+```bash
+npm run browsers:install # once per machine
+npm run test:e2e
+npm run test:e2e:preview
+```
 
 ## Architecture Flow
 

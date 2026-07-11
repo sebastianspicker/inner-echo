@@ -12,7 +12,7 @@
 
 These are the conservative *default-enabled* motifs used by the composer when this dimension is selected:
 
-- **Video nodes**: `haze`, `chroma_aberration`, `temporal_smear`, `color_grade`
+- **Video nodes**: `haze`, `chromatic_aberration`, `temporal_smear`, `color_grade`
 - **Audio nodes**: `flutter`, `lowpass`, `reverb`, `compressor_limiter`
 
 ## Motif-by-motif traceability (evidence vs likelihood vs artistic)
@@ -26,7 +26,7 @@ Each motif below includes:
 | Motif (node) | What it does in the simulation | Claim label | Likelihood label | Sources |
 |---|---|---|---|---|
 | `haze` | Adds soft fog/veil (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/haze.md` |
-| `chroma_aberration` | Minor RGB channel offset near edges (very low). | **Artistic** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/chroma_aberration.md`, `docs/references/CONTRIBUTIONS_AND_LIMITS.md` |
+| `chromatic_aberration` | Minor RGB channel offset near edges (very low). | **Artistic** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/chromatic_aberration.md`, `docs/references/CONTRIBUTIONS_AND_LIMITS.md` |
 | `temporal_smear` | Blends previous frames for persistence/smear (feedback clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/temporal_smear.md` |
 | `color_grade` | Adjusts saturation/contrast/tonal balance (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/color_grade.md` |
 | `flutter` | Low-depth pitch/phase wobble (clamped). | **Mixed** | **Medium** | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/flutter.md` |

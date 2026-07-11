@@ -8,11 +8,7 @@ import type {
   RangeCheckResult,
 } from '../src/contractVerification/types'
 
-function rel(p: string): string {
-  return p.replaceAll(path.sep, '/')
-}
-
-function mdIssue(issue: ContractIssue): string {
+const mdIssue = (issue: ContractIssue): string => {
   const where = [
     issue.sourceFile,
     issue.location,
@@ -26,7 +22,7 @@ function mdIssue(issue: ContractIssue): string {
   }${where ? ` — ${where}` : ''}`
 }
 
-function mdRange(r: RangeCheckResult): string {
+const mdRange = (r: RangeCheckResult): string => {
   return `- [${r.status.toUpperCase()}] \`${r.kind}.${r.node}.${r.param}\` min=${String(
     r.min,
   )} max=${String(r.max)} observedMin=${String(
@@ -34,14 +30,14 @@ function mdRange(r: RangeCheckResult): string {
   )} observedMax=${String(r.observedMax)} — ${r.message}`
 }
 
-function mdPolicy(p: PolicyCheckResult): string {
+const mdPolicy = (p: PolicyCheckResult): string => {
   const target = [p.node, p.param].filter(Boolean).join('.')
   return `- [${p.status.toUpperCase()}] profile=\`${p.profileId}\` policy=\`${
     p.policy
   }\`${target ? ` target=\`${target}\`` : ''} — ${p.message}`
 }
 
-function toMarkdown(report: ContractVerificationReport): string {
+const toMarkdown = (report: ContractVerificationReport): string => {
   const lines: string[] = []
   lines.push('# Contract Verification Report')
   lines.push('')
@@ -93,7 +89,7 @@ function toMarkdown(report: ContractVerificationReport): string {
   return lines.join('\n')
 }
 
-function logWarnings(warnings: ContractIssue[]): void {
+const logWarnings = (warnings: ContractIssue[]): void => {
   for (const warning of warnings) {
     const msg = `${warning.code}: ${warning.message}`
     if (process.env.GITHUB_ACTIONS === 'true') {
@@ -104,7 +100,7 @@ function logWarnings(warnings: ContractIssue[]): void {
   }
 }
 
-function main(): void {
+const main = (): void => {
   const rootDir = process.cwd()
   const report = verifyContracts(rootDir)
 
@@ -130,6 +126,10 @@ function main(): void {
   if (report.errors.length > 0) {
     process.exitCode = 1
   }
+}
+
+const rel = (p: string): string => {
+  return p.replaceAll(path.sep, '/')
 }
 
 main()

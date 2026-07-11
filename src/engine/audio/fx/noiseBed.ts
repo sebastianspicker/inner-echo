@@ -1,9 +1,10 @@
 /**
- * Phase 7: Noise bed — filtered noise for texture (profile chain node).
+ * Noise bed: filtered noise texture for profile audio chains.
  */
 
 import type { AudioModule } from '../types'
 import { clamp } from '../../../utils/numeric'
+import { fastRandom } from '../../../utils/fastRandom'
 
 export interface NoiseBedParams {
   level?: number
@@ -34,7 +35,7 @@ function createNoiseBuffer(
   let pink2 = 0
   let brown = 0
   for (let i = 0; i < length; i++) {
-    const white = Math.random() * 2 - 1
+    const white = fastRandom() * 2 - 1
     if (color === 'white') {
       data[i] = white
       continue
@@ -63,18 +64,21 @@ export function createNoiseBed(
   const level = clamp(params.level ?? DEFAULT_LEVEL, 0, MAX_LEVEL)
   let color = normalizeColor(params.color)
 
+  const input = context.createGain()
+  input.gain.value = 1
+
+  const output = context.createGain()
+  const noiseGain = context.createGain()
+  noiseGain.gain.value = level
+
   let source = context.createBufferSource()
   source.buffer = createNoiseBuffer(context, color, 3)
   source.loop = true
-
-  const gain = context.createGain()
-  gain.gain.value = level
-  source.connect(gain)
+  source.connect(noiseGain)
   source.start(0)
 
-  const input = context.createGain()
-  input.gain.value = 0
-  input.connect(gain)
+  input.connect(output)
+  noiseGain.connect(output)
 
   let replacePending = false
 
@@ -91,7 +95,7 @@ export function createNoiseBed(
     const newSource = context.createBufferSource()
     newSource.buffer = createNoiseBuffer(context, nextColor, 3)
     newSource.loop = true
-    newSource.connect(gain)
+    newSource.connect(noiseGain)
     newSource.start(0)
     source = newSource
     replacePending = false
@@ -99,7 +103,7 @@ export function createNoiseBed(
 
   return {
     connect(destination: AudioNode): void {
-      gain.connect(destination)
+      output.connect(destination)
     },
     getInput(): AudioNode {
       return input
@@ -107,7 +111,7 @@ export function createNoiseBed(
     setParams(p: Record<string, unknown>): void {
       const l = p.level as number | undefined
       if (typeof l === 'number')
-        gain.gain.setValueAtTime(clamp(l, 0, MAX_LEVEL), context.currentTime)
+        noiseGain.gain.setValueAtTime(clamp(l, 0, MAX_LEVEL), context.currentTime)
       const c = p.color as string | undefined
       if (typeof c === 'string') {
         const nextColor = normalizeColor(c)
@@ -124,8 +128,9 @@ export function createNoiseBed(
         // ignore
       }
       source.disconnect()
-      gain.disconnect()
       input.disconnect()
+      output.disconnect()
+      noiseGain.disconnect()
     },
   }
 }

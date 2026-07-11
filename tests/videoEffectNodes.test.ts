@@ -15,6 +15,11 @@ import {
   FocusJitterNode,
   FeedbackLoopNode,
   GridHintNode,
+  GazeTunnelNode,
+  SomaticPulseNode,
+  IntrusionBurstNode,
+  SalienceCompetitionNode,
+  GlassVeilNode,
 } from '../src/engine/effects'
 import type { VideoNode, VideoNodeParams } from '../src/engine/effects/VideoNode'
 
@@ -90,6 +95,36 @@ const nodeEntries: NodeEntry[] = [
     hasTick: true,
   },
   { name: 'GridHintNode', create: () => new GridHintNode(), isTemporal: false, hasTick: false },
+  {
+    name: 'GazeTunnelNode',
+    create: () => new GazeTunnelNode(),
+    isTemporal: false,
+    hasTick: false,
+  },
+  {
+    name: 'SomaticPulseNode',
+    create: () => new SomaticPulseNode(),
+    isTemporal: false,
+    hasTick: true,
+  },
+  {
+    name: 'IntrusionBurstNode',
+    create: () => new IntrusionBurstNode(),
+    isTemporal: false,
+    hasTick: true,
+  },
+  {
+    name: 'SalienceCompetitionNode',
+    create: () => new SalienceCompetitionNode(),
+    isTemporal: false,
+    hasTick: true,
+  },
+  {
+    name: 'GlassVeilNode',
+    create: () => new GlassVeilNode(),
+    isTemporal: true,
+    hasTick: true,
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -246,6 +281,11 @@ describe('engine/effects (VideoNode implementations)', () => {
       expect(node.needsPreviousFrame).toBe(true)
     })
 
+    it('GlassVeilNode.needsPreviousFrame is true', () => {
+      const node = new GlassVeilNode()
+      expect(node.needsPreviousFrame).toBe(true)
+    })
+
     it('non-temporal nodes do not have needsPreviousFrame=true', () => {
       const nonTemporalNodes = nodeEntries.filter((e) => !e.isTemporal)
       for (const entry of nonTemporalNodes) {
@@ -273,6 +313,11 @@ describe('engine/effects (VideoNode implementations)', () => {
       FocusJitterNode: 'focus_jitter',
       FeedbackLoopNode: 'feedback_loop',
       GridHintNode: 'grid_hint',
+      GazeTunnelNode: 'gaze_tunnel',
+      SomaticPulseNode: 'somatic_pulse',
+      IntrusionBurstNode: 'intrusion_burst',
+      SalienceCompetitionNode: 'salience_competition',
+      GlassVeilNode: 'glass_veil',
     }
 
     for (const entry of nodeEntries) {
@@ -305,6 +350,15 @@ describe('engine/effects (VideoNode implementations)', () => {
       node.dispose()
     })
 
+    it('GlassVeilNode uses previousFrameTexture', () => {
+      const node = new GlassVeilNode()
+      const input = dummyTexture()
+      const prev = dummyTexture()
+      const mat = node.getMaterial(input, prev) as THREE.ShaderMaterial
+      expect(mat.uniforms.u_prev.value).toBe(prev)
+      node.dispose()
+    })
+
     it('TemporalSmearNode falls back to input when no prev texture', () => {
       const node = new TemporalSmearNode()
       const input = dummyTexture()
@@ -318,13 +372,19 @@ describe('engine/effects (VideoNode implementations)', () => {
   // ColorGradeNode specifics
   // -----------------------------------------------------------------------
   describe('ColorGradeNode specifics', () => {
-    it('setParams with contrast, saturation, brightness does not throw', () => {
+    it('setParams with contrast, saturation, brightness, and color balance does not throw', () => {
       const node = new ColorGradeNode()
       node.getMaterial(dummyTexture())
       expect(() =>
         node.setParams(
           defaultParams({
-            controlValues: { '0.contrast': 0.1, '0.saturation': -0.2, '0.brightness': 0.05 },
+            controlValues: {
+              '0.contrast': 0.1,
+              '0.saturation': -0.2,
+              '0.brightness': 0.05,
+              '0.temperature': 0.4,
+              '0.tint': -0.3,
+            },
           }),
         ),
       ).not.toThrow()
@@ -348,6 +408,57 @@ describe('engine/effects (VideoNode implementations)', () => {
         node.tick(1 / 60)
       }
       expect(mat.uniforms.u_burst.value).toBe(0)
+      node.dispose()
+    })
+  })
+
+  describe('condition-specific primitive behavior', () => {
+    it('IntrusionBurstNode starts a smooth initial burst after its delay', () => {
+      const node = new IntrusionBurstNode()
+      const mat = node.getMaterial(dummyTexture()) as THREE.ShaderMaterial
+      node.setParams(
+        defaultParams({
+          controlValues: {
+            '0.amount': 0.2,
+            '0.initial_delay_ms': 0,
+            '0.burst_probability': 0,
+          },
+        }),
+      )
+      node.tick(1 / 60)
+      expect(mat.uniforms.u_burst.value).toBeGreaterThan(0)
+      node.dispose()
+    })
+
+    it('IntrusionBurstNode does not restart initial delay on repeated setParams', () => {
+      const node = new IntrusionBurstNode()
+      const mat = node.getMaterial(dummyTexture()) as THREE.ShaderMaterial
+      const params = defaultParams({
+        controlValues: {
+          '0.amount': 0.2,
+          '0.initial_delay_ms': 180,
+          '0.burst_probability': 0,
+        },
+      })
+      for (let i = 0; i < 12; i++) {
+        node.setParams(params)
+        node.tick(1 / 60)
+      }
+      expect(mat.uniforms.u_burst.value).toBeGreaterThan(0)
+      node.dispose()
+    })
+
+    it('SomaticPulseNode modulates its pulse uniform over time', () => {
+      const node = new SomaticPulseNode()
+      const mat = node.getMaterial(dummyTexture()) as THREE.ShaderMaterial
+      node.setParams(
+        defaultParams({
+          controlValues: { '0.depth': 0.14, '0.rate': 1.2, '0.smoothing': 0.2 },
+        }),
+      )
+      const before = mat.uniforms.u_pulse.value as number
+      for (let i = 0; i < 20; i++) node.tick(1 / 60)
+      expect(mat.uniforms.u_pulse.value).not.toBe(before)
       node.dispose()
     })
   })

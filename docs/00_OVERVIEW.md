@@ -17,6 +17,28 @@ This repo contains a privacy-first, client-only web app: an audio-visual overlay
 | [references/](references/README.md) | Evidence rationale; dimension docs; Evidence Matrix; long-form reports. |
 | [generated/](generated/README.md) | Generated catalog and schema (do not edit by hand). |
 
+Completed audit, plan, status, and ledger files are not canonical documentation.
+Keep them out of active navigation; archive them locally under `docs/archive/`
+or delete them when they are superseded. `docs/archive/` is ignored and should
+not be committed.
+
+---
+
+## New maintainer code path
+
+For the first code read, follow this path instead of scanning files alphabetically:
+
+1. `src/app/App.tsx` mounts the single app surface.
+2. `src/ui/CameraView.tsx` owns user-facing state and coordinates camera, audio, profile, and evidence UI.
+3. `src/ui/hooks/useProfileLoad.ts` selects either a preset profile or a composed profile.
+4. `src/conditions/graphBuilder.ts` converts profile `video_stack` entries into live `VideoNode` instances.
+5. `src/ui/hooks/useReactivePipeline.ts` starts the WebGL/Canvas overlay and wires reactive audio/video coupling.
+6. `src/engine/audio/audioEngine.ts` owns WebAudio, optional mic input, analyser metrics, and audio FX.
+7. `src/engine/canvas/webglPipeline.ts` owns the frame loop, render targets, video metrics, and 2D fallback boundary.
+8. `src/contractVerification/` keeps JSON profile references aligned with implemented audio/video node contracts.
+
+The profile JSON under `src/conditions/profiles/` is runtime data, not sample data. Changes there should be treated as contract changes and verified with `npm run verify:contracts`.
+
 ---
 
 ## Source of truth (evidence)

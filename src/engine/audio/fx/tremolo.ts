@@ -1,5 +1,5 @@
 /**
- * Phase 7: Tremolo / Flutter — LFO modulates gain (rate/depth).
+ * Tremolo/flutter FX: LFO modulates gain by rate and depth.
  */
 
 import type { AudioModule } from '../types'

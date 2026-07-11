@@ -133,7 +133,7 @@
       "evidence_strength": "medium",
       "rationale_doc": "docs/references/dimensions/derealization.md",
       "motif_summary": {
-        "video_nodes": ["haze", "chroma_aberration", "temporal_smear", "color_grade"],
+        "video_nodes": ["haze", "chromatic_aberration", "temporal_smear", "color_grade"],
         "audio_nodes": ["flutter", "lowpass", "reverb", "compressor_limiter"]
       }
     },
@@ -148,7 +148,7 @@
       "evidence_strength": "medium",
       "rationale_doc": "docs/references/dimensions/depersonalization.md",
       "motif_summary": {
-        "video_nodes": ["vignette", "soft_blur", "chroma_aberration", "color_grade"],
+        "video_nodes": ["vignette", "soft_blur", "chromatic_aberration", "color_grade"],
         "audio_nodes": ["reverb", "lowpass", "flutter", "compressor_limiter"]
       }
     },

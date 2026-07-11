@@ -1,5 +1,5 @@
 /**
- * Phase 12: Dev-only debug panel for WebGL/Audio status and diagnostics.
+ * Dev-only debug panel for WebGL/Audio status and diagnostics.
  * Renders only when import.meta.env.DEV is true.
  */
 
@@ -169,7 +169,7 @@ export function DebugPanel(props: DebugPanelProps) {
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Poll overlay diagnostics in dev so we don't need to lift overlay ref into React state.
-  useEffect(() => {
+  function pollDiagnostics(): (() => void) | undefined {
     if (!import.meta.env.DEV) return
     let rafId: number | null = null
     function tick(): void {
@@ -184,7 +184,8 @@ export function DebugPanel(props: DebugPanelProps) {
     return () => {
       if (rafId != null) cancelAnimationFrame(rafId)
     }
-  }, [
+  }
+  useEffect(pollDiagnostics, [
     getOverlayDiagnostics,
     getAudioMetrics,
     getVideoMetrics,
@@ -192,14 +193,15 @@ export function DebugPanel(props: DebugPanelProps) {
     getAppliedClamps,
   ])
 
-  useEffect(() => {
+  function clearCopiedTimer(): () => void {
     return () => {
       if (copiedTimeoutRef.current) {
         clearTimeout(copiedTimeoutRef.current)
         copiedTimeoutRef.current = null
       }
     }
-  }, [])
+  }
+  useEffect(clearCopiedTimer, [])
 
   const handleCopy = useCallback(() => {
     const text = formatDiagnosticsText(props, overlay)
@@ -285,6 +287,18 @@ export function DebugPanel(props: DebugPanelProps) {
               <>
                 <dt>micRms</dt>
                 <dd>{audioMetrics.micRms.toFixed(3)}</dd>
+              </>
+            )}
+            {typeof audioMetrics.micCentroid === 'number' && (
+              <>
+                <dt>micCentroid</dt>
+                <dd>{audioMetrics.micCentroid.toFixed(3)}</dd>
+              </>
+            )}
+            {typeof audioMetrics.micFlux === 'number' && (
+              <>
+                <dt>micFlux</dt>
+                <dd>{audioMetrics.micFlux.toFixed(3)}</dd>
               </>
             )}
           </>

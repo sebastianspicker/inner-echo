@@ -84,7 +84,6 @@ export const VIDEO_ORDER_GROUP: Record<string, number> = {
   vignette: 25,
   haze: 30,
   color_grade: 40,
-  chroma_aberration: 50,
   chromatic_aberration: 50,
   temporal_smear: 60,
   feedback_loop: 70,

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { chromium, firefox, webkit } from 'playwright'
+import { createDevServerHarness, destroyServerHarness } from './serverHarness.mjs'
 
 const HOST = process.env.HOST ?? '127.0.0.1'
 const PORT = Number(process.env.PORT ?? '4173')
@@ -14,72 +14,12 @@ const BROWSERS = [
   { name: 'webkit', launcher: webkit, launchOptions: {} },
 ]
 
-async function isServerUp() {
-  try {
-    const res = await fetch(BASE_URL)
-    return res.ok
-  } catch {
-    return false
-  }
-}
-
-async function waitForServerReady(timeoutMs) {
-  const started = Date.now()
-  while (Date.now() - started < timeoutMs) {
-    if (await isServerUp()) return
-    await delay(200)
-  }
-  throw new Error(`Dev server did not become ready within ${timeoutMs}ms (${BASE_URL})`)
-}
-
-function spawnDevServer() {
-  return spawn('npm', ['run', 'dev', '--', '--host', HOST, '--port', String(PORT)], {
-    cwd: process.cwd(),
-    stdio: 'pipe',
-    env: process.env,
-  })
-}
-
-async function stopServer(proc) {
-  if (!proc) return
-  if (proc.exitCode != null) return
-  proc.kill('SIGTERM')
-  const exited = await Promise.race([
-    new Promise((resolve) => {
-      proc.once('exit', () => resolve(true))
-    }),
-    delay(3000).then(() => false),
-  ])
-  if (!exited && proc.exitCode == null) {
-    proc.kill('SIGKILL')
-    await Promise.race([
-      new Promise((resolve) => {
-        proc.once('exit', () => resolve())
-      }),
-      delay(1000),
-    ])
-  }
-  proc.stdout?.destroy()
-  proc.stderr?.destroy()
-  proc.stdin?.destroy()
-}
-
 async function createHarness() {
-  let ownsServer = false
-  let serverProc = null
-  const alreadyUp = await isServerUp()
-  if (!alreadyUp) {
-    ownsServer = true
-    serverProc = spawnDevServer()
-    await waitForServerReady(20_000)
-  }
-  return { ownsServer, serverProc }
+  return createDevServerHarness(BASE_URL, HOST, PORT)
 }
 
 async function destroyHarness(h) {
-  if (h.ownsServer) {
-    await stopServer(h.serverProc)
-  }
+  await destroyServerHarness(h)
 }
 
 async function newContextPage(browser, viewport = { width: 1280, height: 720 }) {
@@ -105,6 +45,25 @@ async function waitForAppShell(page) {
   await page
     .getByRole('status', { name: 'Runtime status' })
     .waitFor({ state: 'visible', timeout: 5000 })
+}
+
+async function waitForAnimationFrames(page, frameCount = 2) {
+  await page.evaluate(
+    (count) =>
+      new Promise((resolve) => {
+        let remaining = count
+        const step = () => {
+          remaining -= 1
+          if (remaining <= 0) {
+            resolve(null)
+            return
+          }
+          requestAnimationFrame(step)
+        }
+        requestAnimationFrame(step)
+      }),
+    frameCount,
+  )
 }
 
 async function installFakeMedia(page) {
@@ -217,10 +176,10 @@ async function runSmoke(browserName, browser) {
       for (const value of values) {
         select.value = value
         select.dispatchEvent(new Event('change', { bubbles: true }))
-        await new Promise((resolve) => setTimeout(resolve, 40))
+        await new Promise((resolve) => requestAnimationFrame(() => resolve(null)))
       }
     })
-    await delay(250)
+    await waitForAnimationFrames(page, 4)
     await page.getByRole('button', { name: /stop everything/i }).click()
     await expectCameraStatus(page, /ready/i, 3000)
 

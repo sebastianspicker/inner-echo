@@ -7,6 +7,7 @@
  */
 
 import type { AudioModule } from './types'
+import { fastRandom } from '../../utils/fastRandom'
 
 const DEFAULT_FREQ = 220
 const DEFAULT_DETUNE = 8
@@ -113,7 +114,7 @@ function createNoiseBuffer(context: BaseAudioContext, durationSeconds: number): 
     b1 = 0,
     b2 = 0
   for (let i = 0; i < length; i++) {
-    const white = Math.random() * 2 - 1
+    const white = fastRandom() * 2 - 1
     b0 = 0.99886 * b0 + white * 0.0555179
     b1 = 0.99332 * b1 + white * 0.0750759
     b2 = 0.969 * b2 + white * 0.153852

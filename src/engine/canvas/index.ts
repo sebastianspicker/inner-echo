@@ -1,8 +1,7 @@
 /**
  * Canvas overlay: WebGL (Three.js) by default with 2D fallback.
- * Phase 5: WebGL pipeline is built from condition profile (video nodes); empty nodes = passthrough.
- * Phase 8: Optional reactive options for audio RMS → video param modulation.
- * Phase 12: getDiagnostics() for dev debug panel.
+ * WebGL receives condition-built video nodes; empty nodes mean passthrough.
+ * Reactive options let the frame loop exchange video/audio metrics with WebAudio.
  */
 
 import type { VideoNode } from '../effects/VideoNode'
@@ -18,9 +17,9 @@ export { syncCanvasToContainer }
 export type { VideoPipelineParams, ReactiveLoopOptions }
 export type { VideoMetrics } from './videoMetrics'
 
-/** Phase 12: Diagnostics for dev debug panel. */
+/** Diagnostics exposed to the dev debug panel while an overlay is active. */
 export interface OverlayDiagnostics {
-  rendererMode: 'webgl' | '2d'
+  rendererMode: 'webgl' | '2d' | 'video' | 'unavailable'
   fps: number | null
   frameTimeMs: number | null
   renderScale: number
@@ -39,7 +38,7 @@ const USE_WEBGL = true
 export interface OverlayControl {
   stop(): void
   setParams(params: VideoPipelineParams): void
-  /** Phase 12: Present only when overlay is active; for dev debug panel. */
+  /** Present only when overlay is active; used by the dev debug panel. */
   getDiagnostics?(): OverlayDiagnostics
 }
 
@@ -47,12 +46,13 @@ export interface OverlayControl {
  * Start the overlay render loop. Prefers WebGL (Three.js) with the given video nodes
  * (from condition profile); empty or missing nodes = clean passthrough.
  * Falls back to 2D canvas drawImage if USE_WEBGL is false or WebGL init fails.
- * Phase 8: Pass reactiveOptions to drive video params from audio RMS (getRms + getOverrides).
+ * Pass reactiveOptions to drive AV coupling from audio/video metrics.
  * Returns { stop, setParams }; setParams is a no-op for 2D fallback.
  */
 export function startOverlayLoop(
   video: HTMLVideoElement | null,
-  canvas: HTMLCanvasElement | null,
+  webglCanvas: HTMLCanvasElement | null,
+  fallbackCanvas: HTMLCanvasElement | null,
   container: HTMLElement | null,
   nodes: VideoNode[] = [],
   reactiveOptions?: ReactiveLoopOptions | null,
@@ -66,23 +66,54 @@ export function startOverlayLoop(
     resourceCounts: null,
     activeVideoNodes: [],
   })
+  const getUnavailableDiagnostics = (): OverlayDiagnostics => ({
+    rendererMode: 'unavailable',
+    fps: null,
+    frameTimeMs: null,
+    renderScale: 1,
+    resourceCounts: null,
+    activeVideoNodes: [],
+  })
+  const getVideoDiagnostics = (): OverlayDiagnostics => ({
+    rendererMode: 'video',
+    fps: null,
+    frameTimeMs: null,
+    renderScale: 1,
+    resourceCounts: null,
+    activeVideoNodes: [],
+  })
 
-  if (!video || !canvas || !container) {
-    return { stop: () => {}, setParams: noOpSetParams }
+  const showCanvas = (active: HTMLCanvasElement | null): void => {
+    if (webglCanvas) webglCanvas.hidden = active !== webglCanvas
+    if (fallbackCanvas) fallbackCanvas.hidden = active !== fallbackCanvas
+  }
+
+  if (!video || !container) {
+    showCanvas(null)
+    return {
+      stop: () => {},
+      setParams: noOpSetParams,
+      getDiagnostics: getUnavailableDiagnostics,
+    }
   }
 
   let delegateStop: OverlayControl['stop'] = () => {}
   let delegateSetParams: OverlayControl['setParams'] = noOpSetParams
-  let delegateGetDiagnostics: NonNullable<OverlayControl['getDiagnostics']> = get2dDiagnostics
+  let delegateGetDiagnostics: NonNullable<OverlayControl['getDiagnostics']> = getVideoDiagnostics
+  let stopped = false
+  let fallbackInstalled = false
 
   const install2dFallback = (): void => {
-    const stop2d = start2DOverlayLoop(video, canvas, container)
-    delegateStop = stop2d
+    if (stopped || fallbackInstalled) return
+    fallbackInstalled = true
+    const stop2d = start2DOverlayLoop(video, fallbackCanvas, container)
+    delegateStop = stop2d ?? (() => {})
     delegateSetParams = noOpSetParams
-    delegateGetDiagnostics = get2dDiagnostics
+    delegateGetDiagnostics = stop2d ? get2dDiagnostics : getVideoDiagnostics
+    showCanvas(stop2d ? fallbackCanvas : null)
   }
 
-  if (USE_WEBGL) {
+  if (USE_WEBGL && webglCanvas) {
     let switchedTo2d = false
     const callbacks: WebGLOverlayCallbacks = {
       onFatalRuntimeError() {
@@ -93,18 +124,24 @@ export function startOverlayLoop(
     }
     const control = startWebGLOverlayLoop(
       video,
-      canvas,
+      webglCanvas,
       container,
       nodes,
       reactiveOptions ?? undefined,
       callbacks,
     )
     if (control) {
+      showCanvas(webglCanvas)
       delegateStop = () => control.stop()
       delegateSetParams = (params) => control.setParams(params)
       delegateGetDiagnostics = () => control.getDiagnostics()
       return {
-        stop: () => delegateStop(),
+        stop: () => {
+          if (stopped) return
+          stopped = true
+          delegateStop()
+          showCanvas(null)
+        },
         setParams: (params) => delegateSetParams(params),
         getDiagnostics: () => delegateGetDiagnostics(),
       }
@@ -113,7 +150,12 @@ export function startOverlayLoop(
 
   install2dFallback()
   return {
-    stop: () => delegateStop(),
+    stop: () => {
+      if (stopped) return
+      stopped = true
+      delegateStop()
+      showCanvas(null)
+    },
     setParams: (params) => delegateSetParams(params),
     getDiagnostics: () => delegateGetDiagnostics(),
   }

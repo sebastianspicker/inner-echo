@@ -1,7 +1,7 @@
 {
   "id": "depression",
   "label": "Depressive Disorder",
-  "summary": "A metaphor of dampened affect and reduced clarity: muted color, softened edges, and slowed visual energy.",
+  "summary": "A metaphor of dampened affect and reduced clarity: lower contrast/saturation, softened edges, and slower temporal response.",
   "framing": {
     "type": "metaphor",
     "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
@@ -21,7 +21,7 @@
     }
   ],
   "safety": {
-    "intensity_default": 0.38,
+    "intensity_default": 0.5,
     "intensity_max": 0.7,
     "warnings": [
       "This is a metaphorical overlay. If it feels heavy, reduce Intensity or stop.",
@@ -99,49 +99,43 @@
       "id": "grade",
       "node": "color_grade",
       "params": {
-        "contrast": -0.08,
-        "saturation": -0.18,
-        "brightness": -0.02
+        "contrast": -0.18,
+        "saturation": -0.48,
+        "brightness": -0.04,
+        "temperature": 0,
+        "tint": 0
       }
     },
     {
       "id": "haze",
       "node": "haze",
       "params": {
-        "amount": 0.12
+        "amount": 0.18
       }
     },
     {
       "id": "blur",
       "node": "soft_blur",
       "params": {
-        "amount": 0.1
+        "amount": 0.18
       }
     },
     {
       "id": "time",
       "node": "temporal_smear",
       "params": {
-        "decay": 0.95,
-        "feedback": 0.08,
-        "jitter": 0.03
+        "decay": 0.97,
+        "feedback": 0.16,
+        "jitter": 0
       }
     },
     {
       "id": "grain",
       "node": "grain",
       "params": {
-        "amount": 0.12,
+        "amount": 0.012,
         "scale": 1.4,
-        "speed": 0.06
-      }
-    },
-    {
-      "id": "vignette",
-      "node": "vignette",
-      "params": {
-        "amount": 0.18,
-        "softness": 0.85
+        "speed": 0.015
       }
     }
   ],
@@ -155,29 +149,29 @@
       {
         "node": "lowpass",
         "params": {
-          "cutoff": 3600,
+          "cutoff": 3400,
           "q": 0.7
         }
       },
       {
         "node": "noise_bed",
         "params": {
-          "level": 0.02,
+          "level": 0.018,
           "color": "brown"
         }
       },
       {
         "node": "flutter",
         "params": {
-          "rate": 0.45,
-          "depth": 0.05
+          "rate": 0.42,
+          "depth": 0.045
         }
       },
       {
         "node": "reverb",
         "params": {
-          "mix": 0.05,
-          "decay": 1.8
+          "mix": 0.055,
+          "decay": 1.9
         }
       },
       {
@@ -196,14 +190,14 @@
     "analyser_to_params": [
       {
         "source": "rms",
-        "target": "video.grain.amount",
-        "scale": 0.15,
+        "target": "video.temporal_smear.feedback",
+        "scale": 0.04,
         "offset": 0,
         "smoothing": {
-          "attack": 0.08,
-          "release": 0.25
+          "attack": 0.18,
+          "release": 0.55
         },
-        "clamp": [0, 0.45]
+        "clamp": [0.08, 0.2]
       }
     ]
   },

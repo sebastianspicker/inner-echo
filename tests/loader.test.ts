@@ -163,6 +163,16 @@ describe('conditions/loader — loadProfile and loadCatalog behavior', () => {
     expect(profile).toBeNull()
   })
 
+  it.each([
+    '../anxiety',
+    'anxiety/../../catalog',
+    '__proto__',
+    'Anxiety',
+  ])('loadProfile rejects invalid lookup id %s', async (id) => {
+    const mod = await import('../src/conditions/loader')
+    await expect(mod.loadProfile(id)).resolves.toBeNull()
+  })
+
   it('loaded profile has expected shape (safety, experience_dimensions)', async () => {
     const mod = await import('../src/conditions/loader')
     const profile = await mod.loadProfile('anxiety')

@@ -2,7 +2,7 @@ import { useEffect, type MutableRefObject } from 'react'
 import type { Profile } from '../../conditions/schema'
 import type { CameraState } from '../../engine/video'
 import type { OverlayControl, VideoMetrics } from '../../engine/canvas'
-import type { AudioEngineControl } from '../../engine/audio'
+import type { AudioEngineControl, AudioMetrics } from '../../engine/audio'
 import { BASELINE_PROFILE } from '../../conditions/fallbackProfiles'
 import { buildVideoNodes } from '../../conditions/graphBuilder'
 import { createReactiveDriver, createCouplingEngine } from '../../engine/reactive'
@@ -14,7 +14,8 @@ export interface UseReactivePipelineParams {
   reducedMotion: boolean
   profile: Profile | null
   videoRef: MutableRefObject<HTMLVideoElement | null>
-  canvasRef: MutableRefObject<HTMLCanvasElement | null>
+  webglCanvasRef: MutableRefObject<HTMLCanvasElement | null>
+  fallbackCanvasRef: MutableRefObject<HTMLCanvasElement | null>
   containerRef: MutableRefObject<HTMLDivElement | null>
   overlayControlRef: MutableRefObject<OverlayControl | null>
   audioEngineControlRef: MutableRefObject<AudioEngineControl | null>
@@ -38,7 +39,8 @@ export function useReactivePipeline({
   reducedMotion,
   profile,
   videoRef,
-  canvasRef,
+  webglCanvasRef,
+  fallbackCanvasRef,
   containerRef,
   overlayControlRef,
   audioEngineControlRef,
@@ -61,9 +63,10 @@ export function useReactivePipeline({
     }
 
     const video = videoRef.current
-    const canvas = canvasRef.current
+    const webglCanvas = webglCanvasRef.current
+    const fallbackCanvas = fallbackCanvasRef.current
     const container = containerRef.current
-    if (!video || !canvas || !container) return
+    if (!video || !container) return
     if (!profile) return
 
     let listener: (() => void) | null = null
@@ -81,7 +84,6 @@ export function useReactivePipeline({
       const reactiveOptions = {
         getAudioMetrics: () =>
           audioEngineControlRef.current?.getMetrics?.() ?? { rms: 0, centroid: 0, flux: 0 },
-        getRms: () => audioEngineControlRef.current?.getRms?.() ?? 0,
         applyAudioOverrides: (overrides: Record<string, number>) => {
           audioEngineControlRef.current?.applyReactiveParams?.(overrides)
         },
@@ -110,12 +112,13 @@ export function useReactivePipeline({
           }
           return (
             delta: number,
-            audio: { rms: number; centroid: number; flux: number },
+            audio: AudioMetrics,
             video: { motion: number; luminance: number; edge: number; instability: number },
             baseControlValues: Record<string, number | boolean>,
           ) => {
-            const videoReactive = driver.getVideoOverrides(delta, audio.rms)
-            const audioReactive = driver.getAudioOverrides(delta, audio.rms)
+            const reactiveRms = Math.max(audio.rms, audio.micRms ?? 0)
+            const videoReactive = driver.getVideoOverrides(delta, reactiveRms)
+            const audioReactive = driver.getAudioOverrides(delta, reactiveRms)
 
             clear(baseAfterReactive)
             copy(baseAfterReactive, baseControlValues)
@@ -141,7 +144,14 @@ export function useReactivePipeline({
           }
         })(),
       }
-      const control = startOverlayLoop(video, canvas, container, nodes, reactiveOptions)
+      const control = startOverlayLoop(
+        video,
+        webglCanvas,
+        fallbackCanvas,
+        container,
+        nodes,
+        reactiveOptions,
+      )
       overlayControlRef.current = control
       const safetyCtx = getSafetyContext(prof)
       const safeModeNow = safeModeRef.current

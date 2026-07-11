@@ -24,10 +24,61 @@ export interface EvidenceDrawerProps {
 type DocState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; title: string; html: string; raw: string }
+  | { status: 'ready'; title: string; fragment: DocumentFragment; raw: string }
 
 function isIndexLike(p: EvidenceDocPath): boolean {
   return p.endsWith('/INDEX.md') || p.endsWith('/README.md') || p.endsWith('/EVIDENCE_MATRIX.md')
+}
+
+function getFocusableElements(root: HTMLElement): HTMLElement[] {
+  return Array.from(
+    root.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((element) => {
+    if (element.getAttribute('aria-hidden') === 'true' || element.tabIndex < 0) return false
+    const style = window.getComputedStyle(element)
+    if (style.display === 'none' || style.visibility === 'hidden') return false
+    return element.offsetParent !== null || style.position === 'fixed'
+  })
+}
+
+function trapFocus(e: KeyboardEvent, root: HTMLElement | null): void {
+  if (e.key !== 'Tab' || !root) return
+  const focusables = getFocusableElements(root)
+  if (!focusables.length) return
+  const first = focusables[0]
+  const last = focusables[focusables.length - 1]
+  const active = document.activeElement as HTMLElement | null
+  const outside = !active || !root.contains(active)
+  const wrapBackward = e.shiftKey && (outside || active === first)
+  const wrapForward = !e.shiftKey && (outside || active === last)
+  if (!wrapBackward && !wrapForward) return
+  e.preventDefault()
+  ;(wrapBackward ? last : first).focus()
+}
+
+function handleEvidenceLink(
+  e: ReactMouseEvent<HTMLElement> | ReactKeyboardEvent<HTMLElement>,
+  docPath: EvidenceDocPath,
+  onNavigate: (path: EvidenceDocPath) => void,
+): void {
+  const anchor = (e.target as HTMLElement | null)?.closest?.('a') as HTMLAnchorElement | null
+  if (!anchor) return
+  const href = anchor.getAttribute('href') ?? ''
+  const protocol = href.trim().toLowerCase()
+  if (protocol.startsWith('javascript:') || protocol.startsWith('data:')) {
+    e.preventDefault()
+    return
+  }
+  const resolved = resolveEvidenceHref(docPath, href)
+  if (resolved) {
+    e.preventDefault()
+    onNavigate(resolved)
+    return
+  }
+  anchor.setAttribute('target', '_blank')
+  anchor.setAttribute('rel', 'noreferrer noopener')
 }
 
 export function EvidenceDrawer(props: EvidenceDrawerProps) {
@@ -35,6 +86,7 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
   const backdropRef = useRef<HTMLDivElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
   const navRef = useRef<HTMLElement | null>(null)
+  const evidenceContentRef = useRef<HTMLElement | null>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
   const navItems = useMemo(() => {
@@ -73,8 +125,8 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
           setState({ status: 'error', message: `Evidence doc not found: ${props.docPath}` })
           return
         }
-        const { html, title } = renderEvidenceMarkdown(md)
-        setState({ status: 'ready', html, title, raw: md })
+        const { fragment, title } = renderEvidenceMarkdown(md)
+        setState({ status: 'ready', fragment, title, raw: md })
       } catch (err) {
         if (!ctx.cancelled) {
           logger.error('Failed to load evidence document', props.docPath, err)
@@ -84,6 +136,13 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     },
     [props.open, props.docPath],
   )
+
+  useEffect(() => {
+    if (state.status !== 'ready') return
+    const content = evidenceContentRef.current
+    if (!content) return
+    content.replaceChildren(state.fragment.cloneNode(true))
+  }, [state])
 
   // Escape to close
   useEffect(() => {
@@ -112,44 +171,7 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
   useEffect(() => {
     if (!props.open) return
 
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return
-      const root = backdropRef.current
-      if (!root) return
-
-      const focusables = Array.from(
-        root.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-        ),
-      ).filter((el) => {
-        if (el.getAttribute('aria-hidden') === 'true' || el.tabIndex < 0) return false
-        // Filter out elements hidden via CSS (e.g. display:none or visibility:hidden)
-        const style = window.getComputedStyle(el)
-        if (style.display === 'none' || style.visibility === 'hidden') return false
-        // Also check if an ancestor is hidden
-        if (el.offsetParent === null && style.position !== 'fixed') return false
-        return true
-      })
-
-      if (focusables.length === 0) return
-
-      const first = focusables[0]
-      const last = focusables[focusables.length - 1]
-      const active = document.activeElement as HTMLElement | null
-
-      if (e.shiftKey) {
-        if (!active || active === first || !root.contains(active)) {
-          e.preventDefault()
-          last.focus()
-        }
-        return
-      }
-
-      if (active === last || !active || !root.contains(active)) {
-        e.preventDefault()
-        first.focus()
-      }
-    }
+    const onKey = (e: KeyboardEvent) => trapFocus(e, backdropRef.current)
 
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -258,47 +280,13 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
             {state.status === 'error' && <div className="evidence-error">{state.message}</div>}
             {state.status === 'ready' && (
               <article
+                ref={evidenceContentRef}
                 className="evidence-markdown"
-                onClick={(e) => {
-                  const target = e.target as HTMLElement | null
-                  const a = target?.closest?.('a') as HTMLAnchorElement | null
-                  if (!a) return
-                  const href = a.getAttribute('href') ?? ''
-                  // Block potentially dangerous protocols
-                  const hrefTrimmed = href.trim().toLowerCase()
-                  if (hrefTrimmed.startsWith('javascript:') || hrefTrimmed.startsWith('data:')) {
-                    e.preventDefault()
-                    return
-                  }
-                  const resolved = resolveEvidenceHref(props.docPath, href)
-                  if (resolved) {
-                    e.preventDefault()
-                    props.onNavigate(resolved)
-                  } else {
-                    // For non-evidence links, open in a new tab for clarity and security.
-                    a.setAttribute('target', '_blank')
-                    a.setAttribute('rel', 'noreferrer noopener')
-                  }
-                }}
+                onClick={(e) => handleEvidenceLink(e, props.docPath, props.onNavigate)}
                 onKeyDown={(e) => {
                   if (e.key !== 'Enter' && e.key !== ' ') return
-                  const target = e.target as HTMLElement | null
-                  const a = target?.closest?.('a') as HTMLAnchorElement | null
-                  if (!a) return
-                  const href = a.getAttribute('href') ?? ''
-                  const hrefTrimmed = href.trim().toLowerCase()
-                  if (hrefTrimmed.startsWith('javascript:') || hrefTrimmed.startsWith('data:')) {
-                    e.preventDefault()
-                    return
-                  }
-                  const resolved = resolveEvidenceHref(props.docPath, href)
-                  if (resolved) {
-                    e.preventDefault()
-                    props.onNavigate(resolved)
-                  }
+                  handleEvidenceLink(e, props.docPath, props.onNavigate)
                 }}
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: content is sanitized markdown from local docs/ files, not user-supplied input
-                dangerouslySetInnerHTML={{ __html: state.html }}
               />
             )}
           </main>

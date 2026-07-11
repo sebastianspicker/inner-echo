@@ -15,13 +15,11 @@ import { useAsyncEffect } from './hooks/useAsyncEffect'
 import { logger } from '../utils/logger'
 import {
   DEFAULT_PRESET_NAME,
-  LEGACY_PRESET_STORAGE_KEY,
   PRESET_LIBRARY_STORAGE_KEY,
   applyPresetPayload,
   createPresetPayload,
   createPresetSnapshot,
-  migrateLegacyPresetPayload,
-  parsePresetLibrary,
+  parsePresetLibraryWithDiagnostics,
   type PresetPayload,
   type PresetSnapshotV2,
 } from './presetSnapshot'
@@ -29,6 +27,42 @@ import { decodePresetFromHash, encodePresetToHash } from './presetShare'
 import './ConditionComposerPanel.css'
 
 export type QuickPreset = 'calm' | 'balanced' | 'intense'
+
+function evidenceStrengthRank(strength: string): number {
+  if (strength === 'hypothesis') return 4
+  if (strength === 'low') return 3
+  if (strength === 'medium') return 2
+  if (strength === 'high') return 1
+  return 0
+}
+
+function evidenceStrengthLabel(rank: number): string {
+  return ['', 'high', 'medium', 'low', 'hypothesis'][rank] ?? ''
+}
+
+async function loadConditionStrengths(
+  catalogIds: string[],
+  dimById: Map<string, ExperienceDimensionDef>,
+): Promise<Record<string, string>> {
+  const profiles = await Promise.all(catalogIds.map((id) => loadProfile(id)))
+  const output: Record<string, string> = {}
+  for (let index = 0; index < catalogIds.length; index++) {
+    let rank = 0
+    for (const dimension of profiles[index]?.experience_dimensions ?? []) {
+      const strength = String(
+        dimById.get(String(dimension?.id))?.evidence_strength ?? '',
+      ).toLowerCase()
+      rank = Math.max(rank, evidenceStrengthRank(strength))
+    }
+    output[catalogIds[index]] = evidenceStrengthLabel(rank)
+  }
+  return output
+}
+
+function readPresetLibrary(): ReturnType<typeof parsePresetLibraryWithDiagnostics> | null {
+  const raw = localStorage.getItem(PRESET_LIBRARY_STORAGE_KEY)
+  return raw ? parsePresetLibraryWithDiagnostics(raw) : null
+}
 
 export interface ConditionComposerPanelProps {
   catalog: CatalogEntry[] | null
@@ -134,12 +168,13 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
+  function clearStatusTimers(): () => void {
     return () => {
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
-  }, [])
+  }
+  useEffect(clearStatusTimers, [])
 
   const setCopyStatusTimed = useCallback((status: 'copied' | 'failed') => {
     setCopyStatus(status)
@@ -154,6 +189,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   }, [])
 
   const [library, setLibrary] = useState<PresetSnapshotV2[]>([])
+  const [libraryWarning, setLibraryWarning] = useState<string | null>(null)
   const [selectedLibraryId, setSelectedLibraryId] = useState('')
   const [presetName, setPresetName] = useState(DEFAULT_PRESET_NAME)
   const consumedSharedHashRef = useRef(false)
@@ -161,69 +197,28 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   const catalogIds = useMemo(() => (props.catalog ?? []).map((c) => c.id), [props.catalog])
   useAsyncEffect(
     async (ctx) => {
-      const profiles = await Promise.all(catalogIds.map((id) => loadProfile(id)))
+      const out = await loadConditionStrengths(catalogIds, dimById)
       if (ctx.cancelled) return
-      const out: Record<string, string> = {}
-      for (let i = 0; i < catalogIds.length; i++) {
-        const id = catalogIds[i]
-        const prof = profiles[i]
-        const dimsList = Array.isArray(prof?.experience_dimensions)
-          ? prof.experience_dimensions
-          : []
-        // Conservative aggregation: hypothesis > low > medium > high.
-        let rank = 0 // 0=unknown,1=high,2=med,3=low,4=hyp
-        for (const d of dimsList) {
-          const s = String(dimById.get(String(d?.id))?.evidence_strength ?? '').toLowerCase()
-          const r =
-            s === 'hypothesis' ? 4 : s === 'low' ? 3 : s === 'medium' ? 2 : s === 'high' ? 1 : 0
-          rank = Math.max(rank, r)
-        }
-        out[id] =
-          rank === 4
-            ? 'hypothesis'
-            : rank === 3
-              ? 'low'
-              : rank === 2
-                ? 'medium'
-                : rank === 1
-                  ? 'high'
-                  : ''
-      }
       setConditionStrength(out)
     },
     [catalogIds, dimById],
     { onError: (err) => logger.error('ConditionComposerPanel loadProfile failed', err) },
   )
 
-  useEffect(() => {
+  function loadSavedPresetLibrary(): void {
     try {
-      const raw = localStorage.getItem(PRESET_LIBRARY_STORAGE_KEY)
-      const parsed = raw ? parsePresetLibrary(raw) : []
-
-      if (parsed.length === 0) {
-        const legacyRaw = localStorage.getItem(LEGACY_PRESET_STORAGE_KEY)
-        if (legacyRaw) {
-          let legacyJson: unknown
-          try {
-            legacyJson = JSON.parse(legacyRaw)
-          } catch {
-            legacyJson = null
-          }
-          const legacyParsed = legacyJson != null ? migrateLegacyPresetPayload(legacyJson) : null
-          if (legacyParsed) {
-            const migrated = createPresetSnapshot(legacyParsed, {
-              name: 'Migrated Preset',
-              createdAt: nowIso(),
-            })
-            const next = [migrated]
-            localStorage.setItem(PRESET_LIBRARY_STORAGE_KEY, JSON.stringify(next))
-            localStorage.removeItem(LEGACY_PRESET_STORAGE_KEY)
-            setLibrary(next)
-            setSelectedLibraryId(migrated.id)
-            setPresetName(migrated.name)
-            return
-          }
+      const parsedResult = readPresetLibrary()
+      const parsed = parsedResult?.snapshots ?? []
+      if (parsedResult && !parsedResult.diagnostics.ok) {
+        setLibraryWarning(
+          'Saved preset library could not be read completely. Existing storage was left unchanged.',
+        )
+        if (parsed.length === 0) {
+          setLibrary([])
+          return
         }
+      } else {
+        setLibraryWarning(null)
       }
 
       setLibrary(parsed)
@@ -235,7 +230,8 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
       logger.warn('ConditionComposerPanel preset library load failed', err)
       setLibrary([])
     }
-  }, [])
+  }
+  useEffect(loadSavedPresetLibrary, [])
 
   useEffect(() => {
     if (consumedSharedHashRef.current) return
@@ -347,6 +343,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
 
   const persistLibrary = (next: PresetSnapshotV2[]): void => {
     setLibrary(next)
+    setLibraryWarning(null)
     try {
       localStorage.setItem(PRESET_LIBRARY_STORAGE_KEY, JSON.stringify(next))
     } catch (err) {
@@ -556,6 +553,12 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
             </select>
             <span className="composer__slider-val">{library.length}</span>
           </label>
+
+          {libraryWarning && (
+            <p className="composer__hint" role="alert">
+              {libraryWarning}
+            </p>
+          )}
 
           <div className="composer__quick-buttons">
             <button type="button" onClick={handleSaveLocal}>

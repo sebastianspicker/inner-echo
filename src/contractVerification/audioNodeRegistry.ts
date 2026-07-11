@@ -163,7 +163,7 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
     kind: 'audio',
     node: 'noise_bed',
     params: {
-      level: numberParam('created.gains.0.gain.value', {
+      level: numberParam('created.gains.2.gain.value', {
         defaultValue: 0.03,
         min: 0,
         max: 0.08,

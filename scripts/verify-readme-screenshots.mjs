@@ -18,6 +18,23 @@ const SHOTS_PER_SECTION = {
 const ALLOWED_SECTIONS = new Set(Object.keys(SHOTS_PER_SECTION))
 
 const EXPECTED_SHOT_COUNT = Object.values(SHOTS_PER_SECTION).reduce((a, b) => a + b, 0)
+function isSafeIdentifier(value) {
+  if (value.length === 0 || value.startsWith('-') || value.endsWith('-')) return false
+  let previousWasSeparator = false
+  for (const character of value) {
+    if (character === '-') {
+      if (previousWasSeparator) return false
+      previousWasSeparator = true
+      continue
+    }
+    const code = character.charCodeAt(0)
+    const isLowercaseLetter = code >= 97 && code <= 122
+    const isDigit = code >= 48 && code <= 57
+    if (!isLowercaseLetter && !isDigit) return false
+    previousWasSeparator = false
+  }
+  return true
+}
 
 function fail(message) {
   throw new Error(message)
@@ -59,6 +76,9 @@ function validateShotSchema(shot, index) {
     if (typeof shot[field] !== 'string' || shot[field].trim().length === 0) {
       fail(`Invalid ${context}.${field}`)
     }
+  }
+  for (const field of ['id', 'baseName', 'captionKey']) {
+    if (!isSafeIdentifier(shot[field])) fail(`Invalid ${context}.${field} identifier`)
   }
 
   if (!ALLOWED_SECTIONS.has(shot.section)) {
@@ -104,8 +124,14 @@ async function main() {
     ids.add(shot.id)
     names.add(shot.baseName)
 
-    const pngPath = path.join(PNG_DIR, `${shot.baseName}.png`)
-    const webpPath = path.join(WEBP_DIR, `${shot.baseName}.webp`)
+    const pngPath = path.resolve(PNG_DIR, `${shot.baseName}.png`)
+    const webpPath = path.resolve(WEBP_DIR, `${shot.baseName}.webp`)
+    if (
+      !pngPath.startsWith(`${PNG_DIR}${path.sep}`) ||
+      !webpPath.startsWith(`${WEBP_DIR}${path.sep}`)
+    ) {
+      fail(`Screenshot path escapes repository asset directories: ${shot.baseName}`)
+    }
 
     const pngInfo = await fileInfo(pngPath)
     const webpInfo = await fileInfo(webpPath)

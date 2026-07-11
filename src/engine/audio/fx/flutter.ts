@@ -18,6 +18,10 @@ const DEFAULT_RATE = 0.55
 const DEFAULT_DEPTH = 0.05
 
 export function createFlutter(context: BaseAudioContext, params: FlutterParams = {}): AudioModule {
+  let current: Required<FlutterParams> = {
+    rate: params.rate ?? DEFAULT_RATE,
+    depth: params.depth ?? DEFAULT_DEPTH,
+  }
   const input = context.createGain()
   input.gain.value = 1
 
@@ -46,8 +50,12 @@ export function createFlutter(context: BaseAudioContext, params: FlutterParams =
   lfo.start(0)
 
   const set = (p: FlutterParams) => {
-    const rate = clamp(p.rate ?? DEFAULT_RATE, 0.1, 1.2)
-    const depth = clamp(p.depth ?? DEFAULT_DEPTH, 0, 0.12)
+    current = {
+      rate: p.rate ?? current.rate,
+      depth: p.depth ?? current.depth,
+    }
+    const rate = clamp(current.rate, 0.1, 1.2)
+    const depth = clamp(current.depth, 0, 0.12)
     // depth maps to ~0..6ms modulation (conservative).
     depthGain.gain.setValueAtTime(depth * 0.006, context.currentTime)
     lfo.frequency.setValueAtTime(rate, context.currentTime)

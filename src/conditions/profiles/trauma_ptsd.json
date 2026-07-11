@@ -1,7 +1,7 @@
 {
   "id": "trauma_ptsd",
   "label": "Trauma / PTSD (Hyperarousal + Intrusion)",
-  "summary": "A metaphor of elevated alertness with abstract interference intrusions. No graphic content—only signal-like textures.",
+  "summary": "A metaphor of elevated alertness with sparse present-moment intrusion bursts. No graphic content; only abstract signal fragments.",
   "framing": {
     "type": "metaphor",
     "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
@@ -21,11 +21,11 @@
     }
   ],
   "safety": {
-    "intensity_default": 0.3,
+    "intensity_default": 0.5,
     "intensity_max": 0.62,
     "warnings": [
       "May be activating. Use Safe Mode and keep Intensity low.",
-      "No sudden jump-scares, but interference may still feel unpleasant for some.",
+      "No sudden jump-scares, but brief abstract bursts may still feel unpleasant for some.",
       "Audio is optional; keep volume low.",
       "Avoid flashing lights or rapid flicker; enable Reduced Motion if sensitive.",
       "Keep volume low; avoid headphones at high volume; you can mute audio at any time."
@@ -46,7 +46,13 @@
       "max_jitter": 0.06
     },
     "reduced_motion_policy": {
-      "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+      "disable_nodes": [
+        "temporal_smear",
+        "feedback_loop",
+        "pulse",
+        "focus_jitter",
+        "intrusion_burst"
+      ],
       "note": "Reduced Motion removes time-based feedback/jitter nodes and keeps a calmer static overlay."
     }
   },
@@ -76,60 +82,55 @@
         "label": "Audio (optional)"
       },
       {
-        "id": "interference",
+        "id": "intrusion_burst",
         "type": "slider",
-        "label": "Interference",
+        "label": "Intrusion Burst",
         "min": 0,
-        "max": 0.2,
+        "max": 0.26,
         "step": 0.01,
-        "target": "video.interference.amount"
+        "target": "video.intrusion_burst.amount"
       }
     ]
   },
   "video_stack": [
     {
-      "id": "grain",
-      "node": "grain",
+      "id": "intrusion",
+      "node": "intrusion_burst",
       "params": {
-        "amount": 0.18,
-        "scale": 1.25,
-        "speed": 0.08
+        "amount": 0.24,
+        "burst_probability": 0.58,
+        "burst_duration_ms": 420,
+        "burst_min_gap_ms": 850,
+        "initial_delay_ms": 180,
+        "zoom": 0.82,
+        "band_count": 5
       }
     },
     {
       "id": "sharpen",
       "node": "edge_sharpen",
       "params": {
-        "amount": 0.07
+        "amount": 0.08
       }
     },
     {
-      "id": "vignette",
-      "node": "vignette",
+      "id": "grain",
+      "node": "grain",
       "params": {
-        "amount": 0.22,
-        "softness": 0.82
-      }
-    },
-    {
-      "id": "intrusions",
-      "node": "interference",
-      "params": {
-        "amount": 0.1,
-        "banding": 0.06,
-        "smoothing": 0.92,
-        "burst_probability": 0.08,
-        "burst_duration_ms": 350,
-        "burst_min_gap_ms": 900
+        "amount": 0.012,
+        "scale": 1.15,
+        "speed": 0.02
       }
     },
     {
       "id": "grade",
       "node": "color_grade",
       "params": {
-        "contrast": 0.06,
-        "saturation": -0.04,
-        "brightness": 0
+        "contrast": 0.08,
+        "saturation": -0.05,
+        "brightness": -0.01,
+        "temperature": 0,
+        "tint": 0
       }
     }
   ],
@@ -143,7 +144,7 @@
       {
         "node": "noise_bed",
         "params": {
-          "level": 0.025,
+          "level": 0.02,
           "color": "pink"
         }
       },
@@ -155,18 +156,11 @@
         }
       },
       {
-        "node": "tremolo",
-        "params": {
-          "rate": 0.65,
-          "depth": 0.08
-        }
-      },
-      {
         "node": "delay",
         "params": {
-          "time": 0.12,
-          "feedback": 0.05,
-          "mix": 0.03
+          "time": 0.13,
+          "feedback": 0.06,
+          "mix": 0.05
         }
       },
       {
@@ -185,25 +179,14 @@
     "analyser_to_params": [
       {
         "source": "rms",
-        "target": "video.grain.amount",
-        "scale": 0.15,
+        "target": "video.intrusion_burst.amount",
+        "scale": 0.06,
         "offset": 0,
-        "smoothing": {
-          "attack": 0.08,
-          "release": 0.25
-        },
-        "clamp": [0, 0.45]
-      },
-      {
-        "source": "rms",
-        "target": "video.interference.amount",
-        "scale": 0.12,
-        "offset": 0.02,
         "smoothing": {
           "attack": 0.05,
           "release": 0.2
         },
-        "clamp": [0, 0.18]
+        "clamp": [0.08, 0.26]
       }
     ]
   },

@@ -6,7 +6,7 @@ import {
   type ConditionComposerPanelProps,
 } from '../src/ui/ConditionComposerPanel'
 import { encodePresetToHash } from '../src/ui/presetShare'
-import type { PresetPayload } from '../src/ui/presetSnapshot'
+import { PRESET_LIBRARY_STORAGE_KEY, type PresetPayload } from '../src/ui/presetSnapshot'
 
 const storageMap = new Map<string, string>()
 const storageMock: Storage = {
@@ -138,5 +138,17 @@ describe('ui/ConditionComposerPanel shared preset hash', () => {
       expect(props.__spies.onConditionIdChange).toHaveBeenCalledTimes(1)
       expect(props.__spies.onAudioEnabledChange).toHaveBeenCalledTimes(1)
     })
+  })
+
+  it('surfaces corrupt preset library storage without deleting it or treating it as clean empty state', async () => {
+    storageMap.set(PRESET_LIBRARY_STORAGE_KEY, 'not valid json {{{')
+    const props = buildProps()
+
+    const { getByRole } = render(<ConditionComposerPanel {...props} />)
+
+    await waitFor(() => {
+      expect(getByRole('alert').textContent).toMatch(/saved preset library could not be read/i)
+    })
+    expect(storageMap.get(PRESET_LIBRARY_STORAGE_KEY)).toBe('not valid json {{{')
   })
 })

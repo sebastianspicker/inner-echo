@@ -1,4 +1,5 @@
 import { getCameraStateLabel } from './cameraMessages'
+import { getAudioStateLabel } from './audioStatusMessages'
 import type { CameraState } from '../engine/video'
 import type { AudioContextStatus } from '../engine/audio'
 import type { EvidenceDocPath } from '../evidence/docs'
@@ -6,6 +7,7 @@ import type { EvidenceDocPath } from '../evidence/docs'
 export interface CameraHeaderProps {
   cameraState: CameraState
   audioStatus: AudioContextStatus
+  audioEnabled: boolean
   isRequesting: boolean
   isActive: boolean
   canStop: boolean
@@ -18,6 +20,7 @@ export interface CameraHeaderProps {
 export function CameraHeader({
   cameraState,
   audioStatus,
+  audioEnabled,
   isRequesting,
   isActive,
   canStop,
@@ -47,7 +50,7 @@ export function CameraHeader({
           </span>
           <span className="ie-pill">
             <span className="ie-pillKey">Audio</span>
-            <span className="ie-pillVal">{audioStatus}</span>
+            <span className="ie-pillVal">{getAudioStateLabel(audioStatus, audioEnabled)}</span>
           </span>
           <button
             type="button"

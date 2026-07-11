@@ -1,8 +1,8 @@
-import { useRef, useState, type Dispatch, type SetStateAction } from 'react'
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { loadProfile } from '../../conditions/loader'
 import { getDefaultControlValues } from '../../conditions/controlTargets'
 import type { Profile } from '../../conditions/schema'
-import { BASELINE_PROFILE } from '../../conditions/fallbackProfiles'
+import { BASELINE_PROFILE, createComposeFallbackProfile } from '../../conditions/fallbackProfiles'
 import {
   composeEffectiveProfile,
   type ComposeReport,
@@ -13,12 +13,15 @@ import {
 import { useAsyncEffect } from './useAsyncEffect'
 import { logger } from '../../utils/logger'
 
-function mergeControlValuesWithDefaults(
+const GLOBAL_CONTROL_KEYS = ['intensity', 'safeMode', 'reducedMotion', 'audioEnabled'] as const
+
+function mergeGlobalControlsWithDefaults(
   defaults: Record<string, number | boolean>,
   previous: Record<string, number | boolean>,
 ): Record<string, number | boolean> {
   const next: Record<string, number | boolean> = { ...defaults }
-  for (const [key, fallback] of Object.entries(defaults)) {
+  for (const key of GLOBAL_CONTROL_KEYS) {
+    const fallback = defaults[key]
     const prev = previous[key]
     if (typeof prev === typeof fallback) {
       next[key] = prev
@@ -32,8 +35,6 @@ export interface UseProfileLoadParams {
   composerMode: ComposerMode
   selectedPresets: SelectedPreset[]
   selectedDimensions: SelectedDimension[]
-  setIntensity: (v: number) => void
-  setAudioEnabled: (v: boolean) => void
   intensity: number
   safeMode: boolean
   reducedMotion: boolean
@@ -54,8 +55,6 @@ export function useProfileLoad(params: UseProfileLoadParams): {
     composerMode,
     selectedPresets,
     selectedDimensions,
-    setIntensity,
-    setAudioEnabled,
     intensity,
     safeMode,
     reducedMotion,
@@ -72,8 +71,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
   const [composeReport, setComposeReport] = useState<ComposeReport | null>(null)
   const [controlValues, setControlValues] = useState<Record<string, number | boolean>>({})
   // loadingCount tracks concurrent async loads via manual increment/decrement.
-  // The Math.max(0, c - 1) guard in the decrement prevents underflow if a cancellation race
-  // causes an extra decrement. This pattern is intentional.
+  // Stale loads must still decrement in finally; ctx.cancelled only prevents result updates.
   const [loadingCount, setLoadingCount] = useState(0)
   const isProfileLoading = loadingCount > 0
 
@@ -87,28 +85,33 @@ export function useProfileLoad(params: UseProfileLoadParams): {
         const prof = p ?? BASELINE_PROFILE
         setProfile(prof)
         setComposeReport(null)
-        const defaults = getDefaultControlValues(prof)
+        const defaults = getDefaultControlValues(prof, { reducedMotion })
         setControlValues(defaults)
-        const safe = prof.safety
-        if (typeof safe?.intensity_default === 'number') {
-          setIntensity(safe.intensity_default)
-        }
-        setAudioEnabled(false)
       } catch (err) {
         if (!ctx.cancelled) {
           setComposeReport(null)
           setProfile(BASELINE_PROFILE)
-          setControlValues(getDefaultControlValues(BASELINE_PROFILE))
-          setAudioEnabled(false)
+          setControlValues(getDefaultControlValues(BASELINE_PROFILE, { reducedMotion }))
           logger.error('loadProfile failed', err)
         }
       } finally {
-        if (!ctx.cancelled) setLoadingCount((c) => Math.max(0, c - 1))
+        setLoadingCount((c) => Math.max(0, c - 1))
       }
     },
-    [conditionId, composerMode, setIntensity, setAudioEnabled],
+    [conditionId, composerMode],
     { onError: (err) => logger.error('loadProfile failed', err) },
   )
+
+  useEffect(() => {
+    if (!profile) return
+    setControlValues((prev) => {
+      const next = getDefaultControlValues(profile, { reducedMotion })
+      for (const key of GLOBAL_CONTROL_KEYS) {
+        if (typeof prev[key] === typeof next[key]) next[key] = prev[key]
+      }
+      return next
+    })
+  }, [profile, reducedMotion])
 
   useAsyncEffect(
     async (ctx) => {
@@ -130,12 +133,20 @@ export function useProfileLoad(params: UseProfileLoadParams): {
         if (ctx.cancelled) return
         setProfile(res.profile)
         setComposeReport(res.report)
-        const defaults = getDefaultControlValues(res.profile)
-        setControlValues((prev) => mergeControlValuesWithDefaults(defaults, prev))
+        const defaults = getDefaultControlValues(res.profile, { reducedMotion })
+        setControlValues((prev) => mergeGlobalControlsWithDefaults(defaults, prev))
       } catch (err) {
-        if (!ctx.cancelled) logger.error('composeEffectiveProfile failed', err)
+        if (!ctx.cancelled) {
+          const fallback = createComposeFallbackProfile(
+            'Profile composition failed; showing the clean fallback profile.',
+          )
+          setProfile(fallback)
+          setComposeReport(null)
+          setControlValues(getDefaultControlValues(fallback, { reducedMotion }))
+          logger.error('composeEffectiveProfile failed', err)
+        }
       } finally {
-        if (!ctx.cancelled) setLoadingCount((c) => Math.max(0, c - 1))
+        setLoadingCount((c) => Math.max(0, c - 1))
       }
     },
     [

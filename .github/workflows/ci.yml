@@ -108,7 +108,7 @@ jobs:
         run: npm ci --ignore-scripts && npm rebuild
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chrome firefox webkit
+        run: npx playwright install --with-deps firefox webkit chrome
 
       - name: Run RC local gate parity
         run: npm run release:rc:local

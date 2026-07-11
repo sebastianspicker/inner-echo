@@ -1,5 +1,5 @@
 /**
- * Phase 6: Vignette effect — darkens edges. Single pass, amount (and optional softness).
+ * Vignette effect: darkens edges in a single pass, with optional softness.
  */
 
 import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'

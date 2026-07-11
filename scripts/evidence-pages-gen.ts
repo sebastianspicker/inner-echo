@@ -69,22 +69,22 @@ type ScientificSource = {
   dimensionId: string
 }
 
-function readJsonFirstObject<T>(filePath: string): T {
+const readJsonFirstObject = <T>(filePath: string): T => {
   const text = fs.readFileSync(filePath, 'utf-8')
   return parseFirstJsonObject(text) as T
 }
 
-function ensureDir(dir: string): void {
+const ensureDir = (dir: string): void => {
   fs.mkdirSync(dir, { recursive: true })
 }
 
-function writeFileIfChanged(filePath: string, contents: string): void {
+const writeFileIfChanged = (filePath: string, contents: string): void => {
   const prev = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf-8') : null
   if (prev === contents) return
   fs.writeFileSync(filePath, contents, 'utf-8')
 }
 
-function strengthLabel(s?: string): string {
+const strengthLabel = (s?: string): string => {
   const x = String(s ?? '').toLowerCase()
   if (x === 'high') return 'High'
   if (x === 'medium') return 'Medium'
@@ -93,7 +93,7 @@ function strengthLabel(s?: string): string {
   return s ? String(s) : 'Unrated'
 }
 
-function normalizeStrength(s?: string): 'high' | 'medium' | 'low' | 'hypothesis' | 'unrated' {
+const normalizeStrength = (s?: string): 'high' | 'medium' | 'low' | 'hypothesis' | 'unrated' => {
   const x = String(s ?? '').toLowerCase()
   if (x === 'high') return 'high'
   if (x === 'medium') return 'medium'
@@ -102,14 +102,13 @@ function normalizeStrength(s?: string): 'high' | 'medium' | 'low' | 'hypothesis'
   return 'unrated'
 }
 
-function nodeSimulationSummary(node: string): string {
+const nodeSimulationSummary = (node: string): string => {
   const n = node.toLowerCase()
   // Keep this strictly technical (what it does), not psychological claims.
   const map: Record<string, string> = {
     grain: 'Adds fine noise texture (clamped).',
     vignette: 'Darkens edges to narrow the frame (static or gently modulated).',
     edge_sharpen: 'Subtle edge enhancement (non-flickering).',
-    chroma_aberration: 'Minor RGB channel offset near edges (very low).',
     chromatic_aberration: 'Minor RGB channel offset near edges (very low).',
     temporal_smear: 'Blends previous frames for persistence/smear (feedback clamped).',
     color_grade: 'Adjusts saturation/contrast/tonal balance (clamped).',
@@ -157,7 +156,7 @@ function parseEvidenceMatrix(root: string): Map<string, EvidenceMatrixRow> {
   return out
 }
 
-function extractDois(text: string): string[] {
+const extractDois = (text: string): string[] => {
   const dois = new Set<string>()
   // Match either doi.org URLs or raw DOI tokens.
   const re =
@@ -170,7 +169,7 @@ function extractDois(text: string): string[] {
   return Array.from(dois)
 }
 
-function parseCorpusSourcesByDimension(root: string): Map<string, ScientificSource[]> {
+const parseCorpusSourcesByDimension = (root: string): Map<string, ScientificSource[]> => {
   const corpusPaths = [
     'docs/references/reports/deep-research-report.md',
     'docs/references/reports/deep-research-report-2.md',
@@ -302,7 +301,7 @@ function parseCorpusSourcesByDimension(root: string): Map<string, ScientificSour
   return out
 }
 
-function parseMotifClaims(root: string): Map<string, MotifClaim> {
+const parseMotifClaims = (root: string): Map<string, MotifClaim> => {
   const filePath = path.join(root, 'docs/references/MOTIF_CLAIMS.json')
   if (!fs.existsSync(filePath)) return new Map()
   const data = JSON.parse(fs.readFileSync(filePath, 'utf-8')) as MotifClaimsFile
@@ -322,14 +321,14 @@ function parseMotifClaims(root: string): Map<string, MotifClaim> {
   return out
 }
 
-function claimLabelTitle(label: MotifClaimLabel): string {
+const claimLabelTitle = (label: MotifClaimLabel): string => {
   if (label === 'supported') return 'Supported'
   if (label === 'mixed') return 'Mixed'
   if (label === 'artistic') return 'Artistic'
   return 'Hypothesis'
 }
 
-function motifIndexPage(motifs: string[]): string {
+const motifIndexPage = (motifs: string[]): string => {
   const items = motifs
     .slice()
     .sort((a, b) => a.localeCompare(b))
@@ -348,14 +347,14 @@ ${items}
 `
 }
 
-function motifPage(
+const motifPage = (
   motif: string,
   usedByDims: Array<{ id: string; label: string; strength: string; doc: string }>,
   usedByConditions: Array<{ id: string; label: string; doc: string }>,
   matrixByDim: Map<string, EvidenceMatrixRow>,
   claimsByKey: Map<string, MotifClaim>,
   sourcesByDim: Map<string, ScientificSource[]>,
-): string {
+): string => {
   const dimsList = usedByDims
     .slice()
     .sort((a, b) => a.id.localeCompare(b.id))
@@ -443,7 +442,7 @@ ${sourcesMd}
 `
 }
 
-function dimPage(dim: ExperienceDimensionDef, claimsByKey: Map<string, MotifClaim>): string {
+const dimPage = (dim: ExperienceDimensionDef, claimsByKey: Map<string, MotifClaim>): string => {
   const video = dim.motif_summary?.video_nodes ?? []
   const audio = dim.motif_summary?.audio_nodes ?? []
   const strength = strengthLabel(dim.evidence_strength)
@@ -536,14 +535,10 @@ ${safety.length ? safety.map((s) => `- ${s}`).join('\n') : '- Keep modulation sm
 `
 }
 
-function conditionPage(profile: Profile, dimsById: Map<string, ExperienceDimensionDef>): string {
-  const dims = (profile.experience_dimensions ?? [])
-    .slice()
-    .sort((a, b) => a.id.localeCompare(b.id))
-  const warnings = profile.safety?.warnings ?? []
-
-  // Aggregate strength conservatively: weakest dimension wins.
-  // Priority (lower = weaker): hypothesis < low < medium < high.
+const conditionEvidenceStrength = (
+  dimensions: Array<{ id: string; weight: number }>,
+  dimsById: Map<string, ExperienceDimensionDef>,
+): string => {
   const strengthRank: Record<string, number> = {
     hypothesis: 0,
     low: 1,
@@ -553,22 +548,51 @@ function conditionPage(profile: Profile, dimsById: Map<string, ExperienceDimensi
   }
   const rankToStrength = ['hypothesis', 'low', 'medium', 'high', 'unrated'] as const
   let minRank = strengthRank.unrated
-  for (const d of dims) {
-    const s = normalizeStrength(dimsById.get(d.id)?.evidence_strength)
+  for (const dimension of dimensions) {
+    const s = normalizeStrength(dimsById.get(dimension.id)?.evidence_strength)
     minRank = Math.min(minRank, strengthRank[s] ?? strengthRank.unrated)
   }
   const agg = rankToStrength[minRank] ?? 'unrated'
+  return strengthLabel(agg === 'unrated' ? undefined : agg)
+}
 
-  const aggLabel = strengthLabel(agg === 'unrated' ? undefined : agg)
-
-  // Collect motifs from included dimensions (for quick scanning).
-  const motifSet = new Set<string>()
-  for (const d of dims) {
-    const def = dimsById.get(d.id)
-    for (const n of def?.motif_summary?.video_nodes ?? []) motifSet.add(n)
-    for (const n of def?.motif_summary?.audio_nodes ?? []) motifSet.add(n)
+const conditionMotifs = (
+  dimensions: Array<{ id: string; weight: number }>,
+  dimsById: Map<string, ExperienceDimensionDef>,
+): string[] => {
+  const motifs = new Set<string>()
+  for (const dimension of dimensions) {
+    const definition = dimsById.get(dimension.id)
+    for (const node of definition?.motif_summary?.video_nodes ?? []) motifs.add(node)
+    for (const node of definition?.motif_summary?.audio_nodes ?? []) motifs.add(node)
   }
-  const motifs = Array.from(motifSet).sort((a, b) => a.localeCompare(b))
+  return Array.from(motifs).sort((a, b) => a.localeCompare(b))
+}
+
+const conditionDimensionList = (
+  dimensions: Array<{ id: string; weight: number }>,
+  dimsById: Map<string, ExperienceDimensionDef>,
+): string => {
+  if (!dimensions.length) return '_No dimensions listed in profile._'
+  return dimensions
+    .map((dimension) => {
+      const definition = dimsById.get(dimension.id)
+      const label = definition?.label ?? dimension.id
+      const strength = strengthLabel(definition?.evidence_strength)
+      const doc = definition?.rationale_doc ?? `docs/references/dimensions/${dimension.id}.md`
+      return `- **${label}** (\`${dimension.id}\`, weight ${Math.round(dimension.weight * 100)}%) — Evidence: **${strength}** — \`${doc}\``
+    })
+    .join('\n')
+}
+
+const conditionPage = (profile: Profile, dimsById: Map<string, ExperienceDimensionDef>): string => {
+  const dimensions = (profile.experience_dimensions ?? [])
+    .slice()
+    .sort((a, b) => a.id.localeCompare(b.id))
+  const warnings = profile.safety?.warnings ?? []
+  const strength = conditionEvidenceStrength(dimensions, dimsById)
+  const motifs = conditionMotifs(dimensions, dimsById)
+  const dimensionList = conditionDimensionList(dimensions, dimsById)
 
   return `# ${profile.label} — evidence summary
 
@@ -577,25 +601,13 @@ function conditionPage(profile: Profile, dimsById: Map<string, ExperienceDimensi
 ## Summary
 
 - **Condition preset**: \`${profile.id}\`
-- **Evidence summary (conservative)**: **${aggLabel}**
+- **Evidence summary (conservative)**: **${strength}**
 - **What this is**: a curated composition of experience dimensions and conservative AV motifs.
 - **What this is not**: a diagnostic model, a therapy tool, or a statement about “what X looks like”.
 
 ## Included experience dimensions
 
-${
-  dims.length
-    ? dims
-        .map((d) => {
-          const def = dimsById.get(d.id)
-          const label = def?.label ?? d.id
-          const strength = strengthLabel(def?.evidence_strength)
-          const doc = def?.rationale_doc ?? `docs/references/dimensions/${d.id}.md`
-          return `- **${label}** (\`${d.id}\`, weight ${Math.round(d.weight * 100)}%) — Evidence: **${strength}** — \`${doc}\``
-        })
-        .join('\n')
-    : '_No dimensions listed in profile._'
-}
+${dimensionList}
 
 ## Evidence links (in-repo)
 
@@ -615,7 +627,93 @@ ${warnings.length ? warnings.map((w) => `- ${w}`).join('\n') : '- Use Safe Mode 
 `
 }
 
-function main(): void {
+const writeDimensionPages = (
+  root: string,
+  dimensions: ExperienceDimensionDef[],
+  claimsByKey: Map<string, MotifClaim>,
+): void => {
+  const outputDir = path.join(root, 'docs/references/dimensions')
+  ensureDir(outputDir)
+  for (const dimension of dimensions)
+    writeFileIfChanged(path.join(outputDir, `${dimension.id}.md`), dimPage(dimension, claimsByKey))
+}
+
+const loadProfiles = (root: string): Profile[] => {
+  const profilesDir = path.join(root, 'src/conditions/profiles')
+  return fs
+    .readdirSync(profilesDir)
+    .filter((file) => file.endsWith('.json'))
+    .map((file) => readJsonFirstObject<Profile>(path.join(profilesDir, file)))
+}
+
+const writeConditionPages = (
+  root: string,
+  profiles: Profile[],
+  dimsById: Map<string, ExperienceDimensionDef>,
+): void => {
+  const outputDir = path.join(root, 'docs/references/conditions')
+  ensureDir(outputDir)
+  for (const profile of profiles)
+    writeFileIfChanged(path.join(outputDir, `${profile.id}.md`), conditionPage(profile, dimsById))
+}
+
+const collectMotifs = (dimensions: ExperienceDimensionDef[]): string[] => {
+  const motifs = new Set<string>()
+  for (const dimension of dimensions) {
+    for (const node of dimension.motif_summary?.video_nodes ?? []) motifs.add(node)
+    for (const node of dimension.motif_summary?.audio_nodes ?? []) motifs.add(node)
+  }
+  return Array.from(motifs)
+}
+
+const writeMotifPages = (
+  root: string,
+  motifs: string[],
+  dimensions: ExperienceDimensionDef[],
+  profiles: Profile[],
+  matrixByDim: Map<string, EvidenceMatrixRow>,
+  claimsByKey: Map<string, MotifClaim>,
+  sourcesByDim: Map<string, ScientificSource[]>,
+): void => {
+  const outputDir = path.join(root, 'docs/references/motifs')
+  ensureDir(outputDir)
+  writeFileIfChanged(path.join(outputDir, 'INDEX.md'), motifIndexPage(motifs))
+  for (const motif of motifs) {
+    const usedByDims = dimensions.flatMap((dimension) => {
+      const nodes = [
+        ...(dimension.motif_summary?.video_nodes ?? []),
+        ...(dimension.motif_summary?.audio_nodes ?? []),
+      ]
+      if (!nodes.includes(motif)) return []
+      return [
+        {
+          id: dimension.id,
+          label: dimension.label,
+          strength: strengthLabel(dimension.evidence_strength),
+          doc: dimension.rationale_doc ?? `docs/references/dimensions/${dimension.id}.md`,
+        },
+      ]
+    })
+    const usedIds = new Set(usedByDims.map((dimension) => dimension.id))
+    const usedByConditions = profiles.flatMap((profile) => {
+      if (!(profile.experience_dimensions ?? []).some((dimension) => usedIds.has(dimension.id)))
+        return []
+      return [
+        {
+          id: profile.id,
+          label: profile.label,
+          doc: `docs/references/conditions/${profile.id}.md`,
+        },
+      ]
+    })
+    writeFileIfChanged(
+      path.join(outputDir, `${motif}.md`),
+      motifPage(motif, usedByDims, usedByConditions, matrixByDim, claimsByKey, sourcesByDim),
+    )
+  }
+}
+
+const main = (): void => {
   const root = process.cwd()
 
   const dimsFile = readJsonFirstObject<ExperienceDimensionsFile>(
@@ -627,81 +725,14 @@ function main(): void {
   const claimsByKey = parseMotifClaims(root)
   const sourcesByDim = parseCorpusSourcesByDimension(root)
 
-  const outDimsDir = path.join(root, 'docs/references/dimensions')
-  ensureDir(outDimsDir)
-
-  for (const dim of dims) {
-    const filePath = path.join(outDimsDir, `${dim.id}.md`)
-    writeFileIfChanged(filePath, dimPage(dim, claimsByKey))
-  }
-
-  const profilesDir = path.join(root, 'src/conditions/profiles')
-  const profileFiles = fs.readdirSync(profilesDir).filter((f) => f.endsWith('.json'))
-
-  const outConditionsDir = path.join(root, 'docs/references/conditions')
-  ensureDir(outConditionsDir)
-
-  for (const file of profileFiles) {
-    const prof = readJsonFirstObject<Profile>(path.join(profilesDir, file))
-    const filePath = path.join(outConditionsDir, `${prof.id}.md`)
-    writeFileIfChanged(filePath, conditionPage(prof, dimsById))
-  }
-
-  // Motif pages
-  const outMotifsDir = path.join(root, 'docs/references/motifs')
-  ensureDir(outMotifsDir)
-
-  const motifsAll = new Set<string>()
-  for (const dim of dims) {
-    for (const n of dim.motif_summary?.video_nodes ?? []) motifsAll.add(n)
-    for (const n of dim.motif_summary?.audio_nodes ?? []) motifsAll.add(n)
-  }
-
-  const motifsList = Array.from(motifsAll)
-  writeFileIfChanged(path.join(outMotifsDir, 'INDEX.md'), motifIndexPage(motifsList))
-
-  // Build condition metadata for motif pages
-  const condMeta: Array<{ id: string; label: string; dims: string[] }> = []
-  for (const file of profileFiles) {
-    const prof = readJsonFirstObject<Profile>(path.join(profilesDir, file))
-    const dimIds = (prof.experience_dimensions ?? []).map((d) => d.id)
-    condMeta.push({ id: prof.id, label: prof.label, dims: dimIds })
-  }
-
-  for (const motif of motifsList) {
-    const usedByDims: Array<{ id: string; label: string; strength: string; doc: string }> = []
-    for (const dim of dims) {
-      const nodes = [
-        ...(dim.motif_summary?.video_nodes ?? []),
-        ...(dim.motif_summary?.audio_nodes ?? []),
-      ]
-      if (nodes.includes(motif)) {
-        usedByDims.push({
-          id: dim.id,
-          label: dim.label,
-          strength: strengthLabel(dim.evidence_strength),
-          doc: dim.rationale_doc ?? `docs/references/dimensions/${dim.id}.md`,
-        })
-      }
-    }
-    const usedByConditions: Array<{ id: string; label: string; doc: string }> = []
-    for (const c of condMeta) {
-      const any = c.dims.some((d) => usedByDims.some((u) => u.id === d))
-      if (any)
-        usedByConditions.push({
-          id: c.id,
-          label: c.label,
-          doc: `docs/references/conditions/${c.id}.md`,
-        })
-    }
-    writeFileIfChanged(
-      path.join(outMotifsDir, `${motif}.md`),
-      motifPage(motif, usedByDims, usedByConditions, matrixByDim, claimsByKey, sourcesByDim),
-    )
-  }
+  writeDimensionPages(root, dims, claimsByKey)
+  const profiles = loadProfiles(root)
+  writeConditionPages(root, profiles, dimsById)
+  const motifsList = collectMotifs(dims)
+  writeMotifPages(root, motifsList, dims, profiles, matrixByDim, claimsByKey, sourcesByDim)
 
   console.log(
-    `[evidence-pages-gen] Wrote ${dims.length} dimension page(s), ${profileFiles.length} condition page(s), ${motifsList.length} motif page(s).`,
+    `[evidence-pages-gen] Wrote ${dims.length} dimension page(s), ${profiles.length} condition page(s), ${motifsList.length} motif page(s).`,
   )
 }
 

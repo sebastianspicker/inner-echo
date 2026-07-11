@@ -16,7 +16,6 @@ Purpose: current, source-backed inventory of maintained documentation and genera
 | `docs/SECURITY.md` | canonical | Privacy/security constraints and release checks. |
 | `docs/RELEASE_RC.md` | canonical | Single-pass release-candidate runbook and tagging workflow. |
 | `docs/CONTRACT_VERIFICATION.md` | canonical | Contract verification expectations. |
-| `docs/MIGRATION_NOTES.md` | canonical | Where prior docs moved and what was removed. |
 | `docs/CHANGELOG.md` | canonical | High-level repository documentation changelog. |
 
 ## Evidence docs
@@ -41,13 +40,15 @@ Purpose: current, source-backed inventory of maintained documentation and genera
 | `docs/generated/preset-schema.json` | generated | Derived schema output. |
 | `docs/generated/preset-schema.md` | generated | Human-readable schema output. |
 
-## Historical docs
+## Historical and local-only docs
 
-No historical docs are intentionally retained in-repo at this time.
+| Path | Status | Notes |
+|---|---|---|
+| `docs/archive/` | local archive | Historical migration, audit, plan, status, and ledger artifacts retained only for local context. This directory is ignored and should not be committed or used as active navigation. |
 
 ## Cleanup policy
 
 - Keep canonical docs internally link-consistent.
 - Keep generated docs reproducible from scripts; do not hand-edit.
-- Keep historical docs explicitly labeled as historical, not canonical.
-- Remove duplicate stubs/phase scraps when they are superseded.
+- Keep historical and completed remediation artifacts out of active docs; archive them locally or delete them when superseded.
+- Remove duplicate stubs, phase scraps, plan files, ledgers, and status files when they are superseded.

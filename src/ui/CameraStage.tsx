@@ -3,7 +3,8 @@ import type { AudioContextStatus } from '../engine/audio'
 export interface CameraStageProps {
   containerRef: React.RefObject<HTMLDivElement | null>
   videoRef: React.RefObject<HTMLVideoElement | null>
-  canvasRef: React.RefObject<HTMLCanvasElement | null>
+  webglCanvasRef: React.RefObject<HTMLCanvasElement | null>
+  fallbackCanvasRef: React.RefObject<HTMLCanvasElement | null>
   rmsDebugRef: React.RefObject<HTMLSpanElement | null>
   isActive: boolean
   audioStatus: AudioContextStatus
@@ -13,7 +14,8 @@ export interface CameraStageProps {
 export function CameraStage({
   containerRef,
   videoRef,
-  canvasRef,
+  webglCanvasRef,
+  fallbackCanvasRef,
   rmsDebugRef,
   isActive,
   audioStatus,
@@ -26,7 +28,8 @@ export function CameraStage({
       aria-label="Camera stage"
     >
       <video ref={videoRef} className="ie-video" playsInline muted aria-label="Camera feed" />
-      <canvas ref={canvasRef} className="ie-canvas" aria-hidden="true" />
+      <canvas ref={webglCanvasRef} className="ie-canvas" aria-hidden="true" />
+      <canvas ref={fallbackCanvasRef} className="ie-canvas" aria-hidden="true" hidden />
       {import.meta.env.DEV && debugOverlay && audioStatus === 'on' && (
         <span ref={rmsDebugRef} className="ie-debugChip" data-phase="reactive" aria-hidden="true" />
       )}

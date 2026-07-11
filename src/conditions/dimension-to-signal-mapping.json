@@ -967,7 +967,7 @@
           }
         },
         {
-          "node": "chroma_aberration",
+          "node": "chromatic_aberration",
           "params_hint": {
             "amount": "0.03..0.09 (very low)"
           }
@@ -1085,7 +1085,7 @@
           }
         },
         {
-          "node": "chroma_aberration",
+          "node": "chromatic_aberration",
           "params_hint": {
             "amount": "0.02..0.06 (micro)"
           }
