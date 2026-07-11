@@ -13,7 +13,6 @@ import type { Profile } from '../../conditions/schema'
 import {
   getProfileEntryForBuiltIndex,
   NODE_FACTORY,
-  normalizeVideoNodeName,
   shouldSkipNode,
 } from '../../conditions/graphBuilder'
 import { getReducedMotionDisableNodes } from '../../conditions/normalize'
@@ -53,16 +52,16 @@ const VIDEO_NODE_ALIASES: Record<string, string[]> = {
   chromatic_aberration: ['chromatic_aberration', 'chroma_aberration'],
 }
 
-const getBaseNumeric = (
+function getBaseNumeric(
   baseControlValues: Record<string, number | boolean>,
   key: string,
   fallback: number,
-): number => {
+): number {
   const v = baseControlValues[key]
   return typeof v === 'number' && Number.isFinite(v) ? v : fallback
 }
 
-const getProfileVideoBase = (profile: Profile, key: string, reducedMotion: boolean): number => {
+function getProfileVideoBase(profile: Profile, key: string, reducedMotion: boolean): number {
   // key is "builtIndex.param"
   const dot = key.indexOf('.')
   if (dot <= 0) return 0
@@ -75,7 +74,7 @@ const getProfileVideoBase = (profile: Profile, key: string, reducedMotion: boole
   return typeof v === 'number' && Number.isFinite(v) ? v : 0
 }
 
-const getProfileAudioBase = (profile: Profile, key: string): number => {
+function getProfileAudioBase(profile: Profile, key: string): number {
   // key is "audio.<chainIndex>.<param>"
   const parts = key.split('.')
   if (parts.length < 3) return 0
@@ -93,7 +92,7 @@ const getProfileAudioBase = (profile: Profile, key: string): number => {
  * video stack only once. Reused by all video key lookups for the same profile
  * and reducedMotion setting.
  */
-const buildVideoNodeIndex = (profile: Profile, reducedMotion: boolean): Map<string, number[]> => {
+function buildVideoNodeIndex(profile: Profile, reducedMotion: boolean): Map<string, number[]> {
   const index = new Map<string, number[]>()
   let builtIndex = 0
   const reducedMotionDisable = getReducedMotionDisableNodes(profile)
@@ -101,9 +100,9 @@ const buildVideoNodeIndex = (profile: Profile, reducedMotion: boolean): Map<stri
     const nodeType = def.node
     if (!nodeType || typeof nodeType !== 'string') continue
     if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) continue
-    const entryType = normalizeVideoNodeName(nodeType)
-    if (!NODE_FACTORY[entryType]) continue
+    if (!NODE_FACTORY[nodeType.toLowerCase()]) continue
     const entryId = (def.id ?? nodeType).toLowerCase()
+    const entryType = nodeType.toLowerCase()
     for (const key of [entryId, entryType]) {
       let arr = index.get(key)
       if (!arr) {
@@ -117,7 +116,7 @@ const buildVideoNodeIndex = (profile: Profile, reducedMotion: boolean): Map<stri
   return index
 }
 
-const resolveVideoKeysFromIndex = (videoIndex: Map<string, number[]>, target: string): string[] => {
+function resolveVideoKeysFromIndex(videoIndex: Map<string, number[]>, target: string): string[] {
   const t = target.trim().toLowerCase()
   if (!t.startsWith('video.')) return []
   const rest = t.slice(6)
@@ -133,7 +132,7 @@ const resolveVideoKeysFromIndex = (videoIndex: Map<string, number[]>, target: st
   return [...indices].map((i) => `${i}.${param}`)
 }
 
-const resolveAudioKeys = (profile: Profile, nodeId: string, param: string): string[] => {
+function resolveAudioKeys(profile: Profile, nodeId: string, param: string): string[] {
   const chain = profile.audio_stack?.chain ?? []
   const indices: number[] = []
   chain.forEach((n, idx) => {
@@ -180,10 +179,7 @@ export function createCouplingEngine(
   let videoVignetteAmounts = resolveVideoKeysFromIndex(videoIndex, 'video.vignette.amount')
   let videoInterferenceAmounts = resolveVideoKeysFromIndex(videoIndex, 'video.interference.amount')
   let videoSharpenAmounts = resolveVideoKeysFromIndex(videoIndex, 'video.edge_sharpen.amount')
-  let videoChromaAmounts = resolveVideoKeysFromIndex(
-    videoIndex,
-    'video.chromatic_aberration.amount',
-  )
+  let videoChromaAmounts = resolveVideoKeysFromIndex(videoIndex, 'video.chroma_aberration.amount')
   let videoPulseDepths = resolveVideoKeysFromIndex(videoIndex, 'video.pulse.depth')
   let videoGazeAmounts = resolveVideoKeysFromIndex(videoIndex, 'video.gaze_tunnel.amount')
   let videoGazeEdgeGains = resolveVideoKeysFromIndex(videoIndex, 'video.gaze_tunnel.edge_gain')
@@ -526,7 +522,7 @@ export function createCouplingEngine(
     videoVignetteAmounts = resolveVideoKeysFromIndex(videoIndex, 'video.vignette.amount')
     videoInterferenceAmounts = resolveVideoKeysFromIndex(videoIndex, 'video.interference.amount')
     videoSharpenAmounts = resolveVideoKeysFromIndex(videoIndex, 'video.edge_sharpen.amount')
-    videoChromaAmounts = resolveVideoKeysFromIndex(videoIndex, 'video.chromatic_aberration.amount')
+    videoChromaAmounts = resolveVideoKeysFromIndex(videoIndex, 'video.chroma_aberration.amount')
     videoPulseDepths = resolveVideoKeysFromIndex(videoIndex, 'video.pulse.depth')
     videoGazeAmounts = resolveVideoKeysFromIndex(videoIndex, 'video.gaze_tunnel.amount')
     videoGazeEdgeGains = resolveVideoKeysFromIndex(videoIndex, 'video.gaze_tunnel.edge_gain')

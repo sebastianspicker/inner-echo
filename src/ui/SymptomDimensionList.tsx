@@ -70,14 +70,12 @@ export function SymptomDimensionList({
   onOpenEvidence,
 }: SymptomDimensionListProps) {
   return (
-    <div className="composer__section" role="group" aria-label="Symptom-first dimensions">
+    <div className="composer__section" role="group" aria-label="Experience dimensions">
       <div className="composer__title">Experience dimensions</div>
       <p className="composer__hint">
-        Dimension descriptions and evidence links are read from{' '}
-        <code>src/conditions/experience-dimensions.json</code> (read-only). Motif-to-node mapping is
-        applied by the Composition Layer (next step).
+        Select patterns to combine into one bounded audiovisual profile. Each evidence link explains
+        the metaphor, its source basis, and its limits.
       </p>
-      {/* Note: if the dimensions list grows significantly, consider virtualizing this list (e.g. react-window). */}
       <div className="composer__list">
         {dims.map((dim) => {
           const enabled = dimIds.has(dim.id)

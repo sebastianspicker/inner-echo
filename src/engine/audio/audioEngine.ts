@@ -47,12 +47,12 @@ const MIC_LIMITER_RELEASE = 0.1
 // which always creates an ArrayBuffer-backed typed array.
 type F32 = Float32Array<ArrayBuffer>
 
-const ensureSize = (buf: F32, size: number): F32 => {
+function ensureSize(buf: F32, size: number): F32 {
   if (buf.length === size) return buf
   return new Float32Array(size)
 }
 
-const safeDisconnect = (node: AudioNode | null): void => {
+function safeDisconnect(node: AudioNode | null): void {
   if (!node) return
   try {
     node.disconnect()
@@ -61,38 +61,11 @@ const safeDisconnect = (node: AudioNode | null): void => {
   }
 }
 
-const currentAudioContext = (): AudioContext | null => {
-  return getAudioContext()
-}
-
-const setInputModeGains = (
-  mode: AudioInputMode,
-  synthGain: GainNode | null,
-  micGain: GainNode | null,
-): void => {
-  const ctx = currentAudioContext()
-  if (!ctx) return
-  const now = ctx.currentTime
-  const synthLevel = mode === 'mic' ? 0 : mode === 'mix' ? 0.6 : 1
-  const micLevel = mode === 'synth' ? 0 : mode === 'mix' ? 0.6 : 1
-  synthGain?.gain.cancelScheduledValues(now)
-  synthGain?.gain.setValueAtTime(synthLevel, now)
-  micGain?.gain.cancelScheduledValues(now)
-  micGain?.gain.setValueAtTime(micLevel, now)
-}
-
-const getActiveAudioNodeTypes = (audioStack: AudioStackConfig | null | undefined): string[] => {
-  if (audioStack?.enabled !== true) return []
-  return (audioStack.chain ?? [])
-    .map((definition) => String(definition.node ?? '').toLowerCase())
-    .filter(isKnownAudioNodeType)
-}
-
 /**
  * Compute RMS from AnalyserNode float time-domain data. Returns 0 if no data.
  * Uses a provided scratch buffer to avoid per-frame allocations.
  */
-const computeRms = (analyser: AnalyserNode, scratchTime: F32): { rms: number; scratch: F32 } => {
+function computeRms(analyser: AnalyserNode, scratchTime: F32): { rms: number; scratch: F32 } {
   const bufferLength = analyser.fftSize
   const data = ensureSize(scratchTime, bufferLength)
   analyser.getFloatTimeDomainData(data)
@@ -108,7 +81,7 @@ const computeRms = (analyser: AnalyserNode, scratchTime: F32): { rms: number; sc
  * Compute spectral centroid and flux from analyser frequency data.
  * Returns centroid normalized 0..1 and flux 0..1 (heuristic normalization).
  */
-const computeSpectralFeatures = (
+function computeSpectralFeatures(
   analyser: AnalyserNode,
   prevMag: F32 | null,
   scratchDb: F32,
@@ -120,7 +93,7 @@ const computeSpectralFeatures = (
   high: number
   nextPrev: F32
   scratchDb: F32
-} => {
+} {
   const n = analyser.frequencyBinCount
   const db = ensureSize(scratchDb, n)
   analyser.getFloatFrequencyData(db)
@@ -263,20 +236,33 @@ export function createAudioEngine(
   let micRequestSeq = 0
   let desiredAudioStack: AudioStackConfig | null | undefined = initialAudioStack
 
-  const applyMicGateEnvelope = (micRms: number, dtSec: number): void => {
+  function getCtx(): AudioContext | null {
+    return getAudioContext()
+  }
+
+  function applyInputMode(): void {
+    const ctx = getCtx()
+    if (!ctx) return
+    const now = ctx.currentTime
+    const syn = inputMode === 'mic' ? 0 : inputMode === 'mix' ? 0.6 : 1
+    const mic = inputMode === 'synth' ? 0 : inputMode === 'mix' ? 0.6 : 1
+    synthGain?.gain.cancelScheduledValues(now)
+    synthGain?.gain.setValueAtTime(syn, now)
+    micGain?.gain.cancelScheduledValues(now)
+    micGain?.gain.setValueAtTime(mic, now)
+  }
+
+  function applyMicGateEnvelope(micRms: number, dtSec: number): void {
     if (!micGateGain) return
     const threshold = clamp01(micGate) * 0.08
     const knee = 0.02
     const raw = clamp01((micRms - threshold) / knee)
     const target = raw * raw // softer near threshold
     micGateSmoothed = smoothStep(micGateSmoothed, target, dtSec, 0.04, 0.18)
-    micGateGain.gain.setValueAtTime(
-      clamp01(micGateSmoothed),
-      currentAudioContext()?.currentTime ?? 0,
-    )
+    micGateGain.gain.setValueAtTime(clamp01(micGateSmoothed), getCtx()?.currentTime ?? 0)
   }
 
-  const stopMicGateLoop = (): void => {
+  function stopMicGateLoop(): void {
     if (micGateIntervalId) {
       clearInterval(micGateIntervalId)
       micGateIntervalId = null
@@ -284,7 +270,7 @@ export function createAudioEngine(
     lastMicGateTickMs = null
   }
 
-  const startMicGateLoop = (): void => {
+  function startMicGateLoop(): void {
     if (micGateIntervalId) return
     lastMicGateTickMs = typeof performance !== 'undefined' ? performance.now() : Date.now()
     micGateIntervalId = setInterval(() => {
@@ -299,8 +285,8 @@ export function createAudioEngine(
     }, 50)
   }
 
-  const buildAndConnect = (audioStack: AudioStackConfig | null | undefined): void => {
-    const ctx = currentAudioContext()
+  function buildAndConnect(audioStack: AudioStackConfig | null | undefined): void {
+    const ctx = getCtx()
     if (!ctx || !masterGain || !mixer || !synthGain) return
 
     // Disconnect previous routing before rebuilding to avoid stacked parallel connections.
@@ -317,7 +303,11 @@ export function createAudioEngine(
     }
 
     const enabled = audioStack?.enabled === true
-    activeChainNodes = getActiveAudioNodeTypes(audioStack)
+    activeChainNodes = enabled
+      ? (audioStack?.chain ?? [])
+          .map((def) => String(def.node ?? '').toLowerCase())
+          .filter((nodeType) => isKnownAudioNodeType(nodeType))
+      : []
     if (enabled) {
       synthModule = createSynth(ctx, {})
       synthModule.connect(synthGain)
@@ -349,13 +339,13 @@ export function createAudioEngine(
       analyserNode.connect(masterGain)
     }
 
-    setInputModeGains(inputMode, synthGain, micGain)
+    applyInputMode()
   }
 
-  const setConditionAudio = (audioStack: AudioStackConfig | null | undefined): void => {
+  function setConditionAudio(audioStack: AudioStackConfig | null | undefined): void {
     if (disposed) return
     desiredAudioStack = audioStack
-    const ctx = currentAudioContext()
+    const ctx = getCtx()
     if (!ctx || !masterGain) return
 
     if (switchTimeoutId) {
@@ -374,14 +364,14 @@ export function createAudioEngine(
       if (masterGain) {
         const nextEnabled = nextStack?.enabled === true
         const targetVol = nextEnabled ? (nextStack?.master?.volume ?? 0.22) : 0
-        const now = currentAudioContext()?.currentTime ?? 0
+        const now = getCtx()?.currentTime ?? 0
         masterGain.gain.setValueAtTime(0, now)
         masterGain.gain.linearRampToValueAtTime(targetVol, now + rampSec)
       }
     }, RAMP_MS)
   }
 
-  const stopMic = (): void => {
+  function stopMic(): void {
     micRequestSeq++
     stopMicGateLoop()
     if (micStream) {
@@ -405,9 +395,9 @@ export function createAudioEngine(
     callbacks.onMicStatusChange?.('off')
   }
 
-  const requestMic = async (): Promise<void> => {
+  async function requestMic(): Promise<void> {
     if (disposed) return
-    if (!currentAudioContext() || !mixer) {
+    if (!getCtx() || !mixer) {
       callbacks.onMicStatusChange?.('error', 'Audio not ready')
       return
     }
@@ -423,7 +413,7 @@ export function createAudioEngine(
         stream.getTracks().forEach((t) => t.stop())
         return
       }
-      const ctx = currentAudioContext()
+      const ctx = getCtx()
       if (!ctx || !mixer) {
         stream.getTracks().forEach((t) => t.stop())
         callbacks.onMicStatusChange?.('error', 'Audio not ready')
@@ -455,7 +445,7 @@ export function createAudioEngine(
       micGateGain.connect(micGain)
       micGain.connect(mixer)
 
-      setInputModeGains(inputMode, synthGain, micGain)
+      applyInputMode()
       startMicGateLoop()
       callbacks.onMicStatusChange?.('on')
     } catch (err) {
@@ -472,12 +462,12 @@ export function createAudioEngine(
     }
   }
 
-  const init = async (): Promise<void> => {
+  async function init(): Promise<void> {
     const status = await startAudioContext()
     if (disposed) return
     if (status !== 'on') return
 
-    const ctx = currentAudioContext()
+    const ctx = getCtx()
     if (!ctx) return
 
     masterGain = ctx.createGain()
@@ -500,7 +490,7 @@ export function createAudioEngine(
   return {
     setMasterVolume(value: number) {
       if (masterGain) {
-        masterGain.gain.setValueAtTime(clamp01(value), currentAudioContext()?.currentTime ?? 0)
+        masterGain.gain.setValueAtTime(clamp01(value), getCtx()?.currentTime ?? 0)
       }
     },
     setConditionAudio,
@@ -539,34 +529,28 @@ export function createAudioEngine(
         prevMicSpectrumMag = mic.nextPrev
         if (effectiveMicGain > 0) {
           micRms = micR.rms * effectiveMicGain
-          // RMS and flux represent magnitude/change and therefore follow the route gain.
-          // Centroid and band ratios describe spectral shape and must not change when the
-          // user adjusts the mix or gate gain.
-          micCentroid = mic.centroid
+          micCentroid = mic.centroid * effectiveMicGain
           micFlux = mic.flux * effectiveMicGain
-          micLow = mic.low
-          micMid = mic.mid
-          micHigh = mic.high
+          micLow = mic.low * effectiveMicGain
+          micMid = mic.mid * effectiveMicGain
+          micHigh = mic.high * effectiveMicGain
         }
       }
 
-      const metrics: AudioMetrics = {
+      return {
         rms: lastMainRms,
         centroid: main.centroid,
         flux: main.flux,
         low: main.low,
         mid: main.mid,
         high: main.high,
+        micRms,
+        micCentroid,
+        micFlux,
+        micLow,
+        micMid,
+        micHigh,
       }
-      if (micRms !== undefined) {
-        metrics.micRms = micRms
-        metrics.micCentroid = micCentroid
-        metrics.micFlux = micFlux
-        metrics.micLow = micLow
-        metrics.micMid = micMid
-        metrics.micHigh = micHigh
-      }
-      return metrics
     },
     applyReactiveParams(overrides: Record<string, number>): void {
       if (!overrides || !chain.length) return
@@ -588,14 +572,14 @@ export function createAudioEngine(
     stopMic,
     setInputMode(mode: AudioInputMode) {
       inputMode = mode
-      setInputModeGains(inputMode, synthGain, micGain)
+      applyInputMode()
     },
     setMicSensitivity(value: number) {
       micSensitivity = clamp01(value)
       if (micPreGain) {
         // Conservative range, still protected by limiter.
         const g = 0.05 + 0.55 * micSensitivity
-        micPreGain.gain.setValueAtTime(g, currentAudioContext()?.currentTime ?? 0)
+        micPreGain.gain.setValueAtTime(g, getCtx()?.currentTime ?? 0)
       }
     },
     setMicGate(value: number) {

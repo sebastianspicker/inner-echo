@@ -19,6 +19,8 @@ This project does not aim to "accurately simulate" a diagnosis. It uses metaphor
 3. **Reduced Motion** — Time- and motion-heavy effects must be reducible or switchable (e.g. disable temporal_smear, feedback_loop, pulse, focus_jitter). Provide a Reduced Motion toggle.
 4. **Audio optional** — Audio off by default; microphone never required and never on by default.
 
+For the public alpha, these requirements extend to complete WCAG 2.2 AA workflows: keyboard-complete consent, permission-denied, evidence, comfort-control, and Stop Everything paths; visible focus; and 44 by 44 CSS-pixel critical targets (or equivalently sized labelled hit areas). A visitor must also have a clear non-immersive way to defer or leave onboarding without granting media permissions.
+
 These are consistent with the evidence corpus safety notes in `docs/references/**` (e.g. avoid flicker/strobe, sudden loud transients, nausea-inducing motion; provide hard clamps and opt-outs).
 
 ---
@@ -30,6 +32,7 @@ These are consistent with the evidence corpus safety notes in `docs/references/*
 3. **Control and reversibility:** Intensity, Safe Mode, Reduced Motion, and Stop Everything must be easy to find and use.
 4. **Readable UI:** UI stays calm; the artwork lives in the overlay.
 5. **Context and consent:** Onboarding and condition-specific warnings; clear metaphor disclaimer.
+6. **Sensory safeguards are layered:** Honor `prefers-reduced-motion` and retain the in-product Reduced Motion control; neither replaces the other.
 
 ---
 
@@ -101,6 +104,6 @@ See [SECURITY.md](SECURITY.md) for Permissions-Policy, CSP, and release checklis
 Experience → signal mappings are hypotheses supported by references/Scientific where indicated; otherwise they are labeled as evidence gaps. Examples of supported motifs (see [references/EVIDENCE_MATRIX.md](references/EVIDENCE_MATRIX.md)):
 
 - **Hyperarousal:** grain, edge_sharpen, vignette (video); compressor_limiter, highpass, noise_bed (audio). Avoid flicker and sudden loud transients. Source: evidence corpus (`docs/references/**`).
-- **Derealization:** haze, chromatic_aberration (low), temporal_smear (low); lowpass, flutter, reverb. Avoid strong warping or glitch aesthetics. Source: evidence corpus (`docs/references/**`).
+- **Derealization:** haze, chroma_aberration (low), temporal_smear (low); lowpass, flutter, reverb. Avoid strong warping or glitch aesthetics. Source: evidence corpus (`docs/references/**`).
 
 Do not present any mapping as a clinical or diagnostic claim.

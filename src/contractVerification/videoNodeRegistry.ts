@@ -160,8 +160,8 @@ const VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
   },
   {
     kind: 'video',
-    node: 'chromatic_aberration',
-    aliases: ['chroma_aberration'],
+    node: 'chroma_aberration',
+    aliases: ['chromatic_aberration'],
     params: {
       amount: numberParam('node.material.uniforms.u_amount.value', {
         defaultValue: 0.02,

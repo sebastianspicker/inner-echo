@@ -21,99 +21,6 @@ export interface ResolvedControl {
   defaultValue: number | boolean
 }
 
-function basicControl(
-  control: UIControl,
-  target: string,
-  profile: Profile,
-): ResolvedControl | null {
-  if (target === 'intensity' || (control.id === 'intensity' && !control.target)) {
-    const value = profile.safety?.intensity_default
-    return {
-      control,
-      paramKey: 'intensity',
-      kind: 'intensity',
-      defaultValue: typeof value === 'number' ? value : 0.5,
-    }
-  }
-  const choices: Array<[boolean, ResolvedControl['paramKey'], ResolvedControl['kind']]> = [
-    [
-      target === 'safe_mode' ||
-        target === 'safemode' ||
-        control.id === 'safe_mode' ||
-        control.id === 'safeMode',
-      'safeMode',
-      'safeMode',
-    ],
-    [
-      target === 'reduced_motion' || control.id === 'reduced_motion',
-      'reducedMotion',
-      'reducedMotion',
-    ],
-    [target === 'audio_enabled' || control.id === 'audio_enabled', 'audioEnabled', 'audioEnabled'],
-  ]
-  const choice = choices.find(([matches]) => matches)
-  return choice ? { control, paramKey: choice[1], kind: choice[2], defaultValue: false } : null
-}
-
-function controlDefault(
-  control: UIControl,
-  params: Record<string, unknown> | undefined,
-  param: string,
-) {
-  return typeof params?.[param] === 'number'
-    ? params[param]
-    : control.type === 'toggle'
-      ? false
-      : (control.min ?? 0)
-}
-
-function resolveVideoControl(
-  control: UIControl,
-  target: string,
-  profile: Profile,
-  options?: BuildVideoNodesOptions,
-): ResolvedControl | null | undefined {
-  const parsed = parseScopedTarget(target, 'video')
-  if (!parsed) return undefined
-  const nodeIndex = getBuiltNodeIndex(profile, parsed.nodeId, options)
-  if (nodeIndex === -1) return null
-  const entry = profile.video_stack?.find(
-    (node) =>
-      (node.id ?? node.node ?? '').toLowerCase() === parsed.nodeId ||
-      (node.node ?? '').toLowerCase() === parsed.nodeId,
-  )
-  return {
-    control,
-    paramKey: `${nodeIndex}.${parsed.param}`,
-    kind: 'node',
-    nodeIndex,
-    defaultValue: controlDefault(control, entry?.params, parsed.param),
-  }
-}
-
-function resolveAudioControl(
-  control: UIControl,
-  target: string,
-  profile: Profile,
-): ResolvedControl | null | undefined {
-  const parsed = parseScopedTarget(target, 'audio')
-  if (!parsed) return undefined
-  const chain = profile.audio_stack?.chain ?? []
-  const nodeIndex = chain.findIndex(
-    (node) =>
-      ((node as { id?: string }).id ?? node.node ?? '').toLowerCase() === parsed.nodeId ||
-      node.node.toLowerCase() === parsed.nodeId,
-  )
-  if (nodeIndex === -1) return null
-  return {
-    control,
-    paramKey: `audio.${nodeIndex}.${parsed.param}`,
-    kind: 'node',
-    nodeIndex,
-    defaultValue: controlDefault(control, chain[nodeIndex]?.params, parsed.param),
-  }
-}
-
 /**
  * Resolve a control's target to a param key and default value using the profile.
  */
@@ -123,12 +30,98 @@ export function resolveControl(
   options?: BuildVideoNodesOptions,
 ): ResolvedControl | null {
   const target = (control.target ?? control.id ?? '').toLowerCase()
-  return (
-    basicControl(control, target, profile) ??
-    resolveVideoControl(control, target, profile, options) ??
-    resolveAudioControl(control, target, profile) ??
-    null
-  )
+  if (target === 'intensity' || (control.id === 'intensity' && !control.target)) {
+    const def = profile.safety?.intensity_default
+    return {
+      control,
+      paramKey: 'intensity',
+      kind: 'intensity',
+      defaultValue: typeof def === 'number' ? def : 0.5,
+    }
+  }
+  if (
+    target === 'safe_mode' ||
+    target === 'safemode' ||
+    control.id === 'safe_mode' ||
+    control.id === 'safeMode'
+  ) {
+    return {
+      control,
+      paramKey: 'safeMode',
+      kind: 'safeMode',
+      defaultValue: false,
+    }
+  }
+  if (target === 'reduced_motion' || control.id === 'reduced_motion') {
+    return {
+      control,
+      paramKey: 'reducedMotion',
+      kind: 'reducedMotion',
+      defaultValue: false,
+    }
+  }
+  if (target === 'audio_enabled' || control.id === 'audio_enabled') {
+    return {
+      control,
+      paramKey: 'audioEnabled',
+      kind: 'audioEnabled',
+      defaultValue: false,
+    }
+  }
+  const parsedVideoTarget = parseScopedTarget(target, 'video')
+  if (parsedVideoTarget) {
+    const { nodeId, param } = parsedVideoTarget
+    const stack = Array.isArray(profile.video_stack) ? profile.video_stack : []
+    const nodeIndex = getBuiltNodeIndex(profile, nodeId, options)
+    if (nodeIndex === -1) return null
+    // Find the raw stack entry that corresponds to this nodeId for reading default params.
+    const rawIndex = stack.findIndex(
+      (n) =>
+        (n.id ?? n.node ?? '').toLowerCase() === nodeId || (n.node ?? '').toLowerCase() === nodeId,
+    )
+    const entry = rawIndex >= 0 ? stack[rawIndex] : undefined
+    const params = entry?.params
+    const defaultValue =
+      params && typeof params[param] === 'number'
+        ? (params[param] as number)
+        : control.type === 'toggle'
+          ? false
+          : (control.min ?? 0)
+    return {
+      control,
+      paramKey: `${nodeIndex}.${param}`,
+      kind: 'node',
+      nodeIndex,
+      defaultValue,
+    }
+  }
+  const parsedAudioTarget = parseScopedTarget(target, 'audio')
+  if (parsedAudioTarget) {
+    const { nodeId, param } = parsedAudioTarget
+    const chain = profile.audio_stack?.chain ?? []
+    const chainIndex = chain.findIndex(
+      (n) =>
+        ((n as { id?: string }).id ?? n.node ?? '').toLowerCase() === nodeId ||
+        (n.node ?? '').toLowerCase() === nodeId,
+    )
+    if (chainIndex === -1) return null
+    const entry = chain[chainIndex]
+    const params = entry?.params
+    const defaultValue =
+      params && typeof params[param] === 'number'
+        ? (params[param] as number)
+        : control.type === 'toggle'
+          ? false
+          : (control.min ?? 0)
+    return {
+      control,
+      paramKey: `audio.${chainIndex}.${param}`,
+      kind: 'node',
+      nodeIndex: chainIndex,
+      defaultValue,
+    }
+  }
+  return null
 }
 
 /**

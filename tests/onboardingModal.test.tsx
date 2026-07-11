@@ -3,7 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 
-const STORAGE_KEY = 'inner-echo-onboarding-accepted'
+const STORAGE_KEY = 'inner-echo-welcome-acknowledged-v2'
+const LEGACY_KEY = 'inner-echo-onboarding-accepted'
 
 // Node 25+ has a built-in localStorage that may lack standard methods.
 // Create a spec-compliant mock to use in these tests.
@@ -20,6 +21,7 @@ const storageMock: Storage = {
 }
 
 beforeEach(() => {
+  vi.restoreAllMocks()
   storageMap.clear()
   vi.stubGlobal('localStorage', storageMock)
 })
@@ -29,78 +31,34 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-// Import AFTER we set up the stubs, but since ES modules are hoisted,
-// we use dynamic import inside tests or rely on the stub being set before each test runs.
-// Since the OnboardingModal reads localStorage lazily (on function call, not at import time),
-// the static import works fine.
-import {
-  OnboardingModal,
-  getOnboardingAccepted,
-  setOnboardingAccepted,
-} from '../src/ui/OnboardingModal'
+import { WelcomeStep, getWelcomeAcknowledged, setWelcomeAcknowledged } from '../src/ui/WelcomeStep'
 
-describe('ui/OnboardingModal', () => {
+describe('ui/WelcomeStep', () => {
   // ---------------------------------------------------------------------------
   // Rendering
   // ---------------------------------------------------------------------------
-  it('renders the modal with title, content, checkbox, and button', () => {
-    render(<OnboardingModal onAccept={vi.fn()} />)
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText('Welcome to Inner Echo')).toBeInTheDocument()
-    expect(screen.getByText(/your privacy comes first/i)).toBeInTheDocument()
-    expect(screen.getByText(/this is not a diagnosis/i)).toBeInTheDocument()
-    expect(screen.getByRole('checkbox')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /begin/i })).toBeInTheDocument()
-  })
-
-  it('has correct ARIA attributes', () => {
-    render(<OnboardingModal onAccept={vi.fn()} />)
-    const dialog = screen.getByRole('dialog')
-    expect(dialog).toHaveAttribute('aria-modal', 'true')
-    expect(dialog).toHaveAttribute('aria-labelledby', 'onboarding-title')
-    expect(dialog).toHaveAttribute('aria-describedby', 'onboarding-desc')
+  it('renders an in-flow welcome with accurate privacy and storage disclosure', () => {
+    render(<WelcomeStep onContinue={vi.fn()} onOpenEvidence={vi.fn()} />)
+    expect(screen.getByRole('heading', { name: /explore experience/i })).toBeInTheDocument()
+    expect(screen.getByText(/does not record or upload/i)).toBeInTheDocument()
+    expect(screen.getByText(/local storage/i)).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   // ---------------------------------------------------------------------------
   // Interaction — accept flow
   // ---------------------------------------------------------------------------
-  it('button is disabled until checkbox is checked', () => {
-    render(<OnboardingModal onAccept={vi.fn()} />)
-    const button = screen.getByRole('button', { name: /begin/i })
-    expect(button).toBeDisabled()
-  })
-
-  it('button becomes enabled after checking the checkbox', () => {
-    render(<OnboardingModal onAccept={vi.fn()} />)
-    const checkbox = screen.getByRole('checkbox')
-    const button = screen.getByRole('button', { name: /begin/i })
-
-    fireEvent.click(checkbox)
-    expect(button).toBeEnabled()
-  })
-
-  it('calls onAccept when checkbox is checked and button is clicked', () => {
-    const onAccept = vi.fn()
-    render(<OnboardingModal onAccept={onAccept} />)
-
-    fireEvent.click(screen.getByRole('checkbox'))
-    fireEvent.click(screen.getByRole('button', { name: /begin/i }))
-    expect(onAccept).toHaveBeenCalledOnce()
-  })
-
-  it('does not call onAccept when button is clicked without checking checkbox', () => {
-    const onAccept = vi.fn()
-    render(<OnboardingModal onAccept={onAccept} />)
-
-    const button = screen.getByRole('button', { name: /begin/i })
-    fireEvent.click(button)
-    expect(onAccept).not.toHaveBeenCalled()
+  it('continues without a readiness checkbox or media action', () => {
+    const onContinue = vi.fn()
+    render(<WelcomeStep onContinue={onContinue} onOpenEvidence={vi.fn()} />)
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /continue to setup/i }))
+    expect(onContinue).toHaveBeenCalledOnce()
   })
 
   it('persists acceptance to localStorage on confirm', () => {
-    render(<OnboardingModal onAccept={vi.fn()} />)
-    fireEvent.click(screen.getByRole('checkbox'))
-    fireEvent.click(screen.getByRole('button', { name: /begin/i }))
+    render(<WelcomeStep onContinue={vi.fn()} onOpenEvidence={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /continue to setup/i }))
 
     expect(storageMap.get(STORAGE_KEY)).toBe('true')
   })
@@ -108,54 +66,39 @@ describe('ui/OnboardingModal', () => {
   // ---------------------------------------------------------------------------
   // Helper functions
   // ---------------------------------------------------------------------------
-  it('getOnboardingAccepted returns false when not set', () => {
-    expect(getOnboardingAccepted()).toBe(false)
+  it('getWelcomeAcknowledged returns false when not set', () => {
+    expect(getWelcomeAcknowledged()).toBe(false)
   })
 
-  it('getOnboardingAccepted returns true after setOnboardingAccepted', () => {
-    setOnboardingAccepted()
-    expect(getOnboardingAccepted()).toBe(true)
+  it('getWelcomeAcknowledged returns true after setWelcomeAcknowledged', () => {
+    setWelcomeAcknowledged()
+    expect(getWelcomeAcknowledged()).toBe(true)
   })
 
   it('getOnboardingAccepted returns false for non-"true" values', () => {
     storageMap.set(STORAGE_KEY, 'yes')
-    expect(getOnboardingAccepted()).toBe(false)
+    expect(getWelcomeAcknowledged()).toBe(false)
   })
 
   it('getOnboardingAccepted returns false gracefully when localStorage throws', () => {
     vi.spyOn(storageMock, 'getItem').mockImplementation(() => {
       throw new Error('storage unavailable')
     })
-    expect(getOnboardingAccepted()).toBe(false)
+    expect(getWelcomeAcknowledged()).toBe(false)
   })
 
-  it('setOnboardingAccepted does not throw when localStorage throws', () => {
+  it('setWelcomeAcknowledged does not throw when localStorage throws', () => {
     vi.spyOn(storageMock, 'setItem').mockImplementation(() => {
       throw new Error('storage unavailable')
     })
-    expect(() => setOnboardingAccepted()).not.toThrow()
+    expect(() => setWelcomeAcknowledged()).not.toThrow()
   })
 
-  // ---------------------------------------------------------------------------
-  // Focus trap — keyboard navigation
-  // ---------------------------------------------------------------------------
-  it('Escape key is intercepted and does not close the modal', () => {
-    const onAccept = vi.fn()
-    render(<OnboardingModal onAccept={onAccept} />)
-    const dialog = screen.getByRole('dialog')
-    fireEvent.keyDown(dialog, { key: 'Escape' })
-    // Modal should still be mounted (onAccept not called, no close mechanism)
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(onAccept).not.toHaveBeenCalled()
-  })
-
-  it('Tab key cycles focus within the modal wrapper', () => {
-    render(<OnboardingModal onAccept={vi.fn()} />)
-    const dialog = screen.getByRole('dialog')
-    // Should not throw when Tab is pressed inside the modal
-    expect(() => {
-      fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: false })
-      fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true })
-    }).not.toThrow()
+  it('v2 acknowledgement removes only the legacy acknowledgement', () => {
+    storageMap.set(LEGACY_KEY, 'true')
+    storageMap.set('inner-echo-presets-v2', 'keep')
+    setWelcomeAcknowledged()
+    expect(storageMap.has(LEGACY_KEY)).toBe(false)
+    expect(storageMap.get('inner-echo-presets-v2')).toBe('keep')
   })
 })

@@ -3,9 +3,9 @@ import '../ui/CameraView.css'
 
 function App() {
   return (
-    <main className="ie-app" aria-label="Inner Echo">
+    <div className="ie-app">
       <CameraView />
-    </main>
+    </div>
   )
 }
 

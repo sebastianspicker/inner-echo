@@ -47,14 +47,6 @@ type FeatureKey = (typeof FEATURE_KEYS)[number]
 type Signature = Record<FeatureKey, number>
 type EffectiveStackOptions = { reducedMotion?: boolean }
 
-const SIMPLE_NODE_FEATURES: Record<string, [FeatureKey, string, number]> = {
-  edge_sharpen: ['edge', 'amount', 0.8],
-  grid_hint: ['grid', 'amount', 2],
-  grain: ['texture', 'amount', 1],
-  haze: ['fog', 'amount', 1],
-  soft_blur: ['blur', 'amount', 1],
-}
-
 function emptySignature(): Signature {
   return {
     gaze: 0,
@@ -82,10 +74,10 @@ function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value))
 }
 
-const effectiveVideoStack = (
+function effectiveVideoStack(
   profile: Profile,
   options?: EffectiveStackOptions,
-): VideoStackNodeDef[] => {
+): VideoStackNodeDef[] {
   const entries: VideoStackNodeDef[] = []
   for (let builtIndex = 0; ; builtIndex++) {
     const entry = getProfileEntryForBuiltIndex(profile, builtIndex, options)
@@ -94,42 +86,60 @@ const effectiveVideoStack = (
   }
 }
 
-const addNodeToSignature = (signature: Signature, node: VideoStackNodeDef): void => {
-  const simpleFeature = SIMPLE_NODE_FEATURES[node.node]
-  if (simpleFeature) {
-    const [feature, param, multiplier] = simpleFeature
-    signature[feature] += num(node, param) * multiplier
-    return
-  }
-  const additions: Partial<Record<FeatureKey, number>> = {}
-  if (node.node === 'gaze_tunnel') {
-    additions.gaze = num(node, 'amount')
-    additions.edge = num(node, 'edge_gain')
-  } else if (node.node === 'somatic_pulse')
-    additions.somatic = num(node, 'depth') + num(node, 'tunnel') * 0.45 + num(node, 'blur') * 0.35
-  else if (node.node === 'intrusion_burst')
-    additions.intrusion =
-      num(node, 'amount') + num(node, 'burst_probability') * 0.12 + num(node, 'zoom') * 0.06
-  else if (node.node === 'salience_competition')
-    additions.salience =
-      num(node, 'amount') + num(node, 'marker_strength') * 0.12 + num(node, 'shift') * 1.5
-  else if (node.node === 'color_grade') {
-    additions.mute = Math.max(0, -num(node, 'saturation')) + Math.max(0, -num(node, 'contrast'))
-    additions.edge = Math.max(0, num(node, 'contrast')) * 0.25
-  } else if (node.node === 'temporal_smear')
-    additions.inertia = num(node, 'feedback') + Math.max(0, num(node, 'decay') - 0.9)
-  else if (node.node === 'glass_veil')
-    additions.glass =
-      num(node, 'veil') + num(node, 'feedback') + num(node, 'refraction') * 2 + num(node, 'chroma')
-  else if (node.node === 'feedback_loop')
-    additions.loop = num(node, 'feedback') + Math.max(0, num(node, 'decay') - 0.9)
-  for (const [key, value] of Object.entries(additions)) signature[key as FeatureKey] += value ?? 0
-}
-
 function visualSignature(profile: Profile, options?: EffectiveStackOptions): Signature {
   const signature = emptySignature()
   for (const node of effectiveVideoStack(profile, options)) {
-    addNodeToSignature(signature, node)
+    switch (node.node) {
+      case 'gaze_tunnel':
+        signature.gaze += num(node, 'amount')
+        signature.edge += num(node, 'edge_gain')
+        break
+      case 'edge_sharpen':
+        signature.edge += num(node, 'amount') * 0.8
+        break
+      case 'somatic_pulse':
+        signature.somatic +=
+          num(node, 'depth') + num(node, 'tunnel') * 0.45 + num(node, 'blur') * 0.35
+        break
+      case 'intrusion_burst':
+        signature.intrusion +=
+          num(node, 'amount') + num(node, 'burst_probability') * 0.12 + num(node, 'zoom') * 0.06
+        break
+      case 'salience_competition':
+        signature.salience +=
+          num(node, 'amount') + num(node, 'marker_strength') * 0.12 + num(node, 'shift') * 1.5
+        break
+      case 'color_grade':
+        signature.mute +=
+          Math.max(0, -num(node, 'saturation')) + Math.max(0, -num(node, 'contrast'))
+        signature.edge += Math.max(0, num(node, 'contrast')) * 0.25
+        break
+      case 'temporal_smear':
+        signature.inertia += num(node, 'feedback') + Math.max(0, num(node, 'decay') - 0.9)
+        break
+      case 'glass_veil':
+        signature.glass +=
+          num(node, 'veil') +
+          num(node, 'feedback') +
+          num(node, 'refraction') * 2 +
+          num(node, 'chroma')
+        break
+      case 'feedback_loop':
+        signature.loop += num(node, 'feedback') + Math.max(0, num(node, 'decay') - 0.9)
+        break
+      case 'grid_hint':
+        signature.grid += num(node, 'amount') * 2
+        break
+      case 'grain':
+        signature.texture += num(node, 'amount')
+        break
+      case 'haze':
+        signature.fog += num(node, 'amount')
+        break
+      case 'soft_blur':
+        signature.blur += num(node, 'amount')
+        break
+    }
   }
 
   for (const key of FEATURE_KEYS) {

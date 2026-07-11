@@ -76,7 +76,7 @@ describe('ui/EffectControls', () => {
       />,
     )
 
-    expect(screen.getByText('Intensity')).toBeTruthy()
+    expect(screen.queryByText('Intensity')).toBeNull()
     expect(screen.getByText('Grain Amount')).toBeTruthy()
     expect(screen.queryByText('Wave Depth')).toBeNull()
   })

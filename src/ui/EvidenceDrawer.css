@@ -1,31 +1,28 @@
-.evidence-backdrop {
+.evidence-dialog {
   position: fixed;
   inset: 0;
-  z-index: 1100;
-  background: rgba(0, 0, 0, 0.62);
-  display: grid;
-  place-items: center;
-  padding: clamp(12px, 3vw, 22px);
-  animation: ie-backdropIn var(--duration-normal) var(--ease-gentle) both;
+  width: min(1100px, calc(100% - 24px));
+  max-width: none;
+  height: min(82vh, 820px);
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  background: var(--surface-raised);
+  overflow: hidden;
 }
 
-.evidence-backdrop--hidden {
-  display: none;
+.evidence-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.78);
 }
 
 .evidence-drawer {
-  width: min(1100px, 100%);
-  height: min(78vh, 820px);
-  border-radius: var(--r-lg);
-  border: 1px solid var(--border);
-  background: color-mix(in oklab, var(--surface-2) 92%, transparent);
-  box-shadow: var(--shadow-2);
-  overflow: hidden;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  animation: ie-scaleIn var(--duration-slow) var(--ease-out-soft) both;
 }
 
 .evidence-top {
@@ -38,11 +35,15 @@
 }
 
 .evidence-title {
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  margin: 2px 0 0;
+  font-size: 1.125rem;
   color: var(--text);
   font-weight: 650;
+}
+
+.evidence-kicker {
+  color: var(--muted);
+  font-size: 0.8125rem;
 }
 
 .evidence-actions {
@@ -51,11 +52,13 @@
 }
 
 .evidence-btn {
+  min-width: 44px;
+  min-height: 44px;
   padding: 8px 14px;
-  font-size: 12px;
-  border-radius: 999px;
+  font-size: 0.875rem;
+  border-radius: var(--r-sm);
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-control);
   color: var(--text);
   cursor: pointer;
   transition:
@@ -66,10 +69,8 @@
 }
 
 .evidence-btn:hover {
-  background: rgba(255, 255, 255, 0.07);
   border-color: var(--border-strong);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  background: var(--surface-control-hover);
 }
 
 .evidence-btn:active {
@@ -91,15 +92,6 @@
   min-height: 0;
 }
 
-.evidence-navTitle {
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--muted);
-  font-weight: 650;
-  margin-bottom: var(--sp-2);
-}
-
 .evidence-navList {
   list-style: none;
   padding: 0;
@@ -117,10 +109,10 @@
   cursor: pointer;
   text-decoration: none;
   border: 1px solid var(--border);
-  background: rgba(0, 0, 0, 0.14);
+  background: transparent;
   color: var(--text);
   padding: 8px 12px;
-  border-radius: 12px;
+  border-radius: var(--r-sm);
   transition:
     border-color var(--duration-normal) var(--ease-gentle),
     background var(--duration-normal) var(--ease-gentle),
@@ -137,10 +129,8 @@
   background: rgba(123, 200, 192, 0.04);
 }
 
-.evidence-navHint {
-  margin-top: var(--sp-3);
-  color: var(--muted);
-  font-size: 12px;
+.evidence-mobileNav {
+  display: none;
 }
 
 .evidence-content {
@@ -202,6 +192,31 @@
 }
 
 @media (max-width: 860px) {
+  .evidence-dialog {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .evidence-mobileNav {
+    display: grid;
+    gap: 6px;
+    padding: var(--sp-3);
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  .evidence-mobileNav select {
+    min-height: 44px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r-sm);
+    background: var(--surface-control);
+    color: var(--text);
+    padding-inline: 10px;
+  }
+
   .evidence-body {
     grid-template-columns: 1fr;
   }

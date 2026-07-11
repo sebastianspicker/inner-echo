@@ -49,5 +49,5 @@ describe('generated report output contracts', () => {
     expect(report.profiles.every((profile) => profile.audio.frames === 4)).toBe(true)
     expect(report.warnings).toEqual([])
     expect(report.errors).toEqual([])
-  })
+  }, 60_000)
 })

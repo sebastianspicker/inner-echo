@@ -6,12 +6,7 @@ If you find a security issue, please **do not open a public GitHub issue**.
 
 Prefer [GitHub's private vulnerability reporting](https://github.com/sebastianspicker/inner-echo/security/advisories/new) so the disclosure stays confidential until a fix is ready.
 
-Alternatively, email the details to **sebastian.spicker@googlemail.com** with:
-- a description of the issue,
-- steps to reproduce or a proof of concept,
-- any suggested fix if you have one.
-
-You will receive a response within 7 days. Once confirmed, a fix will be prioritised and you will be credited in the release notes (unless you prefer anonymity).
+If private vulnerability reporting is unavailable, contact a maintainer through an established private channel. Include a description, reproduction steps or proof of concept, and any suggested fix. Do not include sensitive details in a public issue.
 
 This project is a local-only browser app with no server, no user accounts, and no remote data transmission — the attack surface is limited. The most relevant concerns are XSS, clickjacking, and supply-chain vulnerabilities in npm dependencies.
 
@@ -22,7 +17,7 @@ This project is a local-only browser app with no server, no user accounts, and n
 - **Local-first**: All processing in the browser. No transmission of video or audio data to any server.
 - **No uploads**: In MVP, neither webcam nor microphone data is uploaded or streamed.
 - **No trackers**: No analytics, no third-party scripts, no tracking cookies.
-- **No network calls in MVP**: In the Minimal Viable Product, no network requests are allowed (no external CDNs, no remote fonts, no API calls). Everything runs fully offline-capable in the client.
+- **No third-party runtime services**: No external CDNs, remote fonts, analytics, or APIs are used. Application assets are bundled and delivered from the same origin; no service worker or offline cache is currently provided.
 
 ---
 
@@ -66,7 +61,7 @@ Even for static hosting, a strict CSP is recommended to reduce XSS and unauthori
 - `style-src 'self'` — styles only from same origin; keep runtime styling in CSS rather than inline attributes.
 - `img-src 'self' data:` — images from self and data URIs (e.g. placeholders).
 - `media-src 'self' blob:` — video/audio from self and blob (e.g. MediaStream).
-- `connect-src 'self'` — same-origin fetch/XHR only (keep `'self'` for local docs/profile fetches).
+- `connect-src 'self'` — reserve connections for same-origin development or future same-origin runtime needs. Current production docs and profiles are bundled.
 - `frame-ancestors 'none'` — prevent iframe embedding. Deliver CSP as an HTTP response header so this directive applies.
 
 Example HTTP header (server config or `public/_headers`):
@@ -97,7 +92,7 @@ Before releasing a build:
 
 - [ ] **Baseline quality gate**: Run `npm run check` and block release on any failure.
 - [ ] **Dependency audit**: Run `npm audit --audit-level=moderate` and remediate reported advisories before release.
-- [ ] **No third-party requests**: Confirm no network calls (DevTools Network tab, or run with network disabled). No external scripts, fonts, or CDNs.
+- [ ] **No third-party requests**: Confirm runtime requests are limited to same-origin application delivery. No external scripts, fonts, APIs, analytics, or CDNs.
 - [ ] **Permissions**: Camera and mic only after user gesture; no `getUserMedia` or `AudioContext` on page load.
 - [ ] **Passive imports**: Shared preset URLs and localStorage migrations do not auto-enable camera, microphone, or audio.
 - [ ] **CSP**: Deploy the recommended header-delivered CSP (or equivalent) and verify both preview and browser smoke runs stay green without CSP violations.

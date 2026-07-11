@@ -12,7 +12,6 @@
 
 import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
-import { fastRandom } from '../../utils/fastRandom'
 import {
   applyUvParams,
   clamp,
@@ -128,7 +127,7 @@ export class InterferenceNode implements VideoNode {
     if (this.burstGapTimer <= 0 && this.burstProbPerSec > 0) {
       // Poisson-like: probability per second.
       const p = clamp(this.burstProbPerSec * delta, 0, 0.5)
-      if (fastRandom() < p) {
+      if (Math.random() < p) {
         this.burstTimer = this.burstDuration
       }
     }

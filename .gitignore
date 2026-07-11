@@ -1,7 +1,5 @@
 /node_modules/
 /dist/
-.DS_Store
-*.log
 *.tsbuildinfo
 /reports/
 /coverage/
@@ -12,37 +10,54 @@
 /tmp/
 /temp/
 
-# Secrets & credentials — never commit these
+# Secrets and credentials: keep examples, never local values.
 .env
 .env.*
 !.env.example
+.envrc
+.direnv/
+.npmrc
+.netrc
+.pypirc
+*.local
 *.pem
 *.key
 *.p12
 *.pfx
 *.crt
 *.cer
+*.der
 *.jks
 *.keystore
+*.mobileprovision
 credentials.json
 service-account*.json
 **/secrets/
 
-# Local / WIP artifacts (audit runs, progress logs)
-.codex/
-.cursor/
-.claude/
-.kilo/
-.agents/
+# Local analysis, agent, and editor state.
+/.codacy/
+/.codegraph/
+/.serena/
+/.impeccable/
+/.codex/
+/.cursor/
+/.claude/
+/.kilo/
+/.agents/
+/.idea/
+/.vscode/
 progress.md
 AUDIT.md
 /docs/archive/
 
-# OS / editor
+# OS and editor residue.
+.DS_Store
 Thumbs.db
 ehthumbs.db
-.idea/
+*.log
 *.sw?
 
+# Legacy ad-hoc captures are local-only. Canonical public screenshots live in
+# assets/readme/screenshots/ and are verified by the manifest.
 /screenshots/
 AGENTS.md

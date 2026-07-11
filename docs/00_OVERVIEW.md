@@ -1,6 +1,6 @@
 # Inner Echo — Documentation overview
 
-This repo contains a privacy-first, client-only web app: an audio-visual overlay on the webcam feed. Users choose a condition (e.g. tension, dissociation) and the app applies a responsive visual and optional audio metaphor. It is an artistic, educational metaphor — not a diagnostic or therapy tool.
+This repo contains a privacy-first, client-only web app: an audio-visual overlay on the webcam feed. Users begin with experience dimensions or optionally choose contextual curated collections, then apply a responsive visual and optional audio metaphor. It is an artistic, educational metaphor — not a diagnostic or therapy tool.
 
 ---
 
@@ -8,6 +8,9 @@ This repo contains a privacy-first, client-only web app: an audio-visual overlay
 
 | Doc | Purpose |
 |-----|--------|
+| [../PRODUCT.md](../PRODUCT.md) | Public product position, audience, boundaries, and accessibility commitment. |
+| [../DESIGN.md](../DESIGN.md) | Public-alpha visual system and UI guardrails. |
+| [frontend-ux-audit.md](frontend-ux-audit.md) | Source-reviewed UX baseline and implementation priorities. |
 | [00_OVERVIEW.md](00_OVERVIEW.md) | This file: navigation and conventions. |
 | [10_PRODUCT.md](10_PRODUCT.md) | Product goals, MVP scope, user stories, non-goals. |
 | [20_ARCHITECTURE.md](20_ARCHITECTURE.md) | System architecture, data flow, frontend/engine, reliability. |
@@ -21,6 +24,10 @@ Completed audit, plan, status, and ledger files are not canonical documentation.
 Keep them out of active navigation; archive them locally under `docs/archive/`
 or delete them when they are superseded. `docs/archive/` is ignored and should
 not be committed.
+
+The canonical public screenshot set is `assets/readme/screenshots/`. Local tool
+state, reports, archives, environment values, and ad-hoc captures are excluded by
+the root `.gitignore`; see [00_DOC_INVENTORY.md](00_DOC_INVENTORY.md) for the full boundary.
 
 ---
 

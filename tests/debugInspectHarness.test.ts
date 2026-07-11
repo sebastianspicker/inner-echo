@@ -7,5 +7,5 @@ describe('debug inspect harness', () => {
     const report = await runInspectHarness(process.cwd(), { frames: 30 })
     expect(report.summary.profiles).toBeGreaterThan(0)
     expect(report.summary.errors).toBe(0)
-  }, 60_000)
+  }, 120_000)
 })

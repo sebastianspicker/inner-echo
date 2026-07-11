@@ -1,42 +1,9 @@
 import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 
-const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]'])
-
-export function validatePort(port) {
-  const value = Number(port)
-  if (!Number.isInteger(value) || value < 1 || value > 65_535) {
-    throw new Error(`Invalid server port: ${String(port)}`)
-  }
-  return value
-}
-
-export function validateLoopbackHost(host) {
-  if (!LOOPBACK_HOSTS.has(host)) throw new Error(`Server host must be loopback: ${String(host)}`)
-  return host
-}
-
-export function validateLoopbackBaseUrl(baseUrl) {
-  const url = new URL(baseUrl)
-  if (
-    url.protocol !== 'http:' ||
-    !LOOPBACK_HOSTS.has(url.hostname) ||
-    url.username ||
-    url.password ||
-    url.pathname !== '/' ||
-    url.search ||
-    url.hash
-  ) {
-    throw new Error(`Server readiness URL must be loopback HTTP: ${baseUrl}`)
-  }
-  validatePort(url.port)
-  return url.href
-}
-
 export async function isServerUp(baseUrl) {
-  const readinessUrl = validateLoopbackBaseUrl(baseUrl)
   try {
-    const res = await fetch(readinessUrl)
+    const res = await fetch(baseUrl)
     return res.ok
   } catch {
     return false
@@ -53,9 +20,7 @@ export async function waitForServerReady(baseUrl, timeoutMs, label = 'Dev server
 }
 
 export function spawnNpmServer(script, host, port, cwd = process.cwd()) {
-  const safeHost = validateLoopbackHost(host)
-  const safePort = validatePort(port)
-  return spawn('npm', ['run', script, '--', '--host', safeHost, '--port', String(safePort)], {
+  return spawn('npm', ['run', script, '--', '--host', host, '--port', String(port)], {
     cwd,
     stdio: 'pipe',
     env: process.env,
@@ -85,51 +50,21 @@ export async function stopServer(proc) {
   proc.stdin?.destroy()
 }
 
-export async function createDevServerHarness(baseUrl, host, port, overrides = {}) {
-  const checkServer = overrides.isServerUp ?? isServerUp
-  const spawnServer = overrides.spawnNpmServer ?? spawnNpmServer
-  const waitUntilReady = overrides.waitForServerReady ?? waitForServerReady
-  const stopSpawnedServer = overrides.stopServer ?? stopServer
+export async function createDevServerHarness(baseUrl, host, port) {
   let ownsServer = false
   let serverProc = null
 
-  if (!(await checkServer(baseUrl))) {
+  if (!(await isServerUp(baseUrl))) {
     ownsServer = true
-    serverProc = spawnServer('dev', host, port)
-    try {
-      await waitUntilReady(baseUrl, 20_000)
-    } catch (error) {
-      await stopSpawnedServer(serverProc)
-      throw error
-    }
+    serverProc = spawnNpmServer('dev', host, port)
+    await waitForServerReady(baseUrl, 20_000)
   }
 
-  return { ownsServer, serverProc, destroyed: false, stopServer: stopSpawnedServer }
+  return { ownsServer, serverProc }
 }
 
 export async function destroyServerHarness(harness) {
-  if (harness.destroyed) return
-  harness.destroyed = true
   if (harness.ownsServer) {
-    await harness.stopServer(harness.serverProc)
-  }
-}
-
-export async function createBrowserServerHarness(baseUrl, host, port, launchBrowser, overrides) {
-  const server = await createDevServerHarness(baseUrl, host, port, overrides)
-  try {
-    const browser = await launchBrowser()
-    return { browser, ...server }
-  } catch (error) {
-    await destroyServerHarness(server)
-    throw error
-  }
-}
-
-export async function destroyBrowserServerHarness(harness) {
-  try {
-    await harness.browser.close()
-  } finally {
-    await destroyServerHarness(harness)
+    await stopServer(harness.serverProc)
   }
 }

@@ -9,7 +9,7 @@ const ROOT = process.cwd()
 const HOST = '127.0.0.1'
 const PORT = 4173
 const BASE_URL = `http://${HOST}:${PORT}`
-const ONBOARDING_KEY = 'inner-echo-onboarding-accepted'
+const ONBOARDING_KEY = 'inner-echo-welcome-acknowledged-v2'
 const MANIFEST_PATH = path.join(ROOT, 'assets/readme/screenshots/manifest.json')
 const PNG_DIR = path.join(ROOT, 'assets/readme/screenshots/png')
 
@@ -114,7 +114,7 @@ async function newContextPage(harness, viewport, onboardingAccepted) {
 
 async function waitForAppShell(page) {
   await page
-    .locator('section[aria-label="Inner Echo — camera and controls"]')
+    .locator('section[aria-label="Inner Echo"]')
     .waitFor({ state: 'visible', timeout: 5000 })
   await page.getByRole('banner').waitFor({ state: 'visible', timeout: 5000 })
   await page
@@ -250,13 +250,13 @@ async function main() {
 
       await captureShot(page, shot('02-hero-active'))
 
-      await page.getByRole('radio', { name: /^preset$/i }).check()
+      await page.getByRole('radio', { name: /^curated collections$/i }).check()
       await page.locator('#condition-picker').waitFor({ state: 'visible', timeout: 3000 })
       await delay(200)
       await captureShot(page, shot('03-preset-mode'))
 
-      await page.getByRole('radio', { name: /^multimorbid$/i }).check()
-      const multimorbid = page.locator('[aria-label="Multimorbid preset stack"]')
+      await page.getByRole('radio', { name: /^combine collections$/i }).check()
+      const multimorbid = page.locator('[aria-label="Combined curated collections"]')
       await multimorbid.waitFor({ state: 'visible', timeout: 3000 })
       const presetChecks = multimorbid.getByRole('checkbox')
       const presetCount = await presetChecks.count()
@@ -266,8 +266,8 @@ async function main() {
       await delay(220)
       await captureShot(page, shot('04-multimorbid-mode'))
 
-      await page.getByRole('radio', { name: /^symptom-first$/i }).check()
-      const symptom = page.locator('[aria-label="Symptom-first dimensions"]')
+      await page.getByRole('radio', { name: /^experience dimensions$/i }).check()
+      const symptom = page.locator('[aria-label="Experience dimensions"]')
       await symptom.waitFor({ state: 'visible', timeout: 3000 })
       const dimChecks = symptom.getByRole('checkbox')
       const dimCount = await dimChecks.count()
@@ -289,22 +289,20 @@ async function main() {
         .locator('.ie-header')
         .getByRole('button', { name: /evidence/i })
         .click()
-      await page.locator('.evidence-backdrop').waitFor({ state: 'visible', timeout: 3000 })
+      await page.locator('dialog.evidence-dialog').waitFor({ state: 'visible', timeout: 3000 })
       await delay(150)
       await captureShot(page, shot('07-evidence-drawer'))
 
-      await page.getByRole('button', { name: /close evidence viewer/i }).click()
-      await page.locator('.evidence-backdrop').waitFor({ state: 'hidden', timeout: 3000 })
-      const composer = page.locator('.composer')
-      await composer.getByLabel('Safe Mode').first().check()
-      await composer.getByLabel('Reduced Motion').first().check()
+      await page.getByRole('button', { name: /^close$/i }).click()
+      await page.locator('dialog.evidence-dialog').waitFor({ state: 'hidden', timeout: 3000 })
+      await page.getByLabel('Safe Mode').check()
+      await page.getByLabel('Reduced Motion').check()
       await delay(150)
       await captureShot(page, shot('08-safety-toggles'))
 
       await page
-        .locator('.ie-header')
-        .getByRole('button', { name: /stop everything/i })
-        .click()
+        .getByRole('button', { name: /stop camera, microphone, sound, and effects/i })
+        .click({ force: true })
       await expectCameraStatus(page, /ready/i, 3000)
       await delay(200)
       await captureShot(page, shot('10-stop-everything-idle'))
