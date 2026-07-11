@@ -16,7 +16,7 @@ export interface EvidenceDrawerProps {
 type DocState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; title: string; html: string }
+  | { status: 'ready'; title: string; fragment: DocumentFragment }
 
 const TOPIC_LABELS: Partial<Record<EvidenceDocPath, string>> = {
   'docs/references/README.md': 'Overview',
@@ -49,6 +49,7 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
   const [retryToken, setRetryToken] = useState(0)
   const dialogRef = useRef<HTMLDialogElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
+  const evidenceContentRef = useRef<HTMLElement | null>(null)
 
   const navItems = useMemo(() => {
     const all = listEvidenceDocPaths()
@@ -80,8 +81,8 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
           setState({ status: 'error', message: 'This evidence topic could not be found.' })
           return
         }
-        const { html, title } = renderEvidenceMarkdown(markdown)
-        setState({ status: 'ready', html, title })
+        const { fragment, title } = renderEvidenceMarkdown(markdown)
+        setState({ status: 'ready', fragment, title })
       } catch (error) {
         if (ctx.cancelled) return
         logger.error('Failed to load evidence document', props.docPath, error)
@@ -90,6 +91,11 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     },
     [props.open, props.docPath, retryToken],
   )
+
+  useEffect(() => {
+    if (state.status !== 'ready') return
+    evidenceContentRef.current?.replaceChildren(state.fragment.cloneNode(true))
+  }, [state])
 
   const handleArticleActivation = (
     event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
@@ -197,11 +203,10 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
             )}
             {state.status === 'ready' && (
               <article
+                ref={evidenceContentRef}
                 className="evidence-markdown"
                 onClick={handleArticleActivation}
                 onKeyDown={handleArticleActivation}
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized local markdown only
-                dangerouslySetInnerHTML={{ __html: state.html }}
               />
             )}
           </section>
