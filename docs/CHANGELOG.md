@@ -27,7 +27,7 @@
 - `EvidenceDrawer`: navigation links changed from `<a href="#">` to `<button>` for correct accessibility semantics; added `onKeyDown` handler for keyboard-accessible link interception inside rendered markdown.
 - Renamed `escape` variable to `escaped` in `jsonObjectParser.ts` and `nodes-report.ts` to avoid shadowing the global `escape` property.
 - Removed `!important` from `prefers-reduced-motion` CSS overrides.
-- `.gitignore`: `.claude/` directory is now fully ignored (was only ignoring a single file).
+- `.gitignore`: local WIP directory ignores now cover directory forms instead of single files.
 - Merged dependabot PR: `@types/three` 0.182.0 to 0.183.1.
 
 #### Removed

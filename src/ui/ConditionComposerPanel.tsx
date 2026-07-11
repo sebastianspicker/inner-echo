@@ -21,7 +21,7 @@ import {
   createPresetPayload,
   createPresetSnapshot,
   migrateLegacyPresetPayload,
-  parsePresetLibrary,
+  parsePresetLibraryWithDiagnostics,
   type PresetPayload,
   type PresetSnapshotV2,
 } from './presetSnapshot'
@@ -154,6 +154,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   }, [])
 
   const [library, setLibrary] = useState<PresetSnapshotV2[]>([])
+  const [libraryWarning, setLibraryWarning] = useState<string | null>(null)
   const [selectedLibraryId, setSelectedLibraryId] = useState('')
   const [presetName, setPresetName] = useState(DEFAULT_PRESET_NAME)
   const consumedSharedHashRef = useRef(false)
@@ -198,7 +199,19 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(PRESET_LIBRARY_STORAGE_KEY)
-      const parsed = raw ? parsePresetLibrary(raw) : []
+      const parsedResult = raw ? parsePresetLibraryWithDiagnostics(raw) : null
+      const parsed = parsedResult?.snapshots ?? []
+      if (parsedResult && !parsedResult.diagnostics.ok) {
+        setLibraryWarning(
+          'Saved preset library could not be read completely. Existing storage was left unchanged.',
+        )
+        if (parsed.length === 0) {
+          setLibrary([])
+          return
+        }
+      } else {
+        setLibraryWarning(null)
+      }
 
       if (parsed.length === 0) {
         const legacyRaw = localStorage.getItem(LEGACY_PRESET_STORAGE_KEY)
@@ -223,6 +236,9 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
             setPresetName(migrated.name)
             return
           }
+          setLibraryWarning(
+            'Legacy preset storage could not be migrated. Existing storage was left unchanged.',
+          )
         }
       }
 
@@ -347,6 +363,7 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
 
   const persistLibrary = (next: PresetSnapshotV2[]): void => {
     setLibrary(next)
+    setLibraryWarning(null)
     try {
       localStorage.setItem(PRESET_LIBRARY_STORAGE_KEY, JSON.stringify(next))
     } catch (err) {
@@ -556,6 +573,12 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
             </select>
             <span className="composer__slider-val">{library.length}</span>
           </label>
+
+          {libraryWarning && (
+            <p className="composer__hint" role="alert">
+              {libraryWarning}
+            </p>
+          )}
 
           <div className="composer__quick-buttons">
             <button type="button" onClick={handleSaveLocal}>

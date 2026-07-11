@@ -1,12 +1,10 @@
 /**
  * Audio Engine
  *
- * This module is the core orchestrator for all Web Audio API operations.
- * It manages:
- * 1. The main synthesizer and effect chain (driven by the current active profile).
- * 2. An `AnalyserNode` to tap into the audio stream and calculate RMS/spectral data for the reactive video layer.
- * 3. An optional microphone input (`getUserMedia`), complete with a safety noise-gate and limiter.
- * 4. Audio routing options (synth only, mic only, or mixed).
+ * Owns all WebAudio resources: profile-driven synth/FX chains, analyser metrics
+ * for reactive video, optional microphone input, and synth/mic/mix routing.
+ * Callers must create it from a user gesture because browsers gate AudioContext
+ * and microphone access.
  */
 
 import {
@@ -37,7 +35,7 @@ import { logger } from '../../utils/logger'
 const RAMP_MS = 25
 const ANALYSER_FFT_SIZE = 2048
 
-/** Phase 9: Mic limiter — threshold (dB), ratio, attack, release. */
+/** Mic limiter settings: threshold (dB), ratio, attack, release. */
 const MIC_LIMITER_THRESHOLD = -24
 const MIC_LIMITER_RATIO = 8
 const MIC_LIMITER_ATTACK = 0.003
@@ -147,7 +145,7 @@ function computeSpectralFeatures(
 
 export interface AudioEngineCallbacks {
   onStatusChange?(status: AudioContextStatus, error?: string): void
-  /** Phase 9: Mic permission/source state. */
+  /** Mic permission/source state. */
   onMicStatusChange?(status: MicStatus, error?: string): void
 }
 
@@ -165,21 +163,21 @@ export interface AudioEngineControl {
   setMasterVolume(value: number): void
   /** Set condition audio stack (rebuilds chain with ramp). */
   setConditionAudio(audioStack: AudioStackConfig | null | undefined): void
-  /** Phase 8: Current RMS (0..1-ish). Returns 0 if analyser not available. */
+  /** Current RMS (0..1-ish). Returns 0 if analyser not available. */
   getRms(): number
-  /** Phase 13: Audio metrics for coupling (RMS + spectral features). */
+  /** Audio metrics for coupling (RMS + spectral features). */
   getMetrics(): AudioMetrics
-  /** SSOT reactive: apply "audio.<chainIndex>.<param>" overrides (smoothed/clamped upstream). */
+  /** Apply "audio.<chainIndex>.<param>" overrides (smoothed/clamped upstream). */
   applyReactiveParams(overrides: Record<string, number>): void
-  /** Phase 9: Request mic (call only after user gesture). */
+  /** Request mic (call only after user gesture). */
   requestMic(): void
-  /** Phase 9: Stop mic and release tracks. */
+  /** Stop mic and release tracks. */
   stopMic(): void
-  /** Phase 9: Set input routing: synth only, mic only, or mix. */
+  /** Set input routing: synth only, mic only, or mix. */
   setInputMode(mode: AudioInputMode): void
-  /** Phase 14: Set mic sensitivity (0..1). Applied as conservative pre-gain into limiter. */
+  /** Set mic sensitivity (0..1). Applied as conservative pre-gain into limiter. */
   setMicSensitivity(value: number): void
-  /** Phase 14: Set soft noise gate threshold (0..1). Higher = stronger gating. */
+  /** Set soft noise gate threshold (0..1). Higher = stronger gating. */
   setMicGate(value: number): void
   /** Debug-only runtime snapshot (cheap and side-effect free). */
   getDebugState(): AudioEngineDebugState
@@ -214,13 +212,9 @@ export function createAudioEngine(
   let scratchMainTime: F32 = new Float32Array(ANALYSER_FFT_SIZE)
   let scratchMainDb: F32 = new Float32Array(ANALYSER_FFT_SIZE)
 
-  // Per-frame RMS cache to avoid reading the analyser twice when both getRms()
-  // and getMetrics() are called in the same frame.
-  let cachedRms = 0
-  let cachedRmsFrame = -1
-  let rmsFrameCounter = 0
+  let lastMainRms = 0
 
-  // Phase 9: Mic — stream and nodes (only when mic is on).
+  // Mic stream and nodes are allocated only while mic is on and released on Stop Everything.
   let micStream: MediaStream | null = null
   let micSource: MediaStreamAudioSourceNode | null = null
   let micPreGain: GainNode | null = null
@@ -320,7 +314,7 @@ export function createAudioEngine(
       synthGain.gain.value = 1
       synthGain.connect(mixer)
     } else {
-      // Audio is optional in SSOT; when disabled, keep output silent.
+      // Audio is optional in profiles; when disabled, keep output silent.
       synthGain.gain.value = 0
     }
 
@@ -502,25 +496,17 @@ export function createAudioEngine(
     setConditionAudio,
     getRms(): number {
       if (!analyserNode) return 0
-      rmsFrameCounter++
-      if (cachedRmsFrame !== rmsFrameCounter) {
-        const res = computeRms(analyserNode, scratchMainTime)
-        scratchMainTime = res.scratch
-        cachedRms = res.rms
-        cachedRmsFrame = rmsFrameCounter
-      }
-      return cachedRms
+      const res = computeRms(analyserNode, scratchMainTime)
+      scratchMainTime = res.scratch
+      lastMainRms = res.rms
+      return lastMainRms
     },
     getMetrics(): AudioMetrics {
       if (!analyserNode) return { rms: 0, centroid: 0, flux: 0 }
 
-      rmsFrameCounter++
-      if (cachedRmsFrame !== rmsFrameCounter) {
-        const mainRms = computeRms(analyserNode, scratchMainTime)
-        scratchMainTime = mainRms.scratch
-        cachedRms = mainRms.rms
-        cachedRmsFrame = rmsFrameCounter
-      }
+      const mainRms = computeRms(analyserNode, scratchMainTime)
+      scratchMainTime = mainRms.scratch
+      lastMainRms = mainRms.rms
       const main = computeSpectralFeatures(analyserNode, prevSpectrumMag, scratchMainDb)
       scratchMainDb = main.scratchDb
       prevSpectrumMag = main.nextPrev
@@ -532,22 +518,27 @@ export function createAudioEngine(
       let micMid: number | undefined
       let micHigh: number | undefined
 
-      if (micAnalyserNode && micGateGain) {
+      if (micAnalyserNode && micGateGain && micGain) {
+        const routingGain = inputMode === 'synth' ? 0 : clamp01(micGain.gain.value)
+        const gateGain = clamp01(micGateGain.gain.value)
+        const effectiveMicGain = routingGain * gateGain
         const micR = computeRms(micAnalyserNode, scratchMicTime)
         scratchMicTime = micR.scratch
-        micRms = micR.rms
         const mic = computeSpectralFeatures(micAnalyserNode, prevMicSpectrumMag, scratchMicDb)
         scratchMicDb = mic.scratchDb
         prevMicSpectrumMag = mic.nextPrev
-        micCentroid = mic.centroid
-        micFlux = mic.flux
-        micLow = mic.low
-        micMid = mic.mid
-        micHigh = mic.high
+        if (effectiveMicGain > 0) {
+          micRms = micR.rms * effectiveMicGain
+          micCentroid = mic.centroid * effectiveMicGain
+          micFlux = mic.flux * effectiveMicGain
+          micLow = mic.low * effectiveMicGain
+          micMid = mic.mid * effectiveMicGain
+          micHigh = mic.high * effectiveMicGain
+        }
       }
 
       return {
-        rms: cachedRms,
+        rms: lastMainRms,
         centroid: main.centroid,
         flux: main.flux,
         low: main.low,

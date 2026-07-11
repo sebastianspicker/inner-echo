@@ -19,6 +19,7 @@ const argv = new Set(process.argv.slice(2))
 const REQUIRE_AUDIO = process.env.REQUIRE_AUDIO === '1' || argv.has('--require-audio')
 const REQUIRE_MIC = process.env.REQUIRE_MIC === '1' || argv.has('--require-mic')
 const HEADLESS = process.env.HEADLESS ? process.env.HEADLESS === '1' : true
+const AUDIO_ENGINE_READY_RE = /Audio:\s*(on|muted \(engine on\))/i
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms))
@@ -257,7 +258,7 @@ async function runFlow(page: Page, baseUrl: string): Promise<void> {
   const audioStatus = audioGroup.getByRole('status').first()
   let audioIsOn = false
   let statusText = (await audioStatus.textContent().catch(() => null)) ?? ''
-  audioIsOn = /Audio:\s*on/i.test(statusText)
+  audioIsOn = AUDIO_ENGINE_READY_RE.test(statusText)
   if (!audioIsOn) {
     const enableAudio = audioGroup.getByRole('button', { name: /Enable audio/i })
     if (await enableAudio.isVisible().catch(() => false)) {
@@ -265,11 +266,11 @@ async function runFlow(page: Page, baseUrl: string): Promise<void> {
     }
     try {
       await audioStatus
-        .filter({ hasText: /Audio:\s*(on|error)/i })
+        .filter({ hasText: /Audio:\s*(on|muted \(engine on\)|error)/i })
         .first()
         .waitFor({ timeout: 20_000 })
       statusText = (await audioStatus.textContent()) ?? ''
-      audioIsOn = /Audio:\s*on/i.test(statusText)
+      audioIsOn = AUDIO_ENGINE_READY_RE.test(statusText)
       if (!audioIsOn) {
         const alertText = await audioGroup
           .getByRole('alert')

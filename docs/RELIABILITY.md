@@ -39,7 +39,7 @@ This document describes supported browsers, fallback behaviour, and mitigations 
 
 | Issue | Mitigation |
 |-------|------------|
-| **Low FPS on weak devices** | FPS guard in the WebGL pipeline (Phase 6) reduces internal render resolution (scale 1 → 0.75 → 0.5) when FPS drops below 30. “Stress Mode” in the UI simulates load to test this. |
+| **Low FPS on weak devices** | FPS guard in the WebGL pipeline reduces internal render resolution (scale 1 → 0.75 → 0.5) when FPS drops below 30. “Stress Mode” in the UI simulates load to test this. |
 | **Camera permission denied** | UI shows a clear message; no retry loop. User can click “Start camera” again after granting permission. |
 | **Mic permission denied** | Shown in mic status; user can continue with synth-only audio. |
 | **AudioContext blocked** | Audio stays “off” until the user clicks “Enable audio” (user gesture). No autoplay. |

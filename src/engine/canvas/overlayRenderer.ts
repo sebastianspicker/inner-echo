@@ -62,11 +62,11 @@ export function startOverlayLoop(
   video: HTMLVideoElement | null,
   canvas: HTMLCanvasElement | null,
   container: HTMLElement | null,
-): () => void {
-  if (!video || !canvas || !container) return () => {}
+): (() => void) | null {
+  if (!video || !canvas || !container) return null
 
   const maybeCtx = canvas.getContext('2d')
-  if (!maybeCtx) return () => {}
+  if (!maybeCtx) return null
   // Bind to a new const so TypeScript narrows the type inside the closure.
   const ctx: CanvasRenderingContext2D = maybeCtx
 

@@ -1,5 +1,5 @@
 /**
- * Phase 12: Dev-only debug panel for WebGL/Audio status and diagnostics.
+ * Dev-only debug panel for WebGL/Audio status and diagnostics.
  * Renders only when import.meta.env.DEV is true.
  */
 
@@ -285,6 +285,18 @@ export function DebugPanel(props: DebugPanelProps) {
               <>
                 <dt>micRms</dt>
                 <dd>{audioMetrics.micRms.toFixed(3)}</dd>
+              </>
+            )}
+            {typeof audioMetrics.micCentroid === 'number' && (
+              <>
+                <dt>micCentroid</dt>
+                <dd>{audioMetrics.micCentroid.toFixed(3)}</dd>
+              </>
+            )}
+            {typeof audioMetrics.micFlux === 'number' && (
+              <>
+                <dt>micFlux</dt>
+                <dd>{audioMetrics.micFlux.toFixed(3)}</dd>
               </>
             )}
           </>

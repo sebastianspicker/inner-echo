@@ -41,7 +41,7 @@ User gesture → AudioContext
 
 - **Stack:** Vite, React, TypeScript, Three.js, Web APIs (`getUserMedia`, WebAudio).
 - **UI (`src/ui/`):** OnboardingModal, ConditionPicker (from `catalog.json`), ConditionComposerPanel, EffectControls, AudioMicControls; optional DebugPanel (dev-only).
-- **Engine (`src/engine/`):** API used by UI: `startVideo`/`stopVideo`, `startAudio`/`stopAudio`, `startMic`/`stopMic`, `setCondition(id)`, `setControl(key, value)`, `stopEverything()`. Engine owns camera, WebGL, WebAudio, render loop, disposal.
+- **Engine (`src/engine/`):** Browser runtime helpers used by the UI: `requestVideoStream`/`stopVideoStream`, `createAudioEngine`, `startOverlayLoop`, and reactive/coupling utilities. The UI owns React state; engine modules own camera, WebGL, WebAudio, render loops, and disposal.
 
 ---
 
@@ -58,7 +58,17 @@ User gesture → AudioContext
 | **`src/utils/`** | Shared helpers: logger, numeric clamp, JSON parser, target-path resolver. |
 | **`src/app/`** | Entry point and composition. |
 
-Boundary: the engine module builds graphs from conditions data; UI calls engine APIs only.
+Boundary: conditions data declares what to build; `graphBuilder` constructs concrete video nodes; UI hooks coordinate runtime resources without implementing shader or audio DSP logic.
+
+## Runtime ownership path
+
+`CameraView` is the only top-level coordinator. It keeps user-facing state in React, stores frame-loop settings in refs, and delegates long-lived resources to controllers:
+
+- `useProfileLoad` loads `src/conditions/profiles/*.json` for preset mode or asks the composer for a synthesized profile in multimorbid/symptom-first modes.
+- `graphBuilder` translates profile `video_stack` entries into concrete `VideoNode` classes. Reduced Motion filtering happens before nodes are built, so runtime indices always refer to the built stack.
+- `useReactivePipeline` starts the overlay once the camera is active and the video element has metadata. It creates one reactive driver and one coupling engine for the active profile.
+- `webglPipeline` reads the latest refs every frame, merges UI controls with reactive overrides, computes camera-source video metrics, and applies audio overrides through `audioEngine`.
+- `audioEngine` owns `AudioContext`, synth/mic routing, FX rebuilding, analyser metrics, and cleanup. Audio and mic permissions remain separate user-gesture flows.
 
 ---
 
@@ -67,7 +77,7 @@ Boundary: the engine module builds graphs from conditions data; UI calls engine 
 - **Video:** `THREE.VideoTexture`; post-processing-style chain (render targets); nodes implement `VideoNode` (setParams, getMaterial, dispose). Implemented nodes include grain, vignette, chromatic_aberration, temporal_smear (and others). Unknown node types are skipped with a warning.
 - **WebGL module split:** `src/engine/canvas/webglPipeline.ts` is orchestrator-only; loop/params/resource helpers live under `src/engine/canvas/webgl/` for lower coupling and safer incremental changes.
 - **Audio:** Native WebAudio; starts only after user gesture. Synth + FX chain from profile `audio_stack.chain`; FX include lowpass, highpass, tremolo, noise_bed, compressor_limiter, delay, reverb, flutter, pulse_tone. Condition switch: master gain ramp, dispose and rebuild chain.
-- **Reactive:** Profile can define `reactive.analyser_to_params`; analyser (e.g. RMS) drives video parameters with smoothing and clamps.
+- **Reactive:** Profile can define `reactive.analyser_to_params`; analyser RMS drives video or audio parameters with smoothing and clamps. The coupling engine separately maps audio metrics and video metrics into small, clamped bidirectional adjustments.
 
 ---
 

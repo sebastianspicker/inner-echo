@@ -4,13 +4,18 @@ import {
   ColorGradeNode,
   EdgeSharpenNode,
   FeedbackLoopNode,
+  GazeTunnelNode,
   FocusJitterNode,
+  GlassVeilNode,
   GrainNode,
   GridHintNode,
   HazeNode,
+  IntrusionBurstNode,
   InterferenceNode,
   PulseNode,
+  SalienceCompetitionNode,
   SoftBlurNode,
+  SomaticPulseNode,
   TemporalSmearNode,
   VignetteNode,
   type VideoNode,
@@ -215,6 +220,16 @@ const VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         min: -0.12,
         max: 0.12,
       }),
+      temperature: numberParam('node.material.uniforms.u_temperature.value', {
+        defaultValue: 0,
+        min: -1,
+        max: 1,
+      }),
+      tint: numberParam('node.material.uniforms.u_tint.value', {
+        defaultValue: 0,
+        min: -1,
+        max: 1,
+      }),
     },
     createHarness: () => new VideoProbeHarness(() => new ColorGradeNode()),
   },
@@ -379,6 +394,184 @@ const VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
       }),
     },
     createHarness: () => new VideoProbeHarness(() => new GridHintNode()),
+  },
+  {
+    kind: 'video',
+    node: 'gaze_tunnel',
+    params: {
+      amount: numberParam('node.material.uniforms.u_amount.value', {
+        defaultValue: 0,
+        min: 0,
+        max: 0.85,
+        safeModeClampKey: 'max_intensity',
+      }),
+      radius: numberParam('node.material.uniforms.u_radius.value', {
+        defaultValue: 0.42,
+        min: 0.18,
+        max: 0.75,
+      }),
+      edge_gain: numberParam('node.material.uniforms.u_edge_gain.value', {
+        defaultValue: 0.12,
+        min: 0,
+        max: 0.35,
+      }),
+      desaturate: numberParam('node.material.uniforms.u_desaturate.value', {
+        defaultValue: 0.16,
+        min: 0,
+        max: 0.7,
+      }),
+    },
+    createHarness: () => new VideoProbeHarness(() => new GazeTunnelNode()),
+  },
+  {
+    kind: 'video',
+    node: 'somatic_pulse',
+    params: {
+      depth: numberParam('node.material.uniforms.u_depth.value', {
+        defaultValue: 0,
+        min: 0,
+        max: 1,
+        safeModeClampKey: 'max_pulse_depth',
+      }),
+      rate: numberParam('node.rateHz', {
+        defaultValue: 1,
+        min: 0.05,
+        max: 10,
+        safeModeClampKey: 'max_flash_hz',
+      }),
+      smoothing: numberParam('node.smoothing', {
+        defaultValue: 0.85,
+        min: 0,
+        max: 0.999,
+      }),
+      tunnel: numberParam('node.material.uniforms.u_tunnel.value', {
+        defaultValue: 0.3,
+        min: 0,
+        max: 0.75,
+      }),
+      blur: numberParam('node.material.uniforms.u_blur.value', {
+        defaultValue: 0.12,
+        min: 0,
+        max: 0.35,
+      }),
+    },
+    createHarness: () => new VideoProbeHarness(() => new SomaticPulseNode()),
+  },
+  {
+    kind: 'video',
+    node: 'intrusion_burst',
+    params: {
+      amount: numberParam('node.material.uniforms.u_amount.value', {
+        defaultValue: 0,
+        min: 0,
+        max: 0.26,
+        safeModeClampKey: 'max_luminance_delta_per_frame',
+      }),
+      burst_probability: numberParam('node.burstProbPerSec', {
+        defaultValue: 0,
+        min: 0,
+        max: 1.2,
+      }),
+      burst_duration_ms: {
+        type: 'number',
+        defaultValue: 320,
+        min: 180,
+        max: 500,
+        readEffective(harness: ProbeHarness): unknown {
+          const sec = (harness as VideoProbeHarness).readPath('node.burstDuration')
+          return typeof sec === 'number' ? sec * 1000 : sec
+        },
+      },
+      burst_min_gap_ms: {
+        type: 'number',
+        defaultValue: 800,
+        min: 450,
+        max: 3000,
+        readEffective(harness: ProbeHarness): unknown {
+          const sec = (harness as VideoProbeHarness).readPath('node.burstMinGap')
+          return typeof sec === 'number' ? sec * 1000 : sec
+        },
+      },
+      initial_delay_ms: {
+        type: 'number',
+        defaultValue: 250,
+        min: 0,
+        max: 2000,
+        readEffective(harness: ProbeHarness): unknown {
+          const sec = (harness as VideoProbeHarness).readPath('node.initialDelay')
+          return typeof sec === 'number' ? sec * 1000 : sec
+        },
+      },
+      zoom: numberParam('node.material.uniforms.u_zoom.value', {
+        defaultValue: 0.5,
+        min: 0,
+        max: 1,
+      }),
+      band_count: numberParam('node.material.uniforms.u_band_count.value', {
+        defaultValue: 4,
+        min: 1,
+        max: 9,
+      }),
+    },
+    createHarness: () => new VideoProbeHarness(() => new IntrusionBurstNode()),
+  },
+  {
+    kind: 'video',
+    node: 'salience_competition',
+    params: {
+      amount: numberParam('node.material.uniforms.u_amount.value', {
+        defaultValue: 0,
+        min: 0,
+        max: 0.3,
+        safeModeClampKey: 'max_intensity',
+      }),
+      marker_strength: numberParam('node.material.uniforms.u_marker_strength.value', {
+        defaultValue: 0.5,
+        min: 0,
+        max: 1,
+      }),
+      shift: numberParam('node.material.uniforms.u_shift.value', {
+        defaultValue: 0.04,
+        min: 0,
+        max: 0.08,
+        safeModeClampKey: 'max_jitter',
+      }),
+      jump_rate: numberParam('node.jumpRate', {
+        defaultValue: 1.2,
+        min: 0.1,
+        max: 3,
+      }),
+    },
+    createHarness: () => new VideoProbeHarness(() => new SalienceCompetitionNode()),
+  },
+  {
+    kind: 'video',
+    node: 'glass_veil',
+    params: {
+      veil: numberParam('node.material.uniforms.u_veil.value', {
+        defaultValue: 0,
+        min: 0,
+        max: 0.45,
+      }),
+      feedback: numberParam('node.material.uniforms.u_feedback.value', {
+        defaultValue: 0,
+        min: 0,
+        max: 0.35,
+        safeModeClampKey: 'max_feedback',
+      }),
+      refraction: numberParam('node.material.uniforms.u_refraction.value', {
+        defaultValue: 0,
+        min: 0,
+        max: 0.06,
+      }),
+      chroma: numberParam('node.material.uniforms.u_chroma.value', {
+        defaultValue: 0,
+        min: 0,
+        max: 0.2,
+        safeModeClampKey: 'max_chroma',
+      }),
+    },
+    createHarness: () => new VideoProbeHarness(() => new GlassVeilNode()),
   },
 ]
 

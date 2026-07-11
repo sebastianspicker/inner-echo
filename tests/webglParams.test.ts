@@ -34,13 +34,13 @@ describe('engine/canvas/webgl/params', () => {
     expect(result.audio).toEqual({ a1: 0.3 })
   })
 
-  it('normalizes legacy video-only reactive overrides', () => {
+  it('ignores legacy video-only reactive overrides', () => {
     const result = resolveReactiveOverrides({
       good: 1,
       badBool: true,
       badString: 'x',
     })
-    expect(result.video).toEqual({ good: 1 })
+    expect(result.video).toEqual({})
     expect(result.audio).toBeNull()
   })
 
@@ -145,14 +145,14 @@ describe('engine/canvas/webgl/params', () => {
       expect(result.audio).toBeNull()
     })
 
-    it('filters NaN and Infinity from flat overrides', () => {
+    it('ignores flat override records after structured contract tightening', () => {
       const result = resolveReactiveOverrides({
         good: 1.5,
         nan: NaN,
         inf: Infinity,
         negInf: -Infinity,
       })
-      expect(result.video).toEqual({ good: 1.5 })
+      expect(result.video).toEqual({})
     })
   })
 

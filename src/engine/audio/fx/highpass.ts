@@ -1,5 +1,5 @@
 /**
- * Phase 7: Highpass filter FX (profile compatibility, e.g. anxiety).
+ * Highpass filter FX for profile audio chains.
  */
 
 import type { AudioModule } from '../types'

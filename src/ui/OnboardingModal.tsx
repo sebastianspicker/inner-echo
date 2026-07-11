@@ -1,5 +1,5 @@
 /**
- * Phase 10: Onboarding modal — consent before camera.
+ * Onboarding modal: consent and safety framing before camera access.
  * Content: local-only, no diagnosis, Stop anytime, Safe Mode recommendation.
  * Blocks camera until user checks "I understand" and confirms.
  * Accessibility: keyboard, ARIA, focus trap.

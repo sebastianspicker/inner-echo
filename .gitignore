@@ -1,11 +1,16 @@
-node_modules/
-dist/
+/node_modules/
+/dist/
 .DS_Store
 *.log
-tsconfig.tsbuildinfo
-reports/
-coverage/
-.vite/
+*.tsbuildinfo
+/reports/
+/coverage/
+/.vite/
+/playwright-report/
+/test-results/
+/.cache/
+/tmp/
+/temp/
 
 # Secrets & credentials — never commit these
 .env
@@ -31,6 +36,7 @@ service-account*.json
 .agents/
 progress.md
 AUDIT.md
+/docs/archive/
 
 # OS / editor
 Thumbs.db
@@ -38,5 +44,5 @@ ehthumbs.db
 .idea/
 *.sw?
 
-docs/references/reports/
+/screenshots/
 AGENTS.md

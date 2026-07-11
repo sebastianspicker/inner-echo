@@ -210,6 +210,28 @@ describe('engine/reactive/couplingEngine', () => {
     expect(result.video['0.amount']).toBeTypeOf('number')
   })
 
+  it.each([
+    'chromatic_aberration',
+    'chroma_aberration',
+  ])('applies chroma coupling to %s video node name', (nodeName) => {
+    const profile = makeProfile({
+      videoStack: [{ node: nodeName, params: { amount: 0.02 } }],
+    })
+    const engine = createCouplingEngine(
+      profile,
+      defaultSettings({ couplingStrength: 1, maxFeedback: 1 }),
+    )
+    const audio: AudioMetrics = { rms: 0.1, centroid: 0.9, flux: 0.1 }
+    const base = { '0.amount': 0.02 }
+
+    let result = engine.step(1 / 60, audio, zeroVideo(), base)
+    for (let i = 0; i < 120; i++) {
+      result = engine.step(1 / 60, audio, zeroVideo(), base)
+    }
+
+    expect(result.video['0.amount']).toBeGreaterThan(0.02)
+  })
+
   // -----------------------------------------------------------------------
   // setSettings updates coupling strength
   // -----------------------------------------------------------------------
@@ -341,6 +363,58 @@ describe('engine/reactive/couplingEngine', () => {
     expect(tremoloDepthKeys.length).toBeGreaterThan(0)
     const depth = result.audio[tremoloDepthKeys[0]]
     expect(depth).toBeGreaterThan(0)
+  })
+
+  it('mic metrics drive audio overrides even when video metrics are neutral', () => {
+    const profile = makeProfile({
+      audioChain: [
+        { node: 'tremolo', params: { depth: 0.02, rate: 0.8 } },
+        { node: 'lowpass', params: { cutoff: 3600, q: 0.7 } },
+        { node: 'noise_bed', params: { level: 0.01, color: 'pink' } },
+        { node: 'delay', params: { time: 0.16, feedback: 0.06, mix: 0.02 } },
+        { node: 'reverb', params: { mix: 0.03, decay: 1.8 } },
+        { node: 'pulse_tone', params: { rate: 0.9, mix: 0.03, base_freq: 120 } },
+      ],
+    })
+    const settings = defaultSettings({ couplingStrength: 1, maxFeedback: 1 })
+    const neutralVideo = zeroVideo()
+
+    const quietEngine = createCouplingEngine(profile, settings)
+    const quietAudio: AudioMetrics = {
+      ...zeroAudio(),
+      micRms: 0.02,
+      micCentroid: 0.2,
+      micFlux: 0.01,
+    }
+    let quietResult = quietEngine.step(1 / 60, quietAudio, neutralVideo, {})
+    for (let i = 0; i < 120; i++) {
+      quietResult = quietEngine.step(1 / 60, quietAudio, neutralVideo, {})
+    }
+
+    const loudEngine = createCouplingEngine(profile, settings)
+    const loudAudio: AudioMetrics = {
+      ...zeroAudio(),
+      micRms: 0.85,
+      micCentroid: 0.8,
+      micFlux: 0.6,
+    }
+    let loudResult = loudEngine.step(1 / 60, loudAudio, neutralVideo, {})
+    for (let i = 0; i < 120; i++) {
+      loudResult = loudEngine.step(1 / 60, loudAudio, neutralVideo, {})
+    }
+
+    expect(loudResult.audio['audio.0.depth']).toBeGreaterThan(
+      quietResult.audio['audio.0.depth'] ?? 0,
+    )
+    expect(loudResult.audio['audio.1.cutoff']).toBeGreaterThan(
+      quietResult.audio['audio.1.cutoff'] ?? 0,
+    )
+    expect(loudResult.audio['audio.2.level']).toBeGreaterThan(
+      quietResult.audio['audio.2.level'] ?? 0,
+    )
+    expect(loudResult.audio['audio.3.mix']).toBeGreaterThan(quietResult.audio['audio.3.mix'] ?? 0)
+    expect(loudResult.audio['audio.4.mix']).toBeGreaterThan(quietResult.audio['audio.4.mix'] ?? 0)
+    expect(loudResult.audio['audio.5.mix']).toBeGreaterThan(quietResult.audio['audio.5.mix'] ?? 0)
   })
 
   // -----------------------------------------------------------------------

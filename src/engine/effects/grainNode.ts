@@ -1,5 +1,5 @@
 /**
- * Phase 4: Grain/Noise effect node — single ShaderMaterial with updatable uniforms.
+ * Grain/noise effect node: single ShaderMaterial with updatable uniforms.
  */
 
 import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'

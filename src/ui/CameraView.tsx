@@ -1,22 +1,12 @@
 /**
  * CameraView Component
  *
- * Architecture Overview:
- * This component is the primary orchestrator of the entire Inner Echo application.
- * It strictly acts as a conductor, bridging four distinct technological layers:
- *
- * 1. UI State (React): Manages the panels, buttons, and user preferences (e.g., intensity, safe mode).
- * 2. Video Capture (WebRTC): Solicits and maintains the raw camera feed (`requestVideoStream`).
- * 3. Audio Engine (Web Audio API): Manages background audio, microphone inputs, and volume (`contextManager.ts`).
- * 4. Visual Engine (WebGL): Feeds the raw video into WebGL shaders for pixel manipulation (`startOverlayLoop`).
- *
- * Note on Performance:
- * To avoid freezing the UI when heavy WebGL calculations occur, `CameraView` heavily utilizes
- * `useRef` to pass real-time config values (like slider values) into the WebGL requestAnimationFrame loop
- * without triggering full React re-renders.
+ * Top-level coordinator for the browser-only runtime. React state owns the user-facing
+ * controls; refs hand the latest values to long-lived WebGL/WebAudio loops without
+ * rebuilding those loops on every slider move.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useCatalog } from './hooks/useCatalog'
 import { useProfileLoad } from './hooks/useProfileLoad'
 import { useImmersiveIdleState } from './hooks/useImmersiveIdleState'
@@ -51,11 +41,12 @@ import { getCameraErrorMessage } from './cameraMessages'
 import { ConditionComposerPanel } from './ConditionComposerPanel'
 import { OnboardingModal, getOnboardingAccepted } from './OnboardingModal'
 import { DebugPanel } from './DebugPanel'
-// TODO: Lazy-load EvidenceDrawer via React.lazy to code-split marked + DOMPurify
-// out of the main chunk. Currently they are bundled eagerly (~50 KB combined).
-import { EvidenceDrawer } from './EvidenceDrawer'
 import type { EvidenceDocPath } from '../evidence/docs'
 import type { ComposerMode, SelectedDimension, SelectedPreset } from '../composer'
+
+const EvidenceDrawer = lazy(() =>
+  import('./EvidenceDrawer').then((mod) => ({ default: mod.EvidenceDrawer })),
+)
 
 const DEFAULT_INTENSITY = 0.5
 const DEFAULT_CONDITION_ID = 'none'
@@ -135,7 +126,6 @@ export function CameraView() {
       selectedPresets,
       selectedDimensions,
       setIntensity,
-      setAudioEnabled,
       intensity,
       safeMode,
       reducedMotion,
@@ -365,7 +355,7 @@ export function CameraView() {
     }
   }, [])
 
-  const handleEnableAudio = useCallback(() => {
+  const startAudio = useCallback((forceEnabled: boolean) => {
     const requestSeq = ++audioRequestSeqRef.current
     setAudioError(null)
     setAudioStatus('starting')
@@ -378,14 +368,14 @@ export function CameraView() {
             audioEngineControlRef.current = null
           }
           const currentProfile = profileRef.current
-          const currentAudioEnabled = audioEnabledRef.current
+          const currentAudioEnabled = forceEnabled || audioEnabledRef.current
           const profileHasAudio = !!currentProfile?.audio_stack?.enabled
           const audioStack = profileHasAudio
             ? (currentProfile?.audio_stack ?? { enabled: false })
             : currentAudioEnabled
               ? (currentProfile?.audio_stack ?? null)
               : { enabled: false }
-          if (profileHasAudio) setAudioEnabled(true)
+          if (profileHasAudio || forceEnabled) setAudioEnabled(true)
           const control = createAudioEngine(audioStack, {
             onStatusChange(s, err) {
               setAudioStatus(s)
@@ -394,8 +384,17 @@ export function CameraView() {
             onMicStatusChange(s, err) {
               setMicStatus(s)
               setMicError(err ?? null)
-              if (s === 'on') setMicEnabled(true)
-              else if (s === 'off' || s === 'denied' || s === 'error') setMicEnabled(false)
+              if (s === 'on') {
+                setMicEnabled(true)
+                setInputMode('mix')
+                audioEngineControlRef.current?.setInputMode('mix')
+              } else if (s === 'off' || s === 'denied' || s === 'error') {
+                setMicEnabled(false)
+                if (inputModeRef.current !== 'synth') {
+                  setInputMode('synth')
+                  audioEngineControlRef.current?.setInputMode('synth')
+                }
+              }
             },
           })
           if (requestSeq !== audioRequestSeqRef.current) {
@@ -425,6 +424,20 @@ export function CameraView() {
       })
   }, [])
 
+  const handleEnableAudio = useCallback(() => {
+    startAudio(false)
+  }, [startAudio])
+
+  const handleAudioEnabledChange = useCallback(
+    (enabled: boolean) => {
+      setAudioEnabled(enabled)
+      if (enabled && audioStatus !== 'on' && audioStatus !== 'starting') {
+        startAudio(true)
+      }
+    },
+    [audioStatus, startAudio],
+  )
+
   const handleMasterVolumeChange = useCallback((value: number) => {
     setMasterVolume(value)
     audioEngineControlRef.current?.setMasterVolume(value)
@@ -433,12 +446,14 @@ export function CameraView() {
   const handleEnableMic = useCallback(() => {
     setMicError(null)
     setMicEnabled(true)
+    setInputMode('mix')
+    audioEngineControlRef.current?.setInputMode('mix')
     audioEngineControlRef.current?.requestMic()
   }, [])
 
   const handleDisableMic = useCallback(() => {
     audioEngineControlRef.current?.stopMic()
-    if (inputModeRef.current === 'mic') {
+    if (inputModeRef.current !== 'synth') {
       setInputMode('synth')
       audioEngineControlRef.current?.setInputMode('synth')
     }
@@ -543,7 +558,7 @@ export function CameraView() {
     audioEngineControlRef.current.setMasterVolume(vol)
   }, [profile?.audio_stack, audioStatus, audioEnabled])
 
-  // Phase 8: Dev-only live RMS display (no React state to avoid re-renders every frame).
+  // Dev-only live RMS display; avoid React state so the audio meter does not re-render each frame.
   useEffect(() => {
     if (!import.meta.env.DEV || audioStatus !== 'on' || !debugOverlay) return
     let rafId: number | null = null
@@ -612,6 +627,7 @@ export function CameraView() {
       <CameraHeader
         cameraState={cameraState}
         audioStatus={audioStatus}
+        audioEnabled={audioEnabled}
         isRequesting={cameraController.isRequesting}
         isActive={cameraController.isActive}
         canStop={cameraController.canStop}
@@ -685,7 +701,7 @@ export function CameraView() {
                 reducedMotion={reducedMotion}
                 onReducedMotionChange={setReducedMotion}
                 audioEnabled={audioEnabled}
-                onAudioEnabledChange={setAudioEnabled}
+                onAudioEnabledChange={handleAudioEnabledChange}
                 micEnabled={micEnabled}
                 onMicEnabledChange={handleMicEnabledChange}
                 micRequiresAudio={audioStatus !== 'on'}
@@ -780,6 +796,7 @@ export function CameraView() {
 
             <AudioMicControls
               audioStatus={audioStatus}
+              audioEnabled={audioEnabled}
               audioError={audioError}
               masterVolume={masterVolume}
               micStatus={micStatus}
@@ -815,7 +832,7 @@ export function CameraView() {
                 onSafeModeChange={setSafeMode}
                 onStressModeChange={setStressMode}
                 onReducedMotionChange={setReducedMotion}
-                onAudioEnabledChange={setAudioEnabled}
+                onAudioEnabledChange={handleAudioEnabledChange}
                 onControlValuesChange={setControlValues}
               />
             )}
@@ -858,12 +875,16 @@ export function CameraView() {
         </aside>
       </div>
 
-      <EvidenceDrawer
-        open={evidenceOpen}
-        docPath={evidenceDocPath}
-        onNavigate={setEvidenceDocPath}
-        onClose={() => setEvidenceOpen(false)}
-      />
+      {evidenceOpen && (
+        <Suspense fallback={null}>
+          <EvidenceDrawer
+            open={evidenceOpen}
+            docPath={evidenceDocPath}
+            onNavigate={setEvidenceDocPath}
+            onClose={() => setEvidenceOpen(false)}
+          />
+        </Suspense>
+      )}
     </section>
   )
 }

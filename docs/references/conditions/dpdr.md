@@ -23,7 +23,7 @@
 
 ## Motifs used in this preset (quick traceability)
 
-These motifs are used by the included dimensions. Each motif is an artistic/engineering implementation of a metaphor; the evidence applies primarily to the dimension phenomena.
+These motifs are used by the included dimensions. Each motif is an **artistic/engineering implementation** of a metaphor; the evidence applies primarily to the dimension phenomena.
 
 - `chroma_aberration` — Minor RGB channel offset near edges (very low). — `docs/references/motifs/chroma_aberration.md`
 - `color_grade` — Adjusts saturation/contrast/tonal balance (clamped). — `docs/references/motifs/color_grade.md`

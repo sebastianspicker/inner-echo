@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import { FakeAudioContext } from '../src/contractVerification/fakeAudioContext'
+import { FakeAudioContext, FakeGainNode } from '../src/contractVerification/fakeAudioContext'
 import {
   createLowpass,
   createHighpass,
@@ -181,6 +181,56 @@ describe('engine/audio/fx', () => {
       expect(() => mod.setParams({ color: 'brown' })).not.toThrow()
       expect(() => mod.setParams({ color: 'white' })).not.toThrow()
       mod.dispose()
+    })
+
+    it('passes input through at unity and connects downstream from the combined output', () => {
+      const c = new FakeAudioContext()
+      const connectSpy = vi.spyOn(FakeGainNode.prototype, 'connect')
+      const mark = c.mark()
+      let mod: ReturnType<typeof createNoiseBed> | undefined
+
+      try {
+        mod = createNoiseBed(c as unknown as BaseAudioContext, { level: 0.04, color: 'pink' })
+        const created = c.collectSince(mark)
+        expect(created.gains).toHaveLength(3)
+
+        const input = mod.getInput()
+        expect(input).toBeInstanceOf(FakeGainNode)
+        const inputGain = input as FakeGainNode
+        const noiseGain = created.gains.find((node) => node.gain.value === 0.04)
+        const output = created.gains.find(
+          (node) => node !== inputGain && node !== noiseGain && node.gain.value === 1,
+        )
+
+        if (!noiseGain || !output) {
+          throw new Error('Expected separate input, noise gain, and combined output nodes')
+        }
+
+        expect(inputGain.gain.value).toBe(1)
+        expect(output.gain.value).toBe(1)
+
+        const creationConnections = connectSpy.mock.calls.map(([destination], index) => ({
+          source: connectSpy.mock.contexts[index],
+          destination,
+        }))
+        expect(creationConnections).toEqual(
+          expect.arrayContaining([
+            { source: inputGain, destination: output },
+            { source: noiseGain, destination: output },
+          ]),
+        )
+
+        connectSpy.mockClear()
+        const dest = c.createGain()
+        mod.connect(dest as unknown as AudioNode)
+
+        expect(connectSpy).toHaveBeenCalledTimes(1)
+        expect(connectSpy.mock.contexts[0]).toBe(output)
+        expect(connectSpy.mock.calls[0]).toEqual([dest])
+      } finally {
+        mod?.dispose()
+        connectSpy.mockRestore()
+      }
     })
   })
 

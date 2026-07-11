@@ -18,6 +18,7 @@ import { clamp, smoothStep } from '../../utils/numeric'
 import { logger } from '../../utils/logger'
 
 interface MappingState extends ResolvedMapping {
+  baseValue: number
   smoothed: number
   kind: 'video' | 'audio'
 }
@@ -104,6 +105,7 @@ export function createReactiveDriver(
       release: def.smoothing?.release ?? 0.2,
       clampMin,
       clampMax,
+      baseValue,
       smoothed: initialSmoothed,
     })
   }
@@ -118,7 +120,8 @@ export function createReactiveDriver(
     videoOut = {}
     audioOut = {}
     for (const m of mappings) {
-      const raw = rms * m.scale + m.offset
+      const reactiveValue = rms * m.scale + m.offset
+      const raw = m.kind === 'video' ? m.baseValue + reactiveValue : reactiveValue
       const smoothed = smoothStep(m.smoothed, raw, delta, m.attack, m.release)
       m.smoothed = smoothed
       const v = clamp(smoothed, m.clampMin, m.clampMax)

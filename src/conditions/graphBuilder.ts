@@ -5,11 +5,6 @@
  * Its main job is to read the `video_stack` array from a profile and instantiate the
  * correct TypeScript `VideoNode` objects (e.g. turning `"node": "grain"` in JSON into `new GrainNode()`).
  *
- * Features:
- * - Safely skips unrecognized nodes (instead of crashing).
- * - Implements logic for the "Reduced Motion" accessibility setting, skipping
- *   temporal/motion-heavy nodes like `temporal_smear` if requested.
- *
  * Architecture note: This module lives in conditions/ but imports from engine/effects/.
  * This cross-layer dependency is intentional — graphBuilder is the bridge that translates
  * condition profile data into live engine node instances. The dependency direction
@@ -33,6 +28,11 @@ import {
   FocusJitterNode,
   FeedbackLoopNode,
   GridHintNode,
+  GazeTunnelNode,
+  SomaticPulseNode,
+  IntrusionBurstNode,
+  SalienceCompetitionNode,
+  GlassVeilNode,
 } from '../engine/effects'
 import type { Profile, VideoStackNodeDef } from './schema'
 import { getReducedMotionDisableNodes } from './normalize'
@@ -42,7 +42,7 @@ export const NODE_FACTORY: Record<string, () => VideoNode> = {
   grain: () => new GrainNode(),
   vignette: () => new VignetteNode(),
   chromatic_aberration: () => new ChromaticAberrationNode(),
-  // SSOT canonical name
+  // Canonical profile name.
   // Legacy alias: some profiles and dimension mappings use "chroma_aberration" as a short form.
   chroma_aberration: () => new ChromaticAberrationNode(),
   temporal_smear: () => new TemporalSmearNode(),
@@ -55,6 +55,11 @@ export const NODE_FACTORY: Record<string, () => VideoNode> = {
   focus_jitter: () => new FocusJitterNode(),
   feedback_loop: () => new FeedbackLoopNode(),
   grid_hint: () => new GridHintNode(),
+  gaze_tunnel: () => new GazeTunnelNode(),
+  somatic_pulse: () => new SomaticPulseNode(),
+  intrusion_burst: () => new IntrusionBurstNode(),
+  salience_competition: () => new SalienceCompetitionNode(),
+  glass_veil: () => new GlassVeilNode(),
 }
 
 /** Node types that are temporal/motion-heavy; skipped when Reduced Motion is on. */
@@ -63,6 +68,10 @@ export const TEMPORAL_NODE_TYPES = new Set<string>([
   'feedback_loop',
   'pulse',
   'focus_jitter',
+  'somatic_pulse',
+  'intrusion_burst',
+  'salience_competition',
+  'glass_veil',
 ])
 
 export interface BuildVideoNodesOptions {
@@ -132,7 +141,7 @@ export function profileHasTemporalNodes(profile: Profile): boolean {
 }
 
 /**
- * Phase 8: Index of a node in the *built* array (skipped nodes excluded).
+ * Index of a node in the *built* array (skipped nodes excluded).
  * Used so analyser_to_params targets resolve to the same paramKey the pipeline uses (nodeIndex.param).
  */
 export function getBuiltNodeIndex(
@@ -172,7 +181,7 @@ export function getBuiltNodeIndex(
 }
 
 /**
- * Phase 8: Profile video_stack entry for a given built index (for reading default params).
+ * Profile video_stack entry for a given built index (for reading default params).
  */
 export function getProfileEntryForBuiltIndex(
   profile: Profile,

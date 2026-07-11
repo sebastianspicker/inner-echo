@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { FakeAudioContext } from '../src/contractVerification/fakeAudioContext'
 
@@ -45,6 +45,7 @@ class FakeAnalyser {
 // ---------------------------------------------------------------------------
 class HarnessAudioContext extends FakeAudioContext {
   private _analyser: FakeAnalyser | null = null
+  private readonly analysers: FakeAnalyser[] = []
 
   // Wrap every node factory so the returned object has a `.context` pointing back
   // to this HarnessAudioContext — mirrors real Web Audio API behavior.
@@ -87,6 +88,7 @@ class HarnessAudioContext extends FakeAudioContext {
 
   createAnalyser(): AnalyserNode {
     this._analyser = new FakeAnalyser(this.sampleRate)
+    this.analysers.push(this._analyser)
     return this._analyser as unknown as AnalyserNode
   }
 
@@ -97,6 +99,18 @@ class HarnessAudioContext extends FakeAudioContext {
   getLastAnalyser(): FakeAnalyser | null {
     return this._analyser
   }
+
+  getAnalysers(): FakeAnalyser[] {
+    return this.analysers.slice()
+  }
+}
+
+function installMockMicStream() {
+  const stopTrack = vi.fn()
+  const stream = { getTracks: () => [{ stop: stopTrack }] } as unknown as MediaStream
+  const getUserMedia = vi.fn(async () => stream)
+  vi.stubGlobal('navigator', { mediaDevices: { getUserMedia } })
+  return { getUserMedia, stopTrack }
 }
 
 // ---------------------------------------------------------------------------
@@ -133,6 +147,10 @@ describe('engine/audio/audioEngine', () => {
     mocks.getAudioContextMock.mockClear()
     mocks.closeAudioContextMock.mockClear()
     mocks.addAudioContextListenerMock.mockClear()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   // -----------------------------------------------------------------------
@@ -326,6 +344,68 @@ describe('engine/audio/audioEngine', () => {
 
     control.setInputMode('synth')
     expect(control.getDebugState().inputMode).toBe('synth')
+
+    control.stop()
+  })
+
+  // -----------------------------------------------------------------------
+  // getMetrics suppresses mic metrics when mic is muted by synth-only routing
+  // -----------------------------------------------------------------------
+  it('getMetrics does not expose active mic metrics in synth mode', async () => {
+    const { getUserMedia } = installMockMicStream()
+    const control = createAudioEngine({ enabled: true, master: { volume: 0.3 }, chain: [] }, {})
+    await new Promise<void>((resolve) => setTimeout(resolve, 10))
+
+    control.requestMic()
+    await new Promise<void>((resolve) => setTimeout(resolve, 10))
+
+    expect(getUserMedia).toHaveBeenCalledWith({ audio: true })
+
+    const micAnalyser = contextState.ctx!.getAnalysers()[1]
+    expect(micAnalyser).toBeDefined()
+    micAnalyser!.setTimeDomainFill((buf) => buf.fill(0.8))
+    micAnalyser!.setFreqFill((buf) => buf.fill(-20))
+
+    const metrics = control.getMetrics()
+    expect(metrics.micRms ?? 0).toBe(0)
+    expect(metrics.micCentroid ?? 0).toBe(0)
+    expect(metrics.micFlux ?? 0).toBe(0)
+
+    control.stop()
+  })
+
+  // -----------------------------------------------------------------------
+  // getMetrics reports mic metrics after input-mode and gate gain are applied
+  // -----------------------------------------------------------------------
+  it('getMetrics scales routed mic metrics by input routing and gate gain', async () => {
+    installMockMicStream()
+    const control = createAudioEngine({ enabled: true, master: { volume: 0.3 }, chain: [] }, {})
+    await new Promise<void>((resolve) => setTimeout(resolve, 10))
+
+    const mark = contextState.ctx!.mark()
+    control.requestMic()
+    await new Promise<void>((resolve) => setTimeout(resolve, 10))
+
+    const created = contextState.ctx!.collectSince(mark)
+    const micGateGain = created.gains[created.gains.length - 2]
+    const micRoutingGain = created.gains[created.gains.length - 1]
+    expect(micGateGain).toBeDefined()
+    expect(micRoutingGain).toBeDefined()
+
+    control.setInputMode('mix')
+    expect(micRoutingGain!.gain.value).toBeCloseTo(0.6, 4)
+    micGateGain!.gain.value = 0.5
+
+    const micAnalyser = contextState.ctx!.getAnalysers()[1]
+    expect(micAnalyser).toBeDefined()
+    micAnalyser!.setTimeDomainFill((buf) => buf.fill(0.8))
+    micAnalyser!.setFreqFill((buf) => buf.fill(-20))
+
+    const effectiveGain = 0.6 * 0.5
+    const metrics = control.getMetrics()
+    expect(metrics.micRms).toBeCloseTo(0.8 * effectiveGain, 4)
+    expect(metrics.micCentroid).toBeCloseTo(0.5 * effectiveGain, 4)
+    expect(metrics.micFlux).toBeCloseTo(1 * effectiveGain, 4)
 
     control.stop()
   })

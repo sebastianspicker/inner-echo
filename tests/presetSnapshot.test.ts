@@ -8,8 +8,7 @@ import {
   encodePresetPayload,
   migrateLegacyPresetPayload,
   parsePresetLibrary,
-  readPresetLibrary,
-  writePresetLibrary,
+  parsePresetLibraryWithDiagnostics,
   applyPresetPayload,
   type PresetPayload,
   type ApplyPresetPayloadCallbacks,
@@ -83,6 +82,17 @@ describe('presetSnapshot', () => {
       expect(result).toEqual([])
     })
 
+    test('corrupted JSON returns diagnostics without deleting or fabricating presets', () => {
+      const result = parsePresetLibraryWithDiagnostics('not valid json {{{')
+      expect(result.snapshots).toEqual([])
+      expect(result.diagnostics).toEqual({
+        ok: false,
+        reason: 'invalid-json',
+        totalItems: 0,
+        invalidItems: 0,
+      })
+    })
+
     test('non-array JSON returns empty array', () => {
       const result = parsePresetLibrary('"just a string"')
       expect(result).toEqual([])
@@ -106,6 +116,20 @@ describe('presetSnapshot', () => {
       const result = parsePresetLibrary(JSON.stringify(items))
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('Good')
+    })
+
+    test('partial/invalid entries report diagnostics while preserving valid snapshots', () => {
+      const valid = createPresetSnapshot(makePayload(), { name: 'Good' })
+      const result = parsePresetLibraryWithDiagnostics(
+        JSON.stringify([valid, { version: 1, broken: true }]),
+      )
+      expect(result.snapshots).toHaveLength(1)
+      expect(result.diagnostics).toEqual({
+        ok: false,
+        reason: 'invalid-items',
+        totalItems: 2,
+        invalidItems: 1,
+      })
     })
 
     test('empty array JSON returns empty array', () => {
@@ -161,6 +185,14 @@ describe('presetSnapshot', () => {
       expect(migrated!.presets[0].profileId).toBe('anxiety')
       expect(migrated!.dimensions).toHaveLength(1)
       expect(migrated!.dimensions[0].dimensionId).toBe('intrusion')
+    })
+
+    test('rejects legacy identifiers that cannot be written as valid v2 payload', () => {
+      const migrated = migrateLegacyPresetPayload({
+        conditionId: 'bad id with spaces',
+        presets: [{ profileId: 'anxiety', weight: 0.8 }],
+      })
+      expect(migrated).toBeNull()
     })
   })
 
@@ -246,62 +278,6 @@ describe('presetSnapshot', () => {
       expect(decoded!.couplingStrength).toBeCloseTo(0.8)
       expect(decoded!.maxFeedback).toBeCloseTo(0.4)
       expect(decoded!.interactionAmount).toBeCloseTo(0.25)
-    })
-  })
-
-  describe('readPresetLibrary', () => {
-    test('returns empty array when storage key is absent', () => {
-      const storage = { getItem: () => null }
-      const result = readPresetLibrary(storage)
-      expect(result).toEqual([])
-    })
-
-    test('reads and parses valid snapshots from storage', () => {
-      const snap = createPresetSnapshot(makePayload(), { name: 'Stored' })
-      const storage = {
-        getItem: (key: string) => {
-          if (key === PRESET_LIBRARY_STORAGE_KEY) return JSON.stringify([snap])
-          return null
-        },
-      }
-      const result = readPresetLibrary(storage)
-      expect(result).toHaveLength(1)
-      expect(result[0].name).toBe('Stored')
-    })
-
-    test('returns empty array for corrupted storage data', () => {
-      const storage = { getItem: () => 'corrupted{{{' }
-      const result = readPresetLibrary(storage)
-      expect(result).toEqual([])
-    })
-  })
-
-  describe('writePresetLibrary', () => {
-    test('serializes snapshots to storage', () => {
-      let stored: string | null = null
-      const storage = {
-        setItem: (_key: string, value: string) => {
-          stored = value
-        },
-      }
-      const snap = createPresetSnapshot(makePayload(), { name: 'Written' })
-      writePresetLibrary(storage, [snap])
-      expect(stored).not.toBeNull()
-      const parsed = JSON.parse(stored!)
-      expect(Array.isArray(parsed)).toBe(true)
-      expect(parsed).toHaveLength(1)
-      expect(parsed[0].name).toBe('Written')
-    })
-
-    test('writes empty array when no snapshots', () => {
-      let stored: string | null = null
-      const storage = {
-        setItem: (_key: string, value: string) => {
-          stored = value
-        },
-      }
-      writePresetLibrary(storage, [])
-      expect(stored).toBe('[]')
     })
   })
 

@@ -1,5 +1,5 @@
 /**
- * Phase 5: Load condition catalog and profiles with validation.
+ * Load condition catalog and profiles with validation.
  * loadProfile(id) validates required fields (id, label, video_stack).
  * Unknown node types are not rejected here — the graph builder skips them with a warning.
  */

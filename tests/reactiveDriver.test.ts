@@ -71,6 +71,50 @@ describe('engine/reactive/reactiveDriver', () => {
     expect(driver.getVideoOverrides(1 / 60, 0.5)).toEqual({})
   })
 
+  it('keeps video profile defaults when RMS-driven modulation is silent', () => {
+    const profile = makeProfile({
+      video_stack: [{ node: 'grain', params: { amount: 0.2 } }],
+      reactive: {
+        analyser_to_params: [
+          {
+            source: 'rms',
+            target: 'video.grain.amount',
+            scale: 0.15,
+            offset: 0,
+            clamp: [0, 0.45],
+            smoothing: { attack: 0, release: 0 },
+          },
+        ],
+      },
+    })
+
+    const driver = createReactiveDriver(profile)
+
+    expect(driver.getVideoOverrides(1 / 60, 0)['0.amount']).toBeCloseTo(0.2)
+  })
+
+  it('adds video RMS modulation on top of the profile default', () => {
+    const profile = makeProfile({
+      video_stack: [{ node: 'grain', params: { amount: 0.2 } }],
+      reactive: {
+        analyser_to_params: [
+          {
+            source: 'rms',
+            target: 'video.grain.amount',
+            scale: 0.1,
+            offset: 0.05,
+            clamp: [0, 0.45],
+            smoothing: { attack: 0, release: 0 },
+          },
+        ],
+      },
+    })
+
+    const driver = createReactiveDriver(profile)
+
+    expect(driver.getVideoOverrides(1 / 60, 0.5)['0.amount']).toBeCloseTo(0.3)
+  })
+
   describe('audio override paths', () => {
     it('produces audio overrides for audio-targeted mappings', () => {
       const profile = makeProfile({
@@ -100,6 +144,32 @@ describe('engine/reactive/reactiveDriver', () => {
       const keys = Object.keys(audioOverrides)
       expect(keys.length).toBeGreaterThan(0)
       expect(keys[0]).toContain('audio.')
+    })
+
+    it('keeps audio reactive mappings absolute for explicit sweeps', () => {
+      const profile = makeProfile({
+        audio_stack: {
+          enabled: true,
+          chain: [{ id: 'lowpass', node: 'lowpass', params: { cutoff: 5200 } }],
+        },
+        reactive: {
+          analyser_to_params: [
+            {
+              source: 'rms',
+              target: 'audio.lowpass.cutoff',
+              scale: -2500,
+              offset: 7000,
+              clamp: [4500, 7000],
+              smoothing: { attack: 0, release: 0 },
+            },
+          ],
+        },
+      })
+
+      const driver = createReactiveDriver(profile)
+      driver.getVideoOverrides(1 / 60, 0)
+
+      expect(driver.getAudioOverrides(1 / 60, 0)['audio.0.cutoff']).toBeCloseTo(7000)
     })
 
     it('missing audio chain index is skipped gracefully', () => {

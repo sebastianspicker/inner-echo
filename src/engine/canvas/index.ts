@@ -1,8 +1,7 @@
 /**
  * Canvas overlay: WebGL (Three.js) by default with 2D fallback.
- * Phase 5: WebGL pipeline is built from condition profile (video nodes); empty nodes = passthrough.
- * Phase 8: Optional reactive options for audio RMS → video param modulation.
- * Phase 12: getDiagnostics() for dev debug panel.
+ * WebGL receives condition-built video nodes; empty nodes mean passthrough.
+ * Reactive options let the frame loop exchange video/audio metrics with WebAudio.
  */
 
 import type { VideoNode } from '../effects/VideoNode'
@@ -18,9 +17,9 @@ export { syncCanvasToContainer }
 export type { VideoPipelineParams, ReactiveLoopOptions }
 export type { VideoMetrics } from './videoMetrics'
 
-/** Phase 12: Diagnostics for dev debug panel. */
+/** Diagnostics exposed to the dev debug panel while an overlay is active. */
 export interface OverlayDiagnostics {
-  rendererMode: 'webgl' | '2d'
+  rendererMode: 'webgl' | '2d' | 'unavailable'
   fps: number | null
   frameTimeMs: number | null
   renderScale: number
@@ -39,7 +38,7 @@ const USE_WEBGL = true
 export interface OverlayControl {
   stop(): void
   setParams(params: VideoPipelineParams): void
-  /** Phase 12: Present only when overlay is active; for dev debug panel. */
+  /** Present only when overlay is active; used by the dev debug panel. */
   getDiagnostics?(): OverlayDiagnostics
 }
 
@@ -47,7 +46,7 @@ export interface OverlayControl {
  * Start the overlay render loop. Prefers WebGL (Three.js) with the given video nodes
  * (from condition profile); empty or missing nodes = clean passthrough.
  * Falls back to 2D canvas drawImage if USE_WEBGL is false or WebGL init fails.
- * Phase 8: Pass reactiveOptions to drive video params from audio RMS (getRms + getOverrides).
+ * Pass reactiveOptions to drive AV coupling from audio/video metrics.
  * Returns { stop, setParams }; setParams is a no-op for 2D fallback.
  */
 export function startOverlayLoop(
@@ -66,6 +65,14 @@ export function startOverlayLoop(
     resourceCounts: null,
     activeVideoNodes: [],
   })
+  const getUnavailableDiagnostics = (): OverlayDiagnostics => ({
+    rendererMode: 'unavailable',
+    fps: null,
+    frameTimeMs: null,
+    renderScale: 1,
+    resourceCounts: null,
+    activeVideoNodes: [],
+  })
 
   if (!video || !canvas || !container) {
     return { stop: () => {}, setParams: noOpSetParams }
@@ -77,9 +84,9 @@ export function startOverlayLoop(
 
   const install2dFallback = (): void => {
     const stop2d = start2DOverlayLoop(video, canvas, container)
-    delegateStop = stop2d
+    delegateStop = stop2d ?? (() => {})
     delegateSetParams = noOpSetParams
-    delegateGetDiagnostics = get2dDiagnostics
+    delegateGetDiagnostics = stop2d ? get2dDiagnostics : getUnavailableDiagnostics
   }
 
   if (USE_WEBGL) {

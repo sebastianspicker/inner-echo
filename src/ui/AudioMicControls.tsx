@@ -1,8 +1,10 @@
 import type { AudioContextStatus, MicStatus, AudioInputMode } from '../engine/audio'
+import { getAudioStateLabel } from './audioStatusMessages'
 import { LabeledSlider } from './controls/LabeledSlider'
 
 export interface AudioMicControlsProps {
   audioStatus: AudioContextStatus
+  audioEnabled: boolean
   audioError: string | null
   masterVolume: number
   micStatus: MicStatus
@@ -21,6 +23,7 @@ export interface AudioMicControlsProps {
 
 export function AudioMicControls({
   audioStatus,
+  audioEnabled,
   audioError,
   masterVolume,
   micStatus,
@@ -42,10 +45,7 @@ export function AudioMicControls({
       <div className="ie-panelBody">
         <div className="ie-controlGroup" role="group" aria-label="Audio">
           <div className="ie-controlStatus" role="status" aria-live="polite">
-            Audio: {audioStatus === 'off' && 'off'}
-            {audioStatus === 'starting' && 'starting…'}
-            {audioStatus === 'on' && 'on'}
-            {audioStatus === 'error' && 'error'}
+            Audio: {getAudioStateLabel(audioStatus, audioEnabled)}
           </div>
           {audioError && (
             <p className="ie-inlineError" role="alert">

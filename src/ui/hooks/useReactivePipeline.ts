@@ -2,7 +2,7 @@ import { useEffect, type MutableRefObject } from 'react'
 import type { Profile } from '../../conditions/schema'
 import type { CameraState } from '../../engine/video'
 import type { OverlayControl, VideoMetrics } from '../../engine/canvas'
-import type { AudioEngineControl } from '../../engine/audio'
+import type { AudioEngineControl, AudioMetrics } from '../../engine/audio'
 import { BASELINE_PROFILE } from '../../conditions/fallbackProfiles'
 import { buildVideoNodes } from '../../conditions/graphBuilder'
 import { createReactiveDriver, createCouplingEngine } from '../../engine/reactive'
@@ -81,7 +81,6 @@ export function useReactivePipeline({
       const reactiveOptions = {
         getAudioMetrics: () =>
           audioEngineControlRef.current?.getMetrics?.() ?? { rms: 0, centroid: 0, flux: 0 },
-        getRms: () => audioEngineControlRef.current?.getRms?.() ?? 0,
         applyAudioOverrides: (overrides: Record<string, number>) => {
           audioEngineControlRef.current?.applyReactiveParams?.(overrides)
         },
@@ -110,12 +109,13 @@ export function useReactivePipeline({
           }
           return (
             delta: number,
-            audio: { rms: number; centroid: number; flux: number },
+            audio: AudioMetrics,
             video: { motion: number; luminance: number; edge: number; instability: number },
             baseControlValues: Record<string, number | boolean>,
           ) => {
-            const videoReactive = driver.getVideoOverrides(delta, audio.rms)
-            const audioReactive = driver.getAudioOverrides(delta, audio.rms)
+            const reactiveRms = Math.max(audio.rms, audio.micRms ?? 0)
+            const videoReactive = driver.getVideoOverrides(delta, reactiveRms)
+            const audioReactive = driver.getAudioOverrides(delta, reactiveRms)
 
             clear(baseAfterReactive)
             copy(baseAfterReactive, baseControlValues)

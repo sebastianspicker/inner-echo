@@ -10,7 +10,7 @@ export interface VideoMetrics {
 }
 
 export interface VideoMetricsTracker {
-  stepFromCanvas(sourceCanvas: HTMLCanvasElement, deltaSec: number): VideoMetrics
+  stepFromSource(source: CanvasImageSource, deltaSec: number): VideoMetrics
   getLast(): VideoMetrics
   dispose(): void
 }
@@ -34,7 +34,7 @@ export function createVideoMetricsTracker(options?: {
   if (typeof document === 'undefined') {
     const noopMetrics: VideoMetrics = { motion: 0, luminance: 0, edge: 0, instability: 0 }
     return {
-      stepFromCanvas() {
+      stepFromSource() {
         return noopMetrics
       },
       getLast() {
@@ -51,7 +51,7 @@ export function createVideoMetricsTracker(options?: {
   if (!ctx) {
     const noopMetrics: VideoMetrics = { motion: 0, luminance: 0, edge: 0, instability: 0 }
     return {
-      stepFromCanvas() {
+      stepFromSource() {
         return noopMetrics
       },
       getLast() {
@@ -66,14 +66,15 @@ export function createVideoMetricsTracker(options?: {
   let last: VideoMetrics = { motion: 0, luminance: 0, edge: 0, instability: 0 }
 
   const sm: VideoMetrics = { ...last }
-  // Pre-allocated output object to avoid per-frame allocation in stepFromCanvas.
+  // Pre-allocated output object to avoid per-frame allocation in stepFromSource.
   const out: VideoMetrics = { ...last }
 
-  function computeOnce(sourceCanvas: HTMLCanvasElement): VideoMetrics {
+  function computeOnce(source: CanvasImageSource): VideoMetrics {
     if (!ctx) return last
-    // Draw from rendered canvas to low-res buffer.
+    // Draw from the camera source to a low-res buffer. Reading the presented
+    // WebGL canvas through 2D is not reliable across browsers/backends.
     ctx.clearRect(0, 0, size, size)
-    ctx.drawImage(sourceCanvas, 0, 0, size, size)
+    ctx.drawImage(source, 0, 0, size, size)
     const img = ctx.getImageData(0, 0, size, size)
     const data = img.data
     const n = size * size
@@ -127,10 +128,10 @@ export function createVideoMetricsTracker(options?: {
   }
 
   return {
-    stepFromCanvas(sourceCanvas: HTMLCanvasElement, deltaSec: number): VideoMetrics {
+    stepFromSource(source: CanvasImageSource, deltaSec: number): VideoMetrics {
       frame++
       if (frame % everyN === 0) {
-        last = computeOnce(sourceCanvas)
+        last = computeOnce(source)
       }
       sm.motion = smoothStep(sm.motion, last.motion, deltaSec, attack, release)
       sm.luminance = smoothStep(sm.luminance, last.luminance, deltaSec, attack, release)

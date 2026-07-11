@@ -1,8 +1,8 @@
 # Motif / node index
 
-This index lists simulation motifs (video/audio nodes) and links to their evidence pages.
+This index lists **simulation motifs** (video/audio nodes) and links to their evidence pages.
 
-> **Important:** evidence in this project primarily supports experience dimensions and reported phenomena. A specific node is an artistic/engineering implementation of a metaphor, and must be interpreted cautiously.
+> **Important:** evidence in this project primarily supports **experience dimensions and reported phenomena**. A specific node is an **artistic/engineering implementation** of a metaphor, and must be interpreted cautiously.
 
 ## Motifs
 

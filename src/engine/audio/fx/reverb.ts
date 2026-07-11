@@ -33,6 +33,10 @@ function makeImpulse(context: BaseAudioContext, decaySeconds: number): AudioBuff
 }
 
 export function createReverb(context: BaseAudioContext, params: ReverbParams = {}): AudioModule {
+  let current: Required<ReverbParams> = {
+    mix: params.mix ?? DEFAULT_MIX,
+    decay: params.decay ?? DEFAULT_DECAY,
+  }
   const input = context.createGain()
   input.gain.value = 1
 
@@ -45,8 +49,12 @@ export function createReverb(context: BaseAudioContext, params: ReverbParams = {
   let lastDecay = -1
 
   const set = (p: ReverbParams) => {
-    const mix = clamp(p.mix ?? DEFAULT_MIX, 0, 0.12)
-    const decay = clamp(p.decay ?? DEFAULT_DECAY, 0.6, 2.8)
+    current = {
+      mix: p.mix ?? current.mix,
+      decay: p.decay ?? current.decay,
+    }
+    const mix = clamp(current.mix, 0, 0.12)
+    const decay = clamp(current.decay, 0.6, 2.8)
 
     dry.gain.setValueAtTime(1 - mix, context.currentTime)
     wet.gain.setValueAtTime(mix, context.currentTime)

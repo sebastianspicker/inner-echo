@@ -1,11 +1,15 @@
 /**
- * Phase 6: Resolve profile ui.controls target to pipeline param key and default value.
+ * Resolve profile ui.controls target to pipeline param key and default value.
  * target "intensity" -> global intensity; "video.<nodeId>.<param>" -> nodeIndex.param.
  */
 
 import type { Profile, UIControl } from './schema'
 import { parseScopedTarget } from '../utils/targetPath'
-import { getBuiltNodeIndex, type BuildVideoNodesOptions } from './graphBuilder'
+import {
+  getBuiltNodeIndex,
+  getProfileEntryForBuiltIndex,
+  type BuildVideoNodesOptions,
+} from './graphBuilder'
 
 export interface ResolvedControl {
   control: UIControl
@@ -123,16 +127,28 @@ export function resolveControl(
 /**
  * Build initial control values from profile (intensity, safeMode, node params).
  */
-export function getDefaultControlValues(profile: Profile): Record<string, number | boolean> {
+export function getDefaultControlValues(
+  profile: Profile,
+  options?: BuildVideoNodesOptions,
+): Record<string, number | boolean> {
   const out: Record<string, number | boolean> = {}
   const safety = profile.safety
   out.intensity = typeof safety?.intensity_default === 'number' ? safety.intensity_default : 0.5
   out.safeMode = false
   out.reducedMotion = false
   out.audioEnabled = false
+  for (let builtIndex = 0; ; builtIndex++) {
+    const entry = getProfileEntryForBuiltIndex(profile, builtIndex, options)
+    if (!entry) break
+    for (const [param, value] of Object.entries(entry.params ?? {})) {
+      if (typeof value === 'number' || typeof value === 'boolean') {
+        out[`${builtIndex}.${param}`] = value
+      }
+    }
+  }
   const controls = profile.ui?.controls ?? []
   for (const c of controls) {
-    const resolved = resolveControl(c, profile)
+    const resolved = resolveControl(c, profile, options)
     if (!resolved) continue
     out[resolved.paramKey] = resolved.defaultValue
   }
