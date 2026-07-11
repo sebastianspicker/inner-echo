@@ -36,18 +36,12 @@ import {
 } from '../engine/effects'
 import type { Profile, VideoStackNodeDef } from './schema'
 import { getReducedMotionDisableNodes } from './normalize'
-import { TEMPORAL_NODE_TYPES } from './motionPolicy'
 import { logger } from '../utils/logger'
-
-export { TEMPORAL_NODE_TYPES, profileHasTemporalNodes } from './motionPolicy'
 
 export const NODE_FACTORY: Record<string, () => VideoNode> = {
   grain: () => new GrainNode(),
   vignette: () => new VignetteNode(),
   chromatic_aberration: () => new ChromaticAberrationNode(),
-  // Canonical profile name.
-  // Legacy alias: some profiles and dimension mappings use "chroma_aberration" as a short form.
-  chroma_aberration: () => new ChromaticAberrationNode(),
   temporal_smear: () => new TemporalSmearNode(),
   color_grade: () => new ColorGradeNode(),
   haze: () => new HazeNode(),
@@ -65,7 +59,34 @@ export const NODE_FACTORY: Record<string, () => VideoNode> = {
   glass_veil: () => new GlassVeilNode(),
 }
 
+const LEGACY_NODE_ALIASES: Record<string, string> = { chroma_aberration: 'chromatic_aberration' }
+let warnedLegacyChromaAlias = false
+
+/** Normalizes external profile input; the legacy alias is removed in 0.2.0. */
+export function normalizeVideoNodeName(nodeType: string): string {
+  const normalized = nodeType.toLowerCase()
+  const canonical = LEGACY_NODE_ALIASES[normalized]
+  if (canonical && !warnedLegacyChromaAlias) {
+    warnedLegacyChromaAlias = true
+    logger.warn(
+      '[conditions] "chroma_aberration" is deprecated and will be removed in 0.2.0; use "chromatic_aberration".',
+    )
+  }
+  return canonical ?? normalized
+}
+
 /** Node types that are temporal/motion-heavy; skipped when Reduced Motion is on. */
+export const TEMPORAL_NODE_TYPES = new Set<string>([
+  'temporal_smear',
+  'feedback_loop',
+  'pulse',
+  'focus_jitter',
+  'somatic_pulse',
+  'intrusion_burst',
+  'salience_competition',
+  'glass_veil',
+])
+
 export interface BuildVideoNodesOptions {
   /** When true, temporal/strobe-heavy nodes (e.g. temporal_smear) are skipped. */
   reducedMotion?: boolean
@@ -78,7 +99,7 @@ export function shouldSkipNode(
 ): boolean {
   const nodeType = typeof nodeTypeRaw === 'string' ? nodeTypeRaw : ''
   if (!nodeType) return true
-  const t = nodeType.toLowerCase()
+  const t = normalizeVideoNodeName(nodeType)
   if (reducedMotion && (TEMPORAL_NODE_TYPES.has(t) || reducedMotionDisable.has(t))) return true
   return false
 }
@@ -107,7 +128,7 @@ export function buildVideoNodes(profile: Profile, options?: BuildVideoNodesOptio
     if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) {
       continue
     }
-    const factory = NODE_FACTORY[nodeType.toLowerCase()]
+    const factory = NODE_FACTORY[normalizeVideoNodeName(nodeType)]
     if (!factory) {
       logger.warn('[conditions] Unknown video node type, skipping:', nodeType)
       continue
@@ -121,6 +142,47 @@ export function buildVideoNodes(profile: Profile, options?: BuildVideoNodesOptio
  * Returns true if the profile's video_stack contains any temporal node (e.g. temporal_smear).
  * Used to show a UI hint when Reduced Motion is on and the condition would use such nodes.
  */
+export function profileHasTemporalNodes(profile: Profile): boolean {
+  const reducedMotionDisable = getReducedMotionDisableNodes(profile)
+  for (const def of profile.video_stack) {
+    const nodeType = def.node
+    if (!nodeType) continue
+    const t = normalizeVideoNodeName(nodeType)
+    if (TEMPORAL_NODE_TYPES.has(t) || reducedMotionDisable.has(t)) return true
+  }
+  return false
+}
+
+function isBuildableNode(
+  def: VideoStackNodeDef,
+  reducedMotion: boolean,
+  reducedMotionDisable: Set<string>,
+): boolean {
+  const nodeType = def.node
+  return Boolean(
+    nodeType &&
+      typeof nodeType === 'string' &&
+      !shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable) &&
+      NODE_FACTORY[normalizeVideoNodeName(nodeType)],
+  )
+}
+
+function findBuiltNodeIndex(
+  profile: Profile,
+  id: string,
+  reducedMotion: boolean,
+  reducedMotionDisable: Set<string>,
+  match: (def: VideoStackNodeDef, normalizedId: string) => boolean,
+): number {
+  let builtIndex = 0
+  for (const def of profile.video_stack) {
+    if (!isBuildableNode(def, reducedMotion, reducedMotionDisable)) continue
+    if (match(def, id)) return builtIndex
+    builtIndex++
+  }
+  return -1
+}
+
 /**
  * Index of a node in the *built* array (skipped nodes excluded).
  * Used so analyser_to_params targets resolve to the same paramKey the pipeline uses (nodeIndex.param).
@@ -130,35 +192,28 @@ export function getBuiltNodeIndex(
   nodeId: string,
   options?: BuildVideoNodesOptions,
 ): number {
-  const id = nodeId.toLowerCase()
-  let builtIndex = 0
+  const id = normalizeVideoNodeName(nodeId)
   const reducedMotionDisable = getReducedMotionDisableNodes(profile)
   const reducedMotion = options?.reducedMotion === true
 
   // First pass: prefer an exact match on the explicit `id` field.
-  for (const def of profile.video_stack) {
-    const nodeType = def.node
-    if (!nodeType || typeof nodeType !== 'string') continue
-    if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) continue
-    if (!NODE_FACTORY[nodeType.toLowerCase()]) continue
-    const entryId = (def.id ?? '').toLowerCase()
-    if (entryId && entryId === id) return builtIndex
-    builtIndex++
-  }
+  const explicitMatch = findBuiltNodeIndex(
+    profile,
+    id,
+    reducedMotion,
+    reducedMotionDisable,
+    (def, normalizedId) => Boolean(def.id && def.id.toLowerCase() === normalizedId),
+  )
+  if (explicitMatch !== -1) return explicitMatch
 
   // Second pass: fall back to matching by node type when no id match was found.
-  builtIndex = 0
-  for (const def of profile.video_stack) {
-    const nodeType = def.node
-    if (!nodeType || typeof nodeType !== 'string') continue
-    if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) continue
-    if (!NODE_FACTORY[nodeType.toLowerCase()]) continue
-    const entryType = nodeType.toLowerCase()
-    if (entryType === id) return builtIndex
-    builtIndex++
-  }
-
-  return -1
+  return findBuiltNodeIndex(
+    profile,
+    id,
+    reducedMotion,
+    reducedMotionDisable,
+    (def, normalizedId) => normalizeVideoNodeName(def.node) === normalizedId,
+  )
 }
 
 /**
@@ -176,7 +231,7 @@ export function getProfileEntryForBuiltIndex(
     const nodeType = def.node
     if (!nodeType || typeof nodeType !== 'string') continue
     if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) continue
-    if (!NODE_FACTORY[nodeType.toLowerCase()]) continue
+    if (!NODE_FACTORY[normalizeVideoNodeName(nodeType)]) continue
     if (count === builtIndex) return def
     count++
   }
