@@ -63,7 +63,7 @@ describe('canvas renderer fallback ownership', () => {
       {} as HTMLElement,
     )
 
-    expect(control.getDiagnostics?.().rendererMode).toBe('video')
+    expect(control.getDiagnostics?.().rendererMode).toBe('raw')
     expect(webglCanvas.hidden).toBe(true)
     expect(fallbackCanvas.hidden).toBe(true)
   })

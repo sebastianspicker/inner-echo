@@ -41,8 +41,8 @@ Push the same commit and require green status for:
 ## Manual smoke acceptance
 
 1. Start camera + stop everything path.
-2. Switch modes while camera is active (`Preset` -> `Multimorbid` -> `Symptom-first`).
-3. Open/close Evidence drawer and validate keyboard navigation.
+2. Switch modes while camera is active (`Experience dimensions` -> `Curated collections` -> `Combine collections`).
+3. Open/close the Method & Evidence dialog and validate keyboard navigation and focus return.
 4. Confirm mobile layout at ~`390x844` remains usable.
 5. Verify `Safe Mode` and `Reduced Motion` toggles are available and responsive.
 
@@ -57,5 +57,6 @@ Include at minimum:
 
 ## Known limitations template
 
-- Large production bundle warning may still appear during Vite build.
+- The audiovisual runtime is deferred from the initial entry, but its asynchronous chunk remains substantial and should continue to be monitored.
+- Automated Playwright coverage does not replace a real Safari camera/audio smoke, physical mobile-camera smoke, or manual screen-reader pass.
 - RC is non-final and may require additional hardening based on validation feedback.

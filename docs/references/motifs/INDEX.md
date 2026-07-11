@@ -6,7 +6,7 @@ This index lists **simulation motifs** (video/audio nodes) and links to their ev
 
 ## Motifs
 
-- [`chromatic_aberration`](./chromatic_aberration.md) — Minor RGB channel offset near edges (very low).
+- [`chroma_aberration`](./chromatic_aberration.md) — Minor RGB channel offset near edges (very low).
 - [`color_grade`](./color_grade.md) — Adjusts saturation/contrast/tonal balance (clamped).
 - [`compressor_limiter`](./compressor_limiter.md) — Reduces peaks and smooths dynamics (safety-first).
 - [`delay`](./delay.md) — Short echo with low feedback/mix (clamped).

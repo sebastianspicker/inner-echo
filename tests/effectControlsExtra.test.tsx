@@ -68,10 +68,11 @@ afterEach(() => {
 })
 
 describe('ui/EffectControls – additional coverage', () => {
-  it('renders fallback Intensity slider and Safe Mode toggle when profile is null', () => {
+  it('does not duplicate global controls when profile is null', () => {
     render(<EffectControls {...defaultProps({ profile: null })} />)
-    expect(screen.getByText('Intensity')).toBeTruthy()
-    expect(screen.getByText('Safe Mode')).toBeTruthy()
+    expect(screen.getByText(/no additional controls/i)).toBeTruthy()
+    expect(screen.queryByText('Intensity')).toBeNull()
+    expect(screen.queryByText('Safe Mode')).toBeNull()
   })
 
   it('renders Stress Mode toggle regardless of profile', () => {
@@ -92,57 +93,21 @@ describe('ui/EffectControls – additional coverage', () => {
     expect(onStressModeChange).toHaveBeenCalled()
   })
 
-  it('reflects audioEnabled=true on Audio toggle', () => {
-    render(<EffectControls {...defaultProps({ audioEnabled: true })} />)
-    const audioToggle = screen.getByLabelText('Audio') as HTMLInputElement
-    expect(audioToggle.checked).toBe(true)
-  })
-
-  it('reflects audioEnabled=false on Audio toggle', () => {
-    render(<EffectControls {...defaultProps({ audioEnabled: false })} />)
-    const audioToggle = screen.getByLabelText('Audio') as HTMLInputElement
-    expect(audioToggle.checked).toBe(false)
-  })
-
-  it('calls onAudioEnabledChange when Audio toggle is clicked', () => {
-    const onAudioEnabledChange = vi.fn()
-    render(<EffectControls {...defaultProps({ onAudioEnabledChange })} />)
-    const audioToggle = screen.getByLabelText('Audio')
-    fireEvent.click(audioToggle)
-    expect(onAudioEnabledChange).toHaveBeenCalled()
-  })
-
-  it('calls onSafeModeChange when Safe Mode toggle is clicked (with profile)', () => {
-    const onSafeModeChange = vi.fn()
-    render(<EffectControls {...defaultProps({ onSafeModeChange })} />)
-    const safeModeToggle = screen.getByLabelText('Safe Mode')
-    fireEvent.click(safeModeToggle)
-    expect(onSafeModeChange).toHaveBeenCalled()
-  })
-
   it('calls onControlValuesChange when a param slider changes', () => {
     const onControlValuesChange = vi.fn()
     render(<EffectControls {...defaultProps({ onControlValuesChange })} />)
     // The LabeledSlider wraps input in <label>; find by role slider + look for Grain label
     const sliders = screen.getAllByRole('slider')
-    // There should be at least 2 sliders (Intensity and Grain)
-    expect(sliders.length).toBeGreaterThanOrEqual(2)
+    expect(sliders).toHaveLength(1)
     fireEvent.change(sliders[sliders.length - 1], { target: { value: '0.8' } })
     expect(onControlValuesChange).toHaveBeenCalled()
   })
 
-  it('renders profile controls (intensity slider from profile ui.controls)', () => {
+  it('renders only profile-specific controls', () => {
     render(<EffectControls {...defaultProps()} />)
-    // Check for label text rendered inside LabeledSlider <span>
-    expect(screen.getByText('Intensity')).toBeTruthy()
     expect(screen.getByText('Grain')).toBeTruthy()
-  })
-
-  it('calls onReducedMotionChange when Reduced Motion toggle is clicked', () => {
-    const onReducedMotionChange = vi.fn()
-    render(<EffectControls {...defaultProps({ onReducedMotionChange })} />)
-    const toggle = screen.getByLabelText('Reduced Motion')
-    fireEvent.click(toggle)
-    expect(onReducedMotionChange).toHaveBeenCalled()
+    expect(screen.queryByText('Intensity')).toBeNull()
+    expect(screen.queryByText('Reduced Motion')).toBeNull()
+    expect(screen.queryByText('Audio')).toBeNull()
   })
 })

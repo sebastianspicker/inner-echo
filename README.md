@@ -2,11 +2,13 @@
 
 [![CI](https://github.com/sebastianspicker/inner-echo/actions/workflows/ci.yml/badge.svg)](https://github.com/sebastianspicker/inner-echo/actions/workflows/ci.yml)
 
-Privacy-first, client-only webcam overlay app for metaphor-based experience framing.
+Privacy-first, client-only guided media lab for metaphor-based experience framing.
 
 ## At a Glance (Public-Facing)
 
 `inner-echo` is an interactive web app that helps make difficult internal experiences more discussable through careful audiovisual metaphors.
+
+For the public product position, audience, boundaries, and accessibility commitment, see [PRODUCT.md](PRODUCT.md). The visual direction for public-alpha work is in [DESIGN.md](DESIGN.md).
 
 It is built to be:
 - respectful and non-diagnostic,
@@ -54,7 +56,8 @@ It does not send webcam or microphone streams to remote services in the current 
 
 - Camera/microphone access is strictly user-gesture gated.
 - Microphone is optional and can be disabled any time.
-- Runtime is designed for offline-capable local execution.
+- Media processing stays in the browser; application assets are bundled and served from the same origin.
+- The runtime has no analytics, third-party services, or media transmission. A deployed copy still needs its static files to be delivered unless the host adds an offline cache.
 - Debug/evidence tooling supports transparent review.
 
 Canonical references:
@@ -95,7 +98,7 @@ npm run test:e2e:preview
 ```mermaid
 flowchart LR
   U["User in Browser"] --> UI["React UI (src/ui)"]
-  UI --> COMP["Condition Composer (src/composer)"]
+  UI --> COMP["Setup composition (src/composer)"]
   UI --> ENG["Runtime Engine (src/engine)"]
   UI --> EVID["Evidence Viewer (docs/references)"]
 
@@ -172,37 +175,37 @@ Browser-based checks use the Chrome, Firefox, and WebKit browsers installed by P
 
 ### Core Flow
 
-![Onboarding modal before camera consent.](assets/readme/screenshots/webp/01-onboarding.webp)
+![In-flow welcome and privacy disclosure before setup.](assets/readme/screenshots/webp/01-onboarding.webp)
 PNG fallback: [01-onboarding](assets/readme/screenshots/png/01-onboarding.png)
 
-_Onboarding state before any camera activation._
+_Welcome disclosure before setup or any media activation._
 
 ![Active hero state with synthetic camera feed and controls.](assets/readme/screenshots/webp/02-hero-active.webp)
 PNG fallback: [02-hero-active](assets/readme/screenshots/png/02-hero-active.png)
 
-_Active runtime state with synthetic camera feed and status pills._
+_Active runtime state with synthetic camera feed and truthful camera, sound, and effects status._
 
 ![Idle state after Stop Everything safety reset.](assets/readme/screenshots/webp/10-stop-everything-idle.webp)
 PNG fallback: [10-stop-everything-idle](assets/readme/screenshots/png/10-stop-everything-idle.png)
 
 _Safety reset state after `Stop Everything`._
 
-### Composition Modes
+### Setup Modes
 
-![Preset mode with condition picker and evidence access.](assets/readme/screenshots/webp/03-preset-mode.webp)
+![Curated collections mode with collection picker and evidence access.](assets/readme/screenshots/webp/03-preset-mode.webp)
 PNG fallback: [03-preset-mode](assets/readme/screenshots/png/03-preset-mode.png)
 
-_Preset mode for single-condition metaphor composition._
+_A single curated collection used as contextual metaphor, not a diagnostic claim._
 
-![Multimorbid mode with weighted preset stack.](assets/readme/screenshots/webp/04-multimorbid-mode.webp)
+![Combine collections mode with weighted curated collections.](assets/readme/screenshots/webp/04-multimorbid-mode.webp)
 PNG fallback: [04-multimorbid-mode](assets/readme/screenshots/png/04-multimorbid-mode.png)
 
-_Multimorbid mode with weighted preset stacking._
+_Advanced combination of curated collections with relative weights._
 
-![Symptom-first mode with selected dimensions and weights.](assets/readme/screenshots/webp/05-symptom-mode.webp)
+![Experience dimensions mode with selected dimensions and weights.](assets/readme/screenshots/webp/05-symptom-mode.webp)
 PNG fallback: [05-symptom-mode](assets/readme/screenshots/png/05-symptom-mode.png)
 
-_Symptom-first mode with dimension-level control._
+_The default dimensions-first setup with dimension-level control._
 
 ### Safety Controls
 
@@ -211,12 +214,12 @@ PNG fallback: [06-audio-mic-controls](assets/readme/screenshots/png/06-audio-mic
 
 _Audio and optional microphone controls (local-only)._ 
 
-![Evidence drawer with in-repo documentation navigation.](assets/readme/screenshots/webp/07-evidence-drawer.webp)
+![Method and Evidence dialog with topic navigation.](assets/readme/screenshots/webp/07-evidence-drawer.webp)
 PNG fallback: [07-evidence-drawer](assets/readme/screenshots/png/07-evidence-drawer.png)
 
-_Evidence drawer for in-repo traceability and review._
+_Keyboard-accessible Method and Evidence dialog for traceability and review._
 
-![Safe Mode and Reduced Motion toggles in composer panel.](assets/readme/screenshots/webp/08-safety-toggles.webp)
+![Safe Mode and Reduced Motion controls beside the camera stage.](assets/readme/screenshots/webp/08-safety-toggles.webp)
 PNG fallback: [08-safety-toggles](assets/readme/screenshots/png/08-safety-toggles.png)
 
 _Safe Mode and Reduced Motion guardrails remain directly accessible._
@@ -241,19 +244,13 @@ npm run screenshots:verify
 - Assets are generated from `assets/readme/screenshots/manifest.json`.
 - Primary format is WebP with explicit PNG fallback links.
 
-### Quick UI Reference (docs/screenshots)
-
-Lightweight PNG captures of the UI chrome in its initial state (no camera feed):
-
-| Screenshot | Description |
-|---|---|
-| ![Landing](docs/screenshots/01-landing.png) | **Onboarding dialog** — consent modal before camera activation. |
-| ![Controls](docs/screenshots/02-controls.png) | **Controls panel** — mode selector, presets, intensity, safety toggles. |
-| ![Composer](docs/screenshots/03-composer.png) | **Condition composer** — preset library, condition picker, evidence link. |
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, contribution guidelines, and the safety checklist that applies to all PRs.
+
+## Repository Boundary
+
+Public source, maintained documentation, generated contract docs, and the canonical screenshot set live in tracked repository paths. Local analysis state, editor and agent metadata, generated reports, coverage, build output, private environment values, ad-hoc captures, and `docs/archive/` are ignored. `.env.example` documents safe local defaults; real `.env*` values must remain local.
 
 ## Evidence & Docs
 

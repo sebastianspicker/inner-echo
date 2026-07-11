@@ -1,12 +1,17 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import {
   ConditionComposerPanel,
   type ConditionComposerPanelProps,
 } from '../src/ui/ConditionComposerPanel'
 import { encodePresetToHash } from '../src/ui/presetShare'
-import { PRESET_LIBRARY_STORAGE_KEY, type PresetPayload } from '../src/ui/presetSnapshot'
+import {
+  LEGACY_PRESET_STORAGE_KEY,
+  PRESET_LIBRARY_STORAGE_KEY,
+  createPresetSnapshot,
+  type PresetPayload,
+} from '../src/ui/presetSnapshot'
 
 const storageMap = new Map<string, string>()
 const storageMock: Storage = {
@@ -32,7 +37,6 @@ function buildProps(
     onSafeModeChange: ReturnType<typeof vi.fn>
     onReducedMotionChange: ReturnType<typeof vi.fn>
     onAudioEnabledChange: ReturnType<typeof vi.fn>
-    onMicEnabledChange: ReturnType<typeof vi.fn>
     onCouplingStrengthChange: ReturnType<typeof vi.fn>
     onMaxFeedbackChange: ReturnType<typeof vi.fn>
     onInteractionAmountChange: ReturnType<typeof vi.fn>
@@ -47,7 +51,6 @@ function buildProps(
     onSafeModeChange: vi.fn(),
     onReducedMotionChange: vi.fn(),
     onAudioEnabledChange: vi.fn(),
-    onMicEnabledChange: vi.fn(),
     onCouplingStrengthChange: vi.fn(),
     onMaxFeedbackChange: vi.fn(),
     onInteractionAmountChange: vi.fn(),
@@ -71,19 +74,12 @@ function buildProps(
     onReducedMotionChange: spies.onReducedMotionChange,
     audioEnabled: false,
     onAudioEnabledChange: spies.onAudioEnabledChange,
-    micEnabled: false,
-    onMicEnabledChange: spies.onMicEnabledChange,
-    micRequiresAudio: true,
-    micRequiresAudioHint: 'Enable audio first.',
     couplingStrength: 0.5,
     onCouplingStrengthChange: spies.onCouplingStrengthChange,
     maxFeedback: 0.35,
     onMaxFeedbackChange: spies.onMaxFeedbackChange,
     interactionAmount: 0.15,
     onInteractionAmountChange: spies.onInteractionAmountChange,
-    debugOverlay: false,
-    onDebugOverlayChange: vi.fn(),
-    onQuickPreset: vi.fn(),
     onOpenEvidence: vi.fn(),
     __spies: spies,
     ...overrides,
@@ -92,6 +88,7 @@ function buildProps(
 
 describe('ui/ConditionComposerPanel shared preset hash', () => {
   beforeEach(() => {
+    vi.restoreAllMocks()
     storageMap.clear()
     vi.stubGlobal('localStorage', storageMock)
     window.history.replaceState({}, '', '/')
@@ -150,5 +147,92 @@ describe('ui/ConditionComposerPanel shared preset hash', () => {
       expect(getByRole('alert').textContent).toMatch(/saved preset library could not be read/i)
     })
     expect(storageMap.get(PRESET_LIBRARY_STORAGE_KEY)).toBe('not valid json {{{')
+  })
+
+  it('does not remove legacy storage or write v2 storage when legacy migration is invalid', async () => {
+    const legacy = JSON.stringify({ conditionId: 'bad id with spaces' })
+    storageMap.set(LEGACY_PRESET_STORAGE_KEY, legacy)
+    const props = buildProps()
+
+    const { getByRole } = render(<ConditionComposerPanel {...props} />)
+
+    await waitFor(() => {
+      expect(getByRole('alert').textContent).toMatch(/legacy preset storage could not be migrated/i)
+    })
+    expect(storageMap.get(LEGACY_PRESET_STORAGE_KEY)).toBe(legacy)
+    expect(storageMap.has(PRESET_LIBRARY_STORAGE_KEY)).toBe(false)
+  })
+
+  it('retains legacy migration by converting valid legacy storage to v2 once', async () => {
+    storageMap.set(
+      LEGACY_PRESET_STORAGE_KEY,
+      JSON.stringify({
+        conditionId: 'panic',
+        intensity: 0.6,
+        safeMode: false,
+      }),
+    )
+    const props = buildProps()
+
+    render(<ConditionComposerPanel {...props} />)
+
+    await waitFor(() => {
+      expect(storageMap.has(PRESET_LIBRARY_STORAGE_KEY)).toBe(true)
+    })
+    const migrated = JSON.parse(storageMap.get(PRESET_LIBRARY_STORAGE_KEY) ?? '[]')
+    expect(migrated).toHaveLength(1)
+    expect(migrated[0].name).toBe('Migrated Preset')
+    expect(migrated[0].payload.conditionId).toBe('panic')
+    expect(storageMap.has(LEGACY_PRESET_STORAGE_KEY)).toBe(false)
+  })
+
+  it('allows an eight-second preset deletion to be undone without changing the payload', async () => {
+    const payload: PresetPayload = {
+      mode: 'symptom',
+      conditionId: 'none',
+      presets: [],
+      dimensions: [{ dimensionId: 'hyperarousal', weight: 0.6 }],
+      intensity: 0.4,
+      safeMode: true,
+      reducedMotion: true,
+      audioEnabled: false,
+      couplingStrength: 0.5,
+      maxFeedback: 0.3,
+      interactionAmount: 0.2,
+    }
+    const snapshot = createPresetSnapshot(payload, {
+      name: 'Undo fixture',
+      createdAt: '2026-07-11T12:00:00.000Z',
+    })
+    storageMap.set(PRESET_LIBRARY_STORAGE_KEY, JSON.stringify([snapshot]))
+
+    render(<ConditionComposerPanel {...buildProps()} />)
+    await waitFor(() =>
+      expect(
+        (document.getElementById('saved-setup-select') as HTMLSelectElement | null)?.value,
+      ).toBe(snapshot.id),
+    )
+    fireEvent.click(screen.getByText('Saved setups & sharing'))
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(JSON.parse(storageMap.get(PRESET_LIBRARY_STORAGE_KEY) ?? '[]')).toEqual([])
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    const restored = JSON.parse(storageMap.get(PRESET_LIBRARY_STORAGE_KEY) ?? '[]')
+    expect(restored).toHaveLength(1)
+    expect(restored[0].payload).toEqual(snapshot.payload)
+  })
+
+  it('surfaces storage write failure without claiming that a setup was saved', async () => {
+    render(<ConditionComposerPanel {...buildProps()} />)
+    fireEvent.click(screen.getByText('Saved setups & sharing'))
+    vi.spyOn(storageMock, 'setItem').mockImplementation(() => {
+      throw new Error('quota exceeded')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save new' }))
+
+    expect(screen.getByRole('alert').textContent).toMatch(/storage may be unavailable or full/i)
+    expect(screen.queryByText('Saved setup updated.')).toBeNull()
+    expect(storageMap.has(PRESET_LIBRARY_STORAGE_KEY)).toBe(false)
   })
 })

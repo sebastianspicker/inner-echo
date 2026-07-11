@@ -1,7 +1,8 @@
-/* New shell layout (therapeutic, calm). */
+/* Reflective media-lab shell. */
 .ie-app {
   min-height: 100vh;
-  padding: clamp(14px, 2.2vw, 26px);
+  padding: clamp(10px, 2vw, 24px);
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 
 .ie-shell {
@@ -10,7 +11,21 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
-  animation: ie-fadeIn var(--duration-slow) var(--ease-out-soft) both;
+}
+
+.ie-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.ie-liveRegion {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .ie-header {
@@ -19,16 +34,13 @@
   justify-content: space-between;
   gap: var(--sp-4);
   padding: var(--sp-3) var(--sp-4);
-  background: color-mix(in oklab, var(--surface-2) 85%, transparent);
+  position: sticky;
+  top: max(8px, env(safe-area-inset-top));
+  z-index: 20;
+  background: var(--surface-1);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition:
-    opacity 0.5s var(--ease-gentle),
-    filter 0.5s var(--ease-gentle),
-    transform 0.5s var(--ease-gentle);
 }
 
 .ie-brand {
@@ -39,8 +51,7 @@
 
 .ie-title {
   font-size: 14px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   font-weight: 650;
   color: var(--text);
 }
@@ -81,30 +92,21 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: rgba(0, 0, 0, 0.18);
+  padding: 3px 0;
+  border: 0;
+  background: transparent;
   transition:
     border-color var(--duration-normal) var(--ease-gentle),
     background var(--duration-normal) var(--ease-gentle);
 }
 
-.ie-pill:hover {
-  border-color: var(--border-strong);
-  background: rgba(0, 0, 0, 0.24);
-}
-
 .ie-pillKey {
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--faint);
+  font-size: 0.8125rem;
+  color: var(--muted);
 }
 
 .ie-pillVal {
-  font-size: 12px;
-  font-family: var(--font-mono);
+  font-size: 0.8125rem;
   color: var(--text);
 }
 
@@ -116,32 +118,27 @@
 }
 
 .ie-btn {
-  border-radius: 999px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-control);
   color: var(--text);
   padding: 10px 16px;
   min-height: 44px;
-  font-size: 13px;
-  letter-spacing: 0.03em;
+  font-size: 0.9375rem;
   cursor: pointer;
   transition:
-    transform var(--duration-normal) var(--ease-out-soft),
     background var(--duration-normal) var(--ease-gentle),
     border-color var(--duration-normal) var(--ease-gentle),
-    box-shadow var(--duration-normal) var(--ease-gentle),
     opacity var(--duration-normal) var(--ease-gentle);
 }
 
 .ie-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface-control-hover);
   border-color: var(--border-strong);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .ie-btn:active:not(:disabled) {
-  transform: translateY(0px) scale(0.98);
+  background: var(--surface-3);
   transition-duration: 80ms;
 }
 
@@ -200,9 +197,16 @@
 
 .ie-layout {
   display: grid;
-  grid-template-columns: 1.45fr 0.85fr;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.75fr);
   gap: var(--sp-3);
   align-items: start;
+}
+
+.ie-stageColumn {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
 }
 
 .ie-stage {
@@ -213,7 +217,7 @@
   border-radius: var(--r-lg);
   border: 1px solid var(--border);
   overflow: hidden;
-  box-shadow: var(--shadow-2);
+  box-shadow: none;
   transition:
     box-shadow var(--duration-slow) var(--ease-gentle),
     border-color var(--duration-slow) var(--ease-gentle);
@@ -221,9 +225,7 @@
 
 .ie-stage--active {
   border-color: color-mix(in oklab, var(--accent) 20%, var(--border));
-  box-shadow:
-    var(--shadow-2),
-    0 0 40px rgba(123, 200, 192, 0.04);
+  box-shadow: none;
 }
 
 .ie-video {
@@ -266,35 +268,15 @@
   font-size: 13px;
   letter-spacing: 0.06em;
   text-transform: none;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.35));
-  animation: ie-breathe 5s var(--ease-gentle) infinite;
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .ie-panel {
   border-radius: var(--r-lg);
   border: 1px solid var(--border);
-  background: color-mix(in oklab, var(--bg) 60%, transparent);
+  background: var(--surface-1);
   box-shadow: var(--shadow-1);
   overflow: hidden;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  transition:
-    opacity 0.5s var(--ease-gentle),
-    filter 0.5s var(--ease-gentle),
-    transform 0.5s var(--ease-gentle);
-}
-
-/* Immersive Mode Support — gentle fade with transform */
-.ie-shell--idle .ie-header,
-.ie-shell--idle .ie-panel {
-  opacity: 0;
-  pointer-events: none;
-  filter: blur(4px);
-  transform: translateY(4px);
-  transition:
-    opacity 2.5s var(--ease-gentle),
-    filter 2.5s var(--ease-gentle),
-    transform 2.5s var(--ease-gentle);
 }
 
 .ie-panelScroll {
@@ -304,6 +286,60 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
+}
+
+.ie-safety {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.ie-safety__heading,
+.ie-safety__actions,
+.ie-safety__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.ie-safety__heading {
+  justify-content: space-between;
+}
+
+.ie-safety h2,
+.ie-safety p {
+  margin: 0;
+}
+
+.ie-safety h2 {
+  font-size: 1rem;
+}
+
+.ie-safety p,
+.ie-safety small,
+.composer__slider small,
+.composer__toggle small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.ie-safety__controls > * {
+  flex: 1 1 210px;
+}
+
+.ie-inlineAction {
+  border: 0;
+  padding: 2px 4px;
+  color: var(--accent);
+  background: transparent;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .ie-panelSection {

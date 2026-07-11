@@ -1,12 +1,9 @@
 import { useEffect, type MutableRefObject } from 'react'
 import type { Profile } from '../../conditions/schema'
 import type { CameraState } from '../../engine/video'
-import type { OverlayControl, VideoMetrics } from '../../engine/canvas'
+import type { OverlayControl, OverlayRuntimeState, VideoMetrics } from '../../engine/canvas'
 import type { AudioEngineControl, AudioMetrics } from '../../engine/audio'
 import { BASELINE_PROFILE } from '../../conditions/fallbackProfiles'
-import { buildVideoNodes } from '../../conditions/graphBuilder'
-import { createReactiveDriver, createCouplingEngine } from '../../engine/reactive'
-import { startOverlayLoop } from '../../engine/canvas'
 import { clampIntensity, getSafetyContext } from '../../conditions/normalize'
 
 export interface UseReactivePipelineParams {
@@ -14,7 +11,7 @@ export interface UseReactivePipelineParams {
   reducedMotion: boolean
   profile: Profile | null
   videoRef: MutableRefObject<HTMLVideoElement | null>
-  webglCanvasRef: MutableRefObject<HTMLCanvasElement | null>
+  canvasRef: MutableRefObject<HTMLCanvasElement | null>
   fallbackCanvasRef: MutableRefObject<HTMLCanvasElement | null>
   containerRef: MutableRefObject<HTMLDivElement | null>
   overlayControlRef: MutableRefObject<OverlayControl | null>
@@ -26,6 +23,7 @@ export interface UseReactivePipelineParams {
   intensityRef: MutableRefObject<number>
   controlValuesRef: MutableRefObject<Record<string, number | boolean>>
   stressModeRef: MutableRefObject<boolean>
+  onOverlayStateChange?: (state: OverlayRuntimeState) => void
 }
 
 /**
@@ -39,7 +37,7 @@ export function useReactivePipeline({
   reducedMotion,
   profile,
   videoRef,
-  webglCanvasRef,
+  canvasRef,
   fallbackCanvasRef,
   containerRef,
   overlayControlRef,
@@ -51,6 +49,7 @@ export function useReactivePipeline({
   intensityRef,
   controlValuesRef,
   stressModeRef,
+  onOverlayStateChange,
 }: UseReactivePipelineParams): void {
   // biome-ignore lint/correctness/useExhaustiveDependencies: Refs are used as mutable containers read each animation frame. Adding them as deps would re-create the WebGL pipeline on every slider change.
   useEffect(() => {
@@ -59,23 +58,33 @@ export function useReactivePipeline({
         overlayControlRef.current.stop()
         overlayControlRef.current = null
       }
+      onOverlayStateChange?.({ rendererMode: 'unavailable', effectsActive: false, error: null })
       return
     }
 
     const video = videoRef.current
-    const webglCanvas = webglCanvasRef.current
+    const canvas = canvasRef.current
     const fallbackCanvas = fallbackCanvasRef.current
     const container = containerRef.current
-    if (!video || !container) return
-    if (!profile) return
+    if (!video || !canvas || !container || !profile) {
+      onOverlayStateChange?.({ rendererMode: 'unavailable', effectsActive: false, error: null })
+      return
+    }
 
     let listener: (() => void) | null = null
+    let cancelled = false
 
-    function startLoop(): void {
+    async function startLoop(): Promise<void> {
       if (overlayControlRef.current) return
+      const [graphBuilder, reactiveRuntime, canvasRuntime] = await Promise.all([
+        import('../../conditions/graphBuilder'),
+        import('../../engine/reactive'),
+        import('../../engine/canvas'),
+      ])
+      if (cancelled || overlayControlRef.current) return
       const prof = profile ?? BASELINE_PROFILE
-      const nodes = buildVideoNodes(prof, { reducedMotion })
-      const couplingEngine = createCouplingEngine(prof, {
+      const nodes = graphBuilder.buildVideoNodes(prof, { reducedMotion })
+      const couplingEngine = reactiveRuntime.createCouplingEngine(prof, {
         couplingStrength: couplingStrengthRef.current,
         maxFeedback: maxFeedbackRef.current,
         reducedMotion,
@@ -91,7 +100,7 @@ export function useReactivePipeline({
           videoMetricsRef.current = m
         },
         getOverrides: (() => {
-          const driver = createReactiveDriver(prof, { reducedMotion })
+          const driver = reactiveRuntime.createReactiveDriver(prof, { reducedMotion })
           const baseAfterReactive: Record<string, number | boolean> = {}
           // Shared mutable objects reused each frame to avoid GC pressure.
           // Contract: the returned IIFE is called exactly once per animation frame;
@@ -144,13 +153,16 @@ export function useReactivePipeline({
           }
         })(),
       }
-      const control = startOverlayLoop(
+      const control = canvasRuntime.startOverlayLoop(
         video,
-        webglCanvas,
+        canvas,
         fallbackCanvas,
         container,
         nodes,
         reactiveOptions,
+        {
+          onStateChange: onOverlayStateChange,
+        },
       )
       overlayControlRef.current = control
       const safetyCtx = getSafetyContext(prof)
@@ -169,20 +181,32 @@ export function useReactivePipeline({
       })
     }
 
+    const prepareLoop = (): void => {
+      void startLoop().catch((error: unknown) => {
+        if (cancelled) return
+        onOverlayStateChange?.({
+          rendererMode: 'raw',
+          effectsActive: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        })
+      })
+    }
+
     if (video.readyState >= 1 && video.videoWidth > 0 && video.videoHeight > 0) {
-      startLoop()
+      prepareLoop()
     } else {
       listener = (): void => {
         if (listener) {
           video.removeEventListener('loadedmetadata', listener)
         }
         listener = null
-        startLoop()
+        prepareLoop()
       }
       video.addEventListener('loadedmetadata', listener)
     }
 
     return () => {
+      cancelled = true
       if (listener && video) video.removeEventListener('loadedmetadata', listener)
       if (overlayControlRef.current) {
         overlayControlRef.current.stop()
