@@ -133,7 +133,7 @@ const nodeSimulationSummary = (node: string): string => {
   return map[n] ?? 'Simulation node (see engine implementation).'
 }
 
-const parseEvidenceMatrix = (root: string): Map<string, EvidenceMatrixRow> => {
+function parseEvidenceMatrix(root: string): Map<string, EvidenceMatrixRow> {
   const filePath = path.join(root, 'docs/references/EVIDENCE_MATRIX.md')
   if (!fs.existsSync(filePath)) return new Map()
   const text = fs.readFileSync(filePath, 'utf-8')

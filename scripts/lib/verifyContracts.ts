@@ -541,7 +541,7 @@ export const verifyContracts = (rootDir: string): ContractVerificationReport => 
       }
 
       const temporalSensitive = ['temporal_smear', 'feedback_loop', 'pulse', 'focus_jitter']
-      const validateVideoSafeModeClamps = (): void => {
+      function validateReducedMotionTemporalNodes(): void {
         for (const def of profile.video_stack) {
           const node = String(def.node).toLowerCase()
           if (!temporalSensitive.includes(node)) continue
@@ -565,7 +565,9 @@ export const verifyContracts = (rootDir: string): ContractVerificationReport => 
             })
           }
         }
+      }
 
+      function validateVideoSafeModeClamps(): void {
         for (const def of profile.video_stack) {
           const node = String(def.node).toLowerCase()
           const nodeDef = videoLookup.get(node)
@@ -619,6 +621,7 @@ export const verifyContracts = (rootDir: string): ContractVerificationReport => 
           }
         }
       }
+      validateReducedMotionTemporalNodes()
       validateVideoSafeModeClamps()
 
       const audioClampPolicyCheck = (

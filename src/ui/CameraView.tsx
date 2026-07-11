@@ -391,7 +391,7 @@ export function CameraView() {
     audioEngineControlRef.current?.setInputMode('synth')
   }
 
-  const installAudioEngine = (forceEnabled: boolean, startGeneration: number): void => {
+  function installAudioEngine(forceEnabled: boolean, startGeneration: number): void {
     audioEngineControlRef.current?.stop()
     audioEngineControlRef.current = null
     const currentProfile = profileRef.current
