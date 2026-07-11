@@ -66,6 +66,11 @@ export async function startAudioContext(): Promise<AudioContextStatus> {
         const AudioCtx =
           window.AudioContext ??
           (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+        if (typeof AudioCtx !== 'function') {
+          const message = 'Web Audio is unavailable in this browser.'
+          notify('error', message)
+          return 'error' as const
+        }
         sharedContext = new AudioCtx()
       }
 

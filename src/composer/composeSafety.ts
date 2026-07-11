@@ -59,50 +59,64 @@ export function clampVideoParams(
   const hardMaxFeedback = clamp01(settings.maxFeedback)
   const hard = (x: number, max: number) => clamp(x, 0, max * hardMaxFeedback)
 
-  return stack.map((def) => {
-    const node = normalizeNodeType(def.node)
-    const params: Record<string, unknown> = { ...(def.params ?? {}) }
-    if (node === 'temporal_smear' && typeof params.feedback === 'number') {
-      params.feedback = hard(params.feedback, maxFeedback)
+  return stack.map((def) =>
+    clampVideoNode(def, hard, { maxFeedback, maxJitter, maxPulseDepth, maxChroma }),
+  )
+}
+
+const UNBOUNDED_VIDEO_PARAMS = new Set([
+  'rate',
+  'cutoff',
+  'burst_duration_ms',
+  'burst_min_gap_ms',
+  'scale',
+  'decay',
+  'jitter',
+])
+
+function clampVideoNode(
+  def: VideoStackNodeDef,
+  hard: (value: number, maximum: number) => number,
+  limits: { maxFeedback: number; maxJitter: number; maxPulseDepth: number; maxChroma: number },
+): VideoStackNodeDef {
+  const node = normalizeNodeType(def.node)
+  const params: Record<string, unknown> = { ...(def.params ?? {}) }
+  if (
+    (node === 'temporal_smear' || node === 'feedback_loop') &&
+    typeof params.feedback === 'number'
+  ) {
+    params.feedback = hard(params.feedback, limits.maxFeedback)
+  }
+  if (node === 'focus_jitter' && typeof params.amount === 'number') {
+    params.amount = hard(params.amount, limits.maxJitter)
+  }
+  if (node === 'pulse' && typeof params.depth === 'number') {
+    params.depth = hard(params.depth, limits.maxPulseDepth)
+  }
+  if (isChromaNode(node) && typeof params.amount === 'number') {
+    params.amount = hard(params.amount, limits.maxChroma)
+  }
+  if (
+    (node === 'temporal_smear' || node === 'feedback_loop') &&
+    typeof params.jitter === 'number'
+  ) {
+    params.jitter = clamp(params.jitter, 0, limits.maxJitter)
+  }
+  clampUnitVideoParams(params)
+  return { ...def, node, params }
+}
+
+function isChromaNode(node: string): boolean {
+  return node === 'chroma_aberration' || node === 'chromatic_aberration'
+}
+
+function clampUnitVideoParams(params: Record<string, unknown>): void {
+  for (const key of Object.keys(params)) {
+    const value = params[key]
+    if (typeof value === 'number' && !UNBOUNDED_VIDEO_PARAMS.has(key)) {
+      params[key] = clamp(value, -1, 1)
     }
-    if (node === 'feedback_loop' && typeof params.feedback === 'number') {
-      params.feedback = hard(params.feedback, maxFeedback)
-    }
-    if (node === 'focus_jitter' && typeof params.amount === 'number') {
-      params.amount = hard(params.amount, maxJitter)
-    }
-    if (node === 'pulse' && typeof params.depth === 'number') {
-      params.depth = hard(params.depth, maxPulseDepth)
-    }
-    if (
-      (node === 'chroma_aberration' || node === 'chromatic_aberration') &&
-      typeof params.amount === 'number'
-    ) {
-      params.amount = hard(params.amount, maxChroma)
-    }
-    if (node === 'temporal_smear' && typeof params.jitter === 'number') {
-      params.jitter = clamp(params.jitter, 0, maxJitter)
-    }
-    if (node === 'feedback_loop' && typeof params.jitter === 'number') {
-      params.jitter = clamp(params.jitter, 0, maxJitter)
-    }
-    for (const k of Object.keys(params)) {
-      const v = params[k]
-      if (
-        typeof v === 'number' &&
-        k !== 'rate' &&
-        k !== 'cutoff' &&
-        k !== 'burst_duration_ms' &&
-        k !== 'burst_min_gap_ms' &&
-        k !== 'scale' &&
-        k !== 'decay' &&
-        k !== 'jitter'
-      ) {
-        params[k] = clamp(v, -1, 1)
-      }
-    }
-    return { ...def, node, params }
-  })
+  }
 }
 
 type DimensionSafetyEntry = {
@@ -122,6 +136,34 @@ type DerivedSafety = {
   composedSafety: Profile['safety']
 }
 
+function mergeDimensionSafety(
+  cleanedDims: Array<{ dimensionId: string; weight: number }>,
+  getDimensionSafety: (dimensionId: string) => DimensionSafetyEntry | null,
+  safeModeClampsList: Array<Record<string, unknown> | undefined>,
+  reducedMotionDisableLists: Array<string[] | undefined>,
+  warningsLists: string[][],
+) {
+  for (const { dimensionId } of cleanedDims) {
+    const safety = getDimensionSafety(dimensionId)?.safety
+    if (safety?.warnings?.length) warningsLists.push(safety.warnings)
+    if (safety?.clamps) safeModeClampsList.push(safety.clamps)
+    if (safety?.reduced_motion?.disable_nodes?.length) {
+      reducedMotionDisableLists.push(safety.reduced_motion.disable_nodes)
+    }
+  }
+}
+
+function presetIntensity(
+  safetyBlocks: Array<Profile['safety']>,
+  key: 'intensity_max' | 'intensity_default',
+  fallback: number,
+): number {
+  if (!safetyBlocks.length) return fallback
+  return safetyBlocks
+    .map((s) => (typeof s[key] === 'number' ? s[key] : key === 'intensity_max' ? 1 : 0.3))
+    .reduce((minimum, value) => Math.min(minimum, value), key === 'intensity_max' ? 1 : Infinity)
+}
+
 /**
  * Derive composed safety from preset safety blocks and dimension safety entries.
  */
@@ -138,32 +180,20 @@ export function deriveComposedSafety(
   )
   const warningsLists: string[][] = safetyBlocks.map((s) => s.warnings ?? [])
 
-  for (const d of cleanedDims) {
-    const entry = getDimensionSafety(d.dimensionId)
-    const dimSafety = entry?.safety
-    if (dimSafety?.warnings?.length) warningsLists.push(dimSafety.warnings)
-    if (dimSafety?.clamps) safeModeClampsList.push(dimSafety.clamps)
-    if (dimSafety?.reduced_motion?.disable_nodes?.length) {
-      reducedMotionDisableLists.push(dimSafety.reduced_motion.disable_nodes)
-    }
-  }
+  mergeDimensionSafety(
+    cleanedDims,
+    getDimensionSafety,
+    safeModeClampsList,
+    reducedMotionDisableLists,
+    warningsLists,
+  )
 
   const mergedSafeModeClamps = mergeSafeModeClamps(safeModeClampsList)
   const mergedWarnings = mergeWarnings(warningsLists)
   const mergedDisableNodes = mergeDisableNodes(reducedMotionDisableLists)
 
-  const intensityMaxByPresets =
-    safetyBlocks.length > 0
-      ? safetyBlocks
-          .map((s) => (typeof s.intensity_max === 'number' ? s.intensity_max : 1))
-          .reduce((a, b) => Math.min(a, b), 1)
-      : 0.8
-  const intensityDefaultByPresets =
-    safetyBlocks.length > 0
-      ? safetyBlocks
-          .map((s) => (typeof s.intensity_default === 'number' ? s.intensity_default : 0.3))
-          .reduce((a, b) => Math.min(a, b), Infinity)
-      : 0.3
+  const intensityMaxByPresets = presetIntensity(safetyBlocks, 'intensity_max', 0.8)
+  const intensityDefaultByPresets = presetIntensity(safetyBlocks, 'intensity_default', 0.3)
 
   const composedSafety: Profile['safety'] = {
     intensity_default: intensityDefaultByPresets,

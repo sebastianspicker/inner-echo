@@ -1,5 +1,5 @@
 /**
- * Phase 6: Temporal smear — blends with previous frame (feedback) + optional jitter.
+ * Temporal smear: blends with the previous frame using feedback and optional jitter.
  * Uses ping-pong RenderTargets managed by the pipeline; this node only provides the material.
  */
 

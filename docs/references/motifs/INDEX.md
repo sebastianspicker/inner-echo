@@ -1,12 +1,12 @@
 # Motif / node index
 
-This index lists simulation motifs (video/audio nodes) and links to their evidence pages.
+This index lists **simulation motifs** (video/audio nodes) and links to their evidence pages.
 
-> **Important:** evidence in this project primarily supports experience dimensions and reported phenomena. A specific node is an artistic/engineering implementation of a metaphor, and must be interpreted cautiously.
+> **Important:** evidence in this project primarily supports **experience dimensions and reported phenomena**. A specific node is an **artistic/engineering implementation** of a metaphor, and must be interpreted cautiously.
 
 ## Motifs
 
-- [`chroma_aberration`](./chroma_aberration.md) — Minor RGB channel offset near edges (very low).
+- [`chromatic_aberration`](./chromatic_aberration.md) — Minor RGB channel offset near edges (very low).
 - [`color_grade`](./color_grade.md) — Adjusts saturation/contrast/tonal balance (clamped).
 - [`compressor_limiter`](./compressor_limiter.md) — Reduces peaks and smooths dynamics (safety-first).
 - [`delay`](./delay.md) — Short echo with low feedback/mix (clamped).

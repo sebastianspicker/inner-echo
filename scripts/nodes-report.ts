@@ -21,60 +21,69 @@ import type { DimensionToSignalMappingFile, Profile } from '../src/conditions/sc
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 
-function loadJson<T>(pathFromRoot: string): T {
-  return parseFirstJsonObject(readFileSync(join(ROOT, pathFromRoot), 'utf-8'))
-}
-
-function norm(s: unknown): string {
+const norm = (s: unknown): string => {
   return String(s ?? '')
     .trim()
     .toLowerCase()
 }
 
-function uniqSorted(xs: string[]): string[] {
+const uniqSorted = (xs: string[]): string[] => {
   return Array.from(new Set(xs.filter(Boolean))).sort((a, b) => a.localeCompare(b))
 }
 
-function main(): void {
-  const implementedVideo = uniqSorted(Array.from(IMPLEMENTED_VIDEO_NODES))
-  const implementedAudio = uniqSorted(Array.from(IMPLEMENTED_AUDIO_NODES))
-
-  const referencedVideo: string[] = []
-  const referencedAudio: string[] = []
-
-  // Profiles
+const collectProfileNodes = (): { video: string[]; audio: string[] } => {
+  const video: string[] = []
+  const audio: string[] = []
   const profilesDir = join(ROOT, 'src/conditions/profiles')
-  const profiles = readdirSync(profilesDir).filter((f) => f.endsWith('.json'))
-  for (const f of profiles) {
-    const p = loadJson<Profile>(`src/conditions/profiles/${f}`)
-    for (const n of p.video_stack ?? []) referencedVideo.push(norm(n.node))
-    for (const n of p.audio_stack?.chain ?? []) referencedAudio.push(norm(n.node))
+  for (const file of readdirSync(profilesDir).filter((entry) => entry.endsWith('.json'))) {
+    const profile = loadJson<Profile>(`src/conditions/profiles/${file}`)
+    for (const node of profile.video_stack ?? []) video.push(norm(node.node))
+    for (const node of profile.audio_stack?.chain ?? []) audio.push(norm(node.node))
   }
+  return { video, audio }
+}
 
-  // Dimension mapping motifs
+const collectMappedNodes = (): { video: string[]; audio: string[] } => {
   const mapping = loadJson<DimensionToSignalMappingFile>(
     'src/conditions/dimension-to-signal-mapping.json',
   )
+  const video: string[] = []
+  const audio: string[] = []
   for (const entry of Object.values(mapping.mapping ?? {})) {
-    for (const m of entry.video_motifs ?? []) referencedVideo.push(norm(m.node))
-    for (const m of entry.audio_motifs ?? []) referencedAudio.push(norm(m.node))
+    for (const motif of entry.video_motifs ?? []) video.push(norm(motif.node))
+    for (const motif of entry.audio_motifs ?? []) audio.push(norm(motif.node))
   }
+  return { video, audio }
+}
 
-  const refV = uniqSorted(referencedVideo)
-  const refA = uniqSorted(referencedAudio)
+const logNodeList = (label: string, nodes: string[]): void => {
+  console.log('[nodes-report] %s: %s', label, nodes.join(', ') || '(none)')
+}
+
+const main = (): void => {
+  const implementedVideo = uniqSorted(Array.from(IMPLEMENTED_VIDEO_NODES))
+  const implementedAudio = uniqSorted(Array.from(IMPLEMENTED_AUDIO_NODES))
+  const profileNodes = collectProfileNodes()
+  const mappedNodes = collectMappedNodes()
+  const refV = uniqSorted([...profileNodes.video, ...mappedNodes.video])
+  const refA = uniqSorted([...profileNodes.audio, ...mappedNodes.audio])
 
   const missingVideo = refV.filter((n) => n && !implementedVideo.includes(n))
   const missingAudio = refA.filter((n) => n && !implementedAudio.includes(n))
 
-  console.log('[nodes-report] Implemented video nodes:', implementedVideo.join(', ') || '(none)')
-  console.log('[nodes-report] Implemented audio nodes:', implementedAudio.join(', ') || '(none)')
-  console.log('[nodes-report] Referenced video nodes:', refV.join(', ') || '(none)')
-  console.log('[nodes-report] Referenced audio nodes:', refA.join(', ') || '(none)')
+  logNodeList('Implemented video nodes', implementedVideo)
+  logNodeList('Implemented audio nodes', implementedAudio)
+  logNodeList('Referenced video nodes', refV)
+  logNodeList('Referenced audio nodes', refA)
   console.log('---')
-  console.log('[nodes-report] Missing video nodes:', missingVideo.join(', ') || '(none)')
-  console.log('[nodes-report] Missing audio nodes:', missingAudio.join(', ') || '(none)')
+  logNodeList('Missing video nodes', missingVideo)
+  logNodeList('Missing audio nodes', missingAudio)
 
   if (missingVideo.length || missingAudio.length) process.exit(1)
+}
+
+const loadJson = <T>(pathFromRoot: string): T => {
+  return parseFirstJsonObject(readFileSync(join(ROOT, pathFromRoot), 'utf-8'))
 }
 
 main()

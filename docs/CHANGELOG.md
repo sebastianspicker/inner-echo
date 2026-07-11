@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- **Compatibility:** profile changes now preserve only global intensity, Safe Mode,
+  Reduced Motion, and audio-enabled controls; profile-local controls reset to the
+  incoming profile defaults.
+- **Compatibility:** stopped reading and migrating the retired `ie_custom_preset`
+  key. Existing storage is left untouched; only `ie_custom_presets_v2` is read.
+- **Deprecation:** `chroma_aberration` remains accepted at the profile input
+  boundary with one warning and will be removed in `0.2.0`; use
+  `chromatic_aberration`.
+
 ## 2026-03-25
 
 ### Bug fixes and polish
@@ -27,7 +38,7 @@
 - `EvidenceDrawer`: navigation links changed from `<a href="#">` to `<button>` for correct accessibility semantics; added `onKeyDown` handler for keyboard-accessible link interception inside rendered markdown.
 - Renamed `escape` variable to `escaped` in `jsonObjectParser.ts` and `nodes-report.ts` to avoid shadowing the global `escape` property.
 - Removed `!important` from `prefers-reduced-motion` CSS overrides.
-- `.gitignore`: `.claude/` directory is now fully ignored (was only ignoring a single file).
+- `.gitignore`: local WIP directory ignores now cover directory forms instead of single files.
 - Merged dependabot PR: `@types/three` 0.182.0 to 0.183.1.
 
 #### Removed

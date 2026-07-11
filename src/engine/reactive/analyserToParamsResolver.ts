@@ -1,5 +1,5 @@
 /**
- * Phase 8: Resolve profile reactive.analyser_to_params targets to pipeline param keys.
+ * Resolve profile reactive.analyser_to_params targets to runtime parameter keys.
  * Target format: "video.<nodeId>.<param>" → paramKey "builtIndex.param".
  * Uses built-node index (skipped nodes excluded) so keys match what the pipeline passes to nodes.
  * Unknown targets log a warning and are skipped (no crash).

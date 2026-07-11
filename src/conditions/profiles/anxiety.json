@@ -1,7 +1,7 @@
 {
   "id": "anxiety",
   "label": "Anxiety (Generalized / Social)",
-  "summary": "A metaphor of heightened tension and scanning attention, expressed as subtle noise, narrowing focus, and mild edge tension.",
+  "summary": "A metaphor of heightened tension and scanning attention, expressed as a strong gaze tunnel, edge salience, and minimal texture.",
   "framing": {
     "type": "metaphor",
     "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
@@ -21,7 +21,7 @@
     }
   ],
   "safety": {
-    "intensity_default": 0.32,
+    "intensity_default": 0.5,
     "intensity_max": 0.65,
     "warnings": [
       "May feel uncomfortable for some users. Use Safe Mode or stop at any time.",
@@ -76,48 +76,50 @@
         "label": "Audio (optional)"
       },
       {
-        "id": "vignette_amount",
+        "id": "gaze_tunnel",
         "type": "slider",
         "label": "Focus Narrowing",
         "min": 0,
-        "max": 0.6,
+        "max": 0.85,
         "step": 0.01,
-        "target": "video.vignette.amount"
+        "target": "video.gaze_tunnel.amount"
       },
       {
-        "id": "grain_amount",
+        "id": "edge_salience",
         "type": "slider",
-        "label": "Noise",
+        "label": "Edge Salience",
         "min": 0,
-        "max": 0.5,
+        "max": 0.35,
         "step": 0.01,
-        "target": "video.grain.amount"
+        "target": "video.gaze_tunnel.edge_gain"
       }
     ]
   },
   "video_stack": [
     {
-      "id": "grain",
-      "node": "grain",
+      "id": "gaze",
+      "node": "gaze_tunnel",
       "params": {
-        "amount": 0.2,
-        "scale": 1.3,
-        "speed": 0.1
+        "amount": 0.68,
+        "radius": 0.36,
+        "edge_gain": 0.22,
+        "desaturate": 0.18
       }
     },
     {
       "id": "sharpen",
       "node": "edge_sharpen",
       "params": {
-        "amount": 0.08
+        "amount": 0.1
       }
     },
     {
-      "id": "vignette",
-      "node": "vignette",
+      "id": "grain",
+      "node": "grain",
       "params": {
-        "amount": 0.24,
-        "softness": 0.75
+        "amount": 0.015,
+        "scale": 1.25,
+        "speed": 0.025
       }
     },
     {
@@ -125,8 +127,10 @@
       "node": "color_grade",
       "params": {
         "contrast": 0.1,
-        "saturation": -0.03,
-        "brightness": 0.02
+        "saturation": -0.02,
+        "brightness": 0.01,
+        "temperature": 0,
+        "tint": 0
       }
     }
   ],
@@ -140,7 +144,7 @@
       {
         "node": "noise_bed",
         "params": {
-          "level": 0.03,
+          "level": 0.02,
           "color": "pink"
         }
       },
@@ -154,8 +158,8 @@
       {
         "node": "tremolo",
         "params": {
-          "rate": 0.7,
-          "depth": 0.1
+          "rate": 1.1,
+          "depth": 0.07
         }
       },
       {
@@ -174,14 +178,25 @@
     "analyser_to_params": [
       {
         "source": "rms",
-        "target": "video.grain.amount",
-        "scale": 0.15,
+        "target": "video.gaze_tunnel.amount",
+        "scale": 0.08,
         "offset": 0,
         "smoothing": {
-          "attack": 0.08,
-          "release": 0.25
+          "attack": 0.1,
+          "release": 0.3
         },
-        "clamp": [0, 0.45]
+        "clamp": [0.2, 0.82]
+      },
+      {
+        "source": "rms",
+        "target": "video.gaze_tunnel.edge_gain",
+        "scale": 0.07,
+        "offset": 0,
+        "smoothing": {
+          "attack": 0.12,
+          "release": 0.35
+        },
+        "clamp": [0.05, 0.32]
       }
     ]
   },

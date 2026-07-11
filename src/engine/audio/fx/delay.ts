@@ -19,6 +19,11 @@ const DEFAULT_FEEDBACK = 0.06
 const DEFAULT_MIX = 0.03
 
 export function createDelay(context: BaseAudioContext, params: DelayParams = {}): AudioModule {
+  let current: Required<DelayParams> = {
+    time: params.time ?? DEFAULT_TIME,
+    feedback: params.feedback ?? DEFAULT_FEEDBACK,
+    mix: params.mix ?? DEFAULT_MIX,
+  }
   const input = context.createGain()
   input.gain.value = 1
 
@@ -30,9 +35,14 @@ export function createDelay(context: BaseAudioContext, params: DelayParams = {})
   const feedbackGain = context.createGain()
 
   const set = (p: DelayParams) => {
-    const time = clamp(p.time ?? DEFAULT_TIME, 0.05, 0.35)
-    const feedback = clamp(p.feedback ?? DEFAULT_FEEDBACK, 0, 0.18)
-    const mix = clamp(p.mix ?? DEFAULT_MIX, 0, 0.12)
+    current = {
+      time: p.time ?? current.time,
+      feedback: p.feedback ?? current.feedback,
+      mix: p.mix ?? current.mix,
+    }
+    const time = clamp(current.time, 0.05, 0.35)
+    const feedback = clamp(current.feedback, 0, 0.18)
+    const mix = clamp(current.mix, 0, 0.12)
     delay.delayTime.setValueAtTime(time, context.currentTime)
     feedbackGain.gain.setValueAtTime(feedback, context.currentTime)
     dry.gain.setValueAtTime(1 - mix, context.currentTime)

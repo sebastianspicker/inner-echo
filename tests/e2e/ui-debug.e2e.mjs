@@ -1,77 +1,15 @@
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { chromium } from 'playwright'
+import { createBrowserServerHarness, destroyBrowserServerHarness } from './serverHarness.mjs'
 
 const HOST = process.env.HOST ?? '127.0.0.1'
 const PORT = Number(process.env.PORT ?? '4173')
 const BASE_URL = `http://${HOST}:${PORT}`
 const ONBOARDING_KEY = 'inner-echo-onboarding-accepted'
 
-async function isServerUp() {
-  try {
-    const res = await fetch(BASE_URL)
-    return res.ok
-  } catch {
-    return false
-  }
-}
-
-async function waitForServerReady(timeoutMs) {
-  const started = Date.now()
-  while (Date.now() - started < timeoutMs) {
-    if (await isServerUp()) return
-    await delay(200)
-  }
-  throw new Error(`Dev server did not become ready within ${timeoutMs}ms (${BASE_URL})`)
-}
-
-function spawnDevServer() {
-  return spawn('npm', ['run', 'dev', '--', '--host', HOST, '--port', String(PORT)], {
-    cwd: process.cwd(),
-    stdio: 'pipe',
-    env: process.env,
-  })
-}
-
-async function stopServer(proc) {
-  if (!proc) return
-  if (proc.exitCode != null) return
-  proc.kill('SIGTERM')
-  const exited = await Promise.race([
-    new Promise((resolve) => {
-      proc.once('exit', () => resolve(true))
-    }),
-    delay(3000).then(() => false),
-  ])
-  if (!exited && proc.exitCode == null) {
-    proc.kill('SIGKILL')
-    await Promise.race([
-      new Promise((resolve) => {
-        proc.once('exit', () => resolve())
-      }),
-      delay(1000),
-    ])
-  }
-  proc.stdout?.destroy()
-  proc.stderr?.destroy()
-  proc.stdin?.destroy()
-}
-
 async function createHarness() {
-  let ownsServer = false
-  let serverProc = null
-
-  const alreadyUp = await isServerUp()
-  if (!alreadyUp) {
-    ownsServer = true
-    serverProc = spawnDevServer()
-    await waitForServerReady(20_000)
-  }
-
-  const browser = await launchChromium()
-
-  return { browser, ownsServer, serverProc }
+  return createBrowserServerHarness(BASE_URL, HOST, PORT, launchChromium)
 }
 
 async function launchChromium() {
@@ -89,10 +27,7 @@ async function launchChromium() {
 }
 
 async function destroyHarness(h) {
-  await h.browser.close()
-  if (h.ownsServer) {
-    await stopServer(h.serverProc)
-  }
+  await destroyBrowserServerHarness(h)
 }
 
 async function newContextPage(h, viewport = { width: 1280, height: 720 }) {
@@ -110,6 +45,14 @@ async function newContextPage(h, viewport = { width: 1280, height: 720 }) {
   return { context, page }
 }
 
+async function newFirstRunPage(h, viewport = { width: 1280, height: 720 }) {
+  const context = await h.browser.newContext({ viewport })
+  const page = await context.newPage()
+  await page.goto(BASE_URL, { waitUntil: 'networkidle' })
+  await waitForAppShell(page)
+  return { context, page }
+}
+
 async function waitForAppShell(page) {
   await page
     .locator('section[aria-label="Inner Echo — camera and controls"]')
@@ -118,6 +61,45 @@ async function waitForAppShell(page) {
   await page
     .getByRole('status', { name: 'Runtime status' })
     .waitFor({ state: 'visible', timeout: 5000 })
+}
+
+async function waitForAnimationFrames(page, frameCount = 2) {
+  await page.evaluate(
+    (count) =>
+      new Promise((resolve) => {
+        let remaining = count
+        const step = () => {
+          remaining -= 1
+          if (remaining <= 0) {
+            resolve(null)
+            return
+          }
+          requestAnimationFrame(step)
+        }
+        requestAnimationFrame(step)
+      }),
+    frameCount,
+  )
+}
+
+async function forceWebglUnavailable(page) {
+  await page.evaluate(() => {
+    const proto = HTMLCanvasElement.prototype
+    if (!proto.__ieOrigGetContext) {
+      proto.__ieOrigGetContext = proto.getContext
+    }
+    proto.getContext = function patchedGetContext(type, ...args) {
+      if (
+        type === 'webgl' ||
+        type === 'webgl2' ||
+        type === 'experimental-webgl' ||
+        type === 'experimental-webgl2'
+      ) {
+        return null
+      }
+      return proto.__ieOrigGetContext.call(this, type, ...args)
+    }
+  })
 }
 
 async function installFakeMedia(page) {
@@ -165,6 +147,67 @@ async function installFakeMedia(page) {
       return w.__ieOrigGetUserMedia(constraints)
     }
   })
+}
+
+async function readDebugValue(page, label) {
+  return page.evaluate((targetLabel) => {
+    const terms = Array.from(document.querySelectorAll('.debug-panel__grid dt'))
+    const term = terms.find((dt) => dt.textContent?.trim().toLowerCase() === targetLabel)
+    return term?.nextElementSibling?.textContent?.trim() ?? null
+  }, label.toLowerCase())
+}
+
+async function expectDebugValue(page, label, regex, timeoutMs) {
+  const started = Date.now()
+  while (Date.now() - started < timeoutMs) {
+    const value = await readDebugValue(page, label)
+    if (value && regex.test(value)) return
+    await delay(100)
+  }
+  const finalValue = await readDebugValue(page, label)
+  throw new Error(`Debug value ${label} did not match ${regex}; final="${finalValue}"`)
+}
+
+async function expectCanvasNonBlank(page, timeoutMs) {
+  const started = Date.now()
+  while (Date.now() - started < timeoutMs) {
+    const stats = await page.evaluate(() => {
+      const canvas = Array.from(document.querySelectorAll('canvas')).find(
+        (candidate) => !candidate.hidden,
+      )
+      if (!canvas || canvas.width === 0 || canvas.height === 0) return null
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      if (!ctx) return null
+      const width = Math.min(canvas.width, 96)
+      const height = Math.min(canvas.height, 72)
+      const data = ctx.getImageData(0, 0, width, height).data
+      let nonBlank = 0
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i] !== 0 || data[i + 1] !== 0 || data[i + 2] !== 0) nonBlank += 1
+      }
+      return { nonBlank, total: data.length / 4, width, height }
+    })
+    if (stats && stats.nonBlank > stats.total * 0.01) return
+    await delay(100)
+  }
+  throw new Error('Fallback canvas did not produce nonblank 2D pixels')
+}
+
+async function expectElementText(page, selector, regex, timeoutMs) {
+  const started = Date.now()
+  while (Date.now() - started < timeoutMs) {
+    const text = await page
+      .locator(selector)
+      .textContent()
+      .catch(() => '')
+    if (regex.test(text ?? '')) return
+    await delay(100)
+  }
+  const finalText = await page
+    .locator(selector)
+    .textContent()
+    .catch(() => '')
+  throw new Error(`Element ${selector} did not match ${regex}; final="${finalText}"`)
 }
 
 async function startCamera(page) {
@@ -223,6 +266,80 @@ async function collectConsole(page, run) {
 
 const tests = [
   {
+    name: 'first-run onboarding gates camera access until consent is accepted',
+    run: async (h) => {
+      const { context, page } = await newFirstRunPage(h)
+      try {
+        const onboarding = page.getByRole('dialog', { name: /welcome to inner echo/i })
+        await onboarding.waitFor({ state: 'visible', timeout: 5000 })
+
+        const startCameraButton = page.getByRole('button', { name: /^start camera$/i })
+        assert.equal(
+          await startCameraButton.isDisabled(),
+          true,
+          'Start camera must be disabled before onboarding acceptance',
+        )
+
+        const beginButton = page.getByRole('button', { name: /^begin your experience$/i })
+        assert.equal(
+          await beginButton.isDisabled(),
+          true,
+          'Begin must require the consent checkbox',
+        )
+
+        await page.keyboard.press('Escape')
+        await onboarding.waitFor({ state: 'visible', timeout: 1000 })
+
+        await page.getByRole('checkbox', { name: /ready to begin/i }).check()
+        assert.equal(await beginButton.isEnabled(), true, 'Begin should enable after consent')
+        await beginButton.click()
+        await onboarding.waitFor({ state: 'hidden', timeout: 3000 })
+        assert.equal(
+          await startCameraButton.isEnabled(),
+          true,
+          'Start camera should be enabled after onboarding acceptance',
+        )
+        assert.equal(
+          await page.evaluate((key) => localStorage.getItem(key), ONBOARDING_KEY),
+          'true',
+          'Onboarding acceptance should persist in localStorage',
+        )
+      } finally {
+        await context.close()
+      }
+    },
+  },
+  {
+    name: 'evidence drawer opens from header and condition evidence buttons',
+    run: async (h) => {
+      const { context, page } = await newContextPage(h)
+      try {
+        await page.getByRole('button', { name: /^open evidence & method$/i }).click()
+        await page
+          .locator('.evidence-backdrop:not(.evidence-backdrop--hidden)')
+          .waitFor({ state: 'visible', timeout: 5000 })
+        await expectElementText(page, '#evidence-title', /evidence & method/i, 5000)
+        await expectElementText(page, '.evidence-content', /non-diagnostic disclaimer/i, 5000)
+
+        await page.getByRole('button', { name: /^close evidence viewer$/i }).click()
+        await page
+          .locator('.evidence-backdrop.evidence-backdrop--hidden')
+          .waitFor({ state: 'hidden', timeout: 3000 })
+
+        await page.locator('#condition-picker').selectOption('anxiety')
+        await page
+          .getByRole('button', {
+            name: /^open evidence doc docs\/references\/conditions\/anxiety\.md$/i,
+          })
+          .click()
+        await expectElementText(page, '#evidence-title', /anxiety/i, 5000)
+        await expectElementText(page, '.evidence-content', /condition preset.*anxiety/i, 5000)
+      } finally {
+        await context.close()
+      }
+    },
+  },
+  {
     name: 'no WebGL/shader errors during rapid condition switching',
     run: async (h) => {
       const { context, page } = await newContextPage(h)
@@ -238,17 +355,55 @@ const tests = [
               for (const value of values) {
                 select.value = value
                 select.dispatchEvent(new Event('change', { bubbles: true }))
-                await new Promise((resolve) => setTimeout(resolve, 35))
+                await new Promise((resolve) => requestAnimationFrame(() => resolve(null)))
               }
             }
           })
-          await delay(300)
+          await waitForAnimationFrames(page, 8)
         })
         assert.equal(
           capture.webglLike.length,
           0,
           `Expected no WebGL/shader console noise, got ${capture.webglLike.length}\n${capture.webglLike.join('\n')}`,
         )
+      } finally {
+        await context.close()
+      }
+    },
+  },
+  {
+    name: 'forced WebGL unavailable falls back to nonblank Canvas2D output',
+    run: async (h) => {
+      const { context, page } = await newContextPage(h)
+      try {
+        await forceWebglUnavailable(page)
+        await installFakeMedia(page)
+        await startCamera(page)
+        await page.locator('input[aria-label="Debug overlay (dev)"]').check()
+        await expectDebugValue(page, 'renderer', /^2d$/i, 3000)
+        await waitForAnimationFrames(page, 4)
+        await expectCanvasNonBlank(page, 3000)
+      } finally {
+        await context.close()
+      }
+    },
+  },
+  {
+    name: 'WebGL context loss activates the live Canvas2D fallback',
+    run: async (h) => {
+      const { context, page } = await newContextPage(h)
+      try {
+        await installFakeMedia(page)
+        await startCamera(page)
+        await page.locator('input[aria-label="Debug overlay (dev)"]').check()
+        await expectDebugValue(page, 'renderer', /^webgl$/i, 3000)
+        await page.evaluate(() => {
+          const canvas = document.querySelector('canvas')
+          if (!canvas) throw new Error('overlay canvas not found')
+          canvas.dispatchEvent(new Event('webglcontextlost', { cancelable: true }))
+        })
+        await expectDebugValue(page, 'renderer', /^2d$/i, 3000)
+        await expectCanvasNonBlank(page, 3000)
       } finally {
         await context.close()
       }
@@ -275,12 +430,11 @@ const tests = [
           )
           await presetChecks.nth(0).check()
           await presetChecks.nth(1).check()
-          await delay(120)
           const presetWeights = multimorbid.locator('input[type="range"]')
           if ((await presetWeights.count()) > 0) {
             await presetWeights.first().fill('0.71')
           }
-          await delay(180)
+          await waitForAnimationFrames(page, 2)
 
           await page.getByRole('radio', { name: /^symptom-first$/i }).check()
           const symptom = page.locator('[aria-label="Symptom-first dimensions"]')
@@ -295,12 +449,11 @@ const tests = [
           )
           await dimChecks.nth(0).check()
           await dimChecks.nth(1).check()
-          await delay(120)
           const dimWeights = symptom.locator('input[type="range"]')
           if ((await dimWeights.count()) > 0) {
             await dimWeights.first().fill('0.63')
           }
-          await delay(180)
+          await waitForAnimationFrames(page, 2)
           const summaryItems = symptom.locator('.composer__summary li')
           assert.ok(
             (await summaryItems.count()) >= 1,
@@ -311,7 +464,7 @@ const tests = [
           await assert.doesNotReject(async () => {
             await page.locator('#condition-picker').waitFor({ state: 'visible', timeout: 3000 })
           })
-          await delay(240)
+          await waitForAnimationFrames(page, 4)
           await page.getByRole('button', { name: /stop everything/i }).click()
           await expectCameraStatus(page, /ready/i, 3000)
         })
@@ -340,7 +493,7 @@ const tests = [
             track?.stop()
           }
         })
-        await expectCameraStatus(page, /paused/i, 3000)
+        await expectCameraStatus(page, /camera error/i, 3000)
       } finally {
         await context.close()
       }
@@ -434,7 +587,7 @@ const tests = [
         }, ONBOARDING_KEY)
         await page.goto(BASE_URL, { waitUntil: 'networkidle' })
         await waitForAppShell(page)
-        await delay(300)
+        await waitForAnimationFrames(page, 2)
         assert.equal(favicon404, false, 'Initial load should not produce favicon.ico 404')
       } finally {
         await context.close()
@@ -475,23 +628,25 @@ const tests = [
 ]
 
 async function main() {
-  const harness = await createHarness()
+  let harness = null
   const failures = []
-
-  for (const test of tests) {
-    const started = Date.now()
-    try {
-      await test.run(harness)
-      const elapsed = Date.now() - started
-      console.log(`PASS ${test.name} (${elapsed}ms)`)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      failures.push(`${test.name}: ${message}`)
-      console.error(`FAIL ${test.name}: ${message}`)
+  try {
+    harness = await createHarness()
+    for (const test of tests) {
+      const started = Date.now()
+      try {
+        await test.run(harness)
+        const elapsed = Date.now() - started
+        console.log(`PASS ${test.name} (${elapsed}ms)`)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        failures.push(`${test.name}: ${message}`)
+        console.error(`FAIL ${test.name}: ${message}`)
+      }
     }
+  } finally {
+    if (harness) await destroyHarness(harness)
   }
-
-  await destroyHarness(harness)
 
   if (failures.length > 0) {
     console.error('\nE2E failures:')

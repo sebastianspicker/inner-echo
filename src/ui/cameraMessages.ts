@@ -10,7 +10,7 @@ const STATE_LABELS: Record<CameraState, string> = {
   requesting: 'Requesting access\u2026',
   active: 'Active',
   denied: 'Permission needed',
-  error: 'Paused',
+  error: 'Camera error',
 }
 
 export function getCameraStateLabel(state: CameraState): string {

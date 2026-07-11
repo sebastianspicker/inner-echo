@@ -1,5 +1,5 @@
 /**
- * Phase 6: Chromatic aberration — RGB channel offset (amount). Single pass.
+ * Chromatic aberration: RGB channel offset in a single pass.
  */
 
 import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'

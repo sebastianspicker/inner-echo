@@ -185,12 +185,11 @@ describe('presetCodecRobustness — extreme weight values', () => {
     }
     // NaN is not a valid JSON number; Zod's z.number() rejects NaN
     const result = presetPayloadSchema.safeParse(raw)
-    // Zod treats NaN as a valid number type in JS, but when serialized/deserialized
-    // through JSON it becomes null. Test the JSON round-trip path.
+    expect(result.success).toBe(false)
+    // JSON transport converts NaN to null, so the codec path must reject it too.
     const serialized = JSON.stringify(raw)
     const deserialized = JSON.parse(serialized)
     const result2 = presetPayloadSchema.safeParse(deserialized)
-    // JSON.stringify(NaN) => null, so weight becomes null, which Zod rejects
     expect(result2.success).toBe(false)
   })
 

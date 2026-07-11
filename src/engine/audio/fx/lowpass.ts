@@ -1,5 +1,5 @@
 /**
- * Phase 7: Lowpass filter FX (BiquadFilterNode).
+ * Lowpass filter FX (BiquadFilterNode).
  */
 
 import type { AudioModule } from '../types'

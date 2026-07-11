@@ -5,7 +5,7 @@ import { renderEvidenceMarkdown } from '../src/evidence/markdown'
 
 describe('evidence/markdown', () => {
   it('sanitizes active HTML while preserving the markdown title', () => {
-    const { html, title } = renderEvidenceMarkdown(`# Evidence Title
+    const { fragment, title } = renderEvidenceMarkdown(`# Evidence Title
 
 <script>alert('xss')</script>
 <img src="x" onerror="alert('xss')">
@@ -13,7 +13,9 @@ describe('evidence/markdown', () => {
 <a href="javascript:alert('xss')">unsafe html link</a>
 `)
 
-    const normalized = html.toLowerCase()
+    const container = document.createElement('div')
+    container.append(fragment)
+    const normalized = container.innerHTML.toLowerCase()
     expect(title).toBe('Evidence Title')
     expect(normalized).not.toContain('<script')
     expect(normalized).not.toContain('onerror')

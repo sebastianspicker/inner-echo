@@ -1,7 +1,7 @@
 {
   "id": "dpdr",
   "label": "Depersonalization / Derealization",
-  "summary": "A metaphor of distance and 'behind glass': subtle ghosting, chroma drift, and gentle time/phase instability (with Reduced Motion support).",
+  "summary": "A metaphor of distance and 'behind glass': veiling, delayed self-image, subtle refraction, and temporal detachment.",
   "framing": {
     "type": "metaphor",
     "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
@@ -21,7 +21,7 @@
     }
   ],
   "safety": {
-    "intensity_default": 0.3,
+    "intensity_default": 0.5,
     "intensity_max": 0.58,
     "warnings": [
       "May feel disorienting for some. Enable Reduced Motion if needed.",
@@ -45,7 +45,7 @@
       "max_jitter": 0.05
     },
     "reduced_motion_policy": {
-      "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+      "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter", "glass_veil"],
       "note": "Reduced Motion removes time-based feedback/jitter nodes and keeps a calmer static overlay."
     }
   },
@@ -75,55 +75,43 @@
         "label": "Audio (optional)"
       },
       {
-        "id": "chroma",
+        "id": "veil",
         "type": "slider",
-        "label": "Chroma Drift",
+        "label": "Glass Veil",
         "min": 0,
-        "max": 0.25,
+        "max": 0.45,
         "step": 0.01,
-        "target": "video.chroma_aberration.amount"
+        "target": "video.glass_veil.veil"
       }
     ]
   },
   "video_stack": [
     {
-      "id": "time",
-      "node": "temporal_smear",
+      "id": "glass",
+      "node": "glass_veil",
       "params": {
-        "decay": 0.95,
-        "feedback": 0.08,
-        "jitter": 0.03
-      }
-    },
-    {
-      "id": "vignette",
-      "node": "vignette",
-      "params": {
-        "amount": 0.14,
-        "softness": 0.9
-      }
-    },
-    {
-      "id": "chroma",
-      "node": "chroma_aberration",
-      "params": {
-        "amount": 0.06
+        "veil": 0.26,
+        "feedback": 0.12,
+        "refraction": 0.03,
+        "chroma": 0.07
       }
     },
     {
       "id": "haze",
       "node": "haze",
       "params": {
-        "amount": 0.12
+        "amount": 0.1
       }
     },
     {
       "id": "grade",
       "node": "color_grade",
       "params": {
-        "contrast": -0.05,
-        "saturation": -0.1,
-        "brightness": -0.01
+        "contrast": -0.06,
+        "saturation": -0.18,
+        "brightness": -0.01,
+        "temperature": 0,
+        "tint": 0
       }
     }
   ],
@@ -152,8 +140,8 @@
         "node": "delay",
         "params": {
           "time": 0.18,
-          "feedback": 0.06,
-          "mix": 0.03
+          "feedback": 0.08,
+          "mix": 0.05
         }
       },
       {
@@ -179,25 +167,25 @@
     "analyser_to_params": [
       {
         "source": "rms",
-        "target": "video.haze.amount",
-        "scale": 0.15,
-        "offset": 0.0,
-        "smoothing": {
-          "attack": 0.08,
-          "release": 0.25
-        },
-        "clamp": [0.0, 0.45]
-      },
-      {
-        "source": "rms",
-        "target": "video.temporal_smear.feedback",
-        "scale": 0.08,
-        "offset": 0.08,
+        "target": "video.glass_veil.veil",
+        "scale": 0.06,
+        "offset": 0,
         "smoothing": {
           "attack": 0.1,
           "release": 0.35
         },
-        "clamp": [0.06, 0.2]
+        "clamp": [0.08, 0.34]
+      },
+      {
+        "source": "rms",
+        "target": "video.glass_veil.refraction",
+        "scale": 0.012,
+        "offset": 0,
+        "smoothing": {
+          "attack": 0.12,
+          "release": 0.45
+        },
+        "clamp": [0.005, 0.04]
       }
     ]
   },

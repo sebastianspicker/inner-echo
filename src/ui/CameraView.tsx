@@ -1,22 +1,12 @@
 /**
  * CameraView Component
  *
- * Architecture Overview:
- * This component is the primary orchestrator of the entire Inner Echo application.
- * It strictly acts as a conductor, bridging four distinct technological layers:
- *
- * 1. UI State (React): Manages the panels, buttons, and user preferences (e.g., intensity, safe mode).
- * 2. Video Capture (WebRTC): Solicits and maintains the raw camera feed (`requestVideoStream`).
- * 3. Audio Engine (Web Audio API): Manages background audio, microphone inputs, and volume (`contextManager.ts`).
- * 4. Visual Engine (WebGL): Feeds the raw video into WebGL shaders for pixel manipulation (`startOverlayLoop`).
- *
- * Note on Performance:
- * To avoid freezing the UI when heavy WebGL calculations occur, `CameraView` heavily utilizes
- * `useRef` to pass real-time config values (like slider values) into the WebGL requestAnimationFrame loop
- * without triggering full React re-renders.
+ * Top-level coordinator for the browser-only runtime. React state owns the user-facing
+ * controls; refs hand the latest values to long-lived WebGL/WebAudio loops without
+ * rebuilding those loops on every slider move.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useCatalog } from './hooks/useCatalog'
 import { useProfileLoad } from './hooks/useProfileLoad'
 import { useImmersiveIdleState } from './hooks/useImmersiveIdleState'
@@ -41,6 +31,7 @@ import {
 import { requestVideoStream, stopVideoStream, type CameraState } from '../engine/video'
 import {
   startAudioContext,
+  closeAudioContext,
   createAudioEngine,
   type AudioEngineControl,
   type AudioContextStatus,
@@ -51,11 +42,12 @@ import { getCameraErrorMessage } from './cameraMessages'
 import { ConditionComposerPanel } from './ConditionComposerPanel'
 import { OnboardingModal, getOnboardingAccepted } from './OnboardingModal'
 import { DebugPanel } from './DebugPanel'
-// TODO: Lazy-load EvidenceDrawer via React.lazy to code-split marked + DOMPurify
-// out of the main chunk. Currently they are bundled eagerly (~50 KB combined).
-import { EvidenceDrawer } from './EvidenceDrawer'
 import type { EvidenceDocPath } from '../evidence/docs'
 import type { ComposerMode, SelectedDimension, SelectedPreset } from '../composer'
+
+const EvidenceDrawer = lazy(() =>
+  import('./EvidenceDrawer').then((mod) => ({ default: mod.EvidenceDrawer })),
+)
 
 const DEFAULT_INTENSITY = 0.5
 const DEFAULT_CONDITION_ID = 'none'
@@ -96,6 +88,51 @@ function clearVideoTrackEndHandlers(stream: MediaStream | null | undefined): voi
   }
 }
 
+function clearRuntimeCanvas(
+  canvas: HTMLCanvasElement | null,
+  webglCanvas: HTMLCanvasElement | null,
+): void {
+  if (!canvas || canvas.width <= 0 || canvas.height <= 0) return
+  const gl =
+    canvas === webglCanvas ? (canvas.getContext('webgl2') ?? canvas.getContext('webgl')) : null
+  if (gl) {
+    gl.clearColor(0, 0, 0, 0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+  } else {
+    canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height)
+  }
+  canvas.hidden = true
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  const node = target as HTMLElement | null
+  if (!node) return false
+  return (
+    ['input', 'textarea', 'select'].includes(node.tagName.toLowerCase()) || node.isContentEditable
+  )
+}
+
+function profileHasEnabledAudio(profile: Profile | null): boolean {
+  if (!profile) return false
+  if (!profile.audio_stack) return false
+  return profile.audio_stack.enabled === true
+}
+
+function selectAudioStack(
+  profile: Profile | null,
+  profileHasAudio: boolean,
+  audioRequested: boolean,
+): Profile['audio_stack'] | null {
+  if (profileHasAudio) return profile?.audio_stack
+  if (!audioRequested) return { enabled: false }
+  return profile?.audio_stack ?? null
+}
+
+function selectMasterVolume(profile: Profile | null, audioRequested: boolean): number {
+  if (!audioRequested) return 0
+  return profile?.audio_stack?.master?.volume ?? 0.22
+}
+
 export function CameraView() {
   const catalog = useCatalog()
   const [conditionId, setConditionId] = useState(DEFAULT_CONDITION_ID)
@@ -134,8 +171,6 @@ export function CameraView() {
       composerMode,
       selectedPresets,
       selectedDimensions,
-      setIntensity,
-      setAudioEnabled,
       intensity,
       safeMode,
       reducedMotion,
@@ -159,17 +194,19 @@ export function CameraView() {
   const streamRef = useRef<MediaStream | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const webglCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const fallbackCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const overlayControlRef = useRef<OverlayControl | null>(null)
   const audioEngineControlRef = useRef<AudioEngineControl | null>(null)
   const rmsDebugRef = useRef<HTMLSpanElement | null>(null)
   const videoMetricsRef = useRef<VideoMetrics | null>(null)
   const cameraRequestSeqRef = useRef(0)
-  const audioRequestSeqRef = useRef(0)
+  const audioStartGenerationRef = useRef(0)
   const reducedMotionPrevRef = useRef(reducedMotion)
   const profilePrevRef = useRef<Profile | null>(null)
   const profileRef = useRef<Profile | null>(profile)
   const audioEnabledRef = useRef(audioEnabled)
+  const audioDesiredOnRef = useRef(false)
   const cameraStateRef = useRef<CameraState>(cameraState)
 
   inputModeRef.current = inputMode
@@ -224,7 +261,43 @@ export function CameraView() {
    * Primary entry point to turn the camera on.
    * Prompts the user for device permissions via WebRTC `getUserMedia`.
    */
-  const handleStart = useCallback(async () => {
+  const handleVideoPlaybackFailure = (
+    err: unknown,
+    stream: MediaStream,
+    video: HTMLVideoElement,
+    requestSeq: number,
+  ): void => {
+    if (requestSeq !== cameraRequestSeqRef.current) return
+    if (import.meta.env?.DEV) logger.warn('video.play failed', err)
+    stopVideoStream(stream)
+    streamRef.current = null
+    video.srcObject = null
+    setCameraState('error')
+    setErrorMessage(
+      'The camera could not start playback. Please try clicking anywhere on the page and then restarting the camera.',
+    )
+  }
+
+  const activateVideoStream = (stream: MediaStream, requestSeq: number): void => {
+    streamRef.current = stream
+    for (const track of stream.getVideoTracks()) {
+      track.onended = () => handleCameraStreamInterrupted(stream, CAMERA_STREAM_INTERRUPTED_MESSAGE)
+    }
+    const video = videoRef.current
+    if (!video) {
+      setCameraState('active')
+      return
+    }
+    video.srcObject = stream
+    video
+      .play()
+      .then(() => {
+        if (requestSeq === cameraRequestSeqRef.current) setCameraState('active')
+      })
+      .catch((err) => handleVideoPlaybackFailure(err, stream, video, requestSeq))
+  }
+
+  const handleStart = async (): Promise<void> => {
     const requestSeq = ++cameraRequestSeqRef.current
     setErrorMessage(null)
     setCameraState('requesting')
@@ -236,40 +309,7 @@ export function CameraView() {
     }
 
     if (result.ok) {
-      streamRef.current = result.stream
-      const stream = result.stream
-      for (const track of stream.getVideoTracks()) {
-        track.onended = () => {
-          handleCameraStreamInterrupted(stream, CAMERA_STREAM_INTERRUPTED_MESSAGE)
-        }
-      }
-      const video = videoRef.current
-      if (video) {
-        video.srcObject = stream
-        video
-          .play()
-          .then(() => {
-            if (requestSeq !== cameraRequestSeqRef.current) return
-            setCameraState('active')
-          })
-          .catch((err) => {
-            if (requestSeq !== cameraRequestSeqRef.current) return
-            // Autoplay may be restricted; playsInline + srcObject often still shows first frame
-            if (import.meta.env?.DEV) {
-              logger.warn('video.play failed', err)
-            }
-            // Stop the camera stream since playback failed
-            stopVideoStream(stream)
-            streamRef.current = null
-            if (video) video.srcObject = null
-            setCameraState('error')
-            setErrorMessage(
-              'The camera could not start playback. Please try clicking anywhere on the page and then restarting the camera.',
-            )
-          })
-      } else {
-        setCameraState('active')
-      }
+      activateVideoStream(result.stream, requestSeq)
     } else {
       streamRef.current = null
       const isDenied =
@@ -277,7 +317,7 @@ export function CameraView() {
       setCameraState(isDenied ? 'denied' : 'error')
       setErrorMessage(getCameraErrorMessage(result.error))
     }
-  }, [handleCameraStreamInterrupted])
+  }
 
   useEffect(() => {
     const mediaDevices = navigator.mediaDevices
@@ -312,7 +352,7 @@ export function CameraView() {
     // Invalidate any in-flight camera request; stale streams are closed when they resolve.
     cameraRequestSeqRef.current += 1
     // Invalidate any in-flight audio start request.
-    audioRequestSeqRef.current += 1
+    audioStartGenerationRef.current += 1
     if (overlayControlRef.current) {
       overlayControlRef.current.stop()
       overlayControlRef.current = null
@@ -331,19 +371,9 @@ export function CameraView() {
     if (video) {
       video.srcObject = null
     }
-    const canvas = canvasRef.current
-    if (canvas && canvas.width > 0 && canvas.height > 0) {
-      // The canvas may be a WebGL context; trying getContext('2d') on a WebGL canvas
-      // returns null or throws. Try WebGL first, fall back to 2d.
-      const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl')
-      if (gl) {
-        gl.clearColor(0, 0, 0, 0)
-        gl.clear(gl.COLOR_BUFFER_BIT)
-      } else {
-        const ctx2d = canvas.getContext('2d')
-        if (ctx2d) ctx2d.clearRect(0, 0, canvas.width, canvas.height)
-      }
-    }
+    audioDesiredOnRef.current = false
+    clearRuntimeCanvas(webglCanvasRef.current, webglCanvasRef.current)
+    clearRuntimeCanvas(fallbackCanvasRef.current, webglCanvasRef.current)
     setCameraState('idle')
     setErrorMessage(null)
   }, [])
@@ -352,7 +382,8 @@ export function CameraView() {
   useEffect(() => {
     return () => {
       cameraRequestSeqRef.current += 1
-      audioRequestSeqRef.current += 1
+      audioStartGenerationRef.current += 1
+      audioDesiredOnRef.current = false
       overlayControlRef.current?.stop()
       overlayControlRef.current = null
       audioEngineControlRef.current?.stop()
@@ -365,65 +396,95 @@ export function CameraView() {
     }
   }, [])
 
-  const handleEnableAudio = useCallback(() => {
-    const requestSeq = ++audioRequestSeqRef.current
+  const handleMicStatusChange = (status: MicStatus, error?: string): void => {
+    setMicStatus(status)
+    setMicError(error ?? null)
+    if (status === 'on') {
+      setMicEnabled(true)
+      setInputMode('mix')
+      audioEngineControlRef.current?.setInputMode('mix')
+      return
+    }
+    if (!['off', 'denied', 'error'].includes(status)) return
+    setMicEnabled(false)
+    if (inputModeRef.current === 'synth') return
+    setInputMode('synth')
+    audioEngineControlRef.current?.setInputMode('synth')
+  }
+
+  function installAudioEngine(forceEnabled: boolean, startGeneration: number): void {
+    const previousControl = audioEngineControlRef.current
+    if (previousControl) previousControl.stop()
+    audioEngineControlRef.current = null
+    const currentProfile = profileRef.current
+    const currentAudioEnabled = forceEnabled || audioEnabledRef.current
+    const profileHasAudio = profileHasEnabledAudio(currentProfile)
+    const audioRequested = profileHasAudio || currentAudioEnabled
+    const audioStack = selectAudioStack(currentProfile, profileHasAudio, audioRequested)
+    if (profileHasAudio || forceEnabled) setAudioEnabled(true)
+    const control = createAudioEngine(audioStack, {
+      onStatusChange(status, error) {
+        setAudioStatus(status)
+        setAudioError(error ?? null)
+      },
+      onMicStatusChange: handleMicStatusChange,
+    })
+    if (startGeneration !== audioStartGenerationRef.current) {
+      control.stop()
+      return
+    }
+    audioEngineControlRef.current = control
+    setAudioStatus('on')
+    const volume = selectMasterVolume(currentProfile, audioRequested)
+    control.setMasterVolume(volume)
+    control.setInputMode(inputModeRef.current)
+    control.setMicSensitivity(micSensitivityRef.current)
+    control.setMicGate(micGateRef.current)
+    setMasterVolume(volume)
+  }
+
+  const finishAudioStart = (
+    status: AudioContextStatus,
+    forceEnabled: boolean,
+    startGeneration: number,
+  ): void => {
+    if (startGeneration !== audioStartGenerationRef.current || !audioDesiredOnRef.current) {
+      if (!audioDesiredOnRef.current) void closeAudioContext()
+      return
+    }
+    if (status === 'on') installAudioEngine(forceEnabled, startGeneration)
+    else setAudioStatus(status)
+  }
+
+  const failAudioStart = (error: unknown, startGeneration: number): void => {
+    if (startGeneration !== audioStartGenerationRef.current) return
+    setAudioStatus('error')
+    setAudioError(error instanceof Error ? error.message : String(error))
+  }
+
+  const startAudio = (forceEnabled: boolean): void => {
+    const startGeneration = ++audioStartGenerationRef.current
+    audioDesiredOnRef.current = true
     setAudioError(null)
     setAudioStatus('starting')
     startAudioContext()
-      .then((status) => {
-        if (requestSeq !== audioRequestSeqRef.current) return
-        if (status === 'on') {
-          if (audioEngineControlRef.current) {
-            audioEngineControlRef.current.stop()
-            audioEngineControlRef.current = null
-          }
-          const currentProfile = profileRef.current
-          const currentAudioEnabled = audioEnabledRef.current
-          const profileHasAudio = !!currentProfile?.audio_stack?.enabled
-          const audioStack = profileHasAudio
-            ? (currentProfile?.audio_stack ?? { enabled: false })
-            : currentAudioEnabled
-              ? (currentProfile?.audio_stack ?? null)
-              : { enabled: false }
-          if (profileHasAudio) setAudioEnabled(true)
-          const control = createAudioEngine(audioStack, {
-            onStatusChange(s, err) {
-              setAudioStatus(s)
-              setAudioError(err ?? null)
-            },
-            onMicStatusChange(s, err) {
-              setMicStatus(s)
-              setMicError(err ?? null)
-              if (s === 'on') setMicEnabled(true)
-              else if (s === 'off' || s === 'denied' || s === 'error') setMicEnabled(false)
-            },
-          })
-          if (requestSeq !== audioRequestSeqRef.current) {
-            control.stop()
-            return
-          }
-          audioEngineControlRef.current = control
-          setAudioStatus('on')
-          const vol =
-            profileHasAudio || currentAudioEnabled
-              ? (currentProfile?.audio_stack?.master?.volume ?? 0.22)
-              : 0
-          control.setMasterVolume(vol)
-          control.setInputMode(inputModeRef.current)
-          control.setMicSensitivity(micSensitivityRef.current)
-          control.setMicGate(micGateRef.current)
-          setMasterVolume(vol)
-        } else {
-          setAudioStatus(status)
-        }
-      })
-      .catch((err) => {
-        if (requestSeq === audioRequestSeqRef.current) {
-          setAudioStatus('error')
-          setAudioError(err instanceof Error ? err.message : String(err))
-        }
-      })
-  }, [])
+      .then((status) => finishAudioStart(status, forceEnabled, startGeneration))
+      .catch((error) => failAudioStart(error, startGeneration))
+  }
+
+  const handleEnableAudio = (): void => {
+    startAudio(false)
+  }
+
+  const handleAudioEnabledChange = (enabled: boolean): void => {
+    audioDesiredOnRef.current = enabled
+    setAudioEnabled(enabled)
+    if (enabled && audioStatus !== 'on') {
+      startAudio(true)
+    } else if (!enabled && audioStatus === 'starting') {
+      audioStartGenerationRef.current += 1
+    }
+  }
 
   const handleMasterVolumeChange = useCallback((value: number) => {
     setMasterVolume(value)
@@ -433,12 +494,14 @@ export function CameraView() {
   const handleEnableMic = useCallback(() => {
     setMicError(null)
     setMicEnabled(true)
+    setInputMode('mix')
+    audioEngineControlRef.current?.setInputMode('mix')
     audioEngineControlRef.current?.requestMic()
   }, [])
 
   const handleDisableMic = useCallback(() => {
     audioEngineControlRef.current?.stopMic()
-    if (inputModeRef.current === 'mic') {
+    if (inputModeRef.current !== 'synth') {
       setInputMode('synth')
       audioEngineControlRef.current?.setInputMode('synth')
     }
@@ -506,7 +569,8 @@ export function CameraView() {
     reducedMotion,
     profile,
     videoRef,
-    canvasRef,
+    webglCanvasRef,
+    fallbackCanvasRef,
     containerRef,
     overlayControlRef,
     audioEngineControlRef,
@@ -534,17 +598,18 @@ export function CameraView() {
   }, [intensity, safeMode, controlValues, stressMode, profile])
 
   // When condition changes and audio is on, rewire audio graph (with ramp).
-  useEffect(() => {
+  function updateConditionAudio(): void {
     if (audioStatus !== 'on' || !audioEngineControlRef.current) return
     const audioStack = audioEnabled ? (profile?.audio_stack ?? null) : { enabled: false }
     audioEngineControlRef.current.setConditionAudio(audioStack)
     const vol = audioEnabled ? (profile?.audio_stack?.master?.volume ?? 0.22) : 0
     setMasterVolume(vol)
     audioEngineControlRef.current.setMasterVolume(vol)
-  }, [profile?.audio_stack, audioStatus, audioEnabled])
+  }
+  useEffect(updateConditionAudio, [profile?.audio_stack, audioStatus, audioEnabled])
 
-  // Phase 8: Dev-only live RMS display (no React state to avoid re-renders every frame).
-  useEffect(() => {
+  // Dev-only live RMS display; avoid React state so the audio meter does not re-render each frame.
+  function updateRmsDebug(): (() => void) | undefined {
     if (!import.meta.env.DEV || audioStatus !== 'on' || !debugOverlay) return
     let rafId: number | null = null
     function tick(): void {
@@ -558,7 +623,8 @@ export function CameraView() {
     return () => {
       if (rafId != null) cancelAnimationFrame(rafId)
     }
-  }, [audioStatus, debugOverlay])
+  }
+  useEffect(updateRmsDebug, [audioStatus, debugOverlay])
 
   const isIdle = useImmersiveIdleState(cameraState)
   const cameraController = useCameraController({
@@ -569,13 +635,7 @@ export function CameraView() {
     onStop: handleStop,
   })
 
-  useEffect(() => {
-    const isEditableTarget = (target: EventTarget | null): boolean => {
-      const node = target as HTMLElement | null
-      if (!node) return false
-      const tag = node.tagName.toLowerCase()
-      return tag === 'input' || tag === 'textarea' || tag === 'select' || node.isContentEditable
-    }
+  function bindKeyboardShortcuts(): () => void {
     const onKeyDown = (e: KeyboardEvent): void => {
       if (isEditableTarget(e.target)) return
       const key = e.key.toLowerCase()
@@ -593,7 +653,8 @@ export function CameraView() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [cameraController, onboardingAccepted, openEvidence])
+  }
+  useEffect(bindKeyboardShortcuts, [cameraController, onboardingAccepted, openEvidence])
 
   const warnings: string[] = profile?.safety?.warnings ?? []
   const showReducedMotionHint = reducedMotion && profile != null && profileHasTemporalNodes(profile)
@@ -612,6 +673,7 @@ export function CameraView() {
       <CameraHeader
         cameraState={cameraState}
         audioStatus={audioStatus}
+        audioEnabled={audioEnabled}
         isRequesting={cameraController.isRequesting}
         isActive={cameraController.isActive}
         canStop={cameraController.canStop}
@@ -647,7 +709,8 @@ export function CameraView() {
         <CameraStage
           containerRef={containerRef}
           videoRef={videoRef}
-          canvasRef={canvasRef}
+          webglCanvasRef={webglCanvasRef}
+          fallbackCanvasRef={fallbackCanvasRef}
           rmsDebugRef={rmsDebugRef}
           isActive={cameraController.isActive}
           audioStatus={audioStatus}
@@ -685,7 +748,7 @@ export function CameraView() {
                 reducedMotion={reducedMotion}
                 onReducedMotionChange={setReducedMotion}
                 audioEnabled={audioEnabled}
-                onAudioEnabledChange={setAudioEnabled}
+                onAudioEnabledChange={handleAudioEnabledChange}
                 micEnabled={micEnabled}
                 onMicEnabledChange={handleMicEnabledChange}
                 micRequiresAudio={audioStatus !== 'on'}
@@ -780,6 +843,7 @@ export function CameraView() {
 
             <AudioMicControls
               audioStatus={audioStatus}
+              audioEnabled={audioEnabled}
               audioError={audioError}
               masterVolume={masterVolume}
               micStatus={micStatus}
@@ -815,7 +879,7 @@ export function CameraView() {
                 onSafeModeChange={setSafeMode}
                 onStressModeChange={setStressMode}
                 onReducedMotionChange={setReducedMotion}
-                onAudioEnabledChange={setAudioEnabled}
+                onAudioEnabledChange={handleAudioEnabledChange}
                 onControlValuesChange={setControlValues}
               />
             )}
@@ -858,12 +922,16 @@ export function CameraView() {
         </aside>
       </div>
 
-      <EvidenceDrawer
-        open={evidenceOpen}
-        docPath={evidenceDocPath}
-        onNavigate={setEvidenceDocPath}
-        onClose={() => setEvidenceOpen(false)}
-      />
+      {evidenceOpen && (
+        <Suspense fallback={null}>
+          <EvidenceDrawer
+            open={evidenceOpen}
+            docPath={evidenceDocPath}
+            onNavigate={setEvidenceDocPath}
+            onClose={() => setEvidenceOpen(false)}
+          />
+        </Suspense>
+      )}
     </section>
   )
 }

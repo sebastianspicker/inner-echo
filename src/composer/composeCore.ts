@@ -8,7 +8,6 @@ import type {
   ComposerSettings,
   SelectedDimension,
   SelectedPreset,
-  MotifDef,
   DimensionSignalMappingEntry,
   ExperienceDimensionDef,
 } from './types'
@@ -54,9 +53,6 @@ export type ComposeResult = {
   profile: Profile
   report: ComposeReport
 }
-
-// Re-export types for backward compatibility
-export type { MotifDef, DimensionSignalMappingEntry, ExperienceDimensionDef }
 
 export type ComposeSources = {
   loadPresetProfile: (profileId: string) => Promise<Profile | null>
