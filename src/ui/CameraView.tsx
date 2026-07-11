@@ -374,76 +374,83 @@ export function CameraView() {
     }
   }, [])
 
-  const startAudio = useCallback((forceEnabled: boolean) => {
+  const handleMicStatusChange = (status: MicStatus, error?: string): void => {
+    setMicStatus(status)
+    setMicError(error ?? null)
+    if (status === 'on') {
+      setInputMode('mix')
+      audioEngineControlRef.current?.setInputMode('mix')
+      return
+    }
+    if (!['off', 'denied', 'error'].includes(status) || inputModeRef.current === 'synth') return
+    setInputMode('synth')
+    audioEngineControlRef.current?.setInputMode('synth')
+  }
+
+  function installAudioEngine(forceEnabled: boolean, requestSeq: number): void {
+    audioEngineControlRef.current?.stop()
+    audioEngineControlRef.current = null
+    const currentProfile = profileRef.current
+    const currentAudioEnabled = forceEnabled || audioEnabledRef.current
+    const profileHasAudio = !!currentProfile?.audio_stack?.enabled
+    const audioStack = profileHasAudio
+      ? (currentProfile?.audio_stack ?? { enabled: false })
+      : currentAudioEnabled
+        ? (currentProfile?.audio_stack ?? null)
+        : { enabled: false }
+    if (profileHasAudio || forceEnabled) setAudioEnabled(true)
+    const control = createAudioEngine(audioStack, {
+      onStatusChange(status, error) {
+        setAudioStatus(status)
+        setAudioError(error ?? null)
+      },
+      onMicStatusChange: handleMicStatusChange,
+    })
+    if (requestSeq !== audioRequestSeqRef.current) {
+      control.stop()
+      return
+    }
+    audioEngineControlRef.current = control
+    setAudioStatus('on')
+    const volume =
+      profileHasAudio || currentAudioEnabled
+        ? (currentProfile?.audio_stack?.master?.volume ?? 0.22)
+        : 0
+    control.setMasterVolume(volume)
+    control.setInputMode(inputModeRef.current)
+    control.setMicSensitivity(micSensitivityRef.current)
+    control.setMicGate(micGateRef.current)
+    setMasterVolume(volume)
+  }
+
+  const finishAudioStart = (
+    status: AudioContextStatus,
+    forceEnabled: boolean,
+    requestSeq: number,
+  ): void => {
+    if (requestSeq !== audioRequestSeqRef.current) return
+    if (status === 'on') installAudioEngine(forceEnabled, requestSeq)
+    else setAudioStatus(status)
+  }
+
+  const failAudioStart = (error: unknown, requestSeq: number): void => {
+    if (requestSeq !== audioRequestSeqRef.current) return
+    setAudioStatus('error')
+    setAudioError(error instanceof Error ? error.message : String(error))
+  }
+
+  function startAudio(forceEnabled: boolean): void {
     const requestSeq = ++audioRequestSeqRef.current
     setAudioError(null)
     setAudioStatus('starting')
     startAudioContext()
-      .then((status) => {
-        if (requestSeq !== audioRequestSeqRef.current) return
-        if (status === 'on') {
-          if (audioEngineControlRef.current) {
-            audioEngineControlRef.current.stop()
-            audioEngineControlRef.current = null
-          }
-          const currentProfile = profileRef.current
-          const currentAudioEnabled = forceEnabled || audioEnabledRef.current
-          const profileHasAudio = !!currentProfile?.audio_stack?.enabled
-          const audioStack = profileHasAudio
-            ? (currentProfile?.audio_stack ?? { enabled: false })
-            : currentAudioEnabled
-              ? (currentProfile?.audio_stack ?? null)
-              : { enabled: false }
-          if (profileHasAudio || forceEnabled) setAudioEnabled(true)
-          const control = createAudioEngine(audioStack, {
-            onStatusChange(s, err) {
-              setAudioStatus(s)
-              setAudioError(err ?? null)
-            },
-            onMicStatusChange(s, err) {
-              setMicStatus(s)
-              setMicError(err ?? null)
-              if (s === 'on') {
-                setInputMode('mix')
-                audioEngineControlRef.current?.setInputMode('mix')
-              } else if (s === 'off' || s === 'denied' || s === 'error') {
-                if (inputModeRef.current !== 'synth') {
-                  setInputMode('synth')
-                  audioEngineControlRef.current?.setInputMode('synth')
-                }
-              }
-            },
-          })
-          if (requestSeq !== audioRequestSeqRef.current) {
-            control.stop()
-            return
-          }
-          audioEngineControlRef.current = control
-          setAudioStatus('on')
-          const vol =
-            profileHasAudio || currentAudioEnabled
-              ? (currentProfile?.audio_stack?.master?.volume ?? 0.22)
-              : 0
-          control.setMasterVolume(vol)
-          control.setInputMode(inputModeRef.current)
-          control.setMicSensitivity(micSensitivityRef.current)
-          control.setMicGate(micGateRef.current)
-          setMasterVolume(vol)
-        } else {
-          setAudioStatus(status)
-        }
-      })
-      .catch((err) => {
-        if (requestSeq === audioRequestSeqRef.current) {
-          setAudioStatus('error')
-          setAudioError(err instanceof Error ? err.message : String(err))
-        }
-      })
-  }, [])
+      .then((status) => finishAudioStart(status, forceEnabled, requestSeq))
+      .catch((error) => failAudioStart(error, requestSeq))
+  }
 
-  const handleEnableAudio = useCallback(() => {
+  const handleEnableAudio = (): void => {
     startAudio(false)
-  }, [startAudio])
+  }
 
   const handleDisableAudio = useCallback(() => {
     audioRequestSeqRef.current += 1
@@ -457,15 +464,12 @@ export function CameraView() {
     setInputMode('synth')
   }, [])
 
-  const handleAudioEnabledChange = useCallback(
-    (enabled: boolean) => {
-      setAudioEnabled(enabled)
-      if (enabled && audioStatus !== 'on' && audioStatus !== 'starting') {
-        startAudio(true)
-      }
-    },
-    [audioStatus, startAudio],
-  )
+  const handleAudioEnabledChange = (enabled: boolean): void => {
+    setAudioEnabled(enabled)
+    if (enabled && audioStatus !== 'on' && audioStatus !== 'starting') {
+      startAudio(true)
+    }
+  }
 
   const handleMasterVolumeChange = useCallback((value: number) => {
     setMasterVolume(value)

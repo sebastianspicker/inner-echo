@@ -141,7 +141,7 @@ Inner Echo is flat by default. Opaque tonal layers and a single 1px structural b
 
 ## Do's and Don'ts
 
-### Do:
+### Do
 
 - **Do** preserve the near-black/teal identity using opaque `#11171A` and `#182023` surfaces.
 - **Do** make complete keyboard workflows, visible focus, and 44px critical targets acceptance criteria for public-alpha work.
@@ -149,7 +149,7 @@ Inner Echo is flat by default. Opaque tonal layers and a single 1px structural b
 - **Do** use short, grounded system typography and sentence-case explanations before permission requests.
 - **Do** honor `prefers-reduced-motion` and retain in-product sensory safeguards.
 
-### Don't:
+### Don't
 
 - **Don't** make Inner Echo look like a wellness app, a clinical dashboard, an AI-SaaS glassmorphism surface, or a developer console.
 - **Don't** introduce translucent floating cards, decorative `backdrop-filter`, broad glow, gradient text, or ambient blur as a default treatment.

@@ -92,6 +92,37 @@ function applyPayload(props: ConditionComposerPanelProps, payload: PresetPayload
   })
 }
 
+async function loadConditionStrengths(
+  catalogIds: string[],
+  dimById: Map<string, ExperienceDimensionDef>,
+): Promise<Record<string, string>> {
+  const profiles = await Promise.all(catalogIds.map((id) => loadProfile(id)))
+  const strengths: Record<string, string> = {}
+  for (let i = 0; i < catalogIds.length; i++) {
+    const id = catalogIds[i]
+    const dimensions = profiles[i]?.experience_dimensions ?? []
+    let rank = 0
+    for (const dimension of dimensions) {
+      const strength = String(
+        dimById.get(String(dimension?.id))?.evidence_strength ?? '',
+      ).toLowerCase()
+      const nextRank =
+        strength === 'hypothesis'
+          ? 4
+          : strength === 'low'
+            ? 3
+            : strength === 'medium'
+              ? 2
+              : strength === 'high'
+                ? 1
+                : 0
+      rank = Math.max(rank, nextRank)
+    }
+    strengths[id] = ['', 'high', 'medium', 'low', 'hypothesis'][rank] ?? ''
+  }
+  return strengths
+}
+
 export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   const {
     mode,
@@ -158,35 +189,9 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
   const catalogIds = useMemo(() => (props.catalog ?? []).map((c) => c.id), [props.catalog])
   useAsyncEffect(
     async (ctx) => {
-      const profiles = await Promise.all(catalogIds.map((id) => loadProfile(id)))
+      const strengths = await loadConditionStrengths(catalogIds, dimById)
       if (ctx.cancelled) return
-      const out: Record<string, string> = {}
-      for (let i = 0; i < catalogIds.length; i++) {
-        const id = catalogIds[i]
-        const prof = profiles[i]
-        const dimsList = Array.isArray(prof?.experience_dimensions)
-          ? prof.experience_dimensions
-          : []
-        // Conservative aggregation: hypothesis > low > medium > high.
-        let rank = 0 // 0=unknown,1=high,2=med,3=low,4=hyp
-        for (const d of dimsList) {
-          const s = String(dimById.get(String(d?.id))?.evidence_strength ?? '').toLowerCase()
-          const r =
-            s === 'hypothesis' ? 4 : s === 'low' ? 3 : s === 'medium' ? 2 : s === 'high' ? 1 : 0
-          rank = Math.max(rank, r)
-        }
-        out[id] =
-          rank === 4
-            ? 'hypothesis'
-            : rank === 3
-              ? 'low'
-              : rank === 2
-                ? 'medium'
-                : rank === 1
-                  ? 'high'
-                  : ''
-      }
-      setConditionStrength(out)
+      setConditionStrength(strengths)
     },
     [catalogIds, dimById],
     { onError: (err) => logger.error('ConditionComposerPanel loadProfile failed', err) },

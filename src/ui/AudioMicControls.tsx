@@ -22,25 +22,26 @@ export interface AudioMicControlsProps {
   onInputModeChange: (mode: AudioInputMode) => void
 }
 
-export function AudioMicControls({
-  audioStatus,
-  audioEnabled,
-  audioError,
-  masterVolume,
-  micStatus,
-  micError,
-  micSensitivity,
-  micGate,
-  inputMode,
-  onEnableAudio,
-  onDisableAudio,
-  onEnableMic,
-  onDisableMic,
-  onMasterVolumeChange,
-  onMicSensitivityChange,
-  onMicGateChange,
-  onInputModeChange,
-}: AudioMicControlsProps) {
+export function AudioMicControls(props: AudioMicControlsProps) {
+  const {
+    audioStatus,
+    audioEnabled,
+    audioError,
+    masterVolume,
+    micStatus,
+    micError,
+    micSensitivity,
+    micGate,
+    inputMode,
+    onEnableAudio,
+    onDisableAudio,
+    onEnableMic,
+    onDisableMic,
+    onMasterVolumeChange,
+    onMicSensitivityChange,
+    onMicGateChange,
+    onInputModeChange,
+  } = props
   return (
     <details className="ie-panelSection">
       <summary className="ie-summary">Audio & microphone</summary>
