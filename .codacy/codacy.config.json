@@ -1,0 +1,614 @@
+{
+  "version": 1,
+  "metadata": {
+    "source": "local",
+    "provider": null,
+    "organization": null,
+    "autoFilters": "Critical,High,Warning,Minor,AllSecurity,ErrorProne,Performance,BestPractice,UnusedCode,Compatibility,Complexity,Comprehensibility,CodeStyle,Documentation",
+    "repositoryId": null,
+    "repositoryName": null,
+    "createdAt": "2026-07-11T05:57:04.674Z",
+    "updatedAt": "2026-07-11T06:07:53.563Z",
+    "languages": [
+      "CSS",
+      "HTML",
+      "JSON",
+      "Javascript",
+      "Markdown",
+      "TypeScript",
+      "YAML"
+    ]
+  },
+  "tools": [
+    {
+      "toolId": "jackson",
+      "patterns": [
+        {
+          "patternId": "jackson_duplicate-keys"
+        },
+        {
+          "patternId": "jackson_parse-error"
+        }
+      ]
+    },
+    {
+      "toolId": "markdownlint",
+      "patterns": [
+        {
+          "patternId": "markdownlint_MD001"
+        },
+        {
+          "patternId": "markdownlint_MD003"
+        },
+        {
+          "patternId": "markdownlint_MD004"
+        },
+        {
+          "patternId": "markdownlint_MD005"
+        },
+        {
+          "patternId": "markdownlint_MD007"
+        },
+        {
+          "patternId": "markdownlint_MD010"
+        },
+        {
+          "patternId": "markdownlint_MD011"
+        },
+        {
+          "patternId": "markdownlint_MD014"
+        },
+        {
+          "patternId": "markdownlint_MD018"
+        },
+        {
+          "patternId": "markdownlint_MD019"
+        },
+        {
+          "patternId": "markdownlint_MD020"
+        },
+        {
+          "patternId": "markdownlint_MD021"
+        },
+        {
+          "patternId": "markdownlint_MD023"
+        },
+        {
+          "patternId": "markdownlint_MD024",
+          "parameters": {
+            "siblings_only": "true"
+          }
+        },
+        {
+          "patternId": "markdownlint_MD025"
+        },
+        {
+          "patternId": "markdownlint_MD026"
+        },
+        {
+          "patternId": "markdownlint_MD027"
+        },
+        {
+          "patternId": "markdownlint_MD028"
+        },
+        {
+          "patternId": "markdownlint_MD029"
+        },
+        {
+          "patternId": "markdownlint_MD030"
+        },
+        {
+          "patternId": "markdownlint_MD033"
+        },
+        {
+          "patternId": "markdownlint_MD035"
+        },
+        {
+          "patternId": "markdownlint_MD037"
+        },
+        {
+          "patternId": "markdownlint_MD038"
+        },
+        {
+          "patternId": "markdownlint_MD039"
+        },
+        {
+          "patternId": "markdownlint_MD042"
+        },
+        {
+          "patternId": "markdownlint_MD044"
+        },
+        {
+          "patternId": "markdownlint_MD045"
+        },
+        {
+          "patternId": "markdownlint_MD046"
+        },
+        {
+          "patternId": "markdownlint_MD048"
+        },
+        {
+          "patternId": "markdownlint_MD050"
+        },
+        {
+          "patternId": "markdownlint_MD051"
+        },
+        {
+          "patternId": "markdownlint_MD052"
+        },
+        {
+          "patternId": "markdownlint_MD053"
+        },
+        {
+          "patternId": "markdownlint_MD054"
+        },
+        {
+          "patternId": "markdownlint_MD055"
+        },
+        {
+          "patternId": "markdownlint_MD056"
+        }
+      ]
+    },
+    {
+      "toolId": "Trivy",
+      "patterns": [
+        {
+          "patternId": "Trivy_malicious_packages"
+        },
+        {
+          "patternId": "Trivy_secret"
+        },
+        {
+          "patternId": "Trivy_vulnerability_critical"
+        },
+        {
+          "patternId": "Trivy_vulnerability_high"
+        },
+        {
+          "patternId": "Trivy_vulnerability_medium"
+        },
+        {
+          "patternId": "Trivy_vulnerability_minor"
+        }
+      ]
+    },
+    {
+      "toolId": "Semgrep",
+      "patterns": [
+        {
+          "patternId": "Semgrep_ai.typescript.detect-gemini.detect-gemini"
+        },
+        {
+          "patternId": "Semgrep_javascript.ajv.security.audit.ajv-allerrors-true.ajv-allerrors-true"
+        },
+        {
+          "patternId": "Semgrep_javascript.apollo.security.apollo-axios-ssrf.apollo-axios-ssrf"
+        },
+        {
+          "patternId": "Semgrep_javascript.argon2.security.unsafe-argon2-config.unsafe-argon2-config"
+        },
+        {
+          "patternId": "Semgrep_javascript.audit.detect-replaceall-sanitization.detect-replaceall-sanitization"
+        },
+        {
+          "patternId": "Semgrep_javascript.aws-lambda.security.detect-child-process.detect-child-process"
+        },
+        {
+          "patternId": "Semgrep_javascript.aws-lambda.security.dynamodb-request-object.dynamodb-request-object"
+        },
+        {
+          "patternId": "Semgrep_javascript.aws-lambda.security.knex-sqli.knex-sqli"
+        },
+        {
+          "patternId": "Semgrep_javascript.aws-lambda.security.mysql-sqli.mysql-sqli"
+        },
+        {
+          "patternId": "Semgrep_javascript.aws-lambda.security.pg-sqli.pg-sqli"
+        },
+        {
+          "patternId": "Semgrep_javascript.aws-lambda.security.sequelize-sqli.sequelize-sqli"
+        },
+        {
+          "patternId": "Semgrep_javascript.aws-lambda.security.tainted-eval.tainted-eval"
+        },
+        {
+          "patternId": "Semgrep_javascript.aws-lambda.security.tainted-html-response.tainted-html-response"
+        },
+        {
+          "patternId": "Semgrep_javascript.aws-lambda.security.tainted-html-string.tainted-html-string"
+        },
+        {
+          "patternId": "Semgrep_javascript.aws-lambda.security.tainted-sql-string.tainted-sql-string"
+        },
+        {
+          "patternId": "Semgrep_javascript.aws-lambda.security.vm-runincontext-injection.vm-runincontext-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.bluebird.security.audit.tofastproperties-code-execution.tofastproperties-code-execution"
+        },
+        {
+          "patternId": "Semgrep_javascript.browser.security.dom-based-xss.dom-based-xss"
+        },
+        {
+          "patternId": "Semgrep_javascript.browser.security.eval-detected.eval-detected"
+        },
+        {
+          "patternId": "Semgrep_javascript.browser.security.insecure-document-method.insecure-document-method"
+        },
+        {
+          "patternId": "Semgrep_javascript.browser.security.insecure-innerhtml.insecure-innerhtml"
+        },
+        {
+          "patternId": "Semgrep_javascript.browser.security.insufficient-postmessage-origin-validation.insufficient-postmessage-origin-validation"
+        },
+        {
+          "patternId": "Semgrep_javascript.browser.security.open-redirect-from-function.js-open-redirect-from-function"
+        },
+        {
+          "patternId": "Semgrep_javascript.browser.security.open-redirect.js-open-redirect"
+        },
+        {
+          "patternId": "Semgrep_javascript.browser.security.raw-html-concat.raw-html-concat"
+        },
+        {
+          "patternId": "Semgrep_javascript.browser.security.raw-html-join.raw-html-join"
+        },
+        {
+          "patternId": "Semgrep_javascript.browser.security.wildcard-postmessage-configuration.wildcard-postmessage-configuration"
+        },
+        {
+          "patternId": "Semgrep_javascript_buf_rule-buffer-noassert-read"
+        },
+        {
+          "patternId": "Semgrep_javascript_buf_rule-buffer-noassert-write"
+        },
+        {
+          "patternId": "Semgrep_javascript_buf_rule-detect-new-buffer"
+        },
+        {
+          "patternId": "Semgrep_javascript.chrome-remote-interface.security.audit.chrome-remote-interface-compilescript-injection.chrome-remote-interface-compilescript-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript_crypto_rule-NodeLibcurlSSLVerificationDisable"
+        },
+        {
+          "patternId": "Semgrep_javascript.deno.security.audit.deno-dangerous-run.deno-dangerous-run"
+        },
+        {
+          "patternId": "Semgrep_javascript_dos_rule-non-literal-regexp"
+        },
+        {
+          "patternId": "Semgrep_javascript_eval_rule-eval-with-expression"
+        },
+        {
+          "patternId": "Semgrep_javascript_exec_rule-child-process"
+        },
+        {
+          "patternId": "Semgrep_javascript.fbjs.security.audit.insecure-createnodesfrommarkup.insecure-createnodesfrommarkup"
+        },
+        {
+          "patternId": "Semgrep_javascript.grpc.security.grpc-nodejs-insecure-connection.grpc-nodejs-insecure-connection"
+        },
+        {
+          "patternId": "Semgrep_javascript.intercom.security.audit.intercom-settings-user-identifier-without-user-hash.intercom-settings-user-identifier-without-user-hash"
+        },
+        {
+          "patternId": "Semgrep_javascript.jose.security.audit.jose-exposed-data.jose-exposed-data"
+        },
+        {
+          "patternId": "Semgrep_javascript.jose.security.jwt-hardcode.hardcoded-jwt-secret"
+        },
+        {
+          "patternId": "Semgrep_javascript.jose.security.jwt-none-alg.jwt-none-alg"
+        },
+        {
+          "patternId": "Semgrep_javascript.jsonwebtoken.security.audit.jwt-decode-without-verify.jwt-decode-without-verify"
+        },
+        {
+          "patternId": "Semgrep_javascript.jsonwebtoken.security.audit.jwt-exposed-data.jwt-exposed-data"
+        },
+        {
+          "patternId": "Semgrep_javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret"
+        },
+        {
+          "patternId": "Semgrep_javascript.jsonwebtoken.security.jwt-none-alg.jwt-none-alg"
+        },
+        {
+          "patternId": "Semgrep_javascript.jwt-simple.security.jwt-simple-noverify.jwt-simple-noverify"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.code-string-concat.code-string-concat"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.dangerous-spawn-shell.dangerous-spawn-shell"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.detect-non-literal-require.detect-non-literal-require"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.detect-redos.detect-redos"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.hardcoded-hmac-key.hardcoded-hmac-key"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.incomplete-sanitization.incomplete-sanitization"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.md5-used-as-password.md5-used-as-password"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.prototype-pollution.prototype-pollution-assignment.prototype-pollution-assignment"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.prototype-pollution.prototype-pollution-loop.prototype-pollution-loop"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.spawn-shell-true.spawn-shell-true"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.sqli.node-knex-sqli.node-knex-sqli"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.sqli.node-mssql-sqli.node-mssql-sqli"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.sqli.node-mysql-sqli.node-mysql-sqli"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.sqli.node-postgres-sqli.node-postgres-sqli"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.unsafe-dynamic-method.unsafe-dynamic-method"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-buffer-noassert.detect-buffer-noassert"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-child-process.detect-child-process"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-disable-mustache-escape.detect-disable-mustache-escape"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-eval-with-expression.detect-eval-with-expression"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-insecure-websocket.detect-insecure-websocket"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-no-csrf-before-method-override.detect-no-csrf-before-method-override"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-pseudorandombytes.detect-pseudorandombytes"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.html-in-template-string.html-in-template-string"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.insecure-object-assign.insecure-object-assign"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.spawn-git-clone.spawn-git-clone"
+        },
+        {
+          "patternId": "Semgrep_javascript.monaco-editor.security.audit.monaco-hover-htmlsupport.monaco-hover-htmlsupport"
+        },
+        {
+          "patternId": "Semgrep_javascript.node-crypto.security.aead-no-final.aead-no-final"
+        },
+        {
+          "patternId": "Semgrep_javascript.node-crypto.security.create-de-cipher-no-iv.create-de-cipher-no-iv"
+        },
+        {
+          "patternId": "Semgrep_javascript.node-crypto.security.gcm-no-tag-length.gcm-no-tag-length"
+        },
+        {
+          "patternId": "Semgrep_javascript.node-expat.security.audit.expat-xxe.expat-xxe"
+        },
+        {
+          "patternId": "Semgrep_javascript.passport-jwt.security.passport-hardcode.hardcoded-passport-secret"
+        },
+        {
+          "patternId": "Semgrep_javascript.phantom.security.audit.phantom-injection.phantom-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.playwright.security.audit.playwright-addinitscript-code-injection.playwright-addinitscript-code-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.playwright.security.audit.playwright-evaluate-arg-injection.playwright-evaluate-arg-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.playwright.security.audit.playwright-evaluate-code-injection.playwright-evaluate-code-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.playwright.security.audit.playwright-exposed-chrome-devtools.playwright-exposed-chrome-devtools"
+        },
+        {
+          "patternId": "Semgrep_javascript.playwright.security.audit.playwright-goto-injection.playwright-goto-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.playwright.security.audit.playwright-setcontent-injection.playwright-setcontent-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.puppeteer.security.audit.puppeteer-evaluate-arg-injection.puppeteer-evaluate-arg-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.puppeteer.security.audit.puppeteer-evaluate-code-injection.puppeteer-evaluate-code-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.puppeteer.security.audit.puppeteer-exposed-chrome-devtools.puppeteer-exposed-chrome-devtools"
+        },
+        {
+          "patternId": "Semgrep_javascript.puppeteer.security.audit.puppeteer-goto-injection.puppeteer-goto-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.puppeteer.security.audit.puppeteer-setcontent-injection.puppeteer-setcontent-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript_random_rule-pseudo-random-bytes"
+        },
+        {
+          "patternId": "Semgrep_javascript.react.correctness.hooks.set-state-no-op.calling-set-state-on-current-state"
+        },
+        {
+          "patternId": "Semgrep_javascript_react_rule-dangerouslysetinnerhtml"
+        },
+        {
+          "patternId": "Semgrep_javascript_require_rule-non-literal-require"
+        },
+        {
+          "patternId": "Semgrep_javascript.sandbox.security.audit.sandbox-code-injection.sandbox-code-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.sax.security.audit.sax-xxe.sax-xxe"
+        },
+        {
+          "patternId": "Semgrep_javascript.sequelize.security.audit.sequelize-enforce-tls.sequelize-enforce-tls"
+        },
+        {
+          "patternId": "Semgrep_javascript.sequelize.security.audit.sequelize-injection-express.express-sequelize-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.sequelize.security.audit.sequelize-raw-query.sequelize-raw-query"
+        },
+        {
+          "patternId": "Semgrep_javascript.sequelize.security.audit.sequelize-tls-disabled-cert-validation.sequelize-tls-disabled-cert-validation"
+        },
+        {
+          "patternId": "Semgrep_javascript.sequelize.security.audit.sequelize-weak-tls-version.sequelize-weak-tls-version"
+        },
+        {
+          "patternId": "Semgrep_javascript.serialize-javascript.security.audit.unsafe-serialize-javascript.unsafe-serialize-javascript"
+        },
+        {
+          "patternId": "Semgrep_javascript.shelljs.security.shelljs-exec-injection.shelljs-exec-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.thenify.security.audit.multiargs-code-execution.multiargs-code-execution"
+        },
+        {
+          "patternId": "Semgrep_javascript_timing_rule-possible-timing-attacks"
+        },
+        {
+          "patternId": "Semgrep_javascript.vm2.security.audit.vm2-code-injection.vm2-code-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.vm2.security.audit.vm2-context-injection.vm2-context-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.wkhtmltoimage.security.audit.wkhtmltoimage-injection.wkhtmltoimage-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.wkhtmltopdf.security.audit.wkhtmltopdf-injection.wkhtmltopdf-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.xml2json.security.audit.xml2json-xxe.xml2json-xxe"
+        },
+        {
+          "patternId": "Semgrep_javascript_xss_rule-mustache-escape"
+        },
+        {
+          "patternId": "Semgrep_typescript.aws-cdk.security.audit.awscdk-bucket-encryption.awscdk-bucket-encryption"
+        },
+        {
+          "patternId": "Semgrep_typescript.aws-cdk.security.audit.awscdk-bucket-enforcessl.aws-cdk-bucket-enforcessl"
+        },
+        {
+          "patternId": "Semgrep_typescript.aws-cdk.security.audit.awscdk-sqs-unencryptedqueue.awscdk-sqs-unencryptedqueue"
+        },
+        {
+          "patternId": "Semgrep_typescript.aws-cdk.security.awscdk-bucket-grantpublicaccessmethod.awscdk-bucket-grantpublicaccessmethod"
+        },
+        {
+          "patternId": "Semgrep_typescript.aws-cdk.security.awscdk-codebuild-project-public.awscdk-codebuild-project-public"
+        },
+        {
+          "patternId": "Semgrep_typescript.lang.security.audit.cors-regex-wildcard.cors-regex-wildcard"
+        },
+        {
+          "patternId": "Semgrep_typescript.react.best-practice.define-styled-components-on-module-level.define-styled-components-on-module-level"
+        },
+        {
+          "patternId": "Semgrep_typescript.react.best-practice.react-find-dom.react-find-dom"
+        },
+        {
+          "patternId": "Semgrep_typescript.react.best-practice.react-legacy-component.react-legacy-component"
+        },
+        {
+          "patternId": "Semgrep_typescript.react.best-practice.react-props-in-state.react-props-in-state"
+        },
+        {
+          "patternId": "Semgrep_typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml"
+        },
+        {
+          "patternId": "Semgrep_typescript.react.security.audit.react-href-var.react-href-var"
+        },
+        {
+          "patternId": "Semgrep_typescript.react.security.audit.react-jwt-decoded-property.react-jwt-decoded-property"
+        },
+        {
+          "patternId": "Semgrep_typescript.react.security.audit.react-jwt-in-localstorage.react-jwt-in-localstorage"
+        },
+        {
+          "patternId": "Semgrep_typescript.react.security.audit.react-unsanitized-method.react-unsanitized-method"
+        },
+        {
+          "patternId": "Semgrep_typescript.react.security.audit.react-unsanitized-property.react-unsanitized-property"
+        },
+        {
+          "patternId": "Semgrep_typescript.react.security.react-markdown-insecure-html.react-markdown-insecure-html"
+        }
+      ]
+    },
+    {
+      "toolId": "Lizard",
+      "patterns": [
+        {
+          "patternId": "Lizard_ccn-medium",
+          "parameters": {
+            "threshold": "15"
+          }
+        },
+        {
+          "patternId": "Lizard_file-nloc-medium",
+          "parameters": {
+            "threshold": "700"
+          }
+        },
+        {
+          "patternId": "Lizard_nloc-medium",
+          "parameters": {
+            "threshold": "100"
+          }
+        },
+        {
+          "patternId": "Lizard_parameter-count-medium",
+          "parameters": {
+            "threshold": "16"
+          }
+        }
+      ],
+      "exclude": [
+        "package-lock.json"
+      ]
+    },
+    {
+      "toolId": "Biome",
+      "localConfigurationFile": "biome.json",
+      "useLocalConfigurationFile": true,
+      "patterns": []
+    }
+  ],
+  "exclude": []
+}

@@ -12,7 +12,7 @@ The application is client-only:
 - Visual effects applied as a node stack.
 - Optional audio via WebAudio (synth or optional mic); an analyser can drive a modulation layer (Audio → Video).
 
-Design goals: modular (engine ≠ conditions), data-driven (profiles define behaviour), safe (Stop / Safe Mode / Reduced Motion), with a Canvas2D fallback when WebGL init fails.
+Design goals: modular (engine ≠ conditions), data-driven (profiles define behaviour), safe (Stop / Safe Mode / Reduced Motion), with dedicated WebGL and Canvas2D surfaces plus raw-video fallback.
 
 ---
 
@@ -100,7 +100,7 @@ Boundary: conditions data declares what to build; `graphBuilder` constructs conc
 ## Fallback and reliability
 
 1. **Primary:** Three.js WebGL pipeline.
-2. **Fallback:** Canvas2D `drawImage` path if WebGL init fails (no effects).
+2. **Fallback:** WebGL failure or context loss switches to a separate Canvas2D `drawImage` surface; if 2D is unavailable, both canvases are hidden and the live video remains visible.
 3. **Performance:** FPS guard can reduce `renderScale` (e.g. 1.0 → 0.75 → 0.5) under sustained low FPS.
 
 See [RELIABILITY.md](RELIABILITY.md) for browser matrix, WebGL fallback details, and known issues.

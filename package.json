@@ -4,6 +4,9 @@
   "version": "0.1.0-rc.1",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": "22.x"
+  },
   "author": "Sebastian Spicker",
   "scripts": {
     "dev": "vite",
@@ -41,7 +44,7 @@
     "release:rc:checklist": "npm run clean:local && npm ci && npm run browsers:install && npm run check && npm run screenshots:readme && npm run screenshots:verify"
   },
   "dependencies": {
-    "dompurify": "^3.3.1",
+    "dompurify": "^3.4.11",
     "marked": "^17.0.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -63,7 +66,7 @@
     "sharp": "^0.34.5",
     "tsx": "^4.22.0",
     "typescript": "~6.0.2",
-    "vite": "^8.0.5",
+    "vite": "^8.1.4",
     "vitest": "^4.0.18"
   }
 }

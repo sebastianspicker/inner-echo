@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- **Compatibility:** profile changes now preserve only global intensity, Safe Mode,
+  Reduced Motion, and audio-enabled controls; profile-local controls reset to the
+  incoming profile defaults.
+- **Compatibility:** stopped reading and migrating the retired `ie_custom_preset`
+  key. Existing storage is left untouched; only `ie_custom_presets_v2` is read.
+- **Deprecation:** `chroma_aberration` remains accepted at the profile input
+  boundary with one warning and will be removed in `0.2.0`; use
+  `chromatic_aberration`.
+
 ## 2026-03-25
 
 ### Bug fixes and polish

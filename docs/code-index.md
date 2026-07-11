@@ -31,7 +31,7 @@ Status labels:
 
 | File | Type | Responsibility and main exports | Runtime role | Direct dependencies worth knowing | Status / smells |
 |---|---|---|---|---|---|
-| `src/ui/CameraView.tsx` | TSX | Top-level runtime coordinator; exports `CameraView`; owns camera/audio state, refs, profile controls, evidence drawer, debug panel. | UI/adapter/entrypoint | UI hooks/components, `requestVideoStream`, `createAudioEngine`, `startOverlayLoop`, profile/schema utilities | active; highest-risk UI file. Smells: 883 lines, many states/refs, TODO for lazy loading evidence bundle, complex state transitions. |
+| `src/ui/CameraView.tsx` | TSX | Top-level runtime coordinator; exports `CameraView`; owns camera/audio state, refs, profile controls, lazy evidence drawer, and debug panel. | UI/adapter/entrypoint | UI hooks/components, `requestVideoStream`, `createAudioEngine`, `startOverlayLoop`, profile/schema utilities | active; highest-risk startup and cleanup state. EvidenceDrawer is already code-split. |
 | `src/ui/CameraView.css` | CSS | Main app layout, controls, callouts, debug/evidence integration styles. | UI | imported by `App.tsx` | active; large CSS surface, visual QA required. |
 | `src/ui/CameraHeader.tsx` | TSX | Header/status/actions; exports `CameraHeader`. | UI | camera messages, camera/audio status types, evidence doc paths | active; status truthfulness matters. |
 | `src/ui/CameraStage.tsx` | TSX | Video/canvas stage component and camera/audio status surface. | UI | audio status type | active. |
@@ -143,7 +143,7 @@ Status labels:
 | `src/engine/video/index.ts` | TS | Barrel export for video API/types. | adapter/public API | `camera.ts`, `types.ts` | active. |
 | `src/engine/canvas/index.ts` | TS | Chooses WebGL overlay with Canvas2D fallback; exports overlay types, `startOverlayLoop`, `syncCanvasToContainer`. | adapter/runtime | `overlayRenderer`, `webglPipeline`, logger callbacks | active; fallback correctness is high risk. |
 | `src/engine/canvas/overlayRenderer.ts` | TS | Canvas2D fallback renderer; exports `syncCanvasToContainer`, `startOverlayLoop`. | runtime/fallback | Canvas2D API | active via fallback; prove with WebGL failure smoke before cleanup. |
-| `src/engine/canvas/webglPipeline.ts` | TS | Three.js render loop, node chain, reactive/audio overrides, diagnostics, context loss handling; exports `startWebGLOverlayLoop`. | runtime | Three.js, webgl helpers, video metrics, audio metrics | active; highest-risk. Smells: 557 lines, compat `getRms` option, complex cleanup and render-loop state. |
+| `src/engine/canvas/webglPipeline.ts` | TS | Three.js render loop, node chain, structured reactive/audio overrides, diagnostics, and context-loss handoff; exports `startWebGLOverlayLoop`. | runtime | Three.js, webgl helpers, video metrics, audio metrics | active; highest-risk cleanup and render-loop state. Legacy `getRms` compatibility is removed. |
 | `src/engine/canvas/webglPipelineTypes.ts` | TS | Video pipeline param contract. | contract | effect node params | active. |
 | `src/engine/canvas/videoMetrics.ts` | TS | Frame metric sampler/tracker; exports `createVideoMetricsTracker`. | domain logic/runtime | numeric smoothing | active. |
 | `src/engine/canvas/webgl/constants.ts` | TS | FPS thresholds and render scales. | config/domain constants | none | active. |
@@ -333,10 +333,8 @@ are not production code, but they define the current safety net.
 
 ## Likely Deprecated Compatibility Paths
 
-- `src/ui/presetSnapshot.ts` exports `migrateLegacyPresetPayload`.
-- `src/ui/ConditionComposerPanel.tsx` reads a legacy preset storage key and migrates it.
-- `src/engine/canvas/webglPipeline.ts` keeps `ReactiveLoopOptions.getRms` as back-compat fallback when `getAudioMetrics` is missing.
-- `src/composer/composeCore.ts` re-exports types for backward compatibility.
+- The pre-v2 preset migration, `ReactiveLoopOptions.getRms`, flat reactive overrides,
+  and `composeCore.ts` compatibility type re-exports have been removed.
 
 Before deleting any of these, prove current persisted hashes/localStorage,
 callers, docs, tests, and expected public behavior no longer require them.

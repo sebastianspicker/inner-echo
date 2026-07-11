@@ -24,19 +24,135 @@ import type {
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 
-function loadJson<T>(pathFromRoot: string): T {
-  return parseFirstJsonObject(readFileSync(join(ROOT, pathFromRoot), 'utf-8'))
-}
-
-function uniq(xs: string[]): string[] {
+const uniq = (xs: string[]): string[] => {
   return Array.from(new Set(xs.filter(Boolean)))
 }
 
-function mdEscape(s: string): string {
+const mdEscape = (s: string): string => {
   return s.replace(/\|/g, '\\|')
 }
 
-function main(): void {
+const appendHeader = (rows: string[]): void => {
+  rows.push('# References audit (dimensions → motifs → evidence)', '')
+  rows.push(
+    'This file enumerates the **evidence-linked** dimension→motif mappings used by the composer.',
+    '',
+    '- **Non-diagnostic framing**: motifs are metaphorical design choices, not clinical simulations.',
+    '- **Evidence-bounded**: each dimension points to in-repo rationale docs under `docs/references/dimensions/`.',
+    '- **Experimental**: anything marked `hypothesis` should be treated as an evidence gap and kept conservative / off-by-default.',
+    '',
+    'See also: `docs/references/EVIDENCE_MATRIX.md`.',
+    '',
+    '## Matrix',
+    '',
+    '| Dimension | Evidence | Rationale doc | Video motifs (nodes) | Audio motifs (nodes) |',
+    '|---|---|---|---|---|',
+  )
+}
+
+const motifList = (motifs: Array<{ node?: string }>): string => {
+  return uniq(motifs.map((motif) => String(motif.node ?? '').trim())).join(', ')
+}
+
+const markdownCell = (value: string): string => {
+  return value ? `\`${mdEscape(value)}\`` : '—'
+}
+
+const appendDimensionFindings = (
+  gaps: string[],
+  experimental: string[],
+  id: string,
+  label: string,
+  strength: string,
+  doc: string,
+  hasMapping: boolean,
+): void => {
+  if (!hasMapping)
+    gaps.push(
+      `- \`${id}\`: missing mapping entry in \`src/conditions/dimension-to-signal-mapping.json\``,
+    )
+  if (!doc) gaps.push(`- \`${id}\`: missing rationale_doc (no evidence link available)`)
+  if (strength.toLowerCase() === 'hypothesis')
+    experimental.push(
+      `- \`${id}\` (${label}): hypothesis (evidence gap) — keep conservative / experimental`,
+    )
+}
+
+const dimensionRowText = (
+  id: string,
+  label: string,
+  strength: string,
+  doc: string,
+  video: string,
+  audio: string,
+): string => {
+  return `| **${mdEscape(label)}** (\`${id}\`) | ${mdEscape(strength)} | ${markdownCell(doc)} | ${markdownCell(video)} | ${markdownCell(audio)} |`
+}
+
+type DimensionRowInfo = {
+  id: string
+  label: string
+  strength: string
+  doc: string
+  video: string
+  audio: string
+  hasMapping: boolean
+}
+
+const dimensionRowInfo = (
+  mapping: DimensionToSignalMappingFile['mapping'],
+  dimension: ExperienceDimensionsFile['dimensions'][number],
+): DimensionRowInfo => {
+  const id = String(dimension.id ?? '').trim()
+  const label = String(dimension.label ?? id)
+  const entry = mapping[id]
+  return {
+    id,
+    label,
+    strength:
+      String(entry?.evidence_strength ?? dimension.evidence_strength ?? '').trim() || 'unknown',
+    doc: String(entry?.rationale_doc ?? dimension.rationale_doc ?? '').trim(),
+    video: motifList(entry?.video_motifs ?? []),
+    audio: motifList(entry?.audio_motifs ?? []),
+    hasMapping: Boolean(entry),
+  }
+}
+
+const appendDimensionRow = (
+  rows: string[],
+  gaps: string[],
+  experimental: string[],
+  mapping: DimensionToSignalMappingFile['mapping'],
+  dimension: ExperienceDimensionsFile['dimensions'][number],
+): void => {
+  const info = dimensionRowInfo(mapping, dimension)
+  if (!info.id) return
+  appendDimensionFindings(
+    gaps,
+    experimental,
+    info.id,
+    info.label,
+    info.strength,
+    info.doc,
+    info.hasMapping,
+  )
+  rows.push(dimensionRowText(info.id, info.label, info.strength, info.doc, info.video, info.audio))
+}
+
+const appendFindings = (rows: string[], gaps: string[], experimental: string[]): void => {
+  rows.push('', '## Hypotheses / evidence gaps', '')
+  if (!experimental.length && !gaps.length) {
+    rows.push(
+      '- None detected from `src/conditions/experience-dimensions.json` and `src/conditions/dimension-to-signal-mapping.json`.',
+      '',
+    )
+    return
+  }
+  if (experimental.length) rows.push('### Experimental (hypothesis)', '', ...experimental, '')
+  if (gaps.length) rows.push('### Gaps / missing links', '', ...gaps, '')
+}
+
+const main = (): void => {
   const dimsFile = loadJson<ExperienceDimensionsFile>('src/conditions/experience-dimensions.json')
   const mapFile = loadJson<DimensionToSignalMappingFile>(
     'src/conditions/dimension-to-signal-mapping.json',
@@ -46,90 +162,19 @@ function main(): void {
   const mapping = mapFile.mapping ?? {}
 
   const rows: string[] = []
-  rows.push('# References audit (dimensions → motifs → evidence)')
-  rows.push('')
-  rows.push(
-    'This file enumerates the **evidence-linked** dimension→motif mappings used by the composer.',
-  )
-  rows.push('')
-  rows.push(
-    '- **Non-diagnostic framing**: motifs are metaphorical design choices, not clinical simulations.',
-  )
-  rows.push(
-    '- **Evidence-bounded**: each dimension points to in-repo rationale docs under `docs/references/dimensions/`.',
-  )
-  rows.push(
-    '- **Experimental**: anything marked `hypothesis` should be treated as an evidence gap and kept conservative / off-by-default.',
-  )
-  rows.push('')
-  rows.push('See also: `docs/references/EVIDENCE_MATRIX.md`.')
-  rows.push('')
-  rows.push('## Matrix')
-  rows.push('')
-  rows.push(
-    '| Dimension | Evidence | Rationale doc | Video motifs (nodes) | Audio motifs (nodes) |',
-  )
-  rows.push('|---|---|---|---|---|')
-
+  appendHeader(rows)
   const gaps: string[] = []
   const experimental: string[] = []
-
-  for (const d of dims) {
-    const id = String(d.id ?? '').trim()
-    if (!id) continue
-    const label = String(d.label ?? id)
-    const defStrength = String(d.evidence_strength ?? '').trim()
-    const defDoc = String(d.rationale_doc ?? '').trim()
-    const entry = mapping[id]
-    const strength = String(entry?.evidence_strength ?? defStrength ?? '').trim() || 'unknown'
-    const doc = String(entry?.rationale_doc ?? defDoc ?? '').trim() || ''
-    const vNodes = uniq((entry?.video_motifs ?? []).map((m) => String(m.node ?? '').trim())).join(
-      ', ',
-    )
-    const aNodes = uniq((entry?.audio_motifs ?? []).map((m) => String(m.node ?? '').trim())).join(
-      ', ',
-    )
-
-    if (!entry)
-      gaps.push(
-        `- \`${id}\`: missing mapping entry in \`src/conditions/dimension-to-signal-mapping.json\``,
-      )
-    if (!doc) gaps.push(`- \`${id}\`: missing rationale_doc (no evidence link available)`)
-    if (strength.toLowerCase() === 'hypothesis')
-      experimental.push(
-        `- \`${id}\` (${label}): hypothesis (evidence gap) — keep conservative / experimental`,
-      )
-
-    rows.push(
-      `| **${mdEscape(label)}** (\`${id}\`) | ${mdEscape(strength)} | ${doc ? `\`${mdEscape(doc)}\`` : '—'} | ${vNodes ? `\`${mdEscape(vNodes)}\`` : '—'} | ${aNodes ? `\`${mdEscape(aNodes)}\`` : '—'} |`,
-    )
-  }
-
-  rows.push('')
-  rows.push('## Hypotheses / evidence gaps')
-  rows.push('')
-  if (experimental.length === 0 && gaps.length === 0) {
-    rows.push(
-      '- None detected from `src/conditions/experience-dimensions.json` and `src/conditions/dimension-to-signal-mapping.json`.',
-    )
-  } else {
-    if (experimental.length) {
-      rows.push('### Experimental (hypothesis)')
-      rows.push('')
-      rows.push(...experimental)
-      rows.push('')
-    }
-    if (gaps.length) {
-      rows.push('### Gaps / missing links')
-      rows.push('')
-      rows.push(...gaps)
-      rows.push('')
-    }
-  }
+  for (const dimension of dims) appendDimensionRow(rows, gaps, experimental, mapping, dimension)
+  appendFindings(rows, gaps, experimental)
 
   const outPath = join(ROOT, 'docs', 'REFERENCES_AUDIT.md')
   writeFileSync(outPath, rows.join('\n'), 'utf-8')
   console.log(`Wrote docs/REFERENCES_AUDIT.md (${dims.length} dimensions)`)
+}
+
+const loadJson = <T>(pathFromRoot: string): T => {
+  return parseFirstJsonObject(readFileSync(join(ROOT, pathFromRoot), 'utf-8'))
 }
 
 main()

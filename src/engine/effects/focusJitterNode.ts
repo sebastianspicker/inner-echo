@@ -5,6 +5,7 @@
 
 import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
+import { fastRandom } from '../../utils/fastRandom'
 import {
   applyUvParams,
   clamp,
@@ -58,9 +59,9 @@ export class FocusJitterNode implements VideoNode {
     this.nextSampleIn -= delta
     if (this.nextSampleIn <= 0) {
       // Slow, non-rhythmic sampling to avoid strobe-like motion.
-      this.nextSampleIn = 0.35 + Math.random() * 0.5
-      const ax = (Math.random() * 2 - 1) * amount
-      const ay = (Math.random() * 2 - 1) * amount
+      this.nextSampleIn = 0.35 + fastRandom() * 0.5
+      const ax = (fastRandom() * 2 - 1) * amount
+      const ay = (fastRandom() * 2 - 1) * amount
       this.targetX = ax
       this.targetY = ay
     }

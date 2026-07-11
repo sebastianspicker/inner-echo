@@ -12,9 +12,28 @@ const loadCatalogModule = () => import('./catalog.json')
 
 // All profile JSONs bundled; load by id via glob (each module default = parsed JSON)
 const profileModules = import.meta.glob<{ default: Record<string, unknown> }>('./profiles/*.json')
+const profileLoaders = new Map(Object.entries(profileModules))
 
 function getProfilePath(id: string): string {
   return `./profiles/${id}.json`
+}
+
+function isProfileId(id: string): boolean {
+  if (id.length === 0 || id.startsWith('_') || id.endsWith('_')) return false
+  let previousWasSeparator = false
+  for (const character of id) {
+    if (character === '_') {
+      if (previousWasSeparator) return false
+      previousWasSeparator = true
+      continue
+    }
+    const code = character.charCodeAt(0)
+    const isLowercaseLetter = code >= 97 && code <= 122
+    const isDigit = code >= 48 && code <= 57
+    if (!isLowercaseLetter && !isDigit) return false
+    previousWasSeparator = false
+  }
+  return true
 }
 
 /**
@@ -43,13 +62,13 @@ export async function loadCatalog(): Promise<Catalog | null> {
  * Returns null on missing file, parse error, or validation failure; logs warning.
  */
 export async function loadProfile(id: string): Promise<Profile | null> {
-  if (!id || id.trim() === '') {
-    logger.warn('[conditions] loadProfile: empty id')
+  if (!isProfileId(id)) {
+    logger.warn('[conditions] loadProfile: invalid id')
     return null
   }
   try {
     const path = getProfilePath(id)
-    const loader = profileModules[path]
+    const loader = profileLoaders.get(path)
     if (!loader) {
       logger.warn('[conditions] Profile not found:', id)
       return null

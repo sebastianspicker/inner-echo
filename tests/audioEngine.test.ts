@@ -367,9 +367,12 @@ describe('engine/audio/audioEngine', () => {
     micAnalyser!.setFreqFill((buf) => buf.fill(-20))
 
     const metrics = control.getMetrics()
-    expect(metrics.micRms ?? 0).toBe(0)
-    expect(metrics.micCentroid ?? 0).toBe(0)
-    expect(metrics.micFlux ?? 0).toBe(0)
+    expect(metrics).not.toHaveProperty('micRms')
+    expect(metrics).not.toHaveProperty('micCentroid')
+    expect(metrics).not.toHaveProperty('micFlux')
+    expect(metrics).not.toHaveProperty('micLow')
+    expect(metrics).not.toHaveProperty('micMid')
+    expect(metrics).not.toHaveProperty('micHigh')
 
     control.stop()
   })
@@ -377,7 +380,7 @@ describe('engine/audio/audioEngine', () => {
   // -----------------------------------------------------------------------
   // getMetrics reports mic metrics after input-mode and gate gain are applied
   // -----------------------------------------------------------------------
-  it('getMetrics scales routed mic metrics by input routing and gate gain', async () => {
+  it('getMetrics route-scales mic magnitude metrics but preserves spectral shape', async () => {
     installMockMicStream()
     const control = createAudioEngine({ enabled: true, master: { volume: 0.3 }, chain: [] }, {})
     await new Promise<void>((resolve) => setTimeout(resolve, 10))
@@ -404,8 +407,9 @@ describe('engine/audio/audioEngine', () => {
     const effectiveGain = 0.6 * 0.5
     const metrics = control.getMetrics()
     expect(metrics.micRms).toBeCloseTo(0.8 * effectiveGain, 4)
-    expect(metrics.micCentroid).toBeCloseTo(0.5 * effectiveGain, 4)
+    expect(metrics.micCentroid).toBeCloseTo(0.5, 4)
     expect(metrics.micFlux).toBeCloseTo(1 * effectiveGain, 4)
+    expect((metrics.micLow ?? 0) + (metrics.micMid ?? 0) + (metrics.micHigh ?? 0)).toBeCloseTo(1, 4)
 
     control.stop()
   })

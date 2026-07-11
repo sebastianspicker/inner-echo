@@ -69,6 +69,44 @@ export function createVideoMetricsTracker(options?: {
   // Pre-allocated output object to avoid per-frame allocation in stepFromSource.
   const out: VideoMetrics = { ...last }
 
+  function readLuma(data: Uint8ClampedArray, pixel: number): number {
+    const r = data[pixel] ?? 0
+    const g = data[pixel + 1] ?? 0
+    const b = data[pixel + 2] ?? 0
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+  }
+
+  function computeLumaMotion(
+    data: Uint8ClampedArray,
+    luma: Float32Array,
+  ): { sumY: number; sumMotion: number } {
+    let sumY = 0
+    let sumMotion = 0
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const i = y * size + x
+        const Y = readLuma(data, i * 4)
+        sumY += Y
+        sumMotion += Math.abs(Y - (luma[i] ?? 0))
+        luma[i] = Y
+      }
+    }
+    return { sumY, sumMotion }
+  }
+
+  function computeEdgeEnergy(data: Uint8ClampedArray): number {
+    let sumEdge = 0
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const i = y * size + x
+        const Y = readLuma(data, i * 4)
+        if (x < size - 1) sumEdge += Math.abs(readLuma(data, (i + 1) * 4) - Y)
+        if (y < size - 1) sumEdge += Math.abs(readLuma(data, (i + size) * 4) - Y)
+      }
+    }
+    return sumEdge
+  }
+
   function computeOnce(source: CanvasImageSource): VideoMetrics {
     if (!ctx) return last
     // Draw from the camera source to a low-res buffer. Reading the presented
@@ -80,43 +118,8 @@ export function createVideoMetricsTracker(options?: {
     const n = size * size
     const luma = prevLuma && prevLuma.length === n ? prevLuma : new Float32Array(n)
 
-    let sumY = 0
-    let sumMotion = 0
-    let sumEdge = 0
-
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        const i = y * size + x
-        const p = i * 4
-        const r = data[p] ?? 0
-        const g = data[p + 1] ?? 0
-        const b = data[p + 2] ?? 0
-        // Rec.709 luma
-        const Y = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
-        sumY += Y
-        const prev = luma[i] ?? 0
-        sumMotion += Math.abs(Y - prev)
-        luma[i] = Y
-
-        // Edge proxy: simple forward difference
-        if (x < size - 1) {
-          const p2 = p + 4
-          const r2 = data[p2] ?? 0
-          const g2 = data[p2 + 1] ?? 0
-          const b2 = data[p2 + 2] ?? 0
-          const Y2 = (0.2126 * r2 + 0.7152 * g2 + 0.0722 * b2) / 255
-          sumEdge += Math.abs(Y2 - Y)
-        }
-        if (y < size - 1) {
-          const p3 = p + size * 4
-          const r3 = data[p3] ?? 0
-          const g3 = data[p3 + 1] ?? 0
-          const b3 = data[p3 + 2] ?? 0
-          const Y3 = (0.2126 * r3 + 0.7152 * g3 + 0.0722 * b3) / 255
-          sumEdge += Math.abs(Y3 - Y)
-        }
-      }
-    }
+    const { sumY, sumMotion } = computeLumaMotion(data, luma)
+    const sumEdge = computeEdgeEnergy(data)
 
     prevLuma = luma
     const luminance = sumY / n

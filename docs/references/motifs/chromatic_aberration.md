@@ -1,4 +1,4 @@
-# `chroma_aberration` — motif evidence
+# `chromatic_aberration` — motif evidence
 
 > **Non-diagnostic, metaphor framing:** This page documents how a simulation motif is used as a design metaphor. It does not diagnose, and it does not claim clinical equivalence.
 

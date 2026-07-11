@@ -3,7 +3,6 @@ import type { ComposerMode, SelectedDimension, SelectedPreset } from '../compose
 import { clamp01 } from '../utils/numeric'
 
 export const PRESET_LIBRARY_STORAGE_KEY = 'ie_custom_presets_v2'
-export const LEGACY_PRESET_STORAGE_KEY = 'ie_custom_preset'
 export const DEFAULT_PRESET_NAME = 'My Preset'
 
 const zIdentifier = z
@@ -174,57 +173,6 @@ export function parsePresetLibraryWithDiagnostics(serialized: string): PresetLib
       diagnostics: { ok: false, reason: 'invalid-json', totalItems: 0, invalidItems: 0 },
     }
   }
-}
-
-export function migrateLegacyPresetPayload(raw: unknown): PresetPayload | null {
-  const legacySchema = z
-    .object({
-      mode: z.enum(['preset', 'multimorbid', 'symptom']).optional(),
-      conditionId: z.string().optional(),
-      presets: z
-        .array(
-          z.object({
-            profileId: z.string(),
-            weight: z.number(),
-          }),
-        )
-        .optional(),
-      dimensions: z
-        .array(
-          z.object({
-            dimensionId: z.string(),
-            weight: z.number(),
-          }),
-        )
-        .optional(),
-      intensity: z.number().optional(),
-      safeMode: z.boolean().optional(),
-      reducedMotion: z.boolean().optional(),
-      audioEnabled: z.boolean().optional(),
-      couplingStrength: z.number().optional(),
-      maxFeedback: z.number().optional(),
-      interactionAmount: z.number().optional(),
-    })
-    .passthrough()
-
-  const parsed = legacySchema.safeParse(raw)
-  if (!parsed.success) return null
-  const value = parsed.data
-  const payload = createPresetPayload({
-    mode: value.mode ?? 'preset',
-    conditionId: value.conditionId ?? 'none',
-    presets: value.presets ?? [],
-    dimensions: value.dimensions ?? [],
-    intensity: value.intensity ?? 0.5,
-    safeMode: value.safeMode ?? true,
-    reducedMotion: value.reducedMotion ?? false,
-    audioEnabled: value.audioEnabled ?? false,
-    couplingStrength: value.couplingStrength ?? 0.5,
-    maxFeedback: value.maxFeedback ?? 0.35,
-    interactionAmount: value.interactionAmount ?? 0.15,
-  })
-  const validated = presetPayloadSchema.safeParse(payload)
-  return validated.success ? validated.data : null
 }
 
 export interface ApplyPresetPayloadCallbacks {
