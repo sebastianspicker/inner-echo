@@ -86,6 +86,24 @@ function clearVideoTrackEndHandlers(stream: MediaStream | null | undefined): voi
   }
 }
 
+function profileHasEnabledAudio(profile: Profile | null): boolean {
+  return profile?.audio_stack?.enabled === true
+}
+
+function selectAudioStack(
+  profile: Profile | null,
+  profileHasAudio: boolean,
+  audioRequested: boolean,
+): Profile['audio_stack'] | null {
+  if (profileHasAudio) return profile?.audio_stack ?? { enabled: false }
+  if (audioRequested) return profile?.audio_stack ?? null
+  return { enabled: false }
+}
+
+function selectMasterVolume(profile: Profile | null, audioRequested: boolean): number {
+  return audioRequested ? (profile?.audio_stack?.master?.volume ?? 0.22) : 0
+}
+
 export function CameraView() {
   const catalogLoad = useCatalog()
   const [conditionId, setConditionId] = useState(DEFAULT_CONDITION_ID)
@@ -392,12 +410,9 @@ export function CameraView() {
     audioEngineControlRef.current = null
     const currentProfile = profileRef.current
     const currentAudioEnabled = forceEnabled || audioEnabledRef.current
-    const profileHasAudio = !!currentProfile?.audio_stack?.enabled
-    const audioStack = profileHasAudio
-      ? (currentProfile?.audio_stack ?? { enabled: false })
-      : currentAudioEnabled
-        ? (currentProfile?.audio_stack ?? null)
-        : { enabled: false }
+    const profileHasAudio = profileHasEnabledAudio(currentProfile)
+    const audioRequested = profileHasAudio || currentAudioEnabled
+    const audioStack = selectAudioStack(currentProfile, profileHasAudio, audioRequested)
     if (profileHasAudio || forceEnabled) setAudioEnabled(true)
     const control = createAudioEngine(audioStack, {
       onStatusChange(status, error) {
@@ -412,10 +427,7 @@ export function CameraView() {
     }
     audioEngineControlRef.current = control
     setAudioStatus('on')
-    const volume =
-      profileHasAudio || currentAudioEnabled
-        ? (currentProfile?.audio_stack?.master?.volume ?? 0.22)
-        : 0
+    const volume = selectMasterVolume(currentProfile, audioRequested)
     control.setMasterVolume(volume)
     control.setInputMode(inputModeRef.current)
     control.setMicSensitivity(micSensitivityRef.current)

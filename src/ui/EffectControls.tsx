@@ -21,97 +21,75 @@ export interface EffectControlsProps {
   ) => void
 }
 
-function resolvedProfileControls(profile: Profile, reducedMotion: boolean): ResolvedControl[] {
+const GLOBAL_CONTROL_KINDS = new Set(['intensity', 'safeMode', 'reducedMotion', 'audioEnabled'])
+
+function resolveProfileControls(profile: Profile, reducedMotion: boolean): ResolvedControl[] {
   const controls: ResolvedControl[] = []
   for (const control of profile.ui?.controls ?? []) {
     const resolved = resolveControl(control, profile, { reducedMotion })
-    if (
-      resolved &&
-      !['intensity', 'safeMode', 'reducedMotion', 'audioEnabled'].includes(resolved.kind)
-    ) {
-      controls.push(resolved)
-    }
+    if (resolved && !GLOBAL_CONTROL_KINDS.has(resolved.kind)) controls.push(resolved)
   }
   return controls
 }
 
-export function EffectControls({
-  profile,
-  intensity,
-  safeMode,
-  stressMode,
-  reducedMotion,
-  audioEnabled,
-  controlValues,
-  onIntensityChange,
-  onSafeModeChange,
-  onStressModeChange,
-  onReducedMotionChange,
-  onAudioEnabledChange,
-  onControlValuesChange,
-}: EffectControlsProps) {
-  const resolvedControls = profile ? resolvedProfileControls(profile, reducedMotion) : []
+function ResolvedEffectControl({
+  control,
+  props,
+}: {
+  control: ResolvedControl
+  props: EffectControlsProps
+}) {
+  const value = props.controlValues[control.paramKey] ?? control.defaultValue
+  const onChange = (next: number | boolean) =>
+    props.onControlValuesChange((previous) => ({ ...previous, [control.paramKey]: next }))
+
+  if (control.control.type === 'slider') {
+    return (
+      <LabeledSlider
+        className="ie-control ie-control--range"
+        label={control.control.label ?? control.control.id}
+        min={control.control.min ?? 0}
+        max={control.control.max ?? 1}
+        step={control.control.step ?? 0.01}
+        value={typeof value === 'number' ? value : 0}
+        onChange={onChange as (next: number) => void}
+      />
+    )
+  }
+
+  return (
+    <ToggleField
+      className="ie-control ie-control--toggle"
+      label={control.control.label ?? control.control.id}
+      checked={value === true}
+      onChange={onChange as (next: boolean) => void}
+    />
+  )
+}
+
+function ProfileEffectControls(props: EffectControlsProps) {
+  const controls = props.profile ? resolveProfileControls(props.profile, props.reducedMotion) : []
+  if (controls.length === 0) {
+    return <p className="ie-hint">This profile has no additional controls.</p>
+  }
+  return controls.map((control) => (
+    <ResolvedEffectControl key={control.control.id} control={control} props={props} />
+  ))
+}
+
+export function EffectControls(props: EffectControlsProps) {
   return (
     <details className="ie-panelSection">
       <summary className="ie-summary">Controls</summary>
       <div className="ie-panelBody">
         <div className="ie-controlGroup" role="group" aria-label="Effect controls">
-          {resolvedControls.length ? (
-            resolvedControls.map((r) => {
-              const value =
-                r.kind === 'intensity'
-                  ? intensity
-                  : r.kind === 'safeMode'
-                    ? safeMode
-                    : r.kind === 'reducedMotion'
-                      ? reducedMotion
-                      : r.kind === 'audioEnabled'
-                        ? audioEnabled
-                        : ((controlValues[r.paramKey] ?? r.defaultValue) as number | boolean)
-              const onChange = (v: number | boolean) => {
-                if (r.kind === 'intensity') onIntensityChange(v as number)
-                else if (r.kind === 'safeMode') onSafeModeChange(v as boolean)
-                else if (r.kind === 'reducedMotion') onReducedMotionChange(v as boolean)
-                else if (r.kind === 'audioEnabled') onAudioEnabledChange(v as boolean)
-                else onControlValuesChange((prev) => ({ ...prev, [r.paramKey]: v }))
-              }
-              if (r.control.type === 'slider') {
-                const num = typeof value === 'number' ? value : 0
-                const min = r.control.min ?? 0
-                const max = r.control.max ?? 1
-                const step = r.control.step ?? 0.01
-                return (
-                  <LabeledSlider
-                    key={r.control.id}
-                    className="ie-control ie-control--range"
-                    label={r.control.label ?? r.control.id}
-                    min={min}
-                    max={max}
-                    step={step}
-                    value={num}
-                    onChange={onChange as (value: number) => void}
-                  />
-                )
-              }
-              return (
-                <ToggleField
-                  key={r.control.id}
-                  className="ie-control ie-control--toggle"
-                  label={r.control.label ?? r.control.id}
-                  checked={value === true}
-                  onChange={onChange as (checked: boolean) => void}
-                />
-              )
-            })
-          ) : (
-            <p className="ie-hint">This profile has no additional controls.</p>
-          )}
+          <ProfileEffectControls {...props} />
           {import.meta.env.DEV && (
             <ToggleField
               className="ie-control ie-control--toggle"
               label="Stress Mode (test FPS guard)"
-              checked={stressMode}
-              onChange={onStressModeChange}
+              checked={props.stressMode}
+              onChange={props.onStressModeChange}
             />
           )}
           {import.meta.env.DEV && (
