@@ -175,7 +175,7 @@ async function expectCanvasNonBlank(page, timeoutMs) {
   const started = Date.now()
   while (Date.now() - started < timeoutMs) {
     const stats = await page.evaluate(() => {
-      const canvas = document.querySelector('canvas')
+      const canvas = document.querySelector('.ie-canvas:not([hidden])')
       if (!canvas || canvas.width === 0 || canvas.height === 0) return null
       const ctx = canvas.getContext('2d', { willReadFrequently: true })
       if (!ctx) return null
@@ -419,7 +419,7 @@ const tests = [
     },
   },
   {
-    name: 'WebGL context loss reports raw preview instead of active effects',
+    name: 'WebGL context loss reports 2D preview instead of active effects',
     run: async (h) => {
       const { context, page } = await newContextPage(h)
       try {
@@ -432,7 +432,7 @@ const tests = [
           if (!canvas) throw new Error('overlay canvas not found')
           canvas.dispatchEvent(new Event('webglcontextlost', { cancelable: true }))
         })
-        await expectDebugValue(page, 'renderer', /^raw$/i, 3000)
+        await expectDebugValue(page, 'renderer', /^2d$/i, 3000)
       } finally {
         await context.close()
       }
