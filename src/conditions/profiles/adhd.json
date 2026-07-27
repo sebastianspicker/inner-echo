@@ -1,7 +1,7 @@
 {
   "id": "adhd",
   "label": "ADHD (Attention Fragmentation / Overload)",
-  "summary": "A metaphor of attention shifting and signal competition—gentle focus jitter and layered detail, with strong comfort controls.",
+  "summary": "A metaphor of attention shifting and signal competition: moving salience anchors, small attention jumps, and detail gain.",
   "framing": {
     "type": "metaphor",
     "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
@@ -21,7 +21,7 @@
     }
   ],
   "safety": {
-    "intensity_default": 0.34,
+    "intensity_default": 0.5,
     "intensity_max": 0.65,
     "warnings": [
       "If you feel overstimulated, reduce Intensity and enable Safe Mode.",
@@ -46,7 +46,13 @@
       "max_jitter": 0.06
     },
     "reduced_motion_policy": {
-      "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+      "disable_nodes": [
+        "temporal_smear",
+        "feedback_loop",
+        "pulse",
+        "focus_jitter",
+        "salience_competition"
+      ],
       "note": "Reduced Motion removes time-based feedback/jitter nodes and keeps a calmer static overlay."
     }
   },
@@ -76,13 +82,13 @@
         "label": "Audio (optional)"
       },
       {
-        "id": "jitter",
+        "id": "salience",
         "type": "slider",
-        "label": "Attention Shifts",
+        "label": "Competing Salience",
         "min": 0,
-        "max": 0.2,
+        "max": 0.3,
         "step": 0.01,
-        "target": "video.focus_jitter.amount"
+        "target": "video.salience_competition.amount"
       },
       {
         "id": "sharpen",
@@ -97,39 +103,28 @@
   },
   "video_stack": [
     {
+      "id": "salience",
+      "node": "salience_competition",
+      "params": {
+        "amount": 0.28,
+        "marker_strength": 0.62,
+        "shift": 0.055,
+        "jump_rate": 1.7
+      }
+    },
+    {
       "id": "focus",
       "node": "focus_jitter",
       "params": {
-        "amount": 0.08,
-        "smoothing": 0.92
+        "amount": 0.055,
+        "smoothing": 0.78
       }
     },
     {
       "id": "edge",
       "node": "edge_sharpen",
       "params": {
-        "amount": 0.08
-      }
-    },
-    {
-      "id": "grain",
-      "node": "grain",
-      "params": {
-        "amount": 0.18,
-        "scale": 1.2,
-        "speed": 0.09
-      }
-    },
-    {
-      "id": "overload",
-      "node": "interference",
-      "params": {
-        "amount": 0.09,
-        "banding": 0.05,
-        "smoothing": 0.9,
-        "burst_probability": 0.05,
-        "burst_duration_ms": 260,
-        "burst_min_gap_ms": 1200
+        "amount": 0.12
       }
     },
     {
@@ -137,8 +132,10 @@
       "node": "color_grade",
       "params": {
         "contrast": 0.08,
-        "saturation": -0.02,
-        "brightness": 0.01
+        "saturation": 0.02,
+        "brightness": 0.02,
+        "temperature": 0,
+        "tint": 0
       }
     }
   ],
@@ -152,8 +149,8 @@
       {
         "node": "tremolo",
         "params": {
-          "rate": 2.2,
-          "depth": 0.09
+          "rate": 2.6,
+          "depth": 0.08
         }
       },
       {
@@ -173,7 +170,7 @@
       {
         "node": "noise_bed",
         "params": {
-          "level": 0.02,
+          "level": 0.018,
           "color": "pink"
         }
       },
@@ -193,25 +190,25 @@
     "analyser_to_params": [
       {
         "source": "rms",
-        "target": "video.grain.amount",
-        "scale": 0.15,
+        "target": "video.salience_competition.amount",
+        "scale": 0.08,
         "offset": 0,
-        "smoothing": {
-          "attack": 0.08,
-          "release": 0.25
-        },
-        "clamp": [0, 0.45]
-      },
-      {
-        "source": "rms",
-        "target": "video.focus_jitter.amount",
-        "scale": 0.1,
-        "offset": 0.05,
         "smoothing": {
           "attack": 0.06,
           "release": 0.18
         },
-        "clamp": [0, 0.18]
+        "clamp": [0.08, 0.3]
+      },
+      {
+        "source": "rms",
+        "target": "video.salience_competition.shift",
+        "scale": 0.018,
+        "offset": 0,
+        "smoothing": {
+          "attack": 0.06,
+          "release": 0.2
+        },
+        "clamp": [0.015, 0.08]
       }
     ]
   },

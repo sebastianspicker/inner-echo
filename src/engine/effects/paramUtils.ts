@@ -40,15 +40,21 @@ function getNumberFromRecord(obj: unknown, key: string): number | undefined {
   return typeof v === 'number' && Number.isFinite(v) ? v : undefined
 }
 
-export function resolveNumberParam(params: VideoNodeParams, key: string, fallback: number): number {
+function resolveControlValue<T extends number | boolean>(
+  params: VideoNodeParams,
+  key: string,
+  expectedType: 'number' | 'boolean',
+  fallback: T,
+): T {
   const controlValues = params.controlValues ?? {}
-  const nodeIndex = params.nodeIndex ?? 0
-  const k = `${nodeIndex}.${key}`
-  const v = controlValues[k]
-  if (typeof v === 'number') return v
-  const v2 = controlValues[key]
-  if (typeof v2 === 'number') return v2
-  return fallback
+  const indexed = controlValues[`${params.nodeIndex ?? 0}.${key}`]
+  if (typeof indexed === expectedType) return indexed as T
+  const unkeyed = controlValues[key]
+  return typeof unkeyed === expectedType ? (unkeyed as T) : fallback
+}
+
+export function resolveNumberParam(params: VideoNodeParams, key: string, fallback: number): number {
+  return resolveControlValue(params, key, 'number', fallback)
 }
 
 export function resolveBooleanParam(
@@ -56,14 +62,7 @@ export function resolveBooleanParam(
   key: string,
   fallback: boolean,
 ): boolean {
-  const controlValues = params.controlValues ?? {}
-  const nodeIndex = params.nodeIndex ?? 0
-  const k = `${nodeIndex}.${key}`
-  const v = controlValues[k]
-  if (typeof v === 'boolean') return v
-  const v2 = controlValues[key]
-  if (typeof v2 === 'boolean') return v2
-  return fallback
+  return resolveControlValue(params, key, 'boolean', fallback)
 }
 
 export function getGlobalClampNumber(

@@ -1,83 +1,54 @@
-# Contract Verification
+# Contract verification
 
-`inner-echo` treats condition/profile JSON as a runtime contract.  
-The contract verifier checks that JSON references match implemented effect nodes and parameters.
+Condition and profile JSON is a runtime contract. The verifier checks that JSON references align with implemented audio and video nodes, parameters, ranges, and policy behavior.
 
 ## Command
-
-Run:
 
 ```bash
 npm run verify:contracts
 ```
 
-Outputs:
+The command writes ignored local reports:
 
 - `reports/contract-verification.json`
 - `reports/contract-verification.md`
 
-Exit behavior:
+It exits nonzero when contract errors exist. Warnings are reported separately.
 
-- non-zero when contract **errors** exist
-- zero when only **warnings** exist
+## Registry metadata
 
-## Registry Metadata
-
-Implemented node metadata lives in:
+Implemented node metadata is defined in:
 
 - `src/contractVerification/videoNodeRegistry.ts`
 - `src/contractVerification/audioNodeRegistry.ts`
 
-Each node contract declares:
+Each contract can declare an identifier, aliases, supported parameters, parameter type, default, bounds, Safe Mode clamp linkage, and deterministic probe reader.
 
-- node id (and aliases)
-- supported parameters
-- parameter type (`number`, `boolean`, `enum`)
-- defaults
-- min/max bounds (where applicable)
-- optional Safe Mode clamp key linkage
-- deterministic probe reader used for runtime verification
+Registry metadata is introspection-only. It must describe runtime behavior without changing it.
 
-This metadata is introspection-only and must not change runtime semantics.
+## Inputs and checks
 
-## What Gets Verified
-
-The verifier parses:
+The verifier reads:
 
 - `src/conditions/profiles/*.json`
 - `src/conditions/dimension-to-signal-mapping.json`
 - `src/conditions/experience-dimensions.json`
 
-Checks:
+It checks:
 
-- node existence
-- parameter existence
-- parameter usage (probe low/high values -> measurable runtime difference)
-- range/clamp adherence for numeric params
-- policy checks (Reduced Motion and Safe Mode behavior)
+- node and parameter existence
+- measurable parameter use through low and high probes
+- numeric range and clamp alignment
+- Safe Mode and Reduced Motion policy references
+- mapping targets used by profiles and composer output
 
-## Adding a New Node Safely
+## Adding or changing a node
 
-When adding a new video/audio node:
+1. Implement the runtime node or audio module.
+2. Register it in the runtime graph builder.
+3. Add matching registry metadata and probes.
+4. Update profile, mapping, schema, and documentation inputs when applicable.
+5. Add a focused regression test.
+6. Run `npm test` and `npm run verify:contracts`.
 
-1. Implement runtime node/fx as usual.
-2. Add/update factory registration in runtime builder (`graphBuilder` / `audioGraphBuilder`).
-3. Add node metadata + probe mapping in `src/contractVerification/*NodeRegistry.ts`.
-4. Ensure probes expose measurable effect for each declared parameter.
-5. Run:
-
-```bash
-npm test
-npm run verify:contracts
-```
-
-## Updating JSON Safely
-
-When changing JSON contracts:
-
-1. Do not add unknown node ids.
-2. Do not add unknown parameter keys for existing nodes.
-3. Keep Reduced Motion and Safe Mode contracts aligned with implementation.
-4. Run `npm run verify:contracts` before commit.
-
-If a mismatch appears, fix runtime implementation (or registry metadata/probes) to match the existing contract definitions.
+Unknown references must not create a successful verification result. Fix the runtime, source contract, or metadata at the shared boundary.

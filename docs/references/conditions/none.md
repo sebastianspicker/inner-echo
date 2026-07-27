@@ -1,29 +1,29 @@
-# None (Clean) — evidence summary
+# None (Clean): evidence summary
 
-> **Non-diagnostic, metaphor framing:** This summary explains which evidence-backed dimensions are used for this preset. It does not describe a diagnosis and does not claim clinical equivalence.
+> Non-diagnostic metaphor framing: This summary explains which dimensions are used for this preset. It does not describe a diagnosis and does not claim clinical equivalence.
 
 ## Summary
 
-- **Condition preset**: `none`
-- **Evidence summary (conservative)**: **Unrated**
-- **What this is**: a curated composition of experience dimensions and conservative AV motifs.
-- **What this is not**: a diagnostic model, a therapy tool, or a statement about “what X looks like”.
+- Condition preset: `none`
+- Evidence summary: Unrated
+- Scope: a curated composition of experience dimensions and conservative audiovisual motifs.
+- Exclusions: not a diagnostic model, therapy tool, or statement about what a condition looks like.
 
 ## Included experience dimensions
 
-_No dimensions listed in profile._
+No dimensions are listed in this profile.
 
 ## Evidence links (in-repo)
 
 - `docs/references/README.md` (Evidence & Method)
 - `docs/references/EVIDENCE_MATRIX.md` (matrix)
-- `docs/REFERENCES_AUDIT.md` (audit)
+- `docs/references/MAPPING_SUMMARY.md` (current mapping)
 
 ## Motifs used in this preset (quick traceability)
 
-These motifs are used by the included dimensions. Each motif is an artistic/engineering implementation of a metaphor; the evidence applies primarily to the dimension phenomena.
+These motifs are used by the included dimensions. Each motif is an artistic and engineering implementation of a metaphor; the evidence applies primarily to the dimension phenomena.
 
-_No motifs listed._
+No motifs are listed.
 
 ## Safety notes / warnings shown in product
 

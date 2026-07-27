@@ -18,6 +18,7 @@ import { clamp, smoothStep } from '../../utils/numeric'
 import { logger } from '../../utils/logger'
 
 interface MappingState extends ResolvedMapping {
+  baseValue: number
   smoothed: number
   kind: 'video' | 'audio'
 }
@@ -32,6 +33,55 @@ function normalizeClampRange(range: [number, number] | undefined): { min: number
     min: Math.min(a, b),
     max: Math.max(a, b),
   }
+}
+
+function getResolvedBaseValue(
+  resolved: { kind: 'video' | 'audio'; paramKey: string },
+  profile: Profile,
+  reducedMotion: boolean | undefined,
+): number {
+  if (resolved.kind === 'video') {
+    const [builtIndexStr, paramName] = resolved.paramKey.split('.')
+    const entry = getProfileEntryForBuiltIndex(profile, Number(builtIndexStr), { reducedMotion })
+    const value = entry?.params?.[paramName]
+    return typeof value === 'number' ? value : 0
+  }
+  const parts = resolved.paramKey.split('.')
+  const value = profile.audio_stack?.chain?.[Number(parts[1])]?.params?.[parts.slice(2).join('.')]
+  return typeof value === 'number' ? value : 0
+}
+
+function buildMappings(
+  profile: Profile,
+  options: { reducedMotion?: boolean } | undefined,
+): MappingState[] {
+  const mappings: MappingState[] = []
+  for (const def of profile.reactive?.analyser_to_params ?? []) {
+    if (def.source !== 'rms') continue
+    const resolved = resolveAnalyserTarget(def.target, profile, options)
+    if (!resolved) {
+      logger.warn(
+        '[reactive] analyser_to_params: target not found or invalid, skipping:',
+        def.target,
+      )
+      continue
+    }
+    const clampRange = normalizeClampRange(def.clamp)
+    const baseValue = getResolvedBaseValue(resolved, profile, options?.reducedMotion)
+    mappings.push({
+      kind: resolved.kind,
+      paramKey: resolved.paramKey,
+      scale: def.scale ?? 1,
+      offset: def.offset ?? 0,
+      attack: def.smoothing?.attack ?? 0.05,
+      release: def.smoothing?.release ?? 0.2,
+      clampMin: clampRange.min,
+      clampMax: clampRange.max,
+      baseValue,
+      smoothed: clamp(baseValue, clampRange.min, clampRange.max),
+    })
+  }
+  return mappings
 }
 
 /**
@@ -59,54 +109,7 @@ export function createReactiveDriver(
     }
   }
 
-  const mappings: MappingState[] = []
-
-  for (const def of list) {
-    if (def.source !== 'rms') continue
-    const resolved = resolveAnalyserTarget(def.target, profile, options)
-    if (!resolved) {
-      logger.warn(
-        '[reactive] analyser_to_params: target not found or invalid, skipping:',
-        def.target,
-      )
-      continue
-    }
-    let baseValue = 0
-    if (resolved.kind === 'video') {
-      const [builtIndexStr, paramName] = resolved.paramKey.split('.')
-      const builtIndex = Number(builtIndexStr)
-      const entry = getProfileEntryForBuiltIndex(profile, builtIndex, {
-        reducedMotion: options?.reducedMotion,
-      })
-      const params = entry?.params
-      baseValue =
-        params && typeof params[paramName] === 'number' ? (params[paramName] as number) : 0
-    } else if (resolved.kind === 'audio') {
-      // For audio overrides, default to 0 unless profile declares a numeric param.
-      const parts = resolved.paramKey.split('.')
-      const chainIndex = Number(parts[1])
-      const paramName = parts.slice(2).join('.')
-      const chain = profile.audio_stack?.chain ?? []
-      const params = chain[chainIndex]?.params
-      baseValue =
-        params && typeof params[paramName] === 'number' ? (params[paramName] as number) : 0
-    }
-    const clampRange = normalizeClampRange(def.clamp)
-    const clampMin = clampRange.min
-    const clampMax = clampRange.max
-    const initialSmoothed = clamp(baseValue, clampMin, clampMax)
-    mappings.push({
-      kind: resolved.kind,
-      paramKey: resolved.paramKey,
-      scale: def.scale ?? 1,
-      offset: def.offset ?? 0,
-      attack: def.smoothing?.attack ?? 0.05,
-      release: def.smoothing?.release ?? 0.2,
-      clampMin,
-      clampMax,
-      smoothed: initialSmoothed,
-    })
-  }
+  const mappings = buildMappings(profile, options)
 
   let videoOut: Record<string, number> = {}
   let audioOut: Record<string, number> = {}
@@ -118,7 +121,8 @@ export function createReactiveDriver(
     videoOut = {}
     audioOut = {}
     for (const m of mappings) {
-      const raw = rms * m.scale + m.offset
+      const reactiveValue = rms * m.scale + m.offset
+      const raw = m.kind === 'video' ? m.baseValue + reactiveValue : reactiveValue
       const smoothed = smoothStep(m.smoothed, raw, delta, m.attack, m.release)
       m.smoothed = smoothed
       const v = clamp(smoothed, m.clampMin, m.clampMax)

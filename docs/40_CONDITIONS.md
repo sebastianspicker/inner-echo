@@ -1,75 +1,83 @@
 # Conditions and experience dimensions
 
-Canonical conditions doc. This project uses metaphorical AV presets built from experience dimensions (non-diagnostic). Evidence and rationale live under `docs/references/**` and the deep research reports.
+The profile system defines audiovisual metaphors. Setup labels emphasize experience dimensions and curated collections rather than diagnostic selection.
 
----
+Profiles do not diagnose a user or claim to reproduce a condition. Evidence pages document sources, design rationale, hypotheses, and limits.
 
-## Purpose
+## Contract sources
 
-Conditions are data-driven presets that define a metaphorical audio-visual overlay. Each condition is built from experience dimensions (e.g. hyperarousal, rumination_loop, derealization). The app does not diagnose or simulate clinical reality; it offers an artistic, educational metaphor.
+| Path | Role |
+|---|---|
+| `src/conditions/catalog.json` | Profile labels, descriptions, tags, and evidence links used by the interface. |
+| `src/conditions/profiles/*.json` | Runtime video, audio, safety, control, warning, and reactive definitions. |
+| `src/conditions/schema.ts` | Zod contract for loaded profile data. |
+| `src/conditions/experience-dimensions.json` | Available experience dimensions. |
+| `src/conditions/dimension-to-signal-mapping.json` | Dimension-to-motif defaults and safety guidance. |
+| `src/conditions/graphBuilder.ts` | Registered video-node construction. |
+| `src/contractVerification/` | Audio and video node metadata and deterministic probes. |
+| `docs/references/` | Evidence method, citations, rationale pages, and stated gaps. |
 
----
+These paths form one runtime contract. Keep them aligned when a node, parameter, profile, or mapping changes.
 
-## Source of truth (evidence)
+## Current curated profiles
 
-- **`src/conditions/**`** — condition catalog, profiles, and dimension/motif mapping (runtime; treated as a read-only contract).
-- **`docs/references/**`** — evidence-backed rationale docs for each dimension (see [references/INDEX.md](references/INDEX.md)) plus [references/EVIDENCE_MATRIX.md](references/EVIDENCE_MATRIX.md).
-- **Deep research reports** — primary citation bundles under [references/reports/](references/reports/).
-- **Audit output** — generated mapping overview in [REFERENCES_AUDIT.md](REFERENCES_AUDIT.md) (dimension → default motifs → evidence doc links).
+The catalog currently contains a neutral `none` profile and curated profiles for anxiety, panic, trauma or PTSD, ADHD, depression, depersonalization or derealization, and OCD. Their labels provide context for collections of experience dimensions. They are not assessment categories.
 
----
+Dimension support and evidence strength are listed in [references/EVIDENCE_MATRIX.md](references/EVIDENCE_MATRIX.md). Evidence strength refers to the cited phenomenon or design rationale, not to clinical accuracy of the rendered overlay.
 
-## Condition → dimensions (current set)
+## Setup modes
 
-| Condition | Experience dimensions (evidence-based) |
-|-----------|----------------------------------------|
-| Anxiety (Generalized / Social) | hyperarousal, hypervigilance, rumination_loop |
-| Panic Disorder | panic_peaks, hyperarousal |
-| Depressive Disorder | emotional_numbing, cognitive_fog, time_dilation |
-| Trauma / PTSD | hyperarousal, hypervigilance, intrusion |
-| OCD | rumination_loop, intrusion, compulsive_loop |
-| Depersonalization / Derealization | derealization, depersonalization, time_dilation |
-| ADHD (Attention Fragmentation / Overload) | attention_fragmentation, sensory_overload, hyperarousal |
+- Experience dimensions: the default guided path, using selected dimensions and weights.
+- Curated collections: one catalog profile.
+- Combine collections: weighted composition of multiple catalog profiles.
 
-Evidence strength (dimension-level) is in [references/EVIDENCE_MATRIX.md](references/EVIDENCE_MATRIX.md). HIGH/MEDIUM/Low refers to support for the phenomenon in the literature, not to clinical accuracy of the overlay.
+Saved preset schema version 2 and URL-hash payloads retain the internal wire values `symptom`, `preset`, and `multimorbid`. Public labels can change without rewriting those stored values.
 
----
+## Composition
 
-## Condition Composer (multimorbid + symptom-first)
+The composer blends profile defaults or dimension mappings, then applies interaction, global safety, Safe Mode, and Reduced Motion policy. Interaction Amount can apply a small code-defined adjustment for selected dimension pairs. It remains bounded by the same safety limits as other composition paths.
 
-The app supports a Condition Composer that can produce an effective overlay in three modes:
+Composition is a perceptual design operation. It does not imply that dimensions cause one another or that the output represents a measured person.
 
-- **Preset (single)**: select one condition profile (classic flow).
-- **Multimorbid (stacked presets)**: select multiple condition profiles and blend them with per-preset weights.
-- **Symptom-first (dimensions)**: select experience dimensions directly and blend motif suggestions into an overlay (no pre-designed condition required).
+## Unknown and invalid values
 
-Important framing:
+- Schema-invalid profiles fail loading and surface an error state.
+- Unknown node types or parameters are reported by validation and cannot create a verified contract result.
+- Runtime builders warn and skip unsupported entries according to their current policy.
+- Numeric values are clamped or rejected according to schema, profile, composer, and engine rules.
+- Registry metadata must not change runtime semantics.
 
-- Composition is a perceptual metaphor of an interaction field — it does not imply clinical causality.
-- Default motif suggestions come from evidence-linked mappings in:
-  - `src/conditions/dimension-to-signal-mapping.json` (motifs + safety notes)
-  - `docs/references/dimensions/*.md` (dimension rationales)
-- The composer uses global safety clamps + Safe Mode + Reduced Motion. Strong time-based effects and feedback are capped.
+## Authoring workflow
 
-### Nonlinear interaction option
+1. Add or update the catalog entry.
+2. Add or update the profile JSON and its evidence references.
+3. Use only registered node identifiers and parameters.
+4. Define conservative defaults, Safe Mode clamps, Reduced Motion policy, and warnings.
+5. Update dimension mappings and registry metadata when required.
+6. Add a focused test for the intended contract or failure mode.
+7. Refresh affected public documentation.
+8. Run the relevant gates.
 
-In Advanced settings, Interaction Amount introduces a conservative, code-defined interaction matrix that can slightly amplify certain dimension pairs (e.g. `hyperarousal` + `intrusion`). It's always clamped by safety limits.
+Typical commands:
 
----
+```bash
+npm run docs:gen
+npm run evidence:gen
+npm run conditions:validate
+npm run composer:validate
+npm run evidence:verify
+npm run verify:contracts
+npm test
+```
 
-## Authoring conditions
+Do not copy a known invalid mapping for consistency. Fix the shared source or report the unsupported mapping explicitly.
 
-1. Add an entry to `src/conditions/catalog.json` (id, label, description, tags).
-2. Create `src/conditions/profiles/<id>.json` with `video_stack`, optional `audio_stack`, `safety`, `ui.controls`. Use only nodes and motifs supported by the Evidence Matrix for the chosen dimensions (or mark as speculative and cap intensity).
-3. Run `npm run docs:gen` to regenerate [generated/](generated/README.md) catalog and schema.
-4. Validate safety framing and constraints in [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md) before shipping.
+## Evidence rules
 
----
+- Link each profile and dimension to maintained evidence pages.
+- Distinguish cited observations, implementation behavior, inference, and design recommendation.
+- Mark unsupported or weakly supported mappings as hypotheses or gaps.
+- Avoid literal simulation, diagnostic, therapeutic, or accuracy claims.
+- Avoid strobe, sudden loud transients, abrupt motion, body-distortion spectacle, and stigmatizing portrayals.
 
-## Evidence alignment
-
-- Every dimension has a rationale doc under `references/dimensions/<id>.md` citing the deep research reports.
-- Every profile should use only video/audio nodes that appear in the Evidence Matrix for its dimensions, or be explicitly marked speculative with strong caps.
-- **Avoid** (from references): flicker/strobe, sudden loud transients, jump-scares, body distortion, comedic loop portrayal, literal "this is what disorder X looks like."
-
-For a repo-wide overview of dimension→motif→evidence links, see [REFERENCES_AUDIT.md](REFERENCES_AUDIT.md).
+See [references/README.md](references/README.md), [references/MAPPING_SUMMARY.md](references/MAPPING_SUMMARY.md), and [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md).

@@ -19,6 +19,12 @@
   flex-wrap: wrap;
 }
 
+.composer__heading {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.125rem;
+}
+
 .composer__title {
   font-size: 12px;
   letter-spacing: 0.14em;
@@ -45,11 +51,25 @@
   font-size: 13px;
   color: var(--text);
   min-height: 44px;
-  padding: 2px 6px;
+  border: 1px solid var(--border);
   border-radius: var(--r-sm);
+  padding: 6px 10px;
   transition:
     background var(--duration-normal) var(--ease-gentle),
     color var(--duration-normal) var(--ease-gentle);
+}
+
+.composer__toggle:has(input:checked) {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 10%, var(--surface-2));
+}
+
+.composer__empty {
+  margin: 0;
+  padding: var(--sp-3);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-sm);
+  color: var(--muted);
 }
 
 .composer__toggle:hover {

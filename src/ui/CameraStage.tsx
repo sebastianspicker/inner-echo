@@ -1,9 +1,11 @@
 import type { AudioContextStatus } from '../engine/audio'
+import brandMarkUrl from '../../assets/brand/inner-echo-mark.svg'
 
 export interface CameraStageProps {
   containerRef: React.RefObject<HTMLDivElement | null>
   videoRef: React.RefObject<HTMLVideoElement | null>
-  canvasRef: React.RefObject<HTMLCanvasElement | null>
+  webglCanvasRef: React.RefObject<HTMLCanvasElement | null>
+  fallbackCanvasRef: React.RefObject<HTMLCanvasElement | null>
   rmsDebugRef: React.RefObject<HTMLSpanElement | null>
   isActive: boolean
   audioStatus: AudioContextStatus
@@ -13,7 +15,8 @@ export interface CameraStageProps {
 export function CameraStage({
   containerRef,
   videoRef,
-  canvasRef,
+  webglCanvasRef,
+  fallbackCanvasRef,
   rmsDebugRef,
   isActive,
   audioStatus,
@@ -26,13 +29,24 @@ export function CameraStage({
       aria-label="Camera stage"
     >
       <video ref={videoRef} className="ie-video" playsInline muted aria-label="Camera feed" />
-      <canvas ref={canvasRef} className="ie-canvas" aria-hidden="true" />
+      <canvas ref={webglCanvasRef} className="ie-canvas" aria-hidden="true" />
+      <canvas ref={fallbackCanvasRef} className="ie-canvas" aria-hidden="true" hidden />
+      {isActive && (
+        <div className="ie-stageChrome" aria-hidden="true">
+          <div className="ie-stageMeta">
+            <span>Experience / Custom</span>
+            <span>Processed locally</span>
+          </div>
+          <div className="ie-stageCaption">A metaphor, not a measurement.</div>
+        </div>
+      )}
       {import.meta.env.DEV && debugOverlay && audioStatus === 'on' && (
         <span ref={rmsDebugRef} className="ie-debugChip" data-phase="reactive" aria-hidden="true" />
       )}
       {!isActive && (
         <div className="ie-placeholder" aria-hidden="true">
-          Take your time. Begin when you feel ready.
+          <img className="ie-placeholderMark" src={brandMarkUrl} alt="" />
+          <span>Camera is off. Review setup and comfort controls before starting.</span>
         </div>
       )}
     </div>

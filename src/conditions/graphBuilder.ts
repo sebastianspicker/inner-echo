@@ -5,16 +5,11 @@
  * Its main job is to read the `video_stack` array from a profile and instantiate the
  * correct TypeScript `VideoNode` objects (e.g. turning `"node": "grain"` in JSON into `new GrainNode()`).
  *
- * Features:
- * - Safely skips unrecognized nodes (instead of crashing).
- * - Implements logic for the "Reduced Motion" accessibility setting, skipping
- *   temporal/motion-heavy nodes like `temporal_smear` if requested.
- *
  * Architecture note: This module lives in conditions/ but imports from engine/effects/.
- * This cross-layer dependency is intentional — graphBuilder is the bridge that translates
+ * This cross-layer dependency is intentional: graphBuilder is the bridge that translates
  * condition profile data into live engine node instances. The dependency direction
- * (conditions → engine) is correct: profiles declare *what* to build, this module
- * instantiates *how*. Moving NODE_FACTORY to engine/ would invert the dependency
+ * (conditions → engine) is correct: profiles declare what to build, this module
+ * instantiates how. Moving NODE_FACTORY to engine/ would invert the dependency
  * without simplifying the architecture, since buildVideoNodes needs profile types.
  */
 
@@ -33,16 +28,24 @@ import {
   FocusJitterNode,
   FeedbackLoopNode,
   GridHintNode,
+  GazeTunnelNode,
+  SomaticPulseNode,
+  IntrusionBurstNode,
+  SalienceCompetitionNode,
+  GlassVeilNode,
 } from '../engine/effects'
 import type { Profile, VideoStackNodeDef } from './schema'
 import { getReducedMotionDisableNodes } from './normalize'
+import { TEMPORAL_NODE_TYPES } from './motionPolicy'
 import { logger } from '../utils/logger'
+
+export { TEMPORAL_NODE_TYPES, profileHasTemporalNodes } from './motionPolicy'
 
 export const NODE_FACTORY: Record<string, () => VideoNode> = {
   grain: () => new GrainNode(),
   vignette: () => new VignetteNode(),
   chromatic_aberration: () => new ChromaticAberrationNode(),
-  // SSOT canonical name
+  // Canonical profile name.
   // Legacy alias: some profiles and dimension mappings use "chroma_aberration" as a short form.
   chroma_aberration: () => new ChromaticAberrationNode(),
   temporal_smear: () => new TemporalSmearNode(),
@@ -55,19 +58,22 @@ export const NODE_FACTORY: Record<string, () => VideoNode> = {
   focus_jitter: () => new FocusJitterNode(),
   feedback_loop: () => new FeedbackLoopNode(),
   grid_hint: () => new GridHintNode(),
+  gaze_tunnel: () => new GazeTunnelNode(),
+  somatic_pulse: () => new SomaticPulseNode(),
+  intrusion_burst: () => new IntrusionBurstNode(),
+  salience_competition: () => new SalienceCompetitionNode(),
+  glass_veil: () => new GlassVeilNode(),
 }
 
 /** Node types that are temporal/motion-heavy; skipped when Reduced Motion is on. */
-export const TEMPORAL_NODE_TYPES = new Set<string>([
-  'temporal_smear',
-  'feedback_loop',
-  'pulse',
-  'focus_jitter',
-])
-
 export interface BuildVideoNodesOptions {
   /** When true, temporal/strobe-heavy nodes (e.g. temporal_smear) are skipped. */
   reducedMotion?: boolean
+}
+
+export interface BuiltVideoStackEntry {
+  def: VideoStackNodeDef
+  index: number
 }
 
 export function shouldSkipNode(
@@ -80,6 +86,27 @@ export function shouldSkipNode(
   const t = nodeType.toLowerCase()
   if (reducedMotion && (TEMPORAL_NODE_TYPES.has(t) || reducedMotionDisable.has(t))) return true
   return false
+}
+
+/** Resolve the profile entries that map to built pipeline indices. */
+export function getBuiltVideoStackEntries(
+  profile: Profile,
+  options?: BuildVideoNodesOptions,
+): BuiltVideoStackEntry[] {
+  const reducedMotionDisable = getReducedMotionDisableNodes(profile)
+  const reducedMotion = options?.reducedMotion === true
+  return profile.video_stack.reduce<BuiltVideoStackEntry[]>((entries, def) => {
+    const nodeType = def.node
+    if (
+      nodeType &&
+      typeof nodeType === 'string' &&
+      !shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable) &&
+      NODE_FACTORY[nodeType.toLowerCase()]
+    ) {
+      entries.push({ def, index: entries.length })
+    }
+    return entries
+  }, [])
 }
 
 /**
@@ -120,19 +147,8 @@ export function buildVideoNodes(profile: Profile, options?: BuildVideoNodesOptio
  * Returns true if the profile's video_stack contains any temporal node (e.g. temporal_smear).
  * Used to show a UI hint when Reduced Motion is on and the condition would use such nodes.
  */
-export function profileHasTemporalNodes(profile: Profile): boolean {
-  const reducedMotionDisable = getReducedMotionDisableNodes(profile)
-  for (const def of profile.video_stack) {
-    const nodeType = def.node
-    if (!nodeType) continue
-    const t = nodeType.toLowerCase()
-    if (TEMPORAL_NODE_TYPES.has(t) || reducedMotionDisable.has(t)) return true
-  }
-  return false
-}
-
 /**
- * Phase 8: Index of a node in the *built* array (skipped nodes excluded).
+ * Index of a node in the built array (skipped nodes excluded).
  * Used so analyser_to_params targets resolve to the same paramKey the pipeline uses (nodeIndex.param).
  */
 export function getBuiltNodeIndex(
@@ -141,54 +157,23 @@ export function getBuiltNodeIndex(
   options?: BuildVideoNodesOptions,
 ): number {
   const id = nodeId.toLowerCase()
-  let builtIndex = 0
-  const reducedMotionDisable = getReducedMotionDisableNodes(profile)
-  const reducedMotion = options?.reducedMotion === true
+  const builtEntries = getBuiltVideoStackEntries(profile, options)
 
   // First pass: prefer an exact match on the explicit `id` field.
-  for (const def of profile.video_stack) {
-    const nodeType = def.node
-    if (!nodeType || typeof nodeType !== 'string') continue
-    if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) continue
-    if (!NODE_FACTORY[nodeType.toLowerCase()]) continue
-    const entryId = (def.id ?? '').toLowerCase()
-    if (entryId && entryId === id) return builtIndex
-    builtIndex++
-  }
+  const exactMatch = builtEntries.find((entry) => (entry.def.id ?? '').toLowerCase() === id)
+  if (exactMatch?.def.id) return exactMatch.index
 
   // Second pass: fall back to matching by node type when no id match was found.
-  builtIndex = 0
-  for (const def of profile.video_stack) {
-    const nodeType = def.node
-    if (!nodeType || typeof nodeType !== 'string') continue
-    if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) continue
-    if (!NODE_FACTORY[nodeType.toLowerCase()]) continue
-    const entryType = nodeType.toLowerCase()
-    if (entryType === id) return builtIndex
-    builtIndex++
-  }
-
-  return -1
+  return builtEntries.find((entry) => entry.def.node.toLowerCase() === id)?.index ?? -1
 }
 
 /**
- * Phase 8: Profile video_stack entry for a given built index (for reading default params).
+ * Profile video_stack entry for a given built index (for reading default params).
  */
 export function getProfileEntryForBuiltIndex(
   profile: Profile,
   builtIndex: number,
   options?: BuildVideoNodesOptions,
 ): VideoStackNodeDef | undefined {
-  let count = 0
-  const reducedMotionDisable = getReducedMotionDisableNodes(profile)
-  const reducedMotion = options?.reducedMotion === true
-  for (const def of profile.video_stack) {
-    const nodeType = def.node
-    if (!nodeType || typeof nodeType !== 'string') continue
-    if (shouldSkipNode(nodeType, reducedMotion, reducedMotionDisable)) continue
-    if (!NODE_FACTORY[nodeType.toLowerCase()]) continue
-    if (count === builtIndex) return def
-    count++
-  }
-  return undefined
+  return getBuiltVideoStackEntries(profile, options)[builtIndex]?.def
 }

@@ -1,12 +1,10 @@
 /**
  * Audio Engine
  *
- * This module is the core orchestrator for all Web Audio API operations.
- * It manages:
- * 1. The main synthesizer and effect chain (driven by the current active profile).
- * 2. An `AnalyserNode` to tap into the audio stream and calculate RMS/spectral data for the reactive video layer.
- * 3. An optional microphone input (`getUserMedia`), complete with a safety noise-gate and limiter.
- * 4. Audio routing options (synth only, mic only, or mixed).
+ * Owns all WebAudio resources: profile-driven synth/FX chains, analyser metrics
+ * for reactive video, optional microphone input, and synth/mic/mix routing.
+ * Callers must create it from a user gesture because browsers gate AudioContext
+ * and microphone access.
  */
 
 import {
@@ -25,129 +23,34 @@ import type {
 import type { AudioStackConfig } from '../../conditions/schema'
 import { createSynth } from './synth'
 import { createCompressor } from './fx'
-import {
-  buildAudioChain,
-  connectAudioChain,
-  isKnownAudioNodeType,
-  rampGain,
-} from './audioGraphBuilder'
+import { isKnownAudioNodeType, rampGain } from './audioGraphBuilder'
 import { clamp01, smoothStep } from '../../utils/numeric'
 import { logger } from '../../utils/logger'
+import { computeRms, computeSpectralFeatures, type F32 } from './analyserFeatures'
+import { configureOutputRouting as configureOutput } from './outputRouting'
+import { getAudioContextTime, getAudioStackTargetVolume } from './audioStackValues'
 
 const RAMP_MS = 25
 const ANALYSER_FFT_SIZE = 2048
 
-/** Phase 9: Mic limiter — threshold (dB), ratio, attack, release. */
+/** Mic limiter settings: threshold (dB), ratio, attack, release. */
 const MIC_LIMITER_THRESHOLD = -24
 const MIC_LIMITER_RATIO = 8
 const MIC_LIMITER_ATTACK = 0.003
 const MIC_LIMITER_RELEASE = 0.1
 
-// TS 6 defaults Float32Array to Float32Array<ArrayBufferLike>, but the Web Audio
-// DOM types (getFloatTimeDomainData, getFloatFrequencyData) require
-// Float32Array<ArrayBuffer>. All scratch buffers originate from `new Float32Array(n)`
-// which always creates an ArrayBuffer-backed typed array.
-type F32 = Float32Array<ArrayBuffer>
-
-function ensureSize(buf: F32, size: number): F32 {
-  if (buf.length === size) return buf
-  return new Float32Array(size)
-}
-
-function safeDisconnect(node: AudioNode | null): void {
+const safeDisconnect = (node: AudioNode | null) => {
   if (!node) return
   try {
     node.disconnect()
   } catch {
-    // already disconnected or not connected — safe to ignore
+    // already disconnected or not connected: safe to ignore
   }
-}
-
-/**
- * Compute RMS from AnalyserNode float time-domain data. Returns 0 if no data.
- * Uses a provided scratch buffer to avoid per-frame allocations.
- */
-function computeRms(analyser: AnalyserNode, scratchTime: F32): { rms: number; scratch: F32 } {
-  const bufferLength = analyser.fftSize
-  const data = ensureSize(scratchTime, bufferLength)
-  analyser.getFloatTimeDomainData(data)
-  let sum = 0
-  for (let i = 0; i < data.length; i++) {
-    const x = data[i]
-    sum += x * x
-  }
-  return { rms: data.length > 0 ? Math.sqrt(sum / data.length) : 0, scratch: data }
-}
-
-/**
- * Compute spectral centroid and flux from analyser frequency data.
- * Returns centroid normalized 0..1 and flux 0..1 (heuristic normalization).
- */
-function computeSpectralFeatures(
-  analyser: AnalyserNode,
-  prevMag: F32 | null,
-  scratchDb: F32,
-): {
-  centroid: number
-  flux: number
-  low: number
-  mid: number
-  high: number
-  nextPrev: F32
-  scratchDb: F32
-} {
-  const n = analyser.frequencyBinCount
-  const db = ensureSize(scratchDb, n)
-  analyser.getFloatFrequencyData(db)
-
-  // Convert dB to magnitude; also compute centroid.
-  const sampleRate = analyser.context.sampleRate
-  const nyquist = sampleRate / 2
-  let sumMag = 0
-  let sumWeighted = 0
-  let fluxSum = 0
-  let sumLow = 0
-  let sumMid = 0
-  let sumHigh = 0
-
-  // Coarse 3-band energy split using absolute frequency thresholds.
-  // Low: <300 Hz, Mid: 300-4000 Hz, High: >4000 Hz.
-  const lowT = 300 / nyquist
-  const midT = 4000 / nyquist
-
-  // Reuses prevMag in-place: safe because each index is read before being overwritten.
-  const nextPrev: F32 = prevMag && prevMag.length === n ? prevMag : new Float32Array(n)
-  for (let i = 0; i < n; i++) {
-    const mag = 10 ** ((db[i] ?? -120) / 20) // linear amplitude
-    const t = i / Math.max(1, n - 1)
-    const freq = t * nyquist
-    sumMag += mag
-    sumWeighted += freq * mag
-    const prev = nextPrev[i] ?? 0
-    const diff = mag - prev
-    if (diff > 0) fluxSum += diff
-    nextPrev[i] = mag
-
-    if (t < lowT) sumLow += mag
-    else if (t < midT) sumMid += mag
-    else sumHigh += mag
-  }
-
-  const centroidHz = sumMag > 0 ? sumWeighted / sumMag : 0
-  const centroid = clamp01(centroidHz / Math.max(1, nyquist))
-
-  // Flux normalization: 0.6 is an empirical ceiling for typical audio signal
-  // spectral flux (determined by measuring a range of music/speech/ambient sources).
-  const flux = clamp01(fluxSum * 0.6)
-  const low = sumMag > 0 ? clamp01(sumLow / sumMag) : 0
-  const mid = sumMag > 0 ? clamp01(sumMid / sumMag) : 0
-  const high = sumMag > 0 ? clamp01(sumHigh / sumMag) : 0
-  return { centroid, flux, low, mid, high, nextPrev, scratchDb: db }
 }
 
 export interface AudioEngineCallbacks {
   onStatusChange?(status: AudioContextStatus, error?: string): void
-  /** Phase 9: Mic permission/source state. */
+  /** Mic permission/source state. */
   onMicStatusChange?(status: MicStatus, error?: string): void
 }
 
@@ -165,21 +68,21 @@ export interface AudioEngineControl {
   setMasterVolume(value: number): void
   /** Set condition audio stack (rebuilds chain with ramp). */
   setConditionAudio(audioStack: AudioStackConfig | null | undefined): void
-  /** Phase 8: Current RMS (0..1-ish). Returns 0 if analyser not available. */
+  /** Current RMS (0..1-ish). Returns 0 if analyser not available. */
   getRms(): number
-  /** Phase 13: Audio metrics for coupling (RMS + spectral features). */
+  /** Audio metrics for coupling (RMS + spectral features). */
   getMetrics(): AudioMetrics
-  /** SSOT reactive: apply "audio.<chainIndex>.<param>" overrides (smoothed/clamped upstream). */
+  /** Apply "audio.<chainIndex>.<param>" overrides (smoothed/clamped upstream). */
   applyReactiveParams(overrides: Record<string, number>): void
-  /** Phase 9: Request mic (call only after user gesture). */
+  /** Request mic (call only after user gesture). */
   requestMic(): void
-  /** Phase 9: Stop mic and release tracks. */
+  /** Stop mic and release tracks. */
   stopMic(): void
-  /** Phase 9: Set input routing: synth only, mic only, or mix. */
+  /** Set input routing: synth only, mic only, or mix. */
   setInputMode(mode: AudioInputMode): void
-  /** Phase 14: Set mic sensitivity (0..1). Applied as conservative pre-gain into limiter. */
+  /** Set mic sensitivity (0..1). Applied as conservative pre-gain into limiter. */
   setMicSensitivity(value: number): void
-  /** Phase 14: Set soft noise gate threshold (0..1). Higher = stronger gating. */
+  /** Set soft noise gate threshold (0..1). Higher = stronger gating. */
   setMicGate(value: number): void
   /** Debug-only runtime snapshot (cheap and side-effect free). */
   getDebugState(): AudioEngineDebugState
@@ -190,7 +93,7 @@ export interface AudioEngineControl {
 /**
  * Creates and starts the main AudioEngine instance.
  *
- * **IMPORTANT**: Call this only after a user gesture (e.g. from an "Enable audio" click event).
+ * Call this only after a user gesture, such as an Enable audio click event.
  * This function handles building the internal routing graph, connecting synthesizers,
  * microphones, and effect chains.
  *
@@ -214,13 +117,9 @@ export function createAudioEngine(
   let scratchMainTime: F32 = new Float32Array(ANALYSER_FFT_SIZE)
   let scratchMainDb: F32 = new Float32Array(ANALYSER_FFT_SIZE)
 
-  // Per-frame RMS cache to avoid reading the analyser twice when both getRms()
-  // and getMetrics() are called in the same frame.
-  let cachedRms = 0
-  let cachedRmsFrame = -1
-  let rmsFrameCounter = 0
+  let lastMainRms = 0
 
-  // Phase 9: Mic — stream and nodes (only when mic is on).
+  // Mic stream and nodes are allocated only while mic is on and released on Stop Everything.
   let micStream: MediaStream | null = null
   let micSource: MediaStreamAudioSourceNode | null = null
   let micPreGain: GainNode | null = null
@@ -242,11 +141,11 @@ export function createAudioEngine(
   let micRequestSeq = 0
   let desiredAudioStack: AudioStackConfig | null | undefined = initialAudioStack
 
-  function getCtx(): AudioContext | null {
+  const getCtx = () => {
     return getAudioContext()
   }
 
-  function applyInputMode(): void {
+  const applyInputMode = () => {
     const ctx = getCtx()
     if (!ctx) return
     const now = ctx.currentTime
@@ -258,7 +157,7 @@ export function createAudioEngine(
     micGain?.gain.setValueAtTime(mic, now)
   }
 
-  function applyMicGateEnvelope(micRms: number, dtSec: number): void {
+  const applyMicGateEnvelope = (micRms: number, dtSec: number) => {
     if (!micGateGain) return
     const threshold = clamp01(micGate) * 0.08
     const knee = 0.02
@@ -268,7 +167,7 @@ export function createAudioEngine(
     micGateGain.gain.setValueAtTime(clamp01(micGateSmoothed), getCtx()?.currentTime ?? 0)
   }
 
-  function stopMicGateLoop(): void {
+  const stopMicGateLoop = () => {
     if (micGateIntervalId) {
       clearInterval(micGateIntervalId)
       micGateIntervalId = null
@@ -276,7 +175,7 @@ export function createAudioEngine(
     lastMicGateTickMs = null
   }
 
-  function startMicGateLoop(): void {
+  const startMicGateLoop = () => {
     if (micGateIntervalId) return
     lastMicGateTickMs = typeof performance !== 'undefined' ? performance.now() : Date.now()
     micGateIntervalId = setInterval(() => {
@@ -291,10 +190,7 @@ export function createAudioEngine(
     }, 50)
   }
 
-  function buildAndConnect(audioStack: AudioStackConfig | null | undefined): void {
-    const ctx = getCtx()
-    if (!ctx || !masterGain || !mixer || !synthGain) return
-
+  const resetAudioRouting = () => {
     // Disconnect previous routing before rebuilding to avoid stacked parallel connections.
     safeDisconnect(synthGain)
     safeDisconnect(mixer)
@@ -307,8 +203,14 @@ export function createAudioEngine(
       synthModule.dispose()
       synthModule = null
     }
+  }
 
-    const enabled = audioStack?.enabled === true
+  const configureSynthRouting = (
+    ctx: AudioContext,
+    audioStack: AudioStackConfig,
+    enabled: boolean,
+  ) => {
+    if (!synthGain || !mixer) return
     activeChainNodes = enabled
       ? (audioStack?.chain ?? [])
           .map((def) => String(def.node ?? '').toLowerCase())
@@ -320,35 +222,58 @@ export function createAudioEngine(
       synthGain.gain.value = 1
       synthGain.connect(mixer)
     } else {
-      // Audio is optional in SSOT; when disabled, keep output silent.
+      // Audio is optional in profiles; when disabled, keep output silent.
       synthGain.gain.value = 0
     }
+  }
 
-    const masterVol = enabled ? (audioStack?.master?.volume ?? 0.22) : 0
-    masterGain.gain.cancelScheduledValues(ctx.currentTime)
-    masterGain.gain.setValueAtTime(masterVol, ctx.currentTime)
+  const configureOutputRouting = (
+    ctx: AudioContext,
+    audioStack: AudioStackConfig,
+    enabled: boolean,
+  ) => {
+    if (!masterGain || !mixer) return
+    const configured = configureOutput(
+      ctx,
+      audioStack,
+      enabled,
+      masterGain,
+      mixer,
+      analyserNode,
+      ANALYSER_FFT_SIZE,
+    )
+    analyserNode = configured.analyser
+    chain = configured.chain
+  }
 
-    if (!analyserNode) {
-      analyserNode = ctx.createAnalyser()
-    }
-    // Re-apply properties after disconnect/reconnect to ensure consistent state.
-    analyserNode.fftSize = ANALYSER_FFT_SIZE
-    analyserNode.smoothingTimeConstant = 0.5
-
-    const newChain = enabled ? buildAudioChain(ctx, audioStack) : []
-    chain = newChain
-    if (newChain.length > 0) {
-      connectAudioChain(mixer, newChain, analyserNode)
-      analyserNode.connect(masterGain)
-    } else {
-      mixer.connect(analyserNode)
-      analyserNode.connect(masterGain)
-    }
+  const buildAndConnect = (audioStack: AudioStackConfig | null | undefined) => {
+    const ctx = getCtx()
+    if (!ctx) return
+    if ([masterGain, mixer, synthGain].includes(null)) return
+    resetAudioRouting()
+    const enabled = audioStack?.enabled === true
+    configureSynthRouting(ctx, audioStack ?? {}, enabled)
+    configureOutputRouting(ctx, audioStack ?? {}, enabled)
 
     applyInputMode()
   }
 
-  function setConditionAudio(audioStack: AudioStackConfig | null | undefined): void {
+  const finishConditionSwitch = (
+    nextStack: AudioStackConfig | null | undefined,
+    rampSec: number,
+  ) => {
+    if (disposed) return
+    switchTimeoutId = null
+    buildAndConnect(nextStack)
+    const currentMaster = masterGain
+    if (!currentMaster) return
+    const targetVol = getAudioStackTargetVolume(nextStack)
+    const now = getAudioContextTime(getCtx())
+    currentMaster.gain.setValueAtTime(0, now)
+    currentMaster.gain.linearRampToValueAtTime(targetVol, now + rampSec)
+  }
+
+  const setConditionAudio = (audioStack: AudioStackConfig | null | undefined) => {
     if (disposed) return
     desiredAudioStack = audioStack
     const ctx = getCtx()
@@ -363,21 +288,10 @@ export function createAudioEngine(
     rampGain(masterGain, 0, rampSec)
 
     const nextStack = desiredAudioStack
-    switchTimeoutId = setTimeout(() => {
-      if (disposed) return
-      switchTimeoutId = null
-      buildAndConnect(nextStack)
-      if (masterGain) {
-        const nextEnabled = nextStack?.enabled === true
-        const targetVol = nextEnabled ? (nextStack?.master?.volume ?? 0.22) : 0
-        const now = getCtx()?.currentTime ?? 0
-        masterGain.gain.setValueAtTime(0, now)
-        masterGain.gain.linearRampToValueAtTime(targetVol, now + rampSec)
-      }
-    }, RAMP_MS)
+    switchTimeoutId = setTimeout(() => finishConditionSwitch(nextStack, rampSec), RAMP_MS)
   }
 
-  function stopMic(): void {
+  const stopMic = () => {
     micRequestSeq++
     stopMicGateLoop()
     if (micStream) {
@@ -401,7 +315,7 @@ export function createAudioEngine(
     callbacks.onMicStatusChange?.('off')
   }
 
-  async function requestMic(): Promise<void> {
+  const requestMic = async () => {
     if (disposed) return
     if (!getCtx() || !mixer) {
       callbacks.onMicStatusChange?.('error', 'Audio not ready')
@@ -468,7 +382,7 @@ export function createAudioEngine(
     }
   }
 
-  async function init(): Promise<void> {
+  const init = async () => {
     const status = await startAudioContext()
     if (disposed) return
     if (status !== 'on') return
@@ -502,25 +416,17 @@ export function createAudioEngine(
     setConditionAudio,
     getRms(): number {
       if (!analyserNode) return 0
-      rmsFrameCounter++
-      if (cachedRmsFrame !== rmsFrameCounter) {
-        const res = computeRms(analyserNode, scratchMainTime)
-        scratchMainTime = res.scratch
-        cachedRms = res.rms
-        cachedRmsFrame = rmsFrameCounter
-      }
-      return cachedRms
+      const res = computeRms(analyserNode, scratchMainTime)
+      scratchMainTime = res.scratch
+      lastMainRms = res.rms
+      return lastMainRms
     },
     getMetrics(): AudioMetrics {
       if (!analyserNode) return { rms: 0, centroid: 0, flux: 0 }
 
-      rmsFrameCounter++
-      if (cachedRmsFrame !== rmsFrameCounter) {
-        const mainRms = computeRms(analyserNode, scratchMainTime)
-        scratchMainTime = mainRms.scratch
-        cachedRms = mainRms.rms
-        cachedRmsFrame = rmsFrameCounter
-      }
+      const mainRms = computeRms(analyserNode, scratchMainTime)
+      scratchMainTime = mainRms.scratch
+      lastMainRms = mainRms.rms
       const main = computeSpectralFeatures(analyserNode, prevSpectrumMag, scratchMainDb)
       scratchMainDb = main.scratchDb
       prevSpectrumMag = main.nextPrev
@@ -532,22 +438,27 @@ export function createAudioEngine(
       let micMid: number | undefined
       let micHigh: number | undefined
 
-      if (micAnalyserNode && micGateGain) {
+      if (micAnalyserNode && micGateGain && micGain) {
+        const routingGain = inputMode === 'synth' ? 0 : clamp01(micGain.gain.value)
+        const gateGain = clamp01(micGateGain.gain.value)
+        const effectiveMicGain = routingGain * gateGain
         const micR = computeRms(micAnalyserNode, scratchMicTime)
         scratchMicTime = micR.scratch
-        micRms = micR.rms
         const mic = computeSpectralFeatures(micAnalyserNode, prevMicSpectrumMag, scratchMicDb)
         scratchMicDb = mic.scratchDb
         prevMicSpectrumMag = mic.nextPrev
-        micCentroid = mic.centroid
-        micFlux = mic.flux
-        micLow = mic.low
-        micMid = mic.mid
-        micHigh = mic.high
+        if (effectiveMicGain > 0) {
+          micRms = micR.rms * effectiveMicGain
+          micCentroid = mic.centroid * effectiveMicGain
+          micFlux = mic.flux * effectiveMicGain
+          micLow = mic.low * effectiveMicGain
+          micMid = mic.mid * effectiveMicGain
+          micHigh = mic.high * effectiveMicGain
+        }
       }
 
       return {
-        rms: cachedRms,
+        rms: lastMainRms,
         centroid: main.centroid,
         flux: main.flux,
         low: main.low,

@@ -1,43 +1,43 @@
-# Depressive Disorder — evidence summary
+# Depressive Disorder: evidence summary
 
-> **Non-diagnostic, metaphor framing:** This summary explains which evidence-backed dimensions are used for this preset. It does not describe a diagnosis and does not claim clinical equivalence.
+> Non-diagnostic metaphor framing: This summary explains which dimensions are used for this preset. It does not describe a diagnosis and does not claim clinical equivalence.
 
 ## Summary
 
-- **Condition preset**: `depression`
-- **Evidence summary (conservative)**: **Medium**
-- **What this is**: a curated composition of experience dimensions and conservative AV motifs.
-- **What this is not**: a diagnostic model, a therapy tool, or a statement about “what X looks like”.
+- Condition preset: `depression`
+- Evidence summary: Medium
+- Scope: a curated composition of experience dimensions and conservative audiovisual motifs.
+- Exclusions: not a diagnostic model, therapy tool, or statement about what a condition looks like.
 
 ## Included experience dimensions
 
-- **Cognitive Fog** (`cognitive_fog`, weight 60%) — Evidence: **Medium** — `docs/references/dimensions/cognitive_fog.md`
-- **Emotional Numbing** (`emotional_numbing`, weight 85%) — Evidence: **Medium** — `docs/references/dimensions/emotional_numbing.md`
-- **Time Dilation** (`time_dilation`, weight 35%) — Evidence: **Medium** — `docs/references/dimensions/time_dilation.md`
+- Cognitive Fog (`cognitive_fog`, weight 60%): Evidence: Medium: `docs/references/dimensions/cognitive_fog.md`
+- Emotional Numbing (`emotional_numbing`, weight 85%): Evidence: Medium: `docs/references/dimensions/emotional_numbing.md`
+- Time Dilation (`time_dilation`, weight 35%): Evidence: Medium: `docs/references/dimensions/time_dilation.md`
 
 ## Evidence links (in-repo)
 
 - `docs/references/README.md` (Evidence & Method)
 - `docs/references/EVIDENCE_MATRIX.md` (matrix)
-- `docs/REFERENCES_AUDIT.md` (audit)
+- `docs/references/MAPPING_SUMMARY.md` (current mapping)
 
 ## Motifs used in this preset (quick traceability)
 
-These motifs are used by the included dimensions. Each motif is an artistic/engineering implementation of a metaphor; the evidence applies primarily to the dimension phenomena.
+These motifs are used by the included dimensions. Each motif is an artistic and engineering implementation of a metaphor; the evidence applies primarily to the dimension phenomena.
 
-- `color_grade` — Adjusts saturation/contrast/tonal balance (clamped). — `docs/references/motifs/color_grade.md`
-- `compressor_limiter` — Reduces peaks and smooths dynamics (safety-first). — `docs/references/motifs/compressor_limiter.md`
-- `delay` — Short echo with low feedback/mix (clamped). — `docs/references/motifs/delay.md`
-- `flutter` — Low-depth pitch/phase wobble (clamped). — `docs/references/motifs/flutter.md`
-- `grain` — Adds fine noise texture (clamped). — `docs/references/motifs/grain.md`
-- `haze` — Adds soft fog/veil (clamped). — `docs/references/motifs/haze.md`
-- `lowpass` — Attenuates high frequencies above cutoff (clamped). — `docs/references/motifs/lowpass.md`
-- `noise_bed` — Adds quiet broadband noise floor (clamped). — `docs/references/motifs/noise_bed.md`
-- `pulse` — Slow, bounded envelope modulation (no strobe). — `docs/references/motifs/pulse.md`
-- `reverb` — Adds gentle space/decay (clamped). — `docs/references/motifs/reverb.md`
-- `soft_blur` — Applies mild blur to reduce sharp detail (clamped). — `docs/references/motifs/soft_blur.md`
-- `temporal_smear` — Blends previous frames for persistence/smear (feedback clamped). — `docs/references/motifs/temporal_smear.md`
-- `vignette` — Darkens edges to narrow the frame (static or gently modulated). — `docs/references/motifs/vignette.md`
+- `color_grade`: Adjusts saturation/contrast/tonal balance (clamped).: `docs/references/motifs/color_grade.md`
+- `compressor_limiter`: Reduces peaks and smooths dynamics (safety-first).: `docs/references/motifs/compressor_limiter.md`
+- `delay`: Short echo with low feedback/mix (clamped).: `docs/references/motifs/delay.md`
+- `flutter`: Low-depth pitch/phase wobble (clamped).: `docs/references/motifs/flutter.md`
+- `grain`: Adds fine noise texture (clamped).: `docs/references/motifs/grain.md`
+- `haze`: Adds soft fog/veil (clamped).: `docs/references/motifs/haze.md`
+- `lowpass`: Attenuates high frequencies above cutoff (clamped).: `docs/references/motifs/lowpass.md`
+- `noise_bed`: Adds quiet broadband noise floor (clamped).: `docs/references/motifs/noise_bed.md`
+- `pulse`: Slow, bounded envelope modulation (no strobe).: `docs/references/motifs/pulse.md`
+- `reverb`: Adds gentle space/decay (clamped).: `docs/references/motifs/reverb.md`
+- `soft_blur`: Applies mild blur to reduce sharp detail (clamped).: `docs/references/motifs/soft_blur.md`
+- `temporal_smear`: Blends previous frames for persistence/smear (feedback clamped).: `docs/references/motifs/temporal_smear.md`
+- `vignette`: Darkens edges to narrow the frame (static or gently modulated).: `docs/references/motifs/vignette.md`
 
 ## Safety notes / warnings shown in product
 

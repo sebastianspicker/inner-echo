@@ -1,8 +1,8 @@
-import { useRef, useState, type Dispatch, type SetStateAction } from 'react'
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { loadProfile } from '../../conditions/loader'
 import { getDefaultControlValues } from '../../conditions/controlTargets'
 import type { Profile } from '../../conditions/schema'
-import { BASELINE_PROFILE } from '../../conditions/fallbackProfiles'
+import { BASELINE_PROFILE, createComposeFallbackProfile } from '../../conditions/fallbackProfiles'
 import {
   composeEffectiveProfile,
   type ComposeReport,
@@ -33,7 +33,6 @@ export interface UseProfileLoadParams {
   selectedPresets: SelectedPreset[]
   selectedDimensions: SelectedDimension[]
   setIntensity: (v: number) => void
-  setAudioEnabled: (v: boolean) => void
   intensity: number
   safeMode: boolean
   reducedMotion: boolean
@@ -42,12 +41,17 @@ export interface UseProfileLoadParams {
   interactionAmount: number
 }
 
+export type ProfileLoadStatus = 'idle' | 'loading' | 'ready' | 'error'
+
 export function useProfileLoad(params: UseProfileLoadParams): {
   profile: Profile | null
   composeReport: ComposeReport | null
   controlValues: Record<string, number | boolean>
   setControlValues: Dispatch<SetStateAction<Record<string, number | boolean>>>
   isProfileLoading: boolean
+  profileLoadStatus: ProfileLoadStatus
+  profileLoadError: string | null
+  retryProfileLoad(): void
 } {
   const {
     conditionId,
@@ -55,7 +59,6 @@ export function useProfileLoad(params: UseProfileLoadParams): {
     selectedPresets,
     selectedDimensions,
     setIntensity,
-    setAudioEnabled,
     intensity,
     safeMode,
     reducedMotion,
@@ -71,49 +74,78 @@ export function useProfileLoad(params: UseProfileLoadParams): {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [composeReport, setComposeReport] = useState<ComposeReport | null>(null)
   const [controlValues, setControlValues] = useState<Record<string, number | boolean>>({})
-  // loadingCount tracks concurrent async loads via manual increment/decrement.
-  // The Math.max(0, c - 1) guard in the decrement prevents underflow if a cancellation race
-  // causes an extra decrement. This pattern is intentional.
-  const [loadingCount, setLoadingCount] = useState(0)
-  const isProfileLoading = loadingCount > 0
+  const [profileLoadStatus, setProfileLoadStatus] = useState<ProfileLoadStatus>('idle')
+  const [profileLoadError, setProfileLoadError] = useState<string | null>(null)
+  const [retryToken, setRetryToken] = useState(0)
+  const retryProfileLoad = useCallback(() => setRetryToken((value) => value + 1), [])
+  const isProfileLoading = profileLoadStatus === 'loading'
 
   useAsyncEffect(
     async (ctx) => {
-      if (composerMode !== 'preset' || !conditionId) return
-      setLoadingCount((c) => c + 1)
+      if (composerMode !== 'preset') return
+      if (!conditionId) {
+        setProfileLoadStatus('idle')
+        setProfileLoadError(null)
+        return
+      }
+      setProfileLoadStatus('loading')
+      setProfileLoadError(null)
       try {
         const p = await loadProfile(conditionId)
         if (ctx.cancelled) return
-        const prof = p ?? BASELINE_PROFILE
+        if (!p) {
+          setComposeReport(null)
+          setProfile(BASELINE_PROFILE)
+          setControlValues(getDefaultControlValues(BASELINE_PROFILE, { reducedMotion }))
+          setProfileLoadStatus('error')
+          setProfileLoadError(
+            'The selected experience could not be loaded. A clean fallback is active.',
+          )
+          return
+        }
+        const prof = p
         setProfile(prof)
         setComposeReport(null)
-        const defaults = getDefaultControlValues(prof)
+        const defaults = getDefaultControlValues(prof, { reducedMotion })
         setControlValues(defaults)
         const safe = prof.safety
         if (typeof safe?.intensity_default === 'number') {
           setIntensity(safe.intensity_default)
         }
-        setAudioEnabled(false)
+        setProfileLoadStatus('ready')
       } catch (err) {
         if (!ctx.cancelled) {
           setComposeReport(null)
           setProfile(BASELINE_PROFILE)
-          setControlValues(getDefaultControlValues(BASELINE_PROFILE))
-          setAudioEnabled(false)
+          setControlValues(getDefaultControlValues(BASELINE_PROFILE, { reducedMotion }))
+          setProfileLoadStatus('error')
+          setProfileLoadError(
+            'The selected experience could not be loaded. A clean fallback is active.',
+          )
           logger.error('loadProfile failed', err)
         }
-      } finally {
-        if (!ctx.cancelled) setLoadingCount((c) => Math.max(0, c - 1))
       }
     },
-    [conditionId, composerMode, setIntensity, setAudioEnabled],
+    [conditionId, composerMode, setIntensity, retryToken],
     { onError: (err) => logger.error('loadProfile failed', err) },
   )
+
+  useEffect(() => {
+    if (!profile) return
+    setControlValues((prev) => {
+      const next = getDefaultControlValues(profile, { reducedMotion })
+      for (const key of ['intensity', 'safeMode', 'audioEnabled'] as const) {
+        if (typeof prev[key] === typeof next[key]) next[key] = prev[key]
+      }
+      return next
+    })
+  }, [profile, reducedMotion])
 
   useAsyncEffect(
     async (ctx) => {
       if (composerMode === 'preset') return
-      setLoadingCount((c) => c + 1)
+      setProfileLoadStatus('loading')
+      setProfileLoadError(null)
       const settings = {
         intensity: intensityRef.current,
         safeMode,
@@ -130,12 +162,21 @@ export function useProfileLoad(params: UseProfileLoadParams): {
         if (ctx.cancelled) return
         setProfile(res.profile)
         setComposeReport(res.report)
-        const defaults = getDefaultControlValues(res.profile)
+        const defaults = getDefaultControlValues(res.profile, { reducedMotion })
         setControlValues((prev) => mergeControlValuesWithDefaults(defaults, prev))
+        setProfileLoadStatus('ready')
       } catch (err) {
-        if (!ctx.cancelled) logger.error('composeEffectiveProfile failed', err)
-      } finally {
-        if (!ctx.cancelled) setLoadingCount((c) => Math.max(0, c - 1))
+        if (!ctx.cancelled) {
+          const fallback = createComposeFallbackProfile(
+            'Profile composition failed; showing the clean fallback profile.',
+          )
+          setProfile(fallback)
+          setComposeReport(null)
+          setControlValues(getDefaultControlValues(fallback, { reducedMotion }))
+          setProfileLoadStatus('error')
+          setProfileLoadError('The experience could not be composed. A clean fallback is active.')
+          logger.error('composeEffectiveProfile failed', err)
+        }
       }
     },
     [
@@ -147,9 +188,19 @@ export function useProfileLoad(params: UseProfileLoadParams): {
       audioEnabled,
       maxFeedback,
       interactionAmount,
+      retryToken,
     ],
     { onError: (err) => logger.error('composeEffectiveProfile failed', err) },
   )
 
-  return { profile, composeReport, controlValues, setControlValues, isProfileLoading }
+  return {
+    profile,
+    composeReport,
+    controlValues,
+    setControlValues,
+    isProfileLoading,
+    profileLoadStatus,
+    profileLoadError,
+    retryProfileLoad,
+  }
 }

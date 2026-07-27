@@ -8,11 +8,11 @@ import { logger } from '../utils/logger'
 
 export type EvidenceDocPath = `docs/${string}.md`
 
-// Bundle all evidence markdown under docs/references/** plus the audit at docs/REFERENCES_AUDIT.md.
-const EVIDENCE_DOC_MODULES = import.meta.glob<string>(
-  ['../../docs/references/**/*.md', '../../docs/REFERENCES_AUDIT.md'],
-  { query: '?raw', import: 'default' },
-)
+// Bundle the maintained evidence documents for same-origin, offline navigation.
+const EVIDENCE_DOC_MODULES = import.meta.glob<string>('../../docs/references/**/*.md', {
+  query: '?raw',
+  import: 'default',
+})
 
 function toKey(docPath: EvidenceDocPath): string {
   // Convert "docs/..." to "../../docs/..." which is how we globbed.

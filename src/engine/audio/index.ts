@@ -1,11 +1,10 @@
 /**
- * Phase 7: Audio engine (no mic). Native WebAudio only.
+ * Public audio engine exports. Runtime uses native WebAudio only.
  */
 
 export type {
   AudioContextStatus,
   AudioModule,
-  AudioStackConfig,
   MicStatus,
   AudioInputMode,
   AudioMetrics,

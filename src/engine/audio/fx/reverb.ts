@@ -1,9 +1,11 @@
 /**
- * SSOT: reverb — small-room convolver with generated impulse (no external assets).
+ * SSOT: reverb: small-room convolver with generated impulse (no external assets).
  */
 
 import type { AudioModule } from '../types'
 import { clamp } from '../../../utils/numeric'
+import { createDryWetMix } from './dryWetMix'
+import { createRoutedAudioModule } from './routedAudioModule'
 
 export interface ReverbParams {
   /** Wet mix 0..1 (keep low). */
@@ -33,23 +35,25 @@ function makeImpulse(context: BaseAudioContext, decaySeconds: number): AudioBuff
 }
 
 export function createReverb(context: BaseAudioContext, params: ReverbParams = {}): AudioModule {
-  const input = context.createGain()
-  input.gain.value = 1
-
-  const dry = context.createGain()
-  const wet = context.createGain()
-  const out = context.createGain()
+  let current: Required<ReverbParams> = {
+    mix: params.mix ?? DEFAULT_MIX,
+    decay: params.decay ?? DEFAULT_DECAY,
+  }
+  const mixNodes = createDryWetMix(context)
 
   const convolver = context.createConvolver()
 
   let lastDecay = -1
 
   const set = (p: ReverbParams) => {
-    const mix = clamp(p.mix ?? DEFAULT_MIX, 0, 0.12)
-    const decay = clamp(p.decay ?? DEFAULT_DECAY, 0.6, 2.8)
+    current = {
+      mix: p.mix ?? current.mix,
+      decay: p.decay ?? current.decay,
+    }
+    const mix = clamp(current.mix, 0, 0.12)
+    const decay = clamp(current.decay, 0.6, 2.8)
 
-    dry.gain.setValueAtTime(1 - mix, context.currentTime)
-    wet.gain.setValueAtTime(mix, context.currentTime)
+    mixNodes.setMix(mix)
 
     // Regenerate impulse only when decay changes meaningfully.
     // Note: makeImpulse blocks the main thread synchronously, but the >0.08
@@ -63,19 +67,11 @@ export function createReverb(context: BaseAudioContext, params: ReverbParams = {
 
   set(params)
 
-  input.connect(dry)
-  input.connect(convolver)
-  convolver.connect(wet)
-  dry.connect(out)
-  wet.connect(out)
+  mixNodes.connectWetSource(convolver)
 
-  return {
-    connect(destination: AudioNode): void {
-      out.connect(destination)
-    },
-    getInput(): AudioNode {
-      return input
-    },
+  return createRoutedAudioModule({
+    input: mixNodes.input,
+    output: mixNodes.out,
     setParams(p: Record<string, unknown>): void {
       set({
         mix: p.mix as number | undefined,
@@ -83,12 +79,9 @@ export function createReverb(context: BaseAudioContext, params: ReverbParams = {
       })
     },
     dispose(): void {
-      input.disconnect()
-      dry.disconnect()
-      wet.disconnect()
-      out.disconnect()
+      mixNodes.dispose()
       convolver.disconnect()
       convolver.buffer = null
     },
-  }
+  })
 }

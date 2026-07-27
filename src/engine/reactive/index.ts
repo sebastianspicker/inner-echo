@@ -1,5 +1,5 @@
 /**
- * Phase 8: Audio-to-video modulation — RMS analyser → video param overrides.
+ * Reactive audio/video modulation helpers.
  */
 
 export { resolveAnalyserTarget, type ResolvedMapping } from './analyserToParamsResolver'

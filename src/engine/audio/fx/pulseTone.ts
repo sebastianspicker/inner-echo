@@ -1,5 +1,5 @@
 /**
- * SSOT: pulse_tone — a very quiet pulsing tone mixed into the chain (safety-first).
+ * SSOT: pulse_tone: a very quiet pulsing tone mixed into the chain (safety-first).
  *
  * Params:
  * - rate (Hz)
@@ -9,6 +9,7 @@
 
 import type { AudioModule } from '../types'
 import { clamp } from '../../../utils/numeric'
+import { createRoutedAudioModule } from './routedAudioModule'
 
 export interface PulseToneParams {
   rate?: number
@@ -24,6 +25,11 @@ export function createPulseTone(
   context: BaseAudioContext,
   params: PulseToneParams = {},
 ): AudioModule {
+  let current: Required<PulseToneParams> = {
+    rate: params.rate ?? DEFAULT_RATE,
+    mix: params.mix ?? DEFAULT_MIX,
+    base_freq: params.base_freq ?? DEFAULT_FREQ,
+  }
   const input = context.createGain()
   input.gain.value = 1
 
@@ -56,10 +62,15 @@ export function createPulseTone(
   lfo.start(0)
 
   const set = (p: PulseToneParams) => {
-    const rate = clamp(p.rate ?? DEFAULT_RATE, 0.2, 3)
-    const baseFreq = clamp(p.base_freq ?? DEFAULT_FREQ, 60, 220)
+    current = {
+      rate: p.rate ?? current.rate,
+      mix: p.mix ?? current.mix,
+      base_freq: p.base_freq ?? current.base_freq,
+    }
+    const rate = clamp(current.rate, 0.2, 3)
+    const baseFreq = clamp(current.base_freq, 60, 220)
     // mix is intentionally capped (SSOT uses <= 0.10).
-    const mix = clamp(p.mix ?? DEFAULT_MIX, 0, 0.12)
+    const mix = clamp(current.mix, 0, 0.12)
 
     osc.frequency.setValueAtTime(baseFreq, context.currentTime)
     lfo.frequency.setValueAtTime(rate, context.currentTime)
@@ -71,13 +82,9 @@ export function createPulseTone(
 
   set(params)
 
-  return {
-    connect(destination: AudioNode): void {
-      out.connect(destination)
-    },
-    getInput(): AudioNode {
-      return input
-    },
+  return createRoutedAudioModule({
+    input,
+    output: out,
     setParams(p: Record<string, unknown>): void {
       set({
         rate: p.rate as number | undefined,
@@ -101,5 +108,5 @@ export function createPulseTone(
       offset.disconnect()
       toneGain.disconnect()
     },
-  }
+  })
 }

@@ -8,7 +8,7 @@
       "notes": "Tonic readiness/tension. Prefer persistent, low-amplitude texture + gentle dynamic control. Avoid dramatic motion or contrast.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -83,9 +83,9 @@
       ],
       "avoid": {
         "behaviors": [
-          "**Flicker, strobe, rapid luminance modulation**: not needed for tonic hyperarousal and increases seizure risk; violates accessibility expectations. citeturn10search0turn10search2",
-          "**Sudden loud transients / jump-cut audio spikes**: would conflate hyperarousal with startle-induction; startle is a defensive reflex to sudden stimuli and can be distressing. citeturn10search3turn13search6",
-          "Replace any “jitter” with **slow envelope** changes (<0.2 Hz) or static texture + intensity slider. citeturn11search10turn10search5"
+          "Flicker, strobe, rapid luminance modulation: not needed for tonic hyperarousal and increases seizure risk; violates accessibility expectations. citeturn10search0turn10search2",
+          "Sudden loud transients / jump-cut audio spikes: would conflate hyperarousal with startle-induction; startle is a defensive reflex to sudden stimuli and can be distressing. citeturn10search3turn13search6",
+          "Replace any “jitter” with slow envelope changes (<0.2 Hz) or static texture + intensity slider. citeturn11search10turn10search5"
         ],
         "video_nodes_risky": [
           "pulse",
@@ -96,7 +96,7 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report.md"]
+      "citations": ["docs/references/research/initial-dimensions.md"]
     },
     "hypervigilance": {
       "evidence_strength": "medium",
@@ -104,7 +104,7 @@
       "notes": "Attentional scanning/threat monitoring. Use subtle narrowing and cue sensitivity without jump scares.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -176,9 +176,9 @@
       ],
       "avoid": {
         "behaviors": [
-          "**Jump scares / abrupt cuts**: directly violate the repo safety note and are not necessary to represent vigilance/maintenance. citeturn46view0turn11search10",
-          "**Fast scanning camera motion** (pan/tilt, parallax): may cause vestibular discomfort and suggests “cinematic scanning” more than attention science. citeturn11search10turn11search7",
-          "Replace moving focus windows with **static composition + micro-contrast cueing** (slow fades) and allow user to disable all cueing (“Reduced Surprise”). citeturn11search10turn10search5"
+          "Jump scares / abrupt cuts: directly violate the repo safety note and are not necessary to represent vigilance/maintenance. citeturn46view0turn11search10",
+          "Fast scanning camera motion (pan/tilt, parallax): may cause vestibular discomfort and suggests “cinematic scanning” more than attention science. citeturn11search10turn11search7",
+          "Replace moving focus windows with static composition + micro-contrast cueing (slow fades) and allow user to disable all cueing (“Reduced Surprise”). citeturn11search10turn10search5"
         ],
         "video_nodes_risky": [
           "pulse",
@@ -189,7 +189,7 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report.md"]
+      "citations": ["docs/references/research/initial-dimensions.md"]
     },
     "panic_peaks": {
       "evidence_strength": "high",
@@ -197,7 +197,7 @@
       "notes": "Phasic rise/fall alarm waves. Use clamped envelopes and smooth returns to baseline. No flashes, no loud transients.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -287,10 +287,10 @@
       ],
       "avoid": {
         "behaviors": [
-          "**Strobe / flicker / fast rhythmic flashes**: unnecessary for “wave” dynamics and presents seizure risk. citeturn10search0turn10search2",
-          "**Rapid zooms, camera shakes, heavy feedback trails**: more likely to induce cybersickness/vestibular discomfort than to represent panic phenomenology. citeturn11search7turn11search10",
-          "**Harsh audio distortion or sudden siren-like elements**: can function as a startle/provocation rather than a metaphor; violates safety-first intent. citeturn10search3turn39view0",
-          "Replace motion-heavy “swells” with **static imagery + slow luminance/contrast envelope** and offer a prominent Reduced Motion toggle. citeturn11search10turn10search5"
+          "Strobe / flicker / fast rhythmic flashes: unnecessary for “wave” dynamics and presents seizure risk. citeturn10search0turn10search2",
+          "Rapid zooms, camera shakes, heavy feedback trails: more likely to induce cybersickness/vestibular discomfort than to represent panic phenomenology. citeturn11search7turn11search10",
+          "Harsh audio distortion or sudden siren-like elements: can function as a startle/provocation rather than a metaphor; violates safety-first intent. citeturn10search3turn39view0",
+          "Replace motion-heavy “swells” with static imagery + slow luminance/contrast envelope and offer a prominent Reduced Motion toggle. citeturn11search10turn10search5"
         ],
         "video_nodes_risky": [
           "pulse",
@@ -301,15 +301,15 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report.md"]
+      "citations": ["docs/references/research/initial-dimensions.md"]
     },
     "intrusion": {
       "evidence_strength": "medium",
       "rationale_doc": "docs/references/dimensions/intrusion.md",
-      "notes": "Unwanted content 'insertion'. Represent as abstract, low-opacity overlays and tiny audio recurrences—never literal content.",
+      "notes": "Unwanted content 'insertion'. Represent as abstract, low-opacity overlays and tiny audio recurrences, never literal content.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -392,7 +392,7 @@
           "Holmes, E. A., Brewin, C. R., & Hennessy, R. G. (2004). Trauma films, information processing, and intrusive memory development. *Journal of Experimental Psychology: General, 133*(1), 3–22. https://doi.org/10.1037/0096-3445.133.1.3",
           "Kleim, B., Graham, B., Bryant, R. A., & Ehlers, A. (2013). Capturing intrusive re-experiencing in trauma survivors’ daily lives using ecological momentary assessment. *Journal of Abnormal Psychology, 122*(4), 998–1009. https://doi.org/10.1037/a0034957",
           "Kuijpers, K. F., et al. (2022). Using a daily diary for monitoring intrusive memories of trauma: A convergent validity study. *International Journal of Methods in Psychiatric Research, 32*(1), e1936. https://doi.org/10.1002/mpr.1936",
-          "Creamer, M., Bell, R., & Failla, S. (2003). Psychometric properties of the Impact of Event Scale—Revised. *Behaviour Research and Therapy, 41*(12), 1489–1496. https://doi.org/10.1016/j.brat.2003.07.010"
+          "Creamer, M., Bell, R., & Failla, S. (2003). Psychometric properties of the Impact of Event Scale–Revised. *Behaviour Research and Therapy, 41*(12), 1489–1496. https://doi.org/10.1016/j.brat.2003.07.010"
         ],
         "video_nodes_risky": [
           "pulse",
@@ -403,7 +403,7 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report-2.md"]
+      "citations": ["docs/references/research/remaining-dimensions.md"]
     },
     "rumination_loop": {
       "evidence_strength": "high",
@@ -411,7 +411,7 @@
       "notes": "Sticky repetition. Prefer gentle, low-feedback recursion without hypnotic escalation or rhythmic insistence.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -510,7 +510,7 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report-2.md"]
+      "citations": ["docs/references/research/remaining-dimensions.md"]
     },
     "compulsive_loop": {
       "evidence_strength": "high",
@@ -518,7 +518,7 @@
       "notes": "Repeat-to-relieve loop. Use subtle repetition cues and structure hints without caricature or “quirky” aesthetics.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -605,7 +605,7 @@
           "Gillan, C. M., Robbins, T. W., Sahakian, B. J., van den Heuvel, O. A., & van Wingen, G. (2016). The role of habit in compulsivity. *European Neuropsychopharmacology, 26*(5), 828–840. https://doi.org/10.1016/j.euroneuro.2015.12.033",
           "Gillan, C. M., & Robbins, T. W. (2014). Goal-directed learning and obsessive–compulsive disorder. *Philosophical Transactions of the Royal Society B, 369*(1655), 20130475. https://doi.org/10.1098/rstb.2013.0475",
           "Gillan, C. M., et al. (2011). Disruption in the balance between goal-directed behavior and habit learning in obsessive–compulsive disorder. *American Journal of Psychiatry.* https://doi.org/10.1176/appi.ajp.2011.10071062",
-          "Vaghi, M. M., et al. (2024). Action sequence learning, habits, and automaticity in obsessive–compulsive disorder. *eLife.* https://doi.org/10.7554/eLife.87346"
+          "Vaghi, M. M., et al. (2024). Action sequence learning, habits, and automaticity in obsessive–compulsive disorder. eLife. https://doi.org/10.7554/eLife.87346"
         ],
         "video_nodes_risky": [
           "pulse",
@@ -616,7 +616,7 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report-2.md"]
+      "citations": ["docs/references/research/remaining-dimensions.md"]
     },
     "emotional_numbing": {
       "evidence_strength": "medium",
@@ -624,7 +624,7 @@
       "notes": "Muted affect/reward. Keep it subtle to avoid a stereotypical 'depression filter'.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -721,7 +721,7 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report-2.md"]
+      "citations": ["docs/references/research/remaining-dimensions.md"]
     },
     "cognitive_fog": {
       "evidence_strength": "medium",
@@ -729,7 +729,7 @@
       "notes": "Reduced clarity/effort. Prefer blur/haze and gentle spectral dulling while preserving readability.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -827,15 +827,15 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report-2.md"]
+      "citations": ["docs/references/research/remaining-dimensions.md"]
     },
     "time_dilation": {
       "evidence_strength": "medium",
       "rationale_doc": "docs/references/dimensions/time_dilation.md",
-      "notes": "Uneven time flow. Use faint afterimage and micro-timing variance—avoid disorientation.",
+      "notes": "Uneven time flow. Use faint afterimage and micro-timing variance while avoiding disorientation.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -911,9 +911,9 @@
       ],
       "avoid": {
         "behaviors": [
-          "**Flutter/wow (very low depth):** micro-instability in pitch/time can metaphorically match temporal unevenness.",
-          "**Short delay (very low mix):** tiny temporal echo without rhythmic repetition.",
-          "**Limiter/compressor:** prevents sudden shocks and reduces fatigue.",
+          "Flutter/wow (very low depth): micro-instability in pitch/time can metaphorically match temporal unevenness.",
+          "Short delay (very low mix): tiny temporal echo without rhythmic repetition.",
+          "Limiter/compressor: prevents sudden shocks and reduces fatigue.",
           "Provide Reduced Motion: disable smear/jitter; keep only gentle audio flutter at minimal depth.",
           "Cap any feedback or smear; forbid flicker and abrupt time skips.",
           "Offer immediate “stabilize time” toggle (repo safety note)."
@@ -927,7 +927,7 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report-2.md"]
+      "citations": ["docs/references/research/remaining-dimensions.md"]
     },
     "derealization": {
       "evidence_strength": "medium",
@@ -935,7 +935,7 @@
       "notes": "World feels unreal/behind glass. Use veil + tiny channel separation; avoid heavy glitch aesthetics.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -1038,7 +1038,7 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report-2.md"]
+      "citations": ["docs/references/research/remaining-dimensions.md"]
     },
     "depersonalization": {
       "evidence_strength": "medium",
@@ -1046,7 +1046,7 @@
       "notes": "Self-distance / reduced agency. Must stay optional and non-impairing; avoid body horror or identity claims.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -1131,11 +1131,11 @@
       ],
       "avoid": {
         "behaviors": [
-          "**Mild room/reverb + lowpass (gentle):** can make “self voice” feel slightly distant without disorientation.",
-          "**Very low chorus/detune (optional, minimal):** suggests self-distance; keep subtle to avoid dizziness.",
-          "**Limiter/compressor:** reduce startling peaks.",
+          "Mild room/reverb + lowpass (gentle): can make “self voice” feel slightly distant without disorientation.",
+          "Very low chorus/detune (optional, minimal): suggests self-distance; keep subtle to avoid dizziness.",
+          "Limiter/compressor: reduce startling peaks.",
           "Follow repo safety note: no unsettling body distortions; user-controlled; subtle.",
-          "Reduced Motion: keep effects static; disable input-latency metaphor if it risks frustration—replace with gentler grading."
+          "Reduced Motion: keep effects static; replace the input-latency metaphor with gentler grading if it risks frustration."
         ],
         "video_nodes_risky": [
           "pulse",
@@ -1146,7 +1146,7 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report-2.md"]
+      "citations": ["docs/references/research/remaining-dimensions.md"]
     },
     "sensory_overload": {
       "evidence_strength": "medium",
@@ -1154,7 +1154,7 @@
       "notes": "Filtering fails; too much at once. Add density via textures (not flashes) + strong dynamics safety.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -1250,7 +1250,7 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report-2.md"]
+      "citations": ["docs/references/research/remaining-dimensions.md"]
     },
     "attention_fragmentation": {
       "evidence_strength": "medium",
@@ -1258,7 +1258,7 @@
       "notes": "Unstable focus. Prefer small focus instability and safe modulation, no rapid camera motion.",
       "safety": {
         "warnings": [
-          "Metaphor only — not a diagnostic or clinical simulation.",
+          "Metaphor only: not a diagnostic or clinical simulation.",
           "Provide Stop / Safe Mode / Reduced Motion.",
           "Avoid flashes/flicker and sudden loud sounds; keep everything user-controllable."
         ],
@@ -1346,7 +1346,7 @@
         ],
         "audio_nodes_risky": ["pulse_tone", "delay", "flutter", "tremolo"]
       },
-      "citations": ["Scientific/deep-research-report-2.md"]
+      "citations": ["docs/references/research/remaining-dimensions.md"]
     }
   }
 }

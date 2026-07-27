@@ -1,6 +1,6 @@
 # Evidence index (dimension-level)
 
-Quick index for authors and reviewers.
+This index maps each experience dimension to its evidence page.
 
 - Evidence strength refers to the experience dimension (phenomenology + measurement literature).
 - It does not mean the AV overlay “simulates” a disorder.
@@ -21,7 +21,3 @@ Quick index for authors and reviewers.
 | `sensory_overload` | Sensory Overload | MEDIUM | `docs/references/dimensions/sensory_overload.md` |
 | `attention_fragmentation` | Attention Fragmentation | MEDIUM | `docs/references/dimensions/attention_fragmentation.md` |
 | `compulsive_loop` | Compulsive Loop | HIGH | `docs/references/dimensions/compulsive_loop.md` |
-
-
-Generated: 2026-02-15
-

@@ -1,16 +1,11 @@
 /**
- * Phase 4: Grain/Noise effect node — single ShaderMaterial with updatable uniforms.
+ * Grain/noise effect node: single ShaderMaterial with updatable uniforms.
  */
 
-import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
+import { ShaderMaterial, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
-import {
-  applyUvParams,
-  clamp,
-  getSafeModeClampNumber,
-  resolveNumberParam,
-  QUAD_VERTEX_SHADER,
-} from './paramUtils'
+import { applyUvParams, clamp, getSafeModeClampNumber, resolveNumberParam } from './paramUtils'
+import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
 
 const GRAIN_FRAGMENT = `
 uniform sampler2D u_map;
@@ -67,23 +62,15 @@ export class GrainNode implements VideoNode {
   }
 
   getMaterial(inputTexture: Texture, _previousFrameTexture?: Texture | null): Material {
-    if (this.material) {
-      this.material.uniforms.u_map.value = inputTexture
-      return this.material
-    }
-    this.material = new ShaderMaterial({
-      uniforms: {
-        u_map: { value: inputTexture },
-        u_uvScale: { value: new Vector2(1, 1) },
-        u_uvOffset: { value: new Vector2(0, 0) },
+    if (!this.material) {
+      this.material = createEffectMaterial(inputTexture, GRAIN_FRAGMENT, {
         u_amount: { value: 0 },
         u_time: { value: 0 },
         u_scale: { value: 1.2 },
-      },
-      vertexShader: QUAD_VERTEX_SHADER,
-      fragmentShader: GRAIN_FRAGMENT,
-      depthWrite: false,
-    })
+      })
+    } else {
+      bindInputTexture(this.material, inputTexture)
+    }
     return this.material
   }
 
@@ -95,9 +82,6 @@ export class GrainNode implements VideoNode {
   }
 
   dispose(): void {
-    if (this.material) {
-      this.material.dispose()
-      this.material = null
-    }
+    this.material = disposeEffectMaterial(this.material)
   }
 }

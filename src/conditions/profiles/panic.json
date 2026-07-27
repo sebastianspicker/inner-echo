@@ -1,7 +1,7 @@
 {
   "id": "panic",
   "label": "Panic Disorder",
-  "summary": "A metaphor of sudden alarm waves—pulsing intensity with strong smoothing and strict caps to prevent harshness.",
+  "summary": "A metaphor of sudden alarm waves: an explicit rhythmic tunnel/blur pulse with low, heartbeat-like audio cues and strict caps.",
   "framing": {
     "type": "metaphor",
     "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
@@ -17,7 +17,7 @@
     }
   ],
   "safety": {
-    "intensity_default": 0.3,
+    "intensity_default": 0.5,
     "intensity_max": 0.6,
     "warnings": [
       "Designed to be subtle, but may still feel activating for some users.",
@@ -43,7 +43,13 @@
       "max_pulse_depth": 0.16
     },
     "reduced_motion_policy": {
-      "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter"],
+      "disable_nodes": [
+        "temporal_smear",
+        "feedback_loop",
+        "pulse",
+        "focus_jitter",
+        "somatic_pulse"
+      ],
       "note": "Reduced Motion removes time-based feedback/jitter nodes and keeps a calmer static overlay."
     }
   },
@@ -79,7 +85,7 @@
         "min": 0,
         "max": 0.18,
         "step": 0.01,
-        "target": "video.pulse.depth"
+        "target": "video.somatic_pulse.depth"
       },
       {
         "id": "pulse_rate",
@@ -88,42 +94,20 @@
         "min": 0.6,
         "max": 1.8,
         "step": 0.01,
-        "target": "video.pulse.rate"
+        "target": "video.somatic_pulse.rate"
       }
     ]
   },
   "video_stack": [
     {
-      "id": "pulse",
-      "node": "pulse",
+      "id": "body_wave",
+      "node": "somatic_pulse",
       "params": {
-        "depth": 0.09,
-        "rate": 1,
-        "smoothing": 0.9
-      }
-    },
-    {
-      "id": "vignette",
-      "node": "vignette",
-      "params": {
-        "amount": 0.22,
-        "softness": 0.8
-      }
-    },
-    {
-      "id": "blur",
-      "node": "soft_blur",
-      "params": {
-        "amount": 0.08
-      }
-    },
-    {
-      "id": "grain",
-      "node": "grain",
-      "params": {
-        "amount": 0.16,
-        "scale": 1.2,
-        "speed": 0.08
+        "depth": 0.16,
+        "rate": 1.25,
+        "smoothing": 0.82,
+        "tunnel": 0.5,
+        "blur": 0.24
       }
     },
     {
@@ -131,8 +115,10 @@
       "node": "color_grade",
       "params": {
         "contrast": 0.06,
-        "saturation": -0.06,
-        "brightness": 0
+        "saturation": -0.05,
+        "brightness": 0,
+        "temperature": 0,
+        "tint": 0
       }
     }
   ],
@@ -146,30 +132,30 @@
       {
         "node": "noise_bed",
         "params": {
-          "level": 0.02,
+          "level": 0.012,
           "color": "pink"
         }
       },
       {
         "node": "pulse_tone",
         "params": {
-          "rate": 1,
-          "mix": 0.08,
-          "base_freq": 120
+          "rate": 1.25,
+          "mix": 0.11,
+          "base_freq": 105
         }
       },
       {
         "node": "lowpass",
         "params": {
-          "cutoff": 5200,
+          "cutoff": 5000,
           "q": 0.7
         }
       },
       {
         "node": "reverb",
         "params": {
-          "mix": 0.05,
-          "decay": 1.3
+          "mix": 0.045,
+          "decay": 1.25
         }
       },
       {
@@ -188,47 +174,36 @@
     "analyser_to_params": [
       {
         "source": "rms",
-        "target": "video.grain.amount",
-        "scale": 0.1,
-        "offset": 0.1,
+        "target": "video.somatic_pulse.depth",
+        "scale": 0.08,
+        "offset": 0,
         "smoothing": {
-          "attack": 0.1,
-          "release": 0.3
+          "attack": 0.08,
+          "release": 0.28
         },
-        "clamp": [0.1, 0.26]
+        "clamp": [0.04, 0.16]
       },
       {
         "source": "rms",
-        "target": "video.pulse.depth",
-        "scale": 0.1,
-        "offset": 0.02,
+        "target": "video.somatic_pulse.tunnel",
+        "scale": 0.12,
+        "offset": 0,
         "smoothing": {
           "attack": 0.1,
           "release": 0.35
         },
-        "clamp": [0.02, 0.14]
+        "clamp": [0.18, 0.62]
       },
       {
         "source": "rms",
-        "target": "video.vignette.amount",
-        "scale": 0.12,
-        "offset": 0.14,
+        "target": "video.somatic_pulse.blur",
+        "scale": 0.08,
+        "offset": 0,
         "smoothing": {
-          "attack": 0.12,
+          "attack": 0.1,
           "release": 0.4
         },
-        "clamp": [0.14, 0.32]
-      },
-      {
-        "source": "rms",
-        "target": "video.soft_blur.amount",
-        "scale": 0.1,
-        "offset": 0.04,
-        "smoothing": {
-          "attack": 0.12,
-          "release": 0.45
-        },
-        "clamp": [0.04, 0.16]
+        "clamp": [0.04, 0.28]
       },
       {
         "source": "rms",
@@ -240,6 +215,17 @@
           "release": 0.35
         },
         "clamp": [4500, 7000]
+      },
+      {
+        "source": "rms",
+        "target": "audio.pulse_tone.mix",
+        "scale": 0.04,
+        "offset": 0.08,
+        "smoothing": {
+          "attack": 0.08,
+          "release": 0.25
+        },
+        "clamp": [0.06, 0.12]
       }
     ]
   },

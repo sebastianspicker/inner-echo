@@ -1,85 +1,89 @@
-# RELIABILITY.md — Browser matrix, fallbacks, and known issues
+# Reliability and browser evidence
 
-This document describes supported browsers, fallback behaviour, and mitigations for known issues. It is intended for developers and release checks.
+This document describes implemented fallback behavior and the scope of automated browser evidence.
 
----
+## Automated browser scope
 
-## Browser matrix
+The custom Playwright scripts target:
 
-| Browser        | getUserMedia (camera) | getUserMedia (mic) | WebGL (Three.js) | AudioContext / autoplay |
-|----------------|------------------------|--------------------|------------------|--------------------------|
-| Chrome (latest)| ✓                      | ✓                  | ✓                | ✓ (after user gesture)   |
-| Firefox (latest)| ✓                    | ✓                  | ✓                | ✓ (after user gesture)   |
-| Safari (latest)| ✓                      | ✓                  | ✓                | ✓ (after user gesture)   |
-| Edge (latest)  | ✓                      | ✓                  | ✓                | ✓ (after user gesture)   |
+| Engine or channel | Automated scope | What it does not prove |
+|---|---|---|
+| Installed Chrome channel | Detailed welcome, setup, camera, fallback, safety, evidence, responsive, and status flows | Other Chromium versions, real devices, and all permission combinations |
+| Playwright Firefox | Cross-browser synthetic-media smoke | Real microphone hardware and every Firefox platform combination |
+| Playwright WebKit | Cross-browser synthetic-media smoke | Real Safari, iOS, Safari permission behavior, and VoiceOver |
 
-- **getUserMedia (camera)**: Required. The app requests video-only by default; mic is a separate, optional permission.
-- **getUserMedia (mic)**: Optional. Used only when the user explicitly enables microphone for reactive audio→video modulation.
-- **WebGL**: Used for the overlay pipeline (effects). If WebGL is unavailable or fails to initialise, the app falls back to 2D canvas (video passthrough only, no effects).
-- **AudioContext**: Must be started after a user gesture (click/touch). Browsers block autoplay; the app does not play audio until the user clicks “Enable audio”.
+Synthetic media makes the checks deterministic and prevents real camera images from entering test artifacts. It also means the checks cannot establish hardware compatibility or real permission behavior.
 
-### Browser-specific behaviour
+## Runtime state requirements
 
-- **Chrome**: Camera and mic permissions are per-origin. Autoplay policy requires user gesture for AudioContext; our “Enable audio” button satisfies this.
-- **Firefox**: Same pattern; mic is a separate permission prompt. WebGL is generally well supported.
-- **Safari**: Stricter autoplay and gesture requirements. `playsInline` and `muted` are set on the video element to allow inline playback. AudioContext must be resumed after user interaction.
+The interface must distinguish these states rather than collapse them into a generic active flag:
 
----
+- camera idle, requesting, active, denied, interrupted, and failed
+- effects loading, WebGL active, 2D fallback, raw preview, unavailable, and stopped
+- sound off, starting, on, blocked, and failed
+- microphone off, requesting, active, denied, and failed
+- profile catalog loading, loaded, invalid, and failed
 
-## WebGL fallback strategy
+Stop Everything must remain reachable and return the visible state to idle after releasing active resources.
 
-1. **Default**: The overlay uses the Three.js WebGL pipeline when `USE_WEBGL` is true (see `src/engine/canvas/index.ts`). This supports the full video node graph (effects, temporal nodes, etc.).
-2. **Init failure**: If `startWebGLOverlayLoop` throws or returns null (e.g. WebGL not supported, context loss, or driver issues), the canvas module falls back to the 2D overlay.
-3. **2D fallback**: `overlayRenderer.ts` draws the camera feed with `drawImage` (cover semantics). No effects are applied; the user sees the raw camera view. The app continues to run; condition switching and Stop Everything still work.
-4. **No further fallback**: If 2D canvas is unavailable, the overlay area may stay black; the app does not crash. Stop Everything and controls remain usable.
+## Rendering fallbacks
 
----
+1. WebGL: the Three.js pipeline reports active only after renderer setup succeeds.
+2. Canvas2D: a valid 2D surface may display camera passthrough without the full effect graph.
+3. Raw preview: the overlay may be hidden while the underlying video remains visible.
+4. Unavailable: if neither effect surface is usable, the interface reports that effects are unavailable and keeps safety controls reachable.
 
-## Known issues and mitigations
+A fallback must not be labelled as active WebGL effects.
 
-| Issue | Mitigation |
-|-------|------------|
-| **Low FPS on weak devices** | FPS guard in the WebGL pipeline (Phase 6) reduces internal render resolution (scale 1 → 0.75 → 0.5) when FPS drops below 30. “Stress Mode” in the UI simulates load to test this. |
-| **Camera permission denied** | UI shows a clear message; no retry loop. User can click “Start camera” again after granting permission. |
-| **Mic permission denied** | Shown in mic status; user can continue with synth-only audio. |
-| **AudioContext blocked** | Audio stays “off” until the user clicks “Enable audio” (user gesture). No autoplay. |
-| **WebGL context lost** | Not explicitly recovered in MVP; user can use “Reset App” (ErrorBoundary) or reload. 2D fallback does not use WebGL. |
-| **Reduced Motion** | Conditions with temporal/smear effects respect the Reduced Motion preference and can disable or simplify those nodes (see condition profiles and `reduced_motion_policy`). |
-| **Resize during active overlay** | Canvas and WebGL pipeline resize with the container; no explicit debounce. Rare visual glitches on very fast resize are acceptable in MVP. |
+## Known runtime limitations
 
----
+| Area | Current behavior and limit |
+|---|---|
+| Low frame rate | The WebGL loop can reduce internal render scale from 1 to 0.75 to 0.5 when measured frame rate remains low. This is a mitigation, not a performance guarantee. |
+| Camera denial | The interface reports denial and waits for another user action. It does not retry continuously. |
+| Microphone denial | The microphone remains off; synthesized audio can continue if enabled. |
+| Blocked `AudioContext` | Sound remains off until a valid user action resumes or creates the context. |
+| WebGL context loss | The effect loop stops and the interface reports a reduced fallback. Reloading may be required to restore WebGL. |
+| Reduced Motion | Profile policies disable or simplify configured motion-sensitive nodes. Coverage depends on profiles and node registration remaining aligned. |
+| Resize | Canvas and WebGL resources resize with the stage. There is no explicit debounce, so rapid resizing can show transient artifacts. |
+| Offline use | No service worker or offline cache is included. |
 
-## Verifying reliability
+## Automated verification
 
-- **Manual**: Start camera → switch conditions → enable/disable audio and mic → Stop Everything. Repeat in Chrome, Firefox, Safari.
-- **WebGL fallback**: In Chrome DevTools, set “Disable WebGL” (or use a VM/device without WebGL) and confirm 2D passthrough and no crash.
-- **Debug panel (dev only)**: When running in development, the debug panel shows renderer mode (webgl vs 2d), fps, renderScale, audio and mic state. Use “Copy diagnostics” to capture state for support.
+Run the complete application gate with:
 
----
+```bash
+npm run check
+```
 
-## Release checklist (reliability)
+It runs the production build, lint, Vitest, condition and composer validation, evidence verification, contract checks, detailed Chrome UI flows, Chrome, Firefox, and WebKit smoke, preview smoke, and the required fake camera, audio, and microphone runtime matrix.
 
-Before release, verify:
+Install matching Playwright binaries first:
 
-- [ ] **Full gate run**: Run `npm run check` (verify + dev e2e + preview smoke) and require a green result before tagging.
-- [ ] **Browser matrix**: Smoke-test start/stop, condition switch, audio and mic in Chrome, Firefox, and Safari (or your supported set).
-- [ ] **WebGL fallback**: With WebGL disabled (or on a device without WebGL), confirm 2D passthrough and no crash.
-- [ ] **Stop Everything**: After starting camera and optional audio/mic, click “Stop Everything”; confirm no orphan streams, loops, or console errors.
-- [ ] **ErrorBoundary**: Use the dev “Throw test error” button (or trigger a crash); confirm “Reset App” appears and reload works.
-- [ ] **Security & privacy**: See [SECURITY.md](./SECURITY.md) for the full release checklist (CSP, permissions, logging).
+```bash
+npm run browsers:install
+```
 
-## RC workflow (single-pass)
+For an alpha candidate, use `npm run release:alpha:local` so the dependency audit runs before `check`.
 
-Use this flow for release candidates:
+## Manual verification
 
-1. Run local parity gate: `npm run release:rc:local` (exactly `npm run check`).
-2. Generate and verify README screenshots:
-   - `npm run screenshots:readme`
-   - `npm run screenshots:verify`
-3. Push branch and require green CI jobs:
-   - `validate`
-   - `release_candidate_gate`
-4. After CI is green, run manual smoke checks (camera start/stop, mode switches, evidence drawer, mobile layout).
-5. Tag candidate with `v0.1.0-rc.N` (for example `v0.1.0-rc.1`), increasing `N` for each retry.
+Automated evidence does not replace these checks:
 
-Detailed one-pass runbook: [RELEASE_RC.md](./RELEASE_RC.md).
+1. Real Safari camera, microphone, audio, and stop flow.
+2. One physical mobile browser with camera permission.
+3. Keyboard-only welcome, setup, evidence, safety, and stop flow.
+4. VoiceOver with Safari, plus NVDA with Chrome or Firefox when available.
+5. WebGL-disabled fallback and context-loss behavior.
+6. Permission denial and later recovery for camera and microphone.
+7. Actual deployment headers and same-origin request behavior.
+
+Record the browser, version, operating system, device class, input hardware, and observed result. Do not include device identifiers, raw media, or personal information.
+
+## Debug diagnostics
+
+Development builds can expose runtime diagnostics behind `import.meta.env.DEV`. The panel reports renderer, frame, audio, microphone, and profile state for local debugging. Production builds must not expose that interface or log sensitive runtime details.
+
+## Release boundary
+
+Do not claim browser, device, accessibility, or production readiness from a subset of this matrix. List skipped engines and manual gaps in the release notes.

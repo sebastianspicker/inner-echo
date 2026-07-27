@@ -1,309 +1,264 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-  type MouseEvent as ReactMouseEvent,
-} from 'react'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { listEvidenceDocPaths, loadEvidenceDoc, type EvidenceDocPath } from '../evidence/docs'
 import { renderEvidenceMarkdown } from '../evidence/markdown'
-import { useAsyncEffect } from './hooks/useAsyncEffect'
+import { useAsyncEffect, type AsyncEffectContext } from './hooks/useAsyncEffect'
 import { resolveEvidenceHref } from './evidenceHref'
 import { logger } from '../utils/logger'
-import './EvidenceDrawer.css'
+import './EvidencePrecision.css'
 
 export interface EvidenceDrawerProps {
   open: boolean
   docPath: EvidenceDocPath
   onNavigate: (docPath: EvidenceDocPath) => void
   onClose: () => void
+  safeMode?: boolean
+  reducedMotion?: boolean
+  mediaActive?: boolean
 }
 
 type DocState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; title: string; html: string; raw: string }
+  | { status: 'ready'; title: string; fragment: DocumentFragment }
 
-function isIndexLike(p: EvidenceDocPath): boolean {
-  return p.endsWith('/INDEX.md') || p.endsWith('/README.md') || p.endsWith('/EVIDENCE_MATRIX.md')
+const TOPIC_LABELS: Partial<Record<EvidenceDocPath, string>> = {
+  'docs/references/README.md': 'Overview',
+  'docs/references/INDEX.md': 'Experience dimensions',
+  'docs/references/EVIDENCE_MATRIX.md': 'Evidence matrix',
+  'docs/references/motifs/INDEX.md': 'Audiovisual motifs',
+  'docs/references/CONTRIBUTIONS_AND_LIMITS.md': 'Limits and contributions',
+  'docs/references/MAPPING_SUMMARY.md': 'Mapping summary',
+}
+
+function isIndexLike(path: EvidenceDocPath): boolean {
+  return (
+    path.endsWith('/INDEX.md') ||
+    path.endsWith('/README.md') ||
+    path.endsWith('/EVIDENCE_MATRIX.md')
+  )
+}
+
+function topicLabel(path: EvidenceDocPath): string {
+  const segments = path.split('/')
+  return (
+    TOPIC_LABELS[path] ??
+    segments[segments.length - 1]?.replace(/\.md$/i, '').replace(/_/g, ' ') ??
+    'Topic'
+  )
+}
+
+function syncEvidenceDialog(
+  dialog: HTMLDialogElement | null,
+  closeButton: HTMLButtonElement | null,
+  open: boolean,
+): (() => void) | undefined {
+  if (!dialog || !open) return
+  if (!dialog.open) {
+    if (typeof dialog.showModal === 'function') dialog.showModal()
+    else dialog.setAttribute('open', '')
+  }
+  closeButton?.focus()
+  return () => {
+    if (!dialog.open) return
+    if (typeof dialog.close === 'function') dialog.close()
+    else dialog.removeAttribute('open')
+  }
+}
+
+async function loadEvidenceState(
+  ctx: AsyncEffectContext,
+  open: boolean,
+  docPath: EvidenceDocPath,
+  setState: (state: DocState) => void,
+): Promise<void> {
+  if (!open) return
+  setState({ status: 'loading' })
+  try {
+    const markdown = await loadEvidenceDoc(docPath)
+    if (ctx.cancelled) return
+    if (!markdown) {
+      setState({ status: 'error', message: 'This evidence topic could not be found.' })
+      return
+    }
+    const { fragment, title } = renderEvidenceMarkdown(markdown)
+    setState({ status: 'ready', fragment, title })
+  } catch (error) {
+    if (ctx.cancelled) return
+    logger.error('Failed to load evidence document', docPath, error)
+    setState({ status: 'error', message: 'This evidence topic could not be loaded.' })
+  }
 }
 
 export function EvidenceDrawer(props: EvidenceDrawerProps) {
   const [state, setState] = useState<DocState>({ status: 'loading' })
-  const backdropRef = useRef<HTMLDivElement | null>(null)
+  const [retryToken, setRetryToken] = useState(0)
+  const dialogRef = useRef<HTMLDialogElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
-  const navRef = useRef<HTMLElement | null>(null)
-  const previousFocusRef = useRef<HTMLElement | null>(null)
+  const evidenceContentRef = useRef<HTMLElement | null>(null)
 
   const navItems = useMemo(() => {
     const all = listEvidenceDocPaths()
-    const curated: EvidenceDocPath[] = [
-      'docs/references/README.md',
-      'docs/references/INDEX.md',
-      'docs/references/EVIDENCE_MATRIX.md',
-      'docs/references/motifs/INDEX.md',
-      'docs/references/CONTRIBUTIONS_AND_LIMITS.md',
-      'docs/REFERENCES_AUDIT.md',
+    const curated = Object.keys(TOPIC_LABELS) as EvidenceDocPath[]
+    return [
+      ...curated.filter((path) => all.includes(path)),
+      ...all.filter((path) => isIndexLike(path) && !curated.includes(path)),
     ]
-    // Ensure curated items exist (filter missing) and then add other index-like docs.
-    const set = new Set<EvidenceDocPath>()
-    const out: EvidenceDocPath[] = []
-    for (const p of curated) {
-      if (all.includes(p)) {
-        set.add(p)
-        out.push(p)
-      }
-    }
-    for (const p of all) {
-      if (!set.has(p) && isIndexLike(p)) out.push(p)
-    }
-    return out
   }, [])
+
+  useEffect(
+    () => syncEvidenceDialog(dialogRef.current, closeButtonRef.current, props.open),
+    [props.open],
+  )
 
   useAsyncEffect(
-    async (ctx) => {
-      if (!props.open) return
-      setState({ status: 'loading' })
-      try {
-        const md = await loadEvidenceDoc(props.docPath)
-        if (ctx.cancelled) return
-        if (!md) {
-          setState({ status: 'error', message: `Evidence doc not found: ${props.docPath}` })
-          return
-        }
-        const { html, title } = renderEvidenceMarkdown(md)
-        setState({ status: 'ready', html, title, raw: md })
-      } catch (err) {
-        if (!ctx.cancelled) {
-          logger.error('Failed to load evidence document', props.docPath, err)
-          setState({ status: 'error', message: 'Could not load evidence document.' })
-        }
-      }
-    },
-    [props.open, props.docPath],
+    (ctx) => loadEvidenceState(ctx, props.open, props.docPath, setState),
+    [props.open, props.docPath, retryToken],
   )
 
-  // Escape to close
   useEffect(() => {
-    if (!props.open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') props.onClose()
+    if (state.status !== 'ready') return
+    evidenceContentRef.current?.replaceChildren(state.fragment.cloneNode(true))
+  }, [state])
+
+  const handleArticleActivation = (
+    event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
+  ): void => {
+    if ('key' in event && event.key !== 'Enter' && event.key !== ' ') return
+    const anchor = (event.target as HTMLElement | null)?.closest?.('a') as HTMLAnchorElement | null
+    if (!anchor) return
+    const href = anchor.getAttribute('href') ?? ''
+    const normalized = href.trim().toLowerCase()
+    if (normalized.startsWith('javascript:') || normalized.startsWith('data:')) {
+      event.preventDefault()
+      return
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [props.open, props.onClose])
-
-  useEffect(() => {
-    if (!props.open) return
-    previousFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null
-    const id = window.requestAnimationFrame(() => {
-      closeButtonRef.current?.focus()
-    })
-    return () => {
-      window.cancelAnimationFrame(id)
-      previousFocusRef.current?.focus()
-      previousFocusRef.current = null
+    const resolved = resolveEvidenceHref(props.docPath, href)
+    if (resolved) {
+      event.preventDefault()
+      props.onNavigate(resolved)
+      return
     }
-  }, [props.open])
-
-  useEffect(() => {
-    if (!props.open) return
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return
-      const root = backdropRef.current
-      if (!root) return
-
-      const focusables = Array.from(
-        root.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-        ),
-      ).filter((el) => {
-        if (el.getAttribute('aria-hidden') === 'true' || el.tabIndex < 0) return false
-        // Filter out elements hidden via CSS (e.g. display:none or visibility:hidden)
-        const style = window.getComputedStyle(el)
-        if (style.display === 'none' || style.visibility === 'hidden') return false
-        // Also check if an ancestor is hidden
-        if (el.offsetParent === null && style.position !== 'fixed') return false
-        return true
-      })
-
-      if (focusables.length === 0) return
-
-      const first = focusables[0]
-      const last = focusables[focusables.length - 1]
-      const active = document.activeElement as HTMLElement | null
-
-      if (e.shiftKey) {
-        if (!active || active === first || !root.contains(active)) {
-          e.preventDefault()
-          last.focus()
-        }
-        return
-      }
-
-      if (active === last || !active || !root.contains(active)) {
-        e.preventDefault()
-        first.focus()
-      }
-    }
-
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [props.open])
-
-  const handleBackdrop = useCallback(
-    (e: ReactMouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget) props.onClose()
-    },
-    [props.onClose],
-  )
-
-  const handleBackdropKeyDown = useCallback(
-    (e: ReactKeyboardEvent<HTMLDivElement>) => {
-      if (e.target !== e.currentTarget) return
-      if (e.key !== 'Enter' && e.key !== ' ') return
-      e.preventDefault()
-      props.onClose()
-    },
-    [props.onClose],
-  )
-
-  const handleNavKeyDown = useCallback((e: ReactKeyboardEvent<HTMLElement>) => {
-    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
-    const root = navRef.current
-    if (!root) return
-    const links = Array.from(root.querySelectorAll<HTMLButtonElement>('button.evidence-navLink'))
-    if (links.length === 0) return
-
-    e.preventDefault()
-    const current = links.indexOf(document.activeElement as HTMLButtonElement)
-    const nextIndex =
-      current < 0
-        ? 0
-        : e.key === 'ArrowDown'
-          ? (current + 1) % links.length
-          : (current - 1 + links.length) % links.length
-    links[nextIndex].focus()
-  }, [])
+    anchor.setAttribute('target', '_blank')
+    anchor.setAttribute('rel', 'noreferrer noopener')
+  }
 
   return (
-    <div
-      ref={backdropRef}
-      className={props.open ? 'evidence-backdrop' : 'evidence-backdrop evidence-backdrop--hidden'}
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
+      className="evidence-dialog"
       aria-labelledby="evidence-title"
-      aria-label="Evidence viewer"
-      tabIndex={-1}
-      onClick={handleBackdrop}
-      onKeyDown={handleBackdropKeyDown}
+      onCancel={(event) => {
+        event.preventDefault()
+        props.onClose()
+      }}
     >
       <div className="evidence-drawer">
-        <div className="evidence-top">
-          <div id="evidence-title" className="evidence-title">
-            {state.status === 'ready' ? state.title : 'Evidence'}
-          </div>
-          <div className="evidence-actions">
-            <button
-              ref={closeButtonRef}
-              type="button"
-              className="evidence-btn"
-              onClick={props.onClose}
-              aria-label="Close evidence viewer"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+        <header className="evidence-top">
+          <h2 id="evidence-title" className="evidence-title">
+            Method &amp; Evidence
+          </h2>
+          <button
+            ref={closeButtonRef}
+            type="button"
+            className="evidence-btn"
+            onClick={props.onClose}
+          >
+            Close
+          </button>
+        </header>
+
+        <label className="evidence-mobileNav">
+          <span>Topic</span>
+          <select
+            value={props.docPath}
+            onChange={(event) => props.onNavigate(event.target.value as EvidenceDocPath)}
+          >
+            {navItems.map((path) => (
+              <option key={path} value={path}>
+                {topicLabel(path)}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <div className="evidence-body">
-          <nav
-            ref={navRef}
-            className="evidence-nav"
-            aria-label="Evidence navigation"
-            onKeyDown={handleNavKeyDown}
-          >
-            <div className="evidence-navTitle">Evidence</div>
+          <nav className="evidence-nav" aria-label="Evidence topics">
             <ul className="evidence-navList">
-              {navItems.map((p) => (
-                <li key={p}>
+              {navItems.map((path) => (
+                <li key={path}>
                   <button
                     type="button"
                     className={
-                      p === props.docPath
+                      path === props.docPath
                         ? 'evidence-navLink evidence-navLink--active'
                         : 'evidence-navLink'
                     }
-                    onClick={() => {
-                      props.onNavigate(p)
-                    }}
+                    aria-current={path === props.docPath ? 'page' : undefined}
+                    onClick={() => props.onNavigate(path)}
                   >
-                    <code>{p.replace('docs/references/', '').replace('docs/', '')}</code>
+                    {topicLabel(path)}
                   </button>
                 </li>
               ))}
             </ul>
-            <div className="evidence-navHint">
-              Tip: use the “Evidence” buttons in the selector to jump directly to a dimension or
-              condition page.
-            </div>
           </nav>
 
-          <main className="evidence-content" aria-label="Evidence content">
-            {state.status === 'loading' && <div className="evidence-loading">Loading…</div>}
-            {state.status === 'error' && <div className="evidence-error">{state.message}</div>}
+          <section className="evidence-content" aria-label="Evidence content">
+            {state.status === 'loading' && (
+              <p className="evidence-loading" role="status">
+                Loading evidence…
+              </p>
+            )}
+            {state.status === 'error' && (
+              <div className="evidence-error" role="alert">
+                <p>{state.message}</p>
+                <button
+                  type="button"
+                  className="evidence-btn"
+                  onClick={() => setRetryToken((value) => value + 1)}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
             {state.status === 'ready' && (
               <article
+                ref={evidenceContentRef}
                 className="evidence-markdown"
-                onClick={(e) => {
-                  const target = e.target as HTMLElement | null
-                  const a = target?.closest?.('a') as HTMLAnchorElement | null
-                  if (!a) return
-                  const href = a.getAttribute('href') ?? ''
-                  // Block potentially dangerous protocols
-                  const hrefTrimmed = href.trim().toLowerCase()
-                  if (hrefTrimmed.startsWith('javascript:') || hrefTrimmed.startsWith('data:')) {
-                    e.preventDefault()
-                    return
-                  }
-                  const resolved = resolveEvidenceHref(props.docPath, href)
-                  if (resolved) {
-                    e.preventDefault()
-                    props.onNavigate(resolved)
-                  } else {
-                    // For non-evidence links, open in a new tab for clarity and security.
-                    a.setAttribute('target', '_blank')
-                    a.setAttribute('rel', 'noreferrer noopener')
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key !== 'Enter' && e.key !== ' ') return
-                  const target = e.target as HTMLElement | null
-                  const a = target?.closest?.('a') as HTMLAnchorElement | null
-                  if (!a) return
-                  const href = a.getAttribute('href') ?? ''
-                  const hrefTrimmed = href.trim().toLowerCase()
-                  if (hrefTrimmed.startsWith('javascript:') || hrefTrimmed.startsWith('data:')) {
-                    e.preventDefault()
-                    return
-                  }
-                  const resolved = resolveEvidenceHref(props.docPath, href)
-                  if (resolved) {
-                    e.preventDefault()
-                    props.onNavigate(resolved)
-                  }
-                }}
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: content is sanitized markdown from local docs/ files, not user-supplied input
-                dangerouslySetInnerHTML={{ __html: state.html }}
+                onClick={handleArticleActivation}
+                onKeyDown={handleArticleActivation}
               />
             )}
-          </main>
+          </section>
+
+          <aside className="evidence-safety" aria-label="Safety boundaries">
+            <div className="evidence-kicker">Safety boundaries</div>
+            <dl>
+              <div>
+                <dt>Safe Mode</dt>
+                <dd>{props.safeMode === false ? 'Off' : 'On'}</dd>
+              </div>
+              <div>
+                <dt>Reduced Motion</dt>
+                <dd>{props.reducedMotion ? 'On' : 'System'}</dd>
+              </div>
+              <div>
+                <dt>Media processing</dt>
+                <dd>Local</dd>
+              </div>
+              <div>
+                <dt>Recording</dt>
+                <dd>None</dd>
+              </div>
+            </dl>
+            <p>
+              Stop Everything remains available whenever media is{' '}
+              {props.mediaActive ? 'active' : 'started'}.
+            </p>
+          </aside>
         </div>
+        <footer className="evidence-footer">Sanitized Markdown / Local document</footer>
       </div>
-    </div>
+    </dialog>
   )
 }

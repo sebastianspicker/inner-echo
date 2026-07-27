@@ -1,45 +1,60 @@
 .ie-errorBoundary {
-  padding: 2rem;
-  max-width: 28rem;
-  margin: 3rem auto;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  width: min(42rem, calc(100% - 32px));
+  min-height: 22rem;
+  margin: max(32px, 12vh) auto;
+  padding: clamp(28px, 5vw, 56px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  text-align: left;
+  background: var(--surface-1);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
 }
 
 .ie-errorBoundaryTitle {
-  margin: 0 0 0.75rem;
-  font-size: 14px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.86);
-  font-weight: 650;
+  margin: 0 0 1rem;
+  color: var(--text);
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1;
 }
 
 .ie-errorBoundaryBody {
-  margin: 0 0 0.5rem;
-  font-size: 13px;
+  max-width: 54ch;
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.58);
 }
 
 .ie-errorBoundaryMessage {
-  margin: 0 0 1.25rem;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.38);
+  width: 100%;
+  margin: 0 0 1.5rem;
+  padding: 12px 0;
+  color: var(--faint);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   font-family: var(--font-mono);
+  font-size: 0.75rem;
 }
 
 .ie-errorBoundaryAction {
+  min-width: 10rem;
+  min-height: 48px;
   padding: 10px 18px;
-  font-size: 13px;
-  font-weight: 520;
+  color: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  background: var(--accent);
+  font-size: 0.875rem;
+  font-weight: 650;
   cursor: pointer;
-  background-color: rgba(123, 200, 192, 0.1);
-  color: rgba(255, 255, 255, 0.86);
-  border: 1px solid rgba(123, 200, 192, 0.25);
-  border-radius: 999px;
+}
+
+.ie-errorBoundaryAction:hover {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
 }

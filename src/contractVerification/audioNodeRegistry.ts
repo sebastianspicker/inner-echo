@@ -11,12 +11,8 @@ import {
 } from '../engine/audio/fx'
 import type { AudioModule } from '../engine/audio/types'
 import { FakeAudioContext, type FakeAudioBuffer, hashBuffer } from './fakeAudioContext'
-import type {
-  ContractNodeDefinition,
-  ContractParamMetadata,
-  ProbeHarness,
-  RegistryNodeSummary,
-} from './types'
+import type { ContractNodeDefinition, ContractParamMetadata, ProbeHarness } from './types'
+import { buildNodeLookup, numberParam, summarizeNodeDefinitions } from './nodeRegistry'
 import { getByPath, withSeededRandom } from './utils'
 
 class AudioProbeHarness implements ProbeHarness {
@@ -51,30 +47,18 @@ class AudioProbeHarness implements ProbeHarness {
   }
 }
 
-function numberParam(
-  readPath: string,
-  config: {
-    defaultValue: number
-    min?: number
-    max?: number
-    safeModeClampKey?: string
-    probeLow?: number
-    probeHigh?: number
-    epsilon?: number
-  },
-): ContractParamMetadata {
+function biquadParams(cutoff: {
+  defaultValue: number
+  min: number
+  max: number
+}): Record<string, ContractParamMetadata> {
   return {
-    type: 'number',
-    defaultValue: config.defaultValue,
-    min: config.min,
-    max: config.max,
-    safeModeClampKey: config.safeModeClampKey,
-    probeLow: config.probeLow,
-    probeHigh: config.probeHigh,
-    epsilon: config.epsilon,
-    readEffective(harness: ProbeHarness): unknown {
-      return (harness as AudioProbeHarness).readPath(readPath)
-    },
+    cutoff: numberParam('created.biquads.0.frequency.value', cutoff),
+    q: numberParam('created.biquads.0.Q.value', {
+      defaultValue: 0.7,
+      min: 0.5,
+      max: 1.2,
+    }),
   }
 }
 
@@ -82,35 +66,13 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
   {
     kind: 'audio',
     node: 'lowpass',
-    params: {
-      cutoff: numberParam('created.biquads.0.frequency.value', {
-        defaultValue: 800,
-        min: 300,
-        max: 12000,
-      }),
-      q: numberParam('created.biquads.0.Q.value', {
-        defaultValue: 0.7,
-        min: 0.5,
-        max: 1.2,
-      }),
-    },
+    params: biquadParams({ defaultValue: 800, min: 300, max: 12000 }),
     createHarness: () => new AudioProbeHarness((ctx) => createLowpass(ctx, {})),
   },
   {
     kind: 'audio',
     node: 'highpass',
-    params: {
-      cutoff: numberParam('created.biquads.0.frequency.value', {
-        defaultValue: 160,
-        min: 50,
-        max: 500,
-      }),
-      q: numberParam('created.biquads.0.Q.value', {
-        defaultValue: 0.7,
-        min: 0.5,
-        max: 1.2,
-      }),
-    },
+    params: biquadParams({ defaultValue: 160, min: 50, max: 500 }),
     createHarness: () => new AudioProbeHarness((ctx) => createHighpass(ctx, {})),
   },
   {
@@ -163,7 +125,7 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
     kind: 'audio',
     node: 'noise_bed',
     params: {
-      level: numberParam('created.gains.0.gain.value', {
+      level: numberParam('created.gains.2.gain.value', {
         defaultValue: 0.03,
         min: 0,
         max: 0.08,
@@ -307,32 +269,9 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
 export const audioNodeDefinitions: ContractNodeDefinition[] = AUDIO_NODE_DEFINITIONS
 
 export function buildAudioNodeLookup(): Map<string, ContractNodeDefinition> {
-  const map = new Map<string, ContractNodeDefinition>()
-  for (const def of audioNodeDefinitions) {
-    map.set(def.node, def)
-    for (const alias of def.aliases ?? []) map.set(alias, def)
-  }
-  return map
+  return buildNodeLookup(audioNodeDefinitions)
 }
 
-export function getAudioRegistrySummaries(): RegistryNodeSummary[] {
-  return audioNodeDefinitions.map((def) => {
-    const params: RegistryNodeSummary['params'] = {}
-    for (const [key, meta] of Object.entries(def.params)) {
-      params[key] = {
-        type: meta.type,
-        defaultValue: meta.defaultValue,
-        min: meta.min,
-        max: meta.max,
-        enumValues: meta.enumValues,
-        safeModeClampKey: meta.safeModeClampKey,
-      }
-    }
-    return {
-      kind: 'audio',
-      node: def.node,
-      aliases: [...(def.aliases ?? [])],
-      params,
-    }
-  })
+export function getAudioRegistrySummaries() {
+  return summarizeNodeDefinitions(audioNodeDefinitions)
 }

@@ -1,120 +1,94 @@
-# SECURITY.md — Security and privacy
+# Security and privacy
 
 ## Reporting a vulnerability
 
-If you find a security issue, please **do not open a public GitHub issue**.
+Do not disclose a suspected vulnerability in a public issue.
 
-Prefer [GitHub's private vulnerability reporting](https://github.com/sebastianspicker/inner-echo/security/advisories/new) so the disclosure stays confidential until a fix is ready.
+Use [GitHub private vulnerability reporting](https://github.com/sebastianspicker/inner-echo/security/advisories/new) when it is available. Include the affected commit, reproduction steps, impact, and the smallest practical proof. If private reporting is unavailable, contact a maintainer through an established private channel.
 
-Alternatively, email the details to **sebastian.spicker@googlemail.com** with:
-- a description of the issue,
-- steps to reproduce or a proof of concept,
-- any suggested fix if you have one.
+Do not include credentials, identifying health information, raw camera or microphone media, device identifiers, or unrelated local logs.
 
-You will receive a response within 7 days. Once confirmed, a fix will be prioritised and you will be credited in the release notes (unless you prefer anonymity).
+## Current trust boundaries
 
-This project is a local-only browser app with no server, no user accounts, and no remote data transmission — the attack surface is limited. The most relevant concerns are XSS, clickjacking, and supply-chain vulnerabilities in npm dependencies.
+The application has no account, session, cookie, backend API, upload, or remote media-processing path. Relevant inputs are:
 
----
+- camera and optional microphone streams granted by the browser
+- shared URL hashes
+- local preset and acknowledgement storage
+- bundled condition JSON
+- bundled evidence Markdown
+- npm dependencies and built static assets
 
-## Privacy-first by default
+The runtime source contains no application analytics, third-party API, external font, or media-upload integration. Static files still need to be delivered by a host, and a host can add behavior outside this repository.
 
-- **Local-first**: All processing in the browser. No transmission of video or audio data to any server.
-- **No uploads**: In MVP, neither webcam nor microphone data is uploaded or streamed.
-- **No trackers**: No analytics, no third-party scripts, no tracking cookies.
-- **No network calls in MVP**: In the Minimal Viable Product, no network requests are allowed (no external CDNs, no remote fonts, no API calls). Everything runs fully offline-capable in the client.
+## Permission activation
 
----
+- Camera access starts only from a direct user action.
+- Microphone input is optional, off by default, and starts only from its separate activation action.
+- `AudioContext` startup requires a direct user action. Sound does not autoplay.
+- URL hashes, local-storage migrations, startup defaults, and other passive imports cannot activate camera, microphone, or sound.
+- Stop Everything must stop active streams, audio resources, and rendering work, then report the idle state.
 
-## No third-party calls
+Changes to these boundaries require focused regression tests.
 
-- The app must not load scripts, fonts, or data from third-party origins in MVP.
-- All assets are bundled or served from the same origin as the app.
-- If you add analytics, CDNs, or external APIs in a future phase, document them and obtain approval; they are out of scope for MVP.
+## HTML and link handling
 
----
+Evidence Markdown is parsed and sanitized through `src/evidence/markdown.ts` before it reaches the rendered dialog. Do not introduce another `dangerouslySetInnerHTML` path for evidence content.
 
-## Permissions policy
+Evidence links are resolved through the local navigation policy. External link activation must reject unsafe schemes and use `noopener noreferrer` where a new browsing context is opened.
 
-- **Camera**: Access only after explicit user action (e.g. click on “Start camera”). No automatic `getUserMedia()` on load.
-- **Microphone**: Optional and only after user gesture. Never enabled by default; user must explicitly enable.
-- **AudioContext**: Start only after user gesture (browser requirement); no audio autoplay.
+## Runtime requests
 
-All permission-triggering actions must be bound to a concrete user gesture event (click, touch).
-Passive state imports such as shared URL hashes, localStorage migrations, or startup defaults must
-not enable camera, microphone, or audio. A shared preset may restore visual/composer state, but audio
-and microphone controls must remain opt-in after the import.
+Production application assets, profiles, and evidence documents are bundled or served from the same origin. The current runtime should not request third-party scripts, fonts, APIs, analytics, or media services.
 
-For static hosting or when you control response headers, you can restrict feature usage with **Permissions-Policy** (formerly Feature-Policy), for example:
+Development servers may use same-origin connections for Vite. No service worker or offline cache is included.
 
-```http
-Permissions-Policy: camera=(self), microphone=(self)
-```
+## Response headers
 
-This allows camera and microphone only for the same origin. Omit or narrow other features as needed.
-
----
-
-## Content Security Policy (CSP)
-
-Even for static hosting, a strict CSP is recommended to reduce XSS and unauthorised resource loading.
-
-**Suggested CSP (adjust for your host):**
-
-- `default-src 'self'` — only load resources from same origin.
-- `script-src 'self'` — scripts only from same origin (Vite/build output).
-- `style-src 'self'` — styles only from same origin; keep runtime styling in CSS rather than inline attributes.
-- `img-src 'self' data:` — images from self and data URIs (e.g. placeholders).
-- `media-src 'self' blob:` — video/audio from self and blob (e.g. MediaStream).
-- `connect-src 'self'` — same-origin fetch/XHR only (keep `'self'` for local docs/profile fetches).
-- `frame-ancestors 'none'` — prevent iframe embedding. Deliver CSP as an HTTP response header so this directive applies.
-
-Example HTTP header (server config or `public/_headers`):
+`public/_headers` records the intended static-host policy:
 
 ```http
 Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';
+Permissions-Policy: camera=(self), microphone=(self)
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
 ```
 
-Development note: the local Vite dev server uses a looser header (`'unsafe-inline'` for scripts/styles) so the dev bootstrap and HMR can run. Keep that exception scoped to development only; preview and production should use the strict header above.
+Deliver CSP as an HTTP response header so `frame-ancestors` is enforceable. Verify the actual deployed response because a static host may ignore or replace `public/_headers`.
 
-Avoid a CSP `<meta>` tag here. The app already relies on response headers, which prevents a stricter document-level meta policy from breaking the Vite dev bootstrap and keeps `frame-ancestors` enforceable.
+The current composition map uses React style attributes for node position and strength. The production `style-src 'self'` policy blocks those attributes. Treat this as a deployment blocker: resolve the implementation or CSP policy, then verify the final page under the deployed header. Do not weaken the policy without reviewing the security impact.
 
-Tighten or relax directives (for example `worker-src` or `form-action`) only if your deployment surface requires it.
+The Vite development server uses a development-only policy compatible with its bootstrap and hot-module reload. Do not copy that looser development policy to a production host.
 
----
+## Logging and local data
 
-## Logging principles
+- Production logging must not include device identifiers, media content, stream or track details, shared preset contents, or user identifiers.
+- Development diagnostics are gated by `import.meta.env.DEV`.
+- Welcome acknowledgement and saved presets are local browser state. The application does not claim encrypted or multi-user isolation for that storage.
+- Video and audio recording or persistent media storage are outside the current scope.
 
-- **Development**: Logs for state, renderer mode, FPS and errors are allowed (see `src/utils/logger.ts`). Use `logger.debug` / `logger.warn` instead of raw `console` where appropriate.
-- **Production**: Keep logging minimal; no sensitive data (no device IDs, no media content, no user identifiers, no stream or track details).
-- No persistent storage of video/audio without an explicit, separately approved scope.
+## Dependency and install policy
 
----
+- `npm run audit:dependencies` fails on moderate or higher npm advisories.
+- Release-critical local and CI gates use the same threshold.
+- CI installs the lockfile with lifecycle scripts disabled, then runs explicit rebuilds only for `esbuild` and `sharp`, which are required by build and screenshot tooling.
+- Dependabot covers npm and GitHub Actions updates. Updates still require review and the complete relevant gate.
+- GitHub Actions references are pinned to full commit identifiers.
 
-## Release checklist (security & privacy)
+An advisory-free audit is evidence about the current npm advisory database, not a complete supply-chain assessment.
 
-Before releasing a build:
+## Release security checks
 
-- [ ] **Baseline quality gate**: Run `npm run check` and block release on any failure.
-- [ ] **Dependency audit**: Run `npm audit --audit-level=moderate` and remediate reported advisories before release.
-- [ ] **No third-party requests**: Confirm no network calls (DevTools Network tab, or run with network disabled). No external scripts, fonts, or CDNs.
-- [ ] **Permissions**: Camera and mic only after user gesture; no `getUserMedia` or `AudioContext` on page load.
-- [ ] **Passive imports**: Shared preset URLs and localStorage migrations do not auto-enable camera, microphone, or audio.
-- [ ] **CSP**: Deploy the recommended header-delivered CSP (or equivalent) and verify both preview and browser smoke runs stay green without CSP violations.
-- [ ] **Permissions-Policy**: If you control headers, set camera/microphone to `(self)` (or stricter).
-- [ ] **Logs**: Ensure no sensitive data is logged (search for `console.*` and `logger.*`; no device IDs, no media, no PII).
-- [ ] **Debug panel**: Confirm the dev-only debug panel is not exposed in production (it is gated by `import.meta.env.DEV`; production builds should not include it).
-- [ ] **ErrorBoundary**: “Reset App” must not leak sensitive data; it only reloads the page.
-- [ ] **Local artifact cleanup**: Optionally run `npm run clean:local` before packaging to remove local `dist/` and `reports/` leftovers.
+Before an alpha tag:
 
-## RC security gate (required)
+1. Run `npm run release:alpha:local` against the candidate lockfile.
+2. Require both CI jobs on the exact candidate commit.
+3. Confirm that camera, microphone, and audio remain direct-user-gesture actions.
+4. Confirm that passive preset imports do not activate media or sound.
+5. Verify the production build contains no debug interface, local path, secret, source map, or unintended remote request.
+6. Verify CSP, permission policy, frame denial, MIME sniffing protection, and referrer policy on the intended host.
+7. Verify that public screenshots use synthetic media and contain no personal information.
+8. Run `npm run notices:verify` after the build and retain the verified notice files in the exact artifact.
 
-For each release-candidate cycle:
-
-1. Run `npm run release:rc:local` (must be green).
-2. Run `npm run screenshots:readme` and `npm run screenshots:verify` so README images remain deterministic and non-PII.
-3. Ensure CI `release_candidate_gate` is green on the same commit.
-4. Draft RC tag in `v0.1.0-rc.N` format and include known limitations in release notes.
-5. Do not publish or tag if any of the above gates fail.
-
-Full release-candidate runbook: [RELEASE_RC.md](./RELEASE_RC.md).
+See [RELEASING.md](RELEASING.md) for the complete alpha procedure.

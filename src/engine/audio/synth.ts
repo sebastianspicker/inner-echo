@@ -31,32 +31,8 @@ export function createSynth(context: BaseAudioContext, params: SynthParams = {})
   const outGain = context.createGain()
   outGain.gain.value = 1
 
-  const osc1 = context.createOscillator()
-  osc1.type = 'sine'
-  osc1.frequency.value = freq
-  osc1.connect(outGain)
-  osc1.start(0)
-
-  const osc2 = context.createOscillator()
-  osc2.type = 'sine'
-  osc2.frequency.value = freq
-  osc2.detune.value = detune
-  osc2.connect(outGain)
-  osc2.start(0)
-
-  let noiseGain: GainNode | null = null
-  let bufferSource: AudioBufferSourceNode | null = null
-  if (noiseLevel > 0) {
-    const buffer = createNoiseBuffer(context, 2)
-    bufferSource = context.createBufferSource()
-    bufferSource.buffer = buffer
-    bufferSource.loop = true
-    noiseGain = context.createGain()
-    noiseGain.gain.value = noiseLevel * 0.3
-    bufferSource.connect(noiseGain)
-    noiseGain.connect(outGain)
-    bufferSource.start(0)
-  }
+  const { osc1, osc2 } = createOscillators(context, outGain, freq, detune)
+  const noise = createNoiseSource(context, outGain, noiseLevel)
 
   return {
     connect(destination: AudioNode): void {
@@ -68,7 +44,7 @@ export function createSynth(context: BaseAudioContext, params: SynthParams = {})
     setParams(p: Record<string, unknown>): void {
       const frequency = p.frequency as number | undefined
       const detuneVal = p.detune as number | undefined
-      const noise = p.noiseLevel as number | undefined
+      const noiseLevel = p.noiseLevel as number | undefined
       if (typeof frequency === 'number') {
         osc1.frequency.setValueAtTime(frequency, context.currentTime)
         osc2.frequency.setValueAtTime(frequency, context.currentTime)
@@ -76,8 +52,8 @@ export function createSynth(context: BaseAudioContext, params: SynthParams = {})
       if (typeof detuneVal === 'number') {
         osc2.detune.setValueAtTime(detuneVal, context.currentTime)
       }
-      if (typeof noise === 'number' && noiseGain) {
-        noiseGain.gain.setValueAtTime(noise * 0.3, context.currentTime)
+      if (typeof noiseLevel === 'number' && noise.gain) {
+        noise.gain.gain.setValueAtTime(noiseLevel * 0.3, context.currentTime)
       }
     },
     dispose(): void {
@@ -90,17 +66,57 @@ export function createSynth(context: BaseAudioContext, params: SynthParams = {})
       osc1.disconnect()
       osc2.disconnect()
       outGain.disconnect()
-      if (bufferSource) {
-        try {
-          bufferSource.stop()
-        } catch {
-          // ignore
-        }
-        bufferSource.disconnect()
-      }
-      if (noiseGain) noiseGain.disconnect()
+      disposeNoiseSource(noise)
     },
   }
+}
+
+function createOscillators(
+  context: BaseAudioContext,
+  output: GainNode,
+  frequency: number,
+  detune: number,
+) {
+  const osc1 = context.createOscillator()
+  osc1.type = 'sine'
+  osc1.frequency.value = frequency
+  osc1.connect(output)
+  osc1.start(0)
+  const osc2 = context.createOscillator()
+  osc2.type = 'sine'
+  osc2.frequency.value = frequency
+  osc2.detune.value = detune
+  osc2.connect(output)
+  osc2.start(0)
+  return { osc1, osc2 }
+}
+
+function createNoiseSource(context: BaseAudioContext, output: GainNode, level: number) {
+  if (level <= 0) return { source: null, gain: null }
+  const source = context.createBufferSource()
+  source.buffer = createNoiseBuffer(context, 2)
+  source.loop = true
+  const gain = context.createGain()
+  gain.gain.value = level * 0.3
+  source.connect(gain)
+  gain.connect(output)
+  source.start(0)
+  return { source, gain }
+}
+
+function disposeNoiseSource(noise: {
+  source: AudioBufferSourceNode | null
+  gain: GainNode | null
+}): void {
+  if (noise.source) {
+    try {
+      noise.source.stop()
+    } catch {
+      /* already stopped */
+    }
+    noise.source.disconnect()
+  }
+  noise.gain?.disconnect()
 }
 
 /** Generate a short noise buffer (white or filtered for pink-ish). */

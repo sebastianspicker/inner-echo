@@ -1,39 +1,34 @@
-# `focus_jitter` — motif evidence
+# `focus_jitter`: motif evidence
 
-> **Non-diagnostic, metaphor framing:** This page documents how a simulation motif is used as a design metaphor. It does not diagnose, and it does not claim clinical equivalence.
+> Non-diagnostic metaphor framing: This page documents how an audiovisual motif is used as a design metaphor. It does not diagnose and does not claim clinical equivalence.
 
-## Short simulation summary
+## Technical summary
 
 Small, smoothed focal instability (bounded).
 
-## Evidence vs artistic implementation (make this explicit)
+## Evidence and implementation
 
-- **Evidence-backed** in this project refers to reported phenomena in the evidence corpus (see dimension pages and the matrix).
-- This node is an artistic/engineering implementation used to represent those phenomena metaphorically.
-- Therefore, the correct claim level for a node is usually **Mixed**: phenomenon supported, motif choice interpretive, implementation details artistic.
+- Evidence-backed in this project refers to reported phenomena in the evidence corpus. See the dimension pages and matrix.
+- This node is an artistic and engineering implementation used to represent those phenomena metaphorically.
+- The usual claim level is Mixed: the phenomenon is supported, while the motif choice and implementation remain interpretive.
 
 ## Where this motif is used (traceability)
 
 ### Used by dimensions
 
-- **Attention Fragmentation** (`attention_fragmentation`) — Evidence (dimension): **Medium** — Claim: **Mixed** — `docs/references/dimensions/attention_fragmentation.md` — corpus: `docs/references/reports/deep-research-report-2.md`
+- Attention Fragmentation (`attention_fragmentation`): Evidence (dimension): Medium: Claim: Mixed: `docs/references/dimensions/attention_fragmentation.md`: corpus: `docs/references/research/remaining-dimensions.md`
 
 ### Used by condition presets
 
-- **ADHD (Attention Fragmentation / Overload)** (`adhd`) — `docs/references/conditions/adhd.md`
+- ADHD (Attention Fragmentation / Overload) (`adhd`): `docs/references/conditions/adhd.md`
 
 ## Scientific sources (peer-reviewed; from in-repo corpus)
 
-These sources come from the evidence corpus sections for the dimensions that currently use this motif.
+These sources come from evidence-corpus sections for the dimensions that currently use this motif.
 
-> Important: these papers support the phenomena described by the dimensions; they do not claim that this specific node is a biomarker or uniquely “correct”.
+> Important: these papers support the phenomena described by the dimensions. They do not claim that this specific node is a biomarker or uniquely correct.
 
-- Zhao, X., et al. (2020). Impact of chronic stress on attention control: Evidence from attention network task and ERPs. *Neuroscience Bulletin.* https://doi.org/10.1007/s12264-020-00549-9
-  DOI: https://doi.org/10.1007/s12264-020-00549-9 (`10.1007/s12264-020-00549-9`) — from `docs/references/reports/deep-research-report-2.md`
-- Shi, R., Sharpe, L., & Abbott, M. (2019). A meta-analysis of the relationship between anxiety and attentional control. *Clinical Psychology Review, 72*, 101754. https://doi.org/10.1016/j.cpr.2019.101754
-  DOI: https://doi.org/10.1016/j.cpr.2019.101754 (`10.1016/j.cpr.2019.101754`) — from `docs/references/reports/deep-research-report-2.md`
-- Ólafsson, R. P., Smári, J., Guðmundsdóttir, F., Ólafsdóttir, G., Harðardóttir, H. L., & Einarsson, S. M. (2011). Self reported attentional control with the Attentional Control Scale: Factor structure and relationship with symptoms of anxiety and depression. *Journal of Anxiety Disorders, 25*(6), 777–782. https://doi.org/10.1016/j.janxdis.2011.03.013
-  DOI: https://doi.org/10.1016/j.janxdis.2011.03.013 (`10.1016/j.janxdis.2011.03.013`) — from `docs/references/reports/deep-research-report-2.md`
+No DOI sources were extracted for the dimensions currently using this motif.
 
 ## Safety notes (implementation constraints)
 
@@ -44,6 +39,6 @@ These sources come from the evidence corpus sections for the dimensions that cur
 ## Sources (in-repo)
 
 - `docs/references/EVIDENCE_MATRIX.md`
-- `docs/REFERENCES_AUDIT.md`
-- `docs/references/reports/deep-research-report.md`
-- `docs/references/reports/deep-research-report-2.md`
+- `docs/references/MAPPING_SUMMARY.md`
+- `docs/references/research/initial-dimensions.md`
+- `docs/references/research/remaining-dimensions.md`

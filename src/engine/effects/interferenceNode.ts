@@ -1,5 +1,5 @@
 /**
- * SSOT: interference — abstract, non-strobing interference / banding with optional micro-bursts.
+ * SSOT: interference: abstract, non-strobing interference / banding with optional micro-bursts.
  *
  * Params:
  * - amount
@@ -10,16 +10,18 @@
  * - burst_min_gap_ms
  */
 
-import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
+import { ShaderMaterial, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
+import { fastRandom, type FastRandom } from '../../utils/fastRandom'
 import {
   applyUvParams,
   clamp,
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
-  QUAD_VERTEX_SHADER,
 } from './paramUtils'
+import { BurstEnvelopeState } from './burstEnvelope'
+import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -47,27 +49,21 @@ void main() {
   float n = hash(vec2(uv.y * 93.7, uv.x * 17.3)) - 0.5;
 
   float strength = u_amount * (0.65 + 0.35 * u_burst);
-  float lift = (band - 0.5) * 0.14 * strength + n * 0.06 * strength;
+  float lift = (band - 0.5) * 0.46 * strength + n * 0.16 * strength;
   color.rgb += lift;
 
   gl_FragColor = clamp(color, 0.0, 1.0);
 }
 `
 
-function easeInOut(t: number): number {
-  const x = clamp(t, 0, 1)
-  return x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2
-}
-
-export class InterferenceNode implements VideoNode {
+export class InterferenceNode extends BurstEnvelopeState implements VideoNode {
   readonly nodeName = 'interference'
   private material: ShaderMaterial | null = null
   private time = 0
-  private burstTimer = 0
-  private burstGapTimer = 0
-  private burstDuration = 0.18
-  private burstProbPerSec = 0
-  private burstMinGap = 0.6
+
+  constructor(random: FastRandom = fastRandom) {
+    super(0.18, 0.6, random)
+  }
 
   setParams(params: VideoNodeParams): void {
     if (!this.material) return
@@ -105,59 +101,25 @@ export class InterferenceNode implements VideoNode {
     if (!this.material) return
     this.time = (this.time + delta) % 1000
 
-    // Burst scheduling (non-strobing): long-ish fades, enforced min gap.
-    if (this.burstGapTimer > 0) this.burstGapTimer = Math.max(0, this.burstGapTimer - delta)
-
-    if (this.burstTimer > 0) {
-      this.burstTimer = Math.max(0, this.burstTimer - delta)
-      // t goes from 0 (start) to 1 (end); use a triangle envelope so
-      // burst fades in during the first half and fades out during the second half.
-      const t = 1 - this.burstTimer / Math.max(0.001, this.burstDuration)
-      const envelope = t < 0.5 ? t * 2 : (1 - t) * 2
-      this.material.uniforms.u_burst.value = easeInOut(envelope)
-      if (this.burstTimer === 0) {
-        this.material.uniforms.u_burst.value = 0
-        this.burstGapTimer = this.burstMinGap
-      }
-      return
-    }
-
-    this.material.uniforms.u_burst.value = 0
-
-    if (this.burstGapTimer <= 0 && this.burstProbPerSec > 0) {
-      // Poisson-like: probability per second.
-      const p = clamp(this.burstProbPerSec * delta, 0, 0.5)
-      if (Math.random() < p) {
-        this.burstTimer = this.burstDuration
-      }
-    }
+    this.material.uniforms.u_burst.value = this.tickBurstEnvelope(delta)
   }
 
   getMaterial(inputTexture: Texture): Material {
-    if (this.material) {
-      this.material.uniforms.u_map.value = inputTexture
-      return this.material
-    }
-    this.material = new ShaderMaterial({
-      uniforms: {
-        u_map: { value: inputTexture },
-        u_uvScale: { value: new Vector2(1, 1) },
-        u_uvOffset: { value: new Vector2(0, 0) },
+    if (!this.material) {
+      this.material = createEffectMaterial(inputTexture, FRAG, {
         u_amount: { value: 0 },
         u_banding: { value: 0.06 },
         u_smoothing: { value: 0.9 },
         u_time: { value: 0 },
         u_burst: { value: 0 },
-      },
-      vertexShader: QUAD_VERTEX_SHADER,
-      fragmentShader: FRAG,
-      depthWrite: false,
-    })
+      })
+    } else {
+      bindInputTexture(this.material, inputTexture)
+    }
     return this.material
   }
 
   dispose(): void {
-    this.material?.dispose()
-    this.material = null
+    this.material = disposeEffectMaterial(this.material)
   }
 }

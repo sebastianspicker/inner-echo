@@ -2,9 +2,9 @@
  * JSON Schema Validation (Zod)
  *
  * This file defines the explicit shape and typing of all `.json` Condition Profiles
- * stored in the `public/profiles/` directory, as well as the main `catalog.json`.
+ * stored under `src/conditions/profiles/`, as well as the main `catalog.json`.
  *
- * It uses Zod to ensure that when we fetch a profile at runtime, it actually has
+ * It uses Zod to ensure that when we load a profile at runtime, it actually has
  * the required fields (like `id`, `label`, and a `video_stack` array). It helps
  * fail fast if someone writes invalid JSON or forgets a required property.
  */
@@ -35,20 +35,22 @@ export const catalogSchema = z.object({
     .optional(),
 })
 
-/** One video stack node definition in a profile. */
-export const videoStackNodeSchema = z.object({
+const stackNodeSchema = z.object({
   id: z.string().optional(),
-  node: z.string(), // e.g. "grain", "vignette" — only "grain" is implemented in Phase 5
+  node: z.string(), // e.g. "grain", "vignette"; implementation is checked by contract verification.
   params: z.record(z.string(), z.unknown()).optional(),
 })
 
-/** SSOT: Experience dimension reference + weight. */
+/** One video stack node definition in a profile. */
+export const videoStackNodeSchema = stackNodeSchema
+
+/** Profile contract: experience dimension reference + weight. */
 export const experienceDimensionSchema = z.object({
   id: z.string().min(1),
   weight: z.number(),
 })
 
-/** SSOT: Framing block (metaphor/baseline + disclaimer). */
+/** Profile contract: framing block (metaphor/baseline + disclaimer). */
 export const framingSchema = z.object({
   type: z.string().min(1),
   disclaimer: z.string().optional(),
@@ -62,16 +64,12 @@ export const uiControlSchema = z.object({
   min: z.number().optional(),
   max: z.number().optional(),
   step: z.number().optional(),
-  /** e.g. "intensity", "video.vignette.amount" — maps to pipeline param or nodeIndex.param */
+  /** e.g. "intensity", "video.vignette.amount": maps to pipeline param or nodeIndex.param */
   target: z.string().optional(),
 })
 
-/** One audio stack node in a profile (Phase 7). e.g. lowpass, tremolo, noise_bed. */
-export const audioStackNodeSchema = z.object({
-  id: z.string().optional(),
-  node: z.string(),
-  params: z.record(z.string(), z.unknown()).optional(),
-})
+/** One audio stack node in a profile, e.g. lowpass, tremolo, noise_bed. */
+export const audioStackNodeSchema = stackNodeSchema
 
 /** Audio stack config in profile: input (synth), master volume, chain of FX nodes. */
 export const audioStackSchema = z.object({
@@ -81,7 +79,7 @@ export const audioStackSchema = z.object({
   chain: z.array(audioStackNodeSchema).max(20).optional(),
 })
 
-/** Phase 8: One analyser→video param mapping (source, target, scale, smoothing, clamp). */
+/** One analyser-to-param mapping (source, target, scale, smoothing, clamp). */
 export const analyserToParamSchema = z.object({
   source: z.enum(['rms']),
   target: z.string(), // e.g. "video.grain.amount", "video.temporal_smear.feedback"
@@ -96,12 +94,12 @@ export const analyserToParamSchema = z.object({
   clamp: z.tuple([z.number(), z.number()]).optional(),
 })
 
-/** Phase 8: Reactive config — analyser (RMS) to video param mappings. */
+/** Reactive config: analyser RMS to video/audio parameter mappings. */
 export const reactiveSchema = z.object({
   analyser_to_params: z.array(analyserToParamSchema).optional(),
 })
 
-/** SSOT: Safe Mode clamps (values used when safeMode is on). */
+/** Profile contract: Safe Mode clamps (values used when safeMode is on). */
 export const safeModeClampsSchema = z
   .object({
     max_intensity: z.number().optional(),
@@ -121,7 +119,7 @@ export const safeModeClampsSchema = z
   })
   .passthrough()
 
-/** SSOT: Reduced Motion policy. */
+/** Profile contract: Reduced Motion policy. */
 export const reducedMotionPolicySchema = z
   .object({
     disable_nodes: z.array(z.string()).optional(),
@@ -186,13 +184,7 @@ export const dimensionMappingSafetySchema = z
   .object({
     warnings: z.array(z.string()).optional(),
     clamps: z.record(z.string(), z.unknown()).optional(),
-    reduced_motion: z
-      .object({
-        disable_nodes: z.array(z.string()).optional(),
-        note: z.string().optional(),
-      })
-      .passthrough()
-      .optional(),
+    reduced_motion: reducedMotionPolicySchema.optional(),
   })
   .passthrough()
 
