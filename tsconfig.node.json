@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     // ES2022 target (vs ES2020 in tsconfig.json) is intentional: this config
-    // only covers Node-side tooling (vite.config.ts, scripts) which run on a
+    // only covers Vite configuration, which runs on a
     // modern Node version, whereas the main tsconfig targets browser output.
     "target": "ES2022",
     "lib": ["ES2023"],

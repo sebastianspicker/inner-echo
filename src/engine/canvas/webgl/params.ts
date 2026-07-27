@@ -83,7 +83,7 @@ export function resolveReactiveOverrides(overridesRaw: unknown): {
   }
 
   return {
-    video: toFiniteNumberRecord(overridesRaw),
+    video: {},
     audio: null,
   }
 }

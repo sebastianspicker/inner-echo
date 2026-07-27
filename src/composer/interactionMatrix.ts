@@ -3,7 +3,7 @@ import { clamp01 } from './types'
 /**
  * Conservative nonlinear interaction matrix between experience dimensions.
  *
- * This encodes a *metaphorical* "mutual reinforcement" knob for the composer:
+ * This encodes a metaphorical "mutual reinforcement" knob for the composer:
  * some pairs can slightly amplify each other when Interaction Amount > 0.
  *
  * Safety rules:
@@ -20,7 +20,7 @@ function key(a: DimensionId, b: DimensionId): string {
 }
 
 const DEFAULT_INTERACTION_MATRIX: InteractionMatrix = {
-  // Conservative examples (0..1). These are *small* gains before clamps.
+  // Conservative examples (0..1). These are small gains before clamps.
   [key('hyperarousal', 'intrusion')]: 0.18,
   [key('hyperarousal', 'hypervigilance')]: 0.12,
   [key('rumination_loop', 'compulsive_loop')]: 0.12,

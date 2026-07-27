@@ -1,44 +1,28 @@
-# Contributions & limits (inner-echo evidence)
+# Evidence contributions and limits
 
-This page makes the project’s boundaries explicit so the website never reads as “just trust us”.
+## Limits
 
-## Non-diagnostic boundary
+- Experiences vary between people. Group-level descriptions do not predict an individual.
+- Many experience dimensions occur across diagnoses and non-clinical contexts.
+- Physiological measures, attention measures, and self-report do not always agree.
+- Audiovisual meaning depends on the viewer, environment, and presentation.
+- A source describing a phenomenon does not validate a specific video or audio mapping.
 
-Inner Echo is not a diagnostic or therapeutic tool. It provides audiovisual metaphors that can be educational or reflective. Any apparent “accuracy” is not a clinical claim.
+The evidence corpus does not support claims that Inner Echo:
 
-## What the evidence does (and does not) support
+- shows what a diagnosis looks or sounds like
+- diagnoses or assesses a user
+- identifies biomarkers
+- infers mental state from camera or microphone input
+- provides treatment or medical advice
 
-### Supported (within this repo’s corpus)
+## Contributing evidence
 
-- That the named experience dimensions correspond to patterns commonly described in research and first-person reports (as synthesized in `docs/references/reports/`).
-- That certain signal metaphors (e.g., bounded texture, gentle compression, soft focus narrowing) can be plausibly framed as metaphors for those dimensions.
+1. Add or update the relevant source notes and bibliography under `research/`.
+2. Update the corresponding dimension, motif, condition, and matrix entries.
+3. State whether each claim is source-backed, mixed, or a hypothesis.
+4. Keep uncertain mappings conservative and off by default where practical.
+5. Preserve the sensory constraints in [../30_SAFETY_ETHICS.md](../30_SAFETY_ETHICS.md).
+6. Run `npm run evidence:gen`, `npm run evidence:verify`, and `npm run docs:links`.
 
-### Mixed / interpretive
-
-- Specific motif choices (e.g., which exact node or parameter best reflects a phenomenon) are often interpretive. Even when the phenomenon is discussed, mapping it to a particular audiovisual technique is a design decision.
-
-### Hypotheses / gaps
-
-- Any mapping marked **Hypothesis (evidence gap)** in the product or in `docs/REFERENCES_AUDIT.md` is not strongly supported by the corpus and should remain conservative / off-by-default.
-
-## Known limitations & controversies
-
-- **Individual variability**: experiences vary widely; group-level patterns do not predict any individual’s experience.
-- **Non-specificity**: many phenomena are not specific to a single diagnosis or context.
-- **Measurement caution**: physiological measures, attention measures, and self-report do not always align; avoid “biomarker cosplay”.
-- **Perception is context-dependent**: audiovisual metaphors can change meaning across users and settings.
-
-## What is explicitly not supported
-
-- Claims that “this is what disorder X looks/sounds like.”
-- Claims of diagnostic validity, biomarkers, or clinical equivalence.
-- Claims that the system can infer mental state from camera or microphone.
-- Any real-time “assessment” language.
-
-## How to contribute evidence safely
-
-1. Add or edit the evidence corpus pages under `docs/references/` (especially `reports/` and dimension pages).
-2. If a mapping is uncertain, label it **Hypothesis (evidence gap)** and keep it conservative.
-3. Prefer phrasing like “metaphor”, “design hypothesis”, “consistent with reports of…”.
-4. Ensure safety posture is maintained: no strobe, no harsh audio spikes, Reduced Motion and Safe Mode always available.
-
+Use precise language. Describe a mapping as a metaphor or design hypothesis, not a simulation or clinical representation.

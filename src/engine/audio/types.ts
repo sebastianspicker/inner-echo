@@ -1,17 +1,17 @@
 /**
- * Phase 7: Audio engine types (no mic).
+ * Audio engine runtime types.
  * AudioModule: create/connect, setParams, dispose.
  */
 
 export type AudioContextStatus = 'off' | 'starting' | 'on' | 'error'
 
-/** Phase 9: Microphone permission/source state. */
+/** Microphone permission/source state. */
 export type MicStatus = 'off' | 'requesting' | 'on' | 'denied' | 'error'
 
-/** Phase 9: Audio input routing — synth only, mic only, or both (mix). */
+/** Audio input routing: synth only, mic only, or both (mix). */
 export type AudioInputMode = 'synth' | 'mic' | 'mix'
 
-/** Phase 13: Audio feature metrics for AV coupling. All values are normalized to 0..1. */
+/** Audio feature metrics for AV coupling. All values are normalized to 0..1. */
 export interface AudioMetrics {
   /** RMS loudness (0..1-ish). */
   rms: number
@@ -47,25 +47,4 @@ export interface AudioModule {
   setParams(params: Record<string, unknown>): void
   /** Disconnect and release resources. */
   dispose(): void
-}
-
-/** Params passed to the audio engine (master volume, safe mode, etc.). */
-export interface AudioEngineParams {
-  masterVolume: number
-  safeMode?: boolean
-}
-
-/** Definition of one node in the profile audio_stack.chain. */
-export interface AudioChainNodeDef {
-  id?: string
-  node: string
-  params?: Record<string, unknown>
-}
-
-/** Full audio stack config from profile. */
-export interface AudioStackConfig {
-  enabled?: boolean
-  input?: 'synth'
-  master?: { volume?: number }
-  chain?: AudioChainNodeDef[]
 }

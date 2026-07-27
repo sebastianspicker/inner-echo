@@ -1,8 +1,8 @@
 /**
- * Phase 6: Chromatic aberration — RGB channel offset (amount). Single pass.
+ * Chromatic aberration: RGB channel offset in a single pass.
  */
 
-import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
+import { ShaderMaterial, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -10,8 +10,8 @@ import {
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
-  QUAD_VERTEX_SHADER,
 } from './paramUtils'
+import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -52,28 +52,17 @@ export class ChromaticAberrationNode implements VideoNode {
   }
 
   getMaterial(inputTexture: Texture, _previousFrame?: Texture | null): Material {
-    if (this.material) {
-      this.material.uniforms.u_map.value = inputTexture
-      return this.material
-    }
-    this.material = new ShaderMaterial({
-      uniforms: {
-        u_map: { value: inputTexture },
-        u_uvScale: { value: new Vector2(1, 1) },
-        u_uvOffset: { value: new Vector2(0, 0) },
+    if (!this.material) {
+      this.material = createEffectMaterial(inputTexture, FRAG, {
         u_amount: { value: 0.02 },
-      },
-      vertexShader: QUAD_VERTEX_SHADER,
-      fragmentShader: FRAG,
-      depthWrite: false,
-    })
+      })
+    } else {
+      bindInputTexture(this.material, inputTexture)
+    }
     return this.material
   }
 
   dispose(): void {
-    if (this.material) {
-      this.material.dispose()
-      this.material = null
-    }
+    this.material = disposeEffectMaterial(this.material)
   }
 }

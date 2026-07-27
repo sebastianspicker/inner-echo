@@ -1,5 +1,5 @@
 /**
- * Canonical node-type sets — single source of truth.
+ * Canonical node-type sets: single source of truth.
  *
  * Video node types are derived from `NODE_FACTORY` in conditions/graphBuilder.ts
  * (the authoritative video-node factory). Audio node types are derived from

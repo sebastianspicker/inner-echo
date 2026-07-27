@@ -1,42 +1,76 @@
-node_modules/
-dist/
-.DS_Store
-*.log
-tsconfig.tsbuildinfo
-reports/
-coverage/
-.vite/
+/node_modules/
+/dist/
+*.tsbuildinfo
+/reports/
+/coverage/
+/.vite/
+/playwright-report/
+/test-results/
+/blob-report/
+/.vitest/
+/tests/.cache/
+/tests/.tmp/
+/tests/.env/
+/tests/fixtures/generated/
+/tests/runtime-snapshots/
+/tests/e2e/artifacts/
+/tests/e2e/screenshots/
+/tests/e2e/videos/
+/.cache/
+/.npm/
+/.node_repl_history
+/tmp/
+/temp/
 
-# Secrets & credentials — never commit these
+# Secrets and credentials. The application does not require a public env file.
 .env
 .env.*
-!.env.example
+.envrc
+.direnv/
+.npmrc
+.netrc
+.pypirc
+*.local
 *.pem
 *.key
 *.p12
 *.pfx
 *.crt
 *.cer
+*.der
 *.jks
 *.keystore
+*.mobileprovision
 credentials.json
 service-account*.json
 **/secrets/
 
-# Local / WIP artifacts (audit runs, progress logs)
-.codex/
-.cursor/
-.claude/
-.kilo/
-.agents/
-progress.md
-AUDIT.md
+# Local analysis, automation, and editor state.
+/.codacy/
+/.codegraph/
+/.serena/
+/.impeccable/
+/.codex/
+/.cursor/
+/.claude/
+/.kilo/
+/.agents/
+/.idea/
+/.vscode/
+/progress.md
+/AUDIT.md
+/AGENTS.md
+/docs/agent/
+/docs/archive/
 
-# OS / editor
+# OS and editor residue.
+.DS_Store
 Thumbs.db
 ehthumbs.db
-.idea/
+*.log
 *.sw?
+*.orig
+*.rej
 
-docs/references/reports/
-AGENTS.md
+# Canonical public screenshots live in assets/readme/screenshots/ and are
+# verified by the manifest. Test-failure captures stay under ignored E2E paths.

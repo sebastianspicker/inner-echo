@@ -54,7 +54,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   /**
    * Called automatically by React after an error has been thrown.
-   * This is the ideal place to log the error to a reporting service.
+   * An application can log the error to a reporting service here.
    */
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // We only log the error stack to the console in development mode.

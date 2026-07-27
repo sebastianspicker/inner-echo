@@ -1,94 +1,84 @@
-# Product — Goals, scope, and requirements
+# Product scope
 
-Canonical product doc. Merged from PRD, MVP, and user-story scope. Non-diagnostic, metaphorical framing only.
+Inner Echo is a client-only browser application for applying audiovisual metaphors to a live webcam view. A user can choose experience dimensions, select a curated profile, or combine profiles, then control the resulting visual and optional audio layers.
 
----
+The application is intended for voluntary individual exploration, technical demonstration, and facilitated educational discussion. The repository does not contain evidence that the interface has completed clinical validation, formal usability validation, or an accessibility conformance audit.
 
-## Problem and solution
+## Current alpha capabilities
 
-Many mental health experiences are difficult to understand from the outside because they are often invisible. This gap can reduce empathy and increase misunderstanding.
+- Explicit welcome and privacy disclosure before media activation.
+- Experience-dimension, curated-profile, and combined-profile setup modes.
+- Profile-driven WebGL effects with reduced Canvas2D or raw-preview fallbacks.
+- Global intensity, Safe Mode, Reduced Motion, and Stop Everything controls.
+- Optional synthesized audio and optional microphone input with separate direct-gesture activation.
+- Local preset storage and URL-hash sharing of non-media state.
+- Bundled evidence and method documents available from the interface.
+- Development-only runtime diagnostics.
 
-**Proposed solution:** A web app that layers metaphorical audio-visual overlays on top of a user's webcam feed. Users pick a condition (a curated experiential frame) and experience an overlay intended to foster empathy, education, and reflection.
+The runtime profile data in `src/conditions/` is an application contract, not example data. Changes to profiles, mappings, schemas, or node names require the validation described in [CONTRACT_VERIFICATION.md](CONTRACT_VERIFICATION.md).
 
-**Non-claim:** This is not a clinical simulation and does not diagnose. It is an artistic and educational representation of experience dimensions. Evidence for dimensions and mappings is documented in [references/](references/README.md).
+## Boundaries
 
----
+Inner Echo is not:
 
-## Target users
+- a diagnostic tool
+- a medical device
+- a treatment platform
+- a questionnaire or assessment system
+- an objective simulation of a diagnosis or another person's experience
+- a recording, export, or media-sharing service
 
-- General public, friends/family, colleagues
-- Education/workshops/awareness events
-- People with lived experience who want reflective tools (voluntary, non-therapeutic)
+The application does not infer a diagnosis, score a user, or collect a clinical history.
 
----
+## Runtime and privacy model
 
-## Product goals
+- Core behavior runs in the browser without an application backend.
+- Camera, microphone, and `AudioContext` startup require direct user actions.
+- Microphone input is optional and off by default.
+- Video and audio are not recorded or uploaded by the application.
+- The runtime has no analytics, tracking, remote font, or third-party API integration.
+- Local storage holds welcome acknowledgement and saved preset state. URL hashes may hold shared composer state.
+- Passive state imports cannot activate camera, microphone, or audio.
 
-- Increase understanding through metaphor and controlled immersion
-- Be low-friction: runs in a browser, no installation
-- Maximize user control and safety
-- Make adding new conditions simple (preset-driven authoring)
+Static application files still need to be delivered by a host. No offline cache or deployment target is included.
 
----
+## Primary workflow
 
-## Explicit non-goals
+1. Read the metaphor, privacy, and permission boundaries.
+2. Select Continue to setup without starting media.
+3. Choose experience dimensions or a curated collection.
+4. Select Start camera.
+5. Adjust intensity and comfort controls.
+6. Enable sound or microphone input separately when desired.
+7. Use Stop Everything to release active runtime resources.
 
-- No diagnostic or medical functionality
-- No therapy or treatment guidance
-- No data collection, profiling, or analytics in MVP
+Permission-denied, loading, invalid-profile, renderer-fallback, and stopped states must be reported as their actual state. Controls must not claim that media, sound, or effects are active before the corresponding runtime is active.
 
----
+## Safety requirements
 
-## Key features
+- Safe Mode defaults on and applies conservative profile and engine clamps.
+- Reduced Motion follows the operating-system preference until the user chooses a setting.
+- Stop Everything remains reachable while media is active.
+- Audio and microphone input remain off until separately enabled.
+- The effect system avoids strobe behavior, abrupt loud transients, and unbounded feedback.
+- Evidence and warnings remain available without requiring media access.
 
-1. Webcam overlay rendering (Three.js VideoTexture)
-2. Condition selection (data-driven profiles from `src/conditions/`)
-3. Visual effect stacks (video nodes)
-4. Global Intensity, Safe Mode, Reduced Motion, Stop Everything
-5. Optional: audio synth and modulation (Audio → Video)
+See [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md) for the implementation-facing safety contract.
 
----
+## Accessibility status
 
-## MVP scope
+The implementation includes semantic controls, visible focus styles, keyboard handling for the evidence dialog, critical 44 CSS-pixel targets, and a narrow single-column layout. Automated tests cover selected keyboard, focus, target-size, and overflow behavior.
 
-**In scope (MUST):** Webcam via `getUserMedia`; at least two data-driven conditions; video overlay stack (e.g. grain, vignette, chroma); condition picker from `catalog.json`; Intensity, Safe Mode, Reduced Motion, Stop Everything; onboarding/consent; no network calls; no storage/upload; microphone not default.
+The project does not currently claim WCAG 2.2 AA conformance. Manual VoiceOver, NVDA, real Safari, and physical mobile evidence is still required.
 
-**MVP+ (optional):** WebAudio synth and FX chain; RMS analyser and modulation into video; dev-only debug panel.
+## Validation targets
 
-**Out of scope (not now):** Recording/export/sharing; accounts/backends; diagnostic questionnaires; "exact simulation" claims.
+- A clean lockfile install can build the static application.
+- Type checking, linting, unit and component tests, contract validation, and data validation pass.
+- Chrome, Firefox, and WebKit Playwright flows run with synthetic media.
+- Required fake camera, audio, and microphone runtime paths pass.
+- The ten canonical README screenshots match the current interface and contain no real media or personal information.
+- Moderate or higher dependency advisories are resolved for the candidate lockfile.
+- Manual browser, device, permission, and assistive-technology gaps are listed as limitations.
 
-**Acceptance criteria:** Camera starts/stops reliably; condition switching live; Safe Mode and Reduced Motion behave as designed; Stop Everything shuts down all resources; no console errors on happy path.
-
----
-
-## UX and safety requirements
-
-- Onboarding/consent before enabling camera; clear language and disclaimers
-- Accessibility: keyboard navigation, ARIA labels, focus management
-- Immediate exit controls and comfort toggles
-- Condition-specific warnings; parameter clamps; Safe Mode and Reduced Motion available; microphone optional and permission-separated
-
-See [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md) for full safety and ethics.
-
----
-
-## Privacy
-
-- MVP is local-only (no backend)
-- No external requests; no trackers
-- No storage or upload of video/audio
-- Permissions only after explicit user action
-
----
-
-## User stories (summary)
-
-Epics: E1 Camera & rendering, E2 Conditions & presets, E3 Safety & accessibility, E4 Audio & modulation (optional), E5 Knowledge base / authoring.
-
----
-
-## Success criteria (qualitative)
-
-- Users understand the metaphor framing and feel informed rather than alarmed
-- The app feels safe and controllable
-- New conditions can be added mostly by editing preset files
+The automated scope and remaining manual checks are listed in [RELIABILITY.md](RELIABILITY.md).

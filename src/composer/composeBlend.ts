@@ -34,6 +34,16 @@ export function mergeNumericWeighted(items: Array<{ w: number; v: number }>): nu
 export function mergeParams(
   contribs: Array<{ w: number; params: Record<string, unknown>; source: SourceId }>,
 ): Record<string, unknown> {
+  const keys = collectSafeKeys(contribs)
+  const out: Record<string, unknown> = {}
+  for (const key of Array.from(keys).sort((a, b) => a.localeCompare(b))) {
+    const value = mergeParamForKey(contribs, key)
+    if (value !== undefined) out[key] = value
+  }
+  return out
+}
+
+function collectSafeKeys(contribs: Array<{ params: Record<string, unknown> }>): Set<string> {
   const keys = new Set<string>()
   for (const c of contribs) {
     const p = c.params ?? {}
@@ -41,28 +51,30 @@ export function mergeParams(
       if (isSafeKey(k)) keys.add(k)
     }
   }
-  const out: Record<string, unknown> = {}
-  const orderedKeys = Array.from(keys).sort((a, b) => a.localeCompare(b))
-  for (const k of orderedKeys) {
-    const numerics: Array<{ w: number; v: number }> = []
-    const nonNumerics: Array<{ w: number; v: unknown; source: SourceId }> = []
-    for (const c of contribs) {
-      const v = c.params?.[k]
-      if (typeof v === 'number') numerics.push({ w: c.w, v })
-      else if (v != null) nonNumerics.push({ w: c.w, v, source: c.source })
-    }
-    if (numerics.length) {
-      out[k] = mergeNumericWeighted(numerics)
-    } else if (nonNumerics.length) {
-      nonNumerics.sort((a, b) => {
-        const dw = clamp01(b.w) - clamp01(a.w)
-        if (dw !== 0) return dw
-        return a.source.localeCompare(b.source)
-      })
-      out[k] = nonNumerics[0].v
-    }
+  return keys
+}
+
+function mergeParamForKey(
+  contribs: Array<{ w: number; params: Record<string, unknown>; source: SourceId }>,
+  key: string,
+): unknown {
+  const numerics: Array<{ w: number; v: number }> = []
+  const nonNumerics: Array<{ w: number; v: unknown; source: SourceId }> = []
+  for (const contribution of contribs) {
+    const value = contribution.params?.[key]
+    if (typeof value === 'number') numerics.push({ w: contribution.w, v: value })
+    else if (value != null)
+      nonNumerics.push({ w: contribution.w, v: value, source: contribution.source })
   }
-  return out
+  if (numerics.length) return mergeNumericWeighted(numerics)
+  return pickHighestWeightedValue(nonNumerics)
+}
+
+function pickHighestWeightedValue(
+  items: Array<{ w: number; v: unknown; source: SourceId }>,
+): unknown {
+  items.sort((a, b) => clamp01(b.w) - clamp01(a.w) || a.source.localeCompare(b.source))
+  return items[0]?.v
 }
 
 export function sortStackKeys<
@@ -175,25 +187,21 @@ export function mergeSafeModeClamps(
       if (isSafeKey(k)) keys.add(k)
     }
   }
-  for (const k of Array.from(keys).sort((a, b) => a.localeCompare(b))) {
-    const vs = items.map((it) => it?.[k]).filter((v) => v != null)
-    if (!vs.length) continue
-    const numVs = vs.filter((v): v is number => typeof v === 'number')
-    if (numVs.length === vs.length) {
-      out[k] = Math.min(...numVs)
-      continue
-    }
-    const boolVs = vs.filter((v): v is boolean => typeof v === 'boolean')
-    if (boolVs.length === vs.length) {
-      // OR semantics: if ANY preset sets the flag, the merged result is true.
-      // This is correct for "no_" prefixed keys (e.g. no_strobe) where true = safe,
-      // so any single preset requesting safety wins.
-      out[k] = boolVs.some(Boolean)
-      continue
-    }
-    out[k] = vs[0]
+  for (const key of Array.from(keys).sort((a, b) => a.localeCompare(b))) {
+    const value = mergeClampValue(items, key)
+    if (value !== undefined) out[key] = value
   }
   return out
+}
+
+function mergeClampValue(items: Array<Record<string, unknown> | undefined>, key: string): unknown {
+  const values = items.map((item) => item?.[key]).filter((value) => value != null)
+  if (!values.length) return undefined
+  if (values.every((value): value is number => typeof value === 'number'))
+    return Math.min(...values)
+  if (values.every((value): value is boolean => typeof value === 'boolean'))
+    return values.some(Boolean)
+  return values[0]
 }
 
 function parseNumberHints(hint: unknown): number[] {
@@ -235,24 +243,7 @@ export function scaleNumericParams(
   return out
 }
 
-export function motifsToVideoDefs(
-  motifs: MotifDef[] | undefined,
-  strength = 1,
-): VideoStackNodeDef[] {
-  if (!motifs?.length) return []
-  return motifs.map((m) => {
-    const node = normalizeNodeType(m.node)
-    const hint = m.params_hint ?? {}
-    const params: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(hint)) {
-      const chosen = pickFromHint(v, strength)
-      if (chosen != null) params[k] = chosen
-    }
-    return { id: node, node, params }
-  })
-}
-
-export function motifsToAudioDefs(
+function motifsToDefs(
   motifs: MotifDef[] | undefined,
   strength = 1,
 ): Array<{ node: string; params: Record<string, unknown> }> {
@@ -267,4 +258,18 @@ export function motifsToAudioDefs(
     }
     return { node, params }
   })
+}
+
+export function motifsToVideoDefs(
+  motifs: MotifDef[] | undefined,
+  strength = 1,
+): VideoStackNodeDef[] {
+  return motifsToDefs(motifs, strength).map(({ node, params }) => ({ id: node, node, params }))
+}
+
+export function motifsToAudioDefs(
+  motifs: MotifDef[] | undefined,
+  strength = 1,
+): Array<{ node: string; params: Record<string, unknown> }> {
+  return motifsToDefs(motifs, strength)
 }

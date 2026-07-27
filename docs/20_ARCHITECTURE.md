@@ -1,113 +1,116 @@
-# Architecture — System design and data flow
+# Architecture
 
-Canonical architecture doc. Merged from ARCHITECTURE and FRONTEND. Client-only; engine and conditions are separate; data-driven profiles.
+Inner Echo is a client-only Vite and React application. React owns visible state and permission flows. Engine modules own browser media, rendering, audio, reactive processing, and cleanup. Profile JSON declares the audiovisual graph that those modules construct.
 
----
+## Entry and ownership
 
-## Overview
-
-The application is client-only:
-
-- Camera video via `getUserMedia()`, rendered through a Three.js WebGL pipeline as a texture.
-- Visual effects applied as a node stack.
-- Optional audio via WebAudio (synth or optional mic); an analyser can drive a modulation layer (Audio → Video).
-
-Design goals: modular (engine ≠ conditions), data-driven (profiles define behaviour), safe (Stop / Safe Mode / Reduced Motion), with a Canvas2D fallback when WebGL init fails.
-
----
-
-## Data flow
-
-### Video pipeline
-
-```
-getUserMedia(video) → <video> element → THREE.VideoTexture
-        → VideoGraph (Node1 → Node2 → … → NodeN)
-        → WebGL Renderer → <canvas> overlay (under UI)
+```text
+index.html
+  -> src/main.tsx
+  -> src/app/App.tsx
+  -> src/ui/CameraView.tsx
 ```
 
-### Audio pipeline
+`CameraView` is the top-level runtime coordinator. It owns user-facing state, direct-gesture activation handlers, safety controls, setup mode, and cleanup wiring. Long-lived browser resources remain inside engine APIs and focused hooks.
 
+## Main modules
+
+| Path | Responsibility |
+|---|---|
+| `src/app/` | React composition and error boundary. |
+| `src/ui/` | Welcome, setup, media controls, status, evidence dialog, safety controls, and runtime hooks. |
+| `src/engine/video/` | Camera acquisition and track cleanup. |
+| `src/engine/canvas/` | Overlay orchestration, WebGL pipeline, Canvas2D fallback, sizing, and video metrics. |
+| `src/engine/effects/` | Implemented video nodes and shader resources. |
+| `src/engine/audio/` | `AudioContext`, synth, optional microphone routing, effects, analysis, and cleanup. |
+| `src/engine/reactive/` | Smoothed audio-to-video and video-to-audio mappings. |
+| `src/conditions/` | Catalog, profiles, schemas, normalization, control targets, and video graph construction. |
+| `src/composer/` | Dimension and profile composition with safety constraints. |
+| `src/contractVerification/` | Node metadata, fake audio context, probes, and policy checks. |
+| `src/evidence/` | Bundled evidence loading and sanitized Markdown rendering. |
+| `src/utils/` | Deterministic parsing, numeric, logging, random, and target-path helpers. |
+
+Registry metadata under `src/contractVerification/` is introspection-only. Runtime builders remain the executable source for graph behavior.
+
+## Profile loading
+
+`useProfileLoad` loads either a profile from `src/conditions/profiles/` or a composer result. Internal storage values remain `preset`, `multimorbid`, and `symptom` for compatibility. Public labels are Curated collections, Combine collections, and Experience dimensions.
+
+Profile loading follows this sequence:
+
+1. Load and validate catalog or profile JSON.
+2. Normalize optional fields and ranges.
+3. Apply composer output when a composed mode is selected.
+4. Apply Safe Mode and Reduced Motion policy.
+5. Build registered video and audio nodes.
+6. Warn and skip, or fail explicitly, for invalid contract references according to the current validator and builder policy.
+
+Unknown inputs must not produce a false active or healthy state.
+
+## Video path
+
+```text
+direct user action
+  -> getUserMedia(video)
+  -> HTMLVideoElement
+  -> THREE.VideoTexture
+  -> registered VideoNode stack
+  -> WebGL render targets
+  -> stage canvas
 ```
-User gesture → AudioContext
-  Synth OR Mic (optional) → AudioGraph (FX chain) → Master Out
-                         → Analyser (RMS/FFT)
-                         → Modulation layer → VideoGraph parameters
+
+`useReactivePipeline` defers loading of the constructor-heavy graph, reactive, and canvas runtime until camera metadata is available. `graphBuilder` constructs the profile's registered video nodes after Reduced Motion filtering. `startOverlayLoop` selects WebGL when available and owns deterministic stop and disposal.
+
+The WebGL pipeline reads current control refs per frame, applies smoothed reactive overrides, measures video metrics, and reports renderer diagnostics. Canvas sizing and source-video metric helpers are separated from the main loop.
+
+## Audio path
+
+```text
+direct user action
+  -> AudioContext
+  -> synth or optional microphone
+  -> profile FX chain
+  -> analyser features
+  -> limiter and master output
 ```
 
----
+`audioEngine` owns context startup, source routing, effect-chain rebuilds, microphone requests, analyser metrics, parameter updates, and cleanup. Sound and microphone activation are separate permission paths.
 
-## Stack and layers
+Profile changes update the desired audio stack. If initialization is still pending, the desired stack is retained and applied when the context becomes ready.
 
-- **Stack:** Vite, React, TypeScript, Three.js, Web APIs (`getUserMedia`, WebAudio).
-- **UI (`src/ui/`):** OnboardingModal, ConditionPicker (from `catalog.json`), ConditionComposerPanel, EffectControls, AudioMicControls; optional DebugPanel (dev-only).
-- **Engine (`src/engine/`):** API used by UI: `startVideo`/`stopVideo`, `startAudio`/`stopAudio`, `startMic`/`stopMic`, `setCondition(id)`, `setControl(key, value)`, `stopEverything()`. Engine owns camera, WebGL, WebAudio, render loop, disposal.
+## Reactive coupling
 
----
+Profile `reactive.analyser_to_params` entries map smoothed audio features to registered parameters. The coupling engine separately maps audio features to video parameters and low-resolution video metrics to audio parameters.
 
-## Modules and responsibilities
+Every mapping is bounded by schema ranges, profile policy, user controls, and engine clamps. Unknown targets are skipped or rejected rather than treated as successful updates.
 
-| Module | Responsibility |
-|--------|----------------|
-| **`src/engine/`** | Camera lifecycle, WebGL renderer, WebAudio, effect nodes, graph construction, runtime (state, safety, Stop Everything). No UI logic, no condition data. |
-| **`src/conditions/`** | Data: `catalog.json`, `profiles/*.json`. Schema, loader, graph builder. No engine logic. |
-| **`src/composer/`** | Multimorbid and symptom-first blend logic, dimension-to-signal mapping, interaction matrix, safety composition. |
-| **`src/contractVerification/`** | Registry metadata and probe harnesses for video/audio nodes. Used by `verify:contracts`. |
-| **`src/evidence/`** | Evidence doc loading and markdown rendering for the in-app evidence drawer. |
-| **`src/ui/`** | Components, condition picker, composer panel, controls, onboarding, accessibility. Calls engine APIs only. |
-| **`src/utils/`** | Shared helpers: logger, numeric clamp, JSON parser, target-path resolver. |
-| **`src/app/`** | Entry point and composition. |
+## Visible runtime state
 
-Boundary: the engine module builds graphs from conditions data; UI calls engine APIs only.
+The UI distinguishes:
 
----
+- camera idle, requesting, active, interrupted, denied, and failed
+- effects loading, WebGL, 2D fallback, raw preview, unavailable, and stopped
+- sound off, starting, on, blocked, and failed
+- microphone off, requesting, active, denied, and failed
+- profile or catalog loading, loaded, invalid, and failed
 
-## Video and audio implementation
+Visible state is derived from actual runtime transitions. It is not an optimistic mirror of a clicked control.
 
-- **Video:** `THREE.VideoTexture`; post-processing-style chain (render targets); nodes implement `VideoNode` (setParams, getMaterial, dispose). Implemented nodes include grain, vignette, chromatic_aberration, temporal_smear (and others). Unknown node types are skipped with a warning.
-- **WebGL module split:** `src/engine/canvas/webglPipeline.ts` is orchestrator-only; loop/params/resource helpers live under `src/engine/canvas/webgl/` for lower coupling and safer incremental changes.
-- **Audio:** Native WebAudio; starts only after user gesture. Synth + FX chain from profile `audio_stack.chain`; FX include lowpass, highpass, tremolo, noise_bed, compressor_limiter, delay, reverb, flutter, pulse_tone. Condition switch: master gain ramp, dispose and rebuild chain.
-- **Reactive:** Profile can define `reactive.analyser_to_params`; analyser (e.g. RMS) drives video parameters with smoothing and clamps.
+## Fallbacks
 
----
+1. Use the Three.js WebGL pipeline when renderer initialization succeeds.
+2. Use Canvas2D camera passthrough when a valid 2D surface is available.
+3. Hide the overlay and preserve raw camera preview when the effects surface cannot be reused safely.
+4. Report unavailable when no valid rendering surface remains.
 
-## Condition system (data-driven)
+Fallback modes keep Stop Everything and surrounding controls usable. See [RELIABILITY.md](RELIABILITY.md).
 
-- **`catalog.json`:** UI metadata (id, label, description, tags). Picker loads from here.
-- **`profiles/<id>.json`:** `video_stack`, optional `audio_stack`, `safety`, `ui.controls`, optional `reactive`. Validation via schema; unknown nodes warn and skip.
+## Security and cleanup boundaries
 
----
+- Camera, microphone, and `AudioContext` startup require direct user actions.
+- Passive preset imports cannot activate media or sound.
+- Evidence HTML uses the sanitized `src/evidence/markdown.ts` path.
+- The runtime contains no remote API, upload, analytics, or recording path.
+- Stop Everything releases media, audio, loops, and renderer resources before reporting idle.
 
-## Global controls
-
-- **Intensity:** Multiplicative scale on node params (subject to safety clamps).
-- **Safe Mode:** Enables extra clamps and caps intensity.
-- **Reduced Motion:** Disables or replaces time-based / motion-heavy nodes.
-- **Stop Everything:** Stops tracks, suspends audio, cancels loops, disposes WebGL, clears canvas.
-
----
-
-## Fallback and reliability
-
-1. **Primary:** Three.js WebGL pipeline.
-2. **Fallback:** Canvas2D `drawImage` path if WebGL init fails (no effects).
-3. **Performance:** FPS guard can reduce `renderScale` (e.g. 1.0 → 0.75 → 0.5) under sustained low FPS.
-
-See [RELIABILITY.md](RELIABILITY.md) for browser matrix, WebGL fallback details, and known issues.
-
----
-
-## Runtime state and permissions
-
-- States: idle, requesting_video, video_active, requesting_audio, audio_active, (optional) mic flow, denied/error.
-- All permission triggers (camera, mic, AudioContext) must be bound to a user gesture.
-
----
-
-## Safety and ethics (architecture boundary)
-
-- Not a diagnostic tool; not a medical device; not therapy.
-- No recording/upload in MVP; mic optional and off by default.
-- Each condition includes warnings and intensity constraints; Safe Mode and Stop Everything always available.
-
-Full safety and ethics: [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md). Security and privacy: [SECURITY.md](SECURITY.md).
+See [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md) and [SECURITY.md](SECURITY.md).

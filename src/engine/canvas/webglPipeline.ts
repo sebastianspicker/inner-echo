@@ -1,8 +1,9 @@
 /**
  * WebGL Rendering Pipeline (Three.js)
  *
- * This module is the core visual engine of Inner Echo. It uses Three.js to process
- * the raw webcam feed through a series of custom shader effects (nodes).
+ * Visual runtime for the webcam overlay. It turns the video element into a Three.js
+ * texture, renders through the active `VideoNode` chain, and reports fatal GPU
+ * failures so the canvas layer can switch to the 2D fallback.
  *
  * Data Flow:
  * 1. Raw WebRTC `<video>` is converted to a `VideoTexture`.
@@ -66,6 +67,7 @@ import {
   updateResourceDiagnostics,
   type WebGLDiagnostics,
 } from './webgl/diagnostics'
+import { createStartupCleanup } from './startupCleanup'
 
 export type { VideoPipelineParams }
 export type WebGLOverlayStop = () => void
@@ -80,16 +82,29 @@ export interface WebGLOverlayCallbacks {
   onFatalRuntimeError?(error: Error): void
 }
 
-/** Phase 8: Optional reactive (audio RMS → video param) callbacks. */
+function mergePipelineParams(current: VideoPipelineParams, next: VideoPipelineParams): void {
+  mergeDefinedParam(current, next, 'intensity')
+  mergeDefinedParam(current, next, 'safeMode')
+  mergeDefinedParam(current, next, 'controlValues')
+  mergeDefinedParam(current, next, 'stressMode')
+  mergeDefinedParam(current, next, 'safetyContext')
+}
+
+function mergeDefinedParam<K extends keyof VideoPipelineParams>(
+  current: VideoPipelineParams,
+  next: VideoPipelineParams,
+  key: K,
+): void {
+  if (next[key] !== undefined) current[key] = next[key]
+}
+
+/** Optional reactive/coupling callbacks used by the frame loop. */
 export interface ReactiveLoopOptions {
-  /** Back-compat: if getAudioMetrics is not provided, getRms() will be used. */
-  getRms?(): number
   /** Preferred: audio metrics (RMS + spectral). */
   getAudioMetrics?(): AudioMetrics
   /**
    * Compute overrides.
-   * - Return value may be either a video overrides record (back-compat),
-   *   or an object containing { video, audio }.
+   * - Return value contains structured { video, audio } overrides.
    * - `baseControlValues` is the current pipeline controlValues before overrides (UI + previous merges).
    */
   getOverrides(
@@ -97,12 +112,10 @@ export interface ReactiveLoopOptions {
     audio: AudioMetrics,
     video: VideoMetrics,
     baseControlValues: Record<string, number | boolean>,
-  ):
-    | Record<string, number>
-    | {
-        video: Record<string, number>
-        audio?: Record<string, number>
-      }
+  ): {
+    video: Record<string, number>
+    audio?: Record<string, number>
+  }
   /** Optional: apply audio overrides directly from the render loop. */
   applyAudioOverrides?(overrides: Record<string, number>): void
   /** Optional: observe video metrics for debug UI. */
@@ -142,8 +155,8 @@ export function startWebGLOverlayLoop(
   let finalBlitMaterial: MeshBasicMaterial | null = null
   let rafId: number | null = null
   let stopped = false
-  let cleanedUp = false
   let consecutiveGlErrors = 0
+  const cleanupResources = createStartupCleanup(startupDisposers, () => gl)
   const currentParams: VideoPipelineParams = {
     intensity: 0.5,
     safeMode: false,
@@ -153,36 +166,6 @@ export function startWebGLOverlayLoop(
   }
 
   const usePassthrough = nodes.length === 0
-
-  function setParams(params: VideoPipelineParams): void {
-    currentParams.intensity = params.intensity ?? currentParams.intensity
-    currentParams.safeMode = params.safeMode ?? currentParams.safeMode
-    currentParams.controlValues = params.controlValues ?? currentParams.controlValues
-    currentParams.stressMode = params.stressMode ?? currentParams.stressMode
-    currentParams.safetyContext = params.safetyContext ?? currentParams.safetyContext
-  }
-
-  function cleanupResources(): void {
-    if (cleanedUp) return
-    cleanedUp = true
-    try {
-      if (gl) {
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
-      }
-    } catch {
-      /* ignore */
-    }
-
-    for (let i = startupDisposers.length - 1; i >= 0; i--) {
-      try {
-        startupDisposers[i]()
-      } catch {
-        /* ignore */
-      }
-    }
-    startupDisposers.length = 0
-  }
 
   try {
     renderer = new WebGLRenderer({
@@ -227,7 +210,7 @@ export function startWebGLOverlayLoop(
 
     const onContextLost = (event: Event): void => {
       event.preventDefault()
-      logger.warn('WebGL context lost — falling back')
+      logger.warn('WebGL context lost: falling back')
       stopInternal()
       callbacks?.onFatalRuntimeError?.(new Error('WebGL context lost. Render loop stopped.'))
     }
@@ -311,9 +294,9 @@ export function startWebGLOverlayLoop(
     const frameTimes: number[] = []
     let avgFps = 60
 
-    // Phase 12: diagnostics object (mutated each frame for dev panel).
+    // Diagnostics object is mutated each frame for the dev panel.
     // Note: activeVideoNodes reflects the initial chain configuration and is not
-    // refreshed at runtime. This is intentional — the node list is static for the
+    // refreshed at runtime. This is intentional: the node list is static for the
     // lifetime of a single pipeline instance.
     const diagnostics: WebGLDiagnostics = createDiagnostics(
       nodes.map((node) => toNodeName(node)),
@@ -421,18 +404,20 @@ export function startWebGLOverlayLoop(
 
       setSize()
 
-      // Compute metrics from the *previous* rendered frame (canvas contents) so we can feed video→audio coupling
-      // without readPixels stalls. This is an approximation but stable at low-res.
+      const videoReady = video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0
+      const cw = container.clientWidth
+      const ch = container.clientHeight
+
+      // Compute camera-source metrics so video→audio coupling has stable inputs
+      // without readPixels stalls or unreliable WebGL canvas readback.
       if (!metricsTracker) {
         rafId = requestAnimationFrame(loop)
         return
       }
-      const videoMetrics = metricsTracker.stepFromCanvas(canvas, delta)
+      const videoMetrics = videoReady
+        ? metricsTracker.stepFromSource(video, delta)
+        : metricsTracker.getLast()
       reactiveOptions?.onVideoMetrics?.(videoMetrics)
-
-      const videoReady = video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0
-      const cw = container.clientWidth
-      const ch = container.clientHeight
 
       if (videoReady) {
         if (
@@ -447,9 +432,11 @@ export function startWebGLOverlayLoop(
         const vh = video.videoHeight
         writeUvScaleOffset(vw, vh, cw, ch, baseParams.uvScale, baseParams.uvOffset)
 
-        const audioMetrics: AudioMetrics =
-          reactiveOptions?.getAudioMetrics?.() ??
-          ({ rms: reactiveOptions?.getRms?.() ?? 0, centroid: 0, flux: 0 } as AudioMetrics)
+        const audioMetrics: AudioMetrics = reactiveOptions?.getAudioMetrics?.() ?? {
+          rms: 0,
+          centroid: 0,
+          flux: 0,
+        }
 
         const baseControlValues = (currentParams.controlValues ?? {}) as Record<
           string,
@@ -535,7 +522,9 @@ export function startWebGLOverlayLoop(
       stop(): void {
         stopInternal()
       },
-      setParams,
+      setParams(params: VideoPipelineParams): void {
+        mergePipelineParams(currentParams, params)
+      },
       getDiagnostics: () => {
         return {
           ...diagnostics,

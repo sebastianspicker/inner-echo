@@ -1,44 +1,17 @@
-# Mapping: Experience Dimensions ↔ Conditions (Metaphor Framing)
+# Profile-to-dimension mapping
 
-Author experience dimensions first, then group them into condition profiles.
-The mapping below is educational and non-diagnostic.
+Profiles group weighted experience dimensions into curated collections. The mappings are design inputs, not diagnostic categories or claims that an overlay reproduces another person's experience.
 
-## Why dimensions?
-“Diagnosis labels” can be too broad, stigmatizing, or misleading in an art context.
-Experience dimensions (e.g., `hyperarousal`, `rumination_loop`, `derealization`) help build *specific, respectful metaphors*.
+| Profile | Experience dimensions |
+|---|---|
+| Anxiety | `hyperarousal`, `hypervigilance`, `rumination_loop` |
+| Panic | `panic_peaks`, `hyperarousal` |
+| Depression | `emotional_numbing`, `cognitive_fog`, `time_dilation` |
+| Trauma or PTSD | `hyperarousal`, `hypervigilance`, `intrusion` |
+| OCD | `rumination_loop`, `intrusion`, `compulsive_loop` |
+| Depersonalization or derealization | `derealization`, `depersonalization`, `time_dilation` |
+| ADHD | `attention_fragmentation`, `sensory_overload`, `hyperarousal` |
 
-## Condition → Dimensions (starter set)
-- **Anxiety (Generalized / Social)**: `hyperarousal`, `hypervigilance`, `rumination_loop`
-- **Panic Disorder**: `panic_peaks`, `hyperarousal`
-- **Depressive Disorder**: `emotional_numbing`, `cognitive_fog`, `time_dilation`
-- **Trauma / PTSD (Hyperarousal + Intrusion)**: `hyperarousal`, `hypervigilance`, `intrusion`
-- **OCD (Intrusion + Compulsive Loop)**: `rumination_loop`, `intrusion`, `compulsive_loop`
-- **Depersonalization / Derealization**: `derealization`, `depersonalization`, `time_dilation`
-- **ADHD (Attention Fragmentation / Overload)**: `attention_fragmentation`, `sensory_overload`, (sometimes) `hyperarousal`
+The executable values are in `profiles/*.json`, `experience-dimensions.json`, and `dimension-to-signal-mapping.json`. This summary must remain consistent with those files.
 
-## Evidence strength (dimension-level)
-Evidence strength is about the underlying experience dimension, not about “the condition as a whole”.
-Even HIGH evidence does not mean the AV mapping is clinically accurate — it only means the phenomenology is well supported.
-
-- `hyperarousal` — **HIGH** — Elevated baseline alertness, physiological tension, and readiness to react.
-- `hypervigilance` — **MEDIUM** — Scanning for threats, narrowed attention, heightened sensitivity to cues.
-- `panic_peaks` — **HIGH** — Sudden waves of intense fear or bodily alarm that rise and fall.
-- `rumination_loop` — **HIGH** — Repetitive, sticky thought loops; difficulty disengaging.
-- `intrusion` — **MEDIUM** — Unwanted thoughts/images/memories pushing into awareness.
-- `emotional_numbing` — **MEDIUM** — Reduced emotional intensity, dampened reward/interest, muted affect.
-- `cognitive_fog` — **MEDIUM** — Slowed thinking, reduced clarity, difficulty sustaining mental effort.
-- `time_dilation` — **MEDIUM** — Time feels slowed, accelerated, or uneven.
-- `derealization` — **MEDIUM** — The world feels unreal, distant, 'behind glass'.
-- `depersonalization` — **MEDIUM** — Feeling detached from the self or body; reduced sense of agency.
-- `sensory_overload` — **MEDIUM** — Too much input at once; difficulty filtering sensory signals.
-- `attention_fragmentation` — **MEDIUM** — Attention jumps between stimuli; difficulty stabilizing focus.
-- `compulsive_loop` — **HIGH** — Urge to repeat actions/mental checks; 'stuckness' in a loop.
-
-## Safety note (non-negotiable)
-Some experiences are sensitive or potentially activating. Always provide:
-- Stop Everything
-- Safe Mode
-- Reduced Motion
-- Clear warnings per profile
-- Audio mute + conservative loudness
-
+Evidence strength applies to the documented experience dimension, not to the clinical accuracy of a profile or audiovisual mapping. See [EVIDENCE.md](EVIDENCE.md) and [../../docs/references/EVIDENCE_MATRIX.md](../../docs/references/EVIDENCE_MATRIX.md).

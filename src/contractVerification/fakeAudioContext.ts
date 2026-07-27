@@ -52,10 +52,7 @@ export class FakeConvolverNode extends FakeAudioNode {
   buffer: FakeAudioBuffer | null = null
 }
 
-export class FakeOscillatorNode extends FakeAudioNode {
-  type: OscillatorType = 'sine'
-  frequency = new FakeAudioParam(440)
-  detune = new FakeAudioParam(0)
+class FakeScheduledSourceNode extends FakeAudioNode {
   started = false
   stopped = false
 
@@ -68,18 +65,14 @@ export class FakeOscillatorNode extends FakeAudioNode {
   }
 }
 
-export class FakeConstantSourceNode extends FakeAudioNode {
+export class FakeOscillatorNode extends FakeScheduledSourceNode {
+  type: OscillatorType = 'sine'
+  frequency = new FakeAudioParam(440)
+  detune = new FakeAudioParam(0)
+}
+
+export class FakeConstantSourceNode extends FakeScheduledSourceNode {
   offset = new FakeAudioParam(0)
-  started = false
-  stopped = false
-
-  start(_t = 0): void {
-    this.started = true
-  }
-
-  stop(_t = 0): void {
-    this.stopped = true
-  }
 }
 
 export class FakeAudioBuffer {
