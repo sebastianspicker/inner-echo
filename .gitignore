@@ -6,14 +6,25 @@
 /.vite/
 /playwright-report/
 /test-results/
+/blob-report/
+/.vitest/
+/tests/.cache/
+/tests/.tmp/
+/tests/.env/
+/tests/fixtures/generated/
+/tests/runtime-snapshots/
+/tests/e2e/artifacts/
+/tests/e2e/screenshots/
+/tests/e2e/videos/
 /.cache/
+/.npm/
+/.node_repl_history
 /tmp/
 /temp/
 
-# Secrets and credentials: keep examples, never local values.
+# Secrets and credentials. The application does not require a public env file.
 .env
 .env.*
-!.env.example
 .envrc
 .direnv/
 .npmrc
@@ -34,7 +45,7 @@ credentials.json
 service-account*.json
 **/secrets/
 
-# Local analysis, agent, and editor state.
+# Local analysis, automation, and editor state.
 /.codacy/
 /.codegraph/
 /.serena/
@@ -46,8 +57,10 @@ service-account*.json
 /.agents/
 /.idea/
 /.vscode/
-progress.md
-AUDIT.md
+/progress.md
+/AUDIT.md
+/AGENTS.md
+/docs/agent/
 /docs/archive/
 
 # OS and editor residue.
@@ -56,8 +69,8 @@ Thumbs.db
 ehthumbs.db
 *.log
 *.sw?
+*.orig
+*.rej
 
-# Legacy ad-hoc captures are local-only. Canonical public screenshots live in
-# assets/readme/screenshots/ and are verified by the manifest.
-/screenshots/
-AGENTS.md
+# Canonical public screenshots live in assets/readme/screenshots/ and are
+# verified by the manifest. Test-failure captures stay under ignored E2E paths.

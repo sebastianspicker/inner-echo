@@ -1,8 +1,13 @@
 import { useEffect, type MutableRefObject } from 'react'
 import type { Profile } from '../../conditions/schema'
 import type { CameraState } from '../../engine/video'
-import type { OverlayControl, OverlayRuntimeState, VideoMetrics } from '../../engine/canvas'
-import type { AudioEngineControl, AudioMetrics } from '../../engine/audio'
+import type {
+  OverlayControl,
+  OverlayRuntimeState,
+  ReactiveLoopOptions,
+  VideoMetrics,
+} from '../../engine/canvas'
+import type { AudioEngineControl } from '../../engine/audio'
 import { BASELINE_PROFILE } from '../../conditions/fallbackProfiles'
 import { clampIntensity, getSafetyContext } from '../../conditions/normalize'
 
@@ -24,6 +29,98 @@ export interface UseReactivePipelineParams {
   controlValuesRef: MutableRefObject<Record<string, number | boolean>>
   stressModeRef: MutableRefObject<boolean>
   onOverlayStateChange?: (state: OverlayRuntimeState) => void
+}
+
+type ReactiveRuntime = typeof import('../../engine/reactive')
+
+interface ReactivePipelineRefs {
+  audioEngineControlRef: MutableRefObject<AudioEngineControl | null>
+  videoMetricsRef: MutableRefObject<VideoMetrics | null>
+  couplingStrengthRef: MutableRefObject<number>
+  maxFeedbackRef: MutableRefObject<number>
+  safeModeRef: MutableRefObject<boolean>
+}
+
+function clearRecord(record: Record<string, unknown>): void {
+  for (const key of Object.keys(record)) delete record[key]
+}
+
+function copyRecord(
+  destination: Record<string, number | boolean>,
+  source: Record<string, number | boolean>,
+): void {
+  for (const key in source) destination[key] = source[key]
+}
+
+function mergeNumberRecord(
+  destination: Record<string, number>,
+  source: Record<string, number>,
+): void {
+  for (const key in source) destination[key] = source[key]
+}
+
+function createOverridesGetter(
+  reactiveRuntime: ReactiveRuntime,
+  profile: Profile,
+  reducedMotion: boolean,
+  refs: ReactivePipelineRefs,
+): ReactiveLoopOptions['getOverrides'] {
+  const driver = reactiveRuntime.createReactiveDriver(profile, { reducedMotion })
+  const couplingEngine = reactiveRuntime.createCouplingEngine(profile, {
+    couplingStrength: refs.couplingStrengthRef.current,
+    maxFeedback: refs.maxFeedbackRef.current,
+    reducedMotion,
+    safeMode: refs.safeModeRef.current,
+  })
+  const baseAfterReactive: Record<string, number | boolean> = {}
+  // Shared mutable objects reused each frame to avoid GC pressure.
+  // Contract: the returned function is called exactly once per animation frame;
+  // callers must not hold references to outVideo/outAudio across frames.
+  const outVideo: Record<string, number> = {}
+  const outAudio: Record<string, number> = {}
+  return (delta, audio, video, baseControlValues) => {
+    const reactiveRms = Math.max(audio.rms, audio.micRms ?? 0)
+    const videoReactive = driver.getVideoOverrides(delta, reactiveRms)
+    const audioReactive = driver.getAudioOverrides(delta, reactiveRms)
+
+    clearRecord(baseAfterReactive)
+    copyRecord(baseAfterReactive, baseControlValues)
+    mergeNumberRecord(baseAfterReactive as Record<string, number>, videoReactive)
+    couplingEngine.setSettings({
+      couplingStrength: refs.couplingStrengthRef.current,
+      maxFeedback: refs.maxFeedbackRef.current,
+      safeMode: refs.safeModeRef.current,
+      reducedMotion,
+    })
+    const coupled = couplingEngine.step(delta, audio, video, baseAfterReactive)
+
+    clearRecord(outVideo)
+    clearRecord(outAudio)
+    mergeNumberRecord(outVideo, videoReactive)
+    mergeNumberRecord(outVideo, coupled.video)
+    mergeNumberRecord(outAudio, audioReactive)
+    mergeNumberRecord(outAudio, coupled.audio)
+    return { video: outVideo, audio: outAudio }
+  }
+}
+
+function createReactiveOptions(
+  reactiveRuntime: ReactiveRuntime,
+  profile: Profile,
+  reducedMotion: boolean,
+  refs: ReactivePipelineRefs,
+): ReactiveLoopOptions {
+  return {
+    getAudioMetrics: () =>
+      refs.audioEngineControlRef.current?.getMetrics?.() ?? { rms: 0, centroid: 0, flux: 0 },
+    applyAudioOverrides: (overrides) => {
+      refs.audioEngineControlRef.current?.applyReactiveParams?.(overrides)
+    },
+    onVideoMetrics: (metrics) => {
+      refs.videoMetricsRef.current = metrics
+    },
+    getOverrides: createOverridesGetter(reactiveRuntime, profile, reducedMotion, refs),
+  }
 }
 
 /**
@@ -73,6 +170,13 @@ export function useReactivePipeline({
 
     let listener: (() => void) | null = null
     let cancelled = false
+    const reactiveRefs: ReactivePipelineRefs = {
+      audioEngineControlRef,
+      videoMetricsRef,
+      couplingStrengthRef,
+      maxFeedbackRef,
+      safeModeRef,
+    }
 
     async function startLoop(): Promise<void> {
       if (overlayControlRef.current) return
@@ -84,75 +188,12 @@ export function useReactivePipeline({
       if (cancelled || overlayControlRef.current) return
       const prof = profile ?? BASELINE_PROFILE
       const nodes = graphBuilder.buildVideoNodes(prof, { reducedMotion })
-      const couplingEngine = reactiveRuntime.createCouplingEngine(prof, {
-        couplingStrength: couplingStrengthRef.current,
-        maxFeedback: maxFeedbackRef.current,
+      const reactiveOptions = createReactiveOptions(
+        reactiveRuntime,
+        prof,
         reducedMotion,
-        safeMode: safeModeRef.current,
-      })
-      const reactiveOptions = {
-        getAudioMetrics: () =>
-          audioEngineControlRef.current?.getMetrics?.() ?? { rms: 0, centroid: 0, flux: 0 },
-        applyAudioOverrides: (overrides: Record<string, number>) => {
-          audioEngineControlRef.current?.applyReactiveParams?.(overrides)
-        },
-        onVideoMetrics: (m: VideoMetrics) => {
-          videoMetricsRef.current = m
-        },
-        getOverrides: (() => {
-          const driver = reactiveRuntime.createReactiveDriver(prof, { reducedMotion })
-          const baseAfterReactive: Record<string, number | boolean> = {}
-          // Shared mutable objects reused each frame to avoid GC pressure.
-          // Contract: the returned IIFE is called exactly once per animation frame;
-          // callers must not hold references to outVideo/outAudio across frames.
-          const outVideo: Record<string, number> = {}
-          const outAudio: Record<string, number> = {}
-          const clear = (obj: Record<string, unknown>): void => {
-            for (const k of Object.keys(obj)) delete obj[k]
-          }
-          const copy = (
-            dst: Record<string, number | boolean>,
-            src: Record<string, number | boolean>,
-          ): void => {
-            for (const k in src) dst[k] = src[k]
-          }
-          const mergeNum = (dst: Record<string, number>, src: Record<string, number>): void => {
-            for (const k in src) dst[k] = src[k]
-          }
-          return (
-            delta: number,
-            audio: AudioMetrics,
-            video: { motion: number; luminance: number; edge: number; instability: number },
-            baseControlValues: Record<string, number | boolean>,
-          ) => {
-            const reactiveRms = Math.max(audio.rms, audio.micRms ?? 0)
-            const videoReactive = driver.getVideoOverrides(delta, reactiveRms)
-            const audioReactive = driver.getAudioOverrides(delta, reactiveRms)
-
-            clear(baseAfterReactive)
-            copy(baseAfterReactive, baseControlValues)
-            mergeNum(baseAfterReactive as Record<string, number>, videoReactive)
-            couplingEngine.setSettings({
-              couplingStrength: couplingStrengthRef.current,
-              maxFeedback: maxFeedbackRef.current,
-              safeMode: safeModeRef.current,
-              reducedMotion,
-            })
-            const coupled = couplingEngine.step(delta, audio, video, baseAfterReactive)
-
-            clear(outVideo)
-            clear(outAudio)
-            mergeNum(outVideo, videoReactive)
-            mergeNum(outVideo, coupled.video)
-            mergeNum(outAudio, audioReactive)
-            mergeNum(outAudio, coupled.audio)
-            return {
-              video: outVideo,
-              audio: outAudio,
-            }
-          }
-        })(),
-      }
+        reactiveRefs,
+      )
       const control = canvasRuntime.startOverlayLoop(
         video,
         canvas,

@@ -1,4 +1,3 @@
-import { Texture } from 'three'
 import {
   ChromaticAberrationNode,
   ColorGradeNode,
@@ -18,100 +17,43 @@ import {
   SomaticPulseNode,
   TemporalSmearNode,
   VignetteNode,
-  type VideoNode,
 } from '../engine/effects'
-import type {
-  ContractNodeDefinition,
-  ContractParamMetadata,
-  ProbeHarness,
-  ProbeOptions,
-  RegistryNodeSummary,
-  SafetyContextShape,
-} from './types'
-import { getByPath } from './utils'
+import type { ContractNodeDefinition, ContractParamMetadata, ProbeHarness } from './types'
+import { buildNodeLookup, numberParam, summarizeNodeDefinitions } from './nodeRegistry'
+import { VideoProbeHarness } from './videoProbeHarness'
 
-const DEFAULT_SAFETY_CONTEXT: SafetyContextShape = {
-  global: {
-    max_intensity: 1,
-    max_chroma: 0.12,
-    max_global_contrast: 0.25,
-    max_feedback: 0.18,
-    max_jitter: 0.06,
-    max_pulse_depth: 0.18,
-    max_flash_hz: 3,
-    max_luminance_delta_per_frame: 0.25,
-  },
-  safeMode: {},
-}
-
-class VideoProbeHarness implements ProbeHarness {
-  readonly node: VideoNode & Record<string, unknown>
-  private readonly input = new Texture()
-  private readonly previous = new Texture()
-
-  constructor(factory: () => VideoNode) {
-    this.node = factory() as VideoNode & Record<string, unknown>
-    if (this.node.needsPreviousFrame) {
-      this.node.getMaterial(this.input, this.previous)
-    } else {
-      this.node.getMaterial(this.input)
-    }
-    if (typeof this.node.time === 'number') {
-      this.node.time = 1
-    }
-  }
-
-  applyParam(paramKey: string, value: unknown, options?: ProbeOptions): void {
-    const controlValues: Record<string, number | boolean | string> = {}
-    if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'string') {
-      controlValues[`0.${paramKey}`] = value
-    }
-    const safeMode = options?.safeMode === true
-    this.node.setParams({
-      intensity: options?.intensity ?? 1,
-      safeMode,
-      safetyContext: options?.safetyContext ?? DEFAULT_SAFETY_CONTEXT,
-      controlValues,
-      nodeIndex: 0,
-      uvScale: [1, 1],
-      uvOffset: [0, 0],
-    })
-  }
-
-  readPath(path: string): unknown {
-    return getByPath({ node: this.node }, path)
-  }
-
-  dispose(): void {
-    this.node.dispose()
-    this.input.dispose()
-    this.previous.dispose()
+function pulseParams(defaultSmoothing: number): Record<string, ContractParamMetadata> {
+  return {
+    depth: numberParam('node.material.uniforms.u_depth.value', {
+      defaultValue: 0,
+      min: 0,
+      max: 1,
+      safeModeClampKey: 'max_pulse_depth',
+    }),
+    rate: numberParam('node.rateHz', {
+      defaultValue: 1,
+      min: 0.05,
+      max: 10,
+      safeModeClampKey: 'max_flash_hz',
+    }),
+    smoothing: numberParam('node.smoothing', {
+      defaultValue: defaultSmoothing,
+      min: 0,
+      max: 0.999,
+    }),
   }
 }
 
-function numberParam(
+function millisecondsParam(
   readPath: string,
-  config: {
-    defaultValue: number
-    min?: number
-    max?: number
-    safeModeClampKey?: string
-    probeLow?: number
-    probeHigh?: number
-    epsilon?: number
-  },
+  config: { defaultValue: number; min: number; max: number },
 ): ContractParamMetadata {
   return {
     type: 'number',
-    defaultValue: config.defaultValue,
-    min: config.min,
-    max: config.max,
-    safeModeClampKey: config.safeModeClampKey,
-    probeLow: config.probeLow,
-    probeHigh: config.probeHigh,
-    epsilon: config.epsilon,
+    ...config,
     readEffective(harness: ProbeHarness): unknown {
-      return (harness as VideoProbeHarness).readPath(readPath)
+      const seconds = (harness as VideoProbeHarness).readPath(readPath)
+      return typeof seconds === 'number' ? seconds * 1000 : seconds
     },
   }
 }
@@ -272,25 +214,7 @@ const VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
   {
     kind: 'video',
     node: 'pulse',
-    params: {
-      depth: numberParam('node.material.uniforms.u_depth.value', {
-        defaultValue: 0,
-        min: 0,
-        max: 1,
-        safeModeClampKey: 'max_pulse_depth',
-      }),
-      rate: numberParam('node.rateHz', {
-        defaultValue: 1,
-        min: 0.05,
-        max: 10,
-        safeModeClampKey: 'max_flash_hz',
-      }),
-      smoothing: numberParam('node.smoothing', {
-        defaultValue: 0.9,
-        min: 0,
-        max: 0.999,
-      }),
-    },
+    params: pulseParams(0.9),
     createHarness: () => new VideoProbeHarness(() => new PulseNode()),
   },
   {
@@ -318,26 +242,16 @@ const VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         min: 0,
         max: 1,
       }),
-      burst_duration_ms: {
-        type: 'number',
+      burst_duration_ms: millisecondsParam('node.burstDuration', {
         defaultValue: 180,
         min: 120,
         max: 500,
-        readEffective(harness: ProbeHarness): unknown {
-          const sec = (harness as VideoProbeHarness).readPath('node.burstDuration')
-          return typeof sec === 'number' ? sec * 1000 : sec
-        },
-      },
-      burst_min_gap_ms: {
-        type: 'number',
+      }),
+      burst_min_gap_ms: millisecondsParam('node.burstMinGap', {
         defaultValue: 600,
         min: 350,
         max: 3000,
-        readEffective(harness: ProbeHarness): unknown {
-          const sec = (harness as VideoProbeHarness).readPath('node.burstMinGap')
-          return typeof sec === 'number' ? sec * 1000 : sec
-        },
-      },
+      }),
     },
     createHarness: () => new VideoProbeHarness(() => new InterferenceNode()),
   },
@@ -427,23 +341,7 @@ const VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
     kind: 'video',
     node: 'somatic_pulse',
     params: {
-      depth: numberParam('node.material.uniforms.u_depth.value', {
-        defaultValue: 0,
-        min: 0,
-        max: 1,
-        safeModeClampKey: 'max_pulse_depth',
-      }),
-      rate: numberParam('node.rateHz', {
-        defaultValue: 1,
-        min: 0.05,
-        max: 10,
-        safeModeClampKey: 'max_flash_hz',
-      }),
-      smoothing: numberParam('node.smoothing', {
-        defaultValue: 0.85,
-        min: 0,
-        max: 0.999,
-      }),
+      ...pulseParams(0.85),
       tunnel: numberParam('node.material.uniforms.u_tunnel.value', {
         defaultValue: 0.3,
         min: 0,
@@ -472,36 +370,21 @@ const VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         min: 0,
         max: 1.2,
       }),
-      burst_duration_ms: {
-        type: 'number',
+      burst_duration_ms: millisecondsParam('node.burstDuration', {
         defaultValue: 320,
         min: 180,
         max: 500,
-        readEffective(harness: ProbeHarness): unknown {
-          const sec = (harness as VideoProbeHarness).readPath('node.burstDuration')
-          return typeof sec === 'number' ? sec * 1000 : sec
-        },
-      },
-      burst_min_gap_ms: {
-        type: 'number',
+      }),
+      burst_min_gap_ms: millisecondsParam('node.burstMinGap', {
         defaultValue: 800,
         min: 450,
         max: 3000,
-        readEffective(harness: ProbeHarness): unknown {
-          const sec = (harness as VideoProbeHarness).readPath('node.burstMinGap')
-          return typeof sec === 'number' ? sec * 1000 : sec
-        },
-      },
-      initial_delay_ms: {
-        type: 'number',
+      }),
+      initial_delay_ms: millisecondsParam('node.initialDelay', {
         defaultValue: 250,
         min: 0,
         max: 2000,
-        readEffective(harness: ProbeHarness): unknown {
-          const sec = (harness as VideoProbeHarness).readPath('node.initialDelay')
-          return typeof sec === 'number' ? sec * 1000 : sec
-        },
-      },
+      }),
       zoom: numberParam('node.material.uniforms.u_zoom.value', {
         defaultValue: 0.5,
         min: 0,
@@ -578,32 +461,9 @@ const VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
 export const videoNodeDefinitions: ContractNodeDefinition[] = VIDEO_NODE_DEFINITIONS
 
 export function buildVideoNodeLookup(): Map<string, ContractNodeDefinition> {
-  const map = new Map<string, ContractNodeDefinition>()
-  for (const def of videoNodeDefinitions) {
-    map.set(def.node, def)
-    for (const alias of def.aliases ?? []) map.set(alias, def)
-  }
-  return map
+  return buildNodeLookup(videoNodeDefinitions)
 }
 
-export function getVideoRegistrySummaries(): RegistryNodeSummary[] {
-  return videoNodeDefinitions.map((def) => {
-    const params: RegistryNodeSummary['params'] = {}
-    for (const [key, meta] of Object.entries(def.params)) {
-      params[key] = {
-        type: meta.type,
-        defaultValue: meta.defaultValue,
-        min: meta.min,
-        max: meta.max,
-        enumValues: meta.enumValues,
-        safeModeClampKey: meta.safeModeClampKey,
-      }
-    }
-    return {
-      kind: 'video',
-      node: def.node,
-      aliases: [...(def.aliases ?? [])],
-      params,
-    }
-  })
+export function getVideoRegistrySummaries() {
+  return summarizeNodeDefinitions(videoNodeDefinitions)
 }

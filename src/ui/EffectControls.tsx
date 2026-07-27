@@ -1,7 +1,8 @@
 import type { Profile } from '../conditions/schema'
-import { resolveControl, type ResolvedControl } from '../conditions/controlTargets'
+import type { ResolvedControl } from '../conditions/controlTargets'
 import { LabeledSlider } from './controls/LabeledSlider'
 import { ToggleField } from './controls/ToggleField'
+import { resolveProfileControls } from './effectControlResolution'
 
 export interface EffectControlsProps {
   profile: Profile | null
@@ -21,24 +22,13 @@ export interface EffectControlsProps {
   ) => void
 }
 
-const GLOBAL_CONTROL_KINDS = new Set(['intensity', 'safeMode', 'reducedMotion', 'audioEnabled'])
-
-function resolveProfileControls(profile: Profile, reducedMotion: boolean): ResolvedControl[] {
-  const controls: ResolvedControl[] = []
-  for (const control of profile.ui?.controls ?? []) {
-    const resolved = resolveControl(control, profile, { reducedMotion })
-    if (resolved && !GLOBAL_CONTROL_KINDS.has(resolved.kind)) controls.push(resolved)
-  }
-  return controls
-}
-
-function ResolvedEffectControl({
+const ResolvedEffectControl = ({
   control,
   props,
 }: {
   control: ResolvedControl
   props: EffectControlsProps
-}) {
+}) => {
   const value = props.controlValues[control.paramKey] ?? control.defaultValue
   const onChange = (next: number | boolean) =>
     props.onControlValuesChange((previous) => ({ ...previous, [control.paramKey]: next }))
@@ -79,7 +69,7 @@ function ProfileEffectControls(props: EffectControlsProps) {
 
 export function EffectControls(props: EffectControlsProps) {
   return (
-    <details className="ie-panelSection">
+    <details className="ie-panelSection ie-panelSection--effects">
       <summary className="ie-summary">Controls</summary>
       <div className="ie-panelBody">
         <div className="ie-controlGroup" role="group" aria-label="Effect controls">

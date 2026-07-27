@@ -108,7 +108,7 @@ export async function composeEffectiveProfileCore(
       // Bounded: boost small weights a bit, but never exceed 1.
       // Intentional: with 3+ co-selected dimensions sumGain may exceed 1,
       // but clamp01 caps the effective weight so interaction effects never
-      // amplify beyond full strength — preventing runaway amplification.
+      // amplify beyond full strength: preventing runaway amplification.
       effectiveDimWeight.set(a.dimensionId, clamp01(a.weight * (1 + sumGain)))
     }
   } else {

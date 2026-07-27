@@ -1,57 +1,53 @@
-# inner-echo — Condition Profiles (v0.2.0)
+# Condition profile contracts
 
-This folder contains a data-driven condition authoring layer for the *inner-echo* concept:
-a privacy-first, client-only webcam overlay app that renders metaphorical audio-visual treatments.
-
-## What this is
-- A **metaphor engine**: conditions are authored as presets composed from experience dimensions.
-- A **teaching / empathy tool**: helps make invisible inner experiences more understandable.
-
-## What this is NOT
-- Not a diagnostic tool.
-- Not a clinical simulation.
-- Not therapy or medical advice.
-
-## Evidence-informed (still metaphorical)
-The dimension vocabulary and motif suggestions are informed by literature and summarized in:
-- `docs/references/dimensions/*.md` (dimension-by-dimension rationale)
-- `docs/references/EVIDENCE_MATRIX.md` (overview)
-
-Inside this folder we only keep implementation-facing artifacts:
-dimension definitions, motif hints, and condition presets.
+This directory contains the runtime data and validation contracts for Inner Echo profiles and experience dimensions. Profiles define audiovisual metaphors. They do not diagnose, assess, or simulate a medical condition.
 
 ## Files
-- `catalog.json` — list of available conditions for the UI
-- `experience-dimensions.json` — the vocabulary of experience dimensions (+ evidence strength + doc pointers)
-- `dimension-to-signal-mapping.json` — authoring hints: dimension → AV motifs (+ safety clamps)
-- `profiles/*.json` — the actual condition profiles
-- `MAPPING.md` — non-diagnostic mapping of starter profiles to dimensions
-- `EVIDENCE.md` — quick index (dimension → evidence strength → doc pointer)
 
-## Profile structure (high level)
-Each profile includes:
-- `experience_dimensions`: list of `{ id, weight }`
-- `safety`: intensity defaults, clamps, warnings, and Reduced Motion policy
-- `video_stack`: ordered list of shader-like nodes and parameters (safe-by-default)
-- `audio_stack`: optional audio chain (synth-based by default)
-- `reactive.analyser_to_params`: optional audio → video modulation mapping (clamped)
+| Path | Purpose |
+|---|---|
+| `catalog.json` | Profile labels, descriptions, tags, and evidence links shown by the interface. |
+| `experience-dimensions.json` | Supported experience dimensions and evidence metadata. |
+| `dimension-to-signal-mapping.json` | Default video and audio motifs used by dimension composition. |
+| `profiles/*.json` | Runtime profile definitions. |
+| `schema.ts` | Zod schemas for catalog and profile data. |
+| `loader.ts` | Bundled catalog and profile loading. |
+| `graphBuilder.ts` | Video-node construction from profile stacks. |
+| `controlTargets.ts` | Supported user-control targets. |
+| `MAPPING.md` | Summary of profile-to-dimension mappings. |
+| `EVIDENCE.md` | Dimension evidence index. |
 
-## Comfort & safety defaults
-Every profile must provide:
-- **Stop Everything** (panic button)
-- **Safe Mode** (extra clamps)
-- **Reduced Motion** (removes time-based feedback/jitter; keeps a calmer overlay)
-- **Audio mute** + conservative master volume
+## Runtime contract
 
-Hard limits for a public-facing repo:
-- no strobe / flicker patterns
-- no jump-scares
-- no sudden loud transients
-- no intense camera-like motion (avoid nausea)
+Each profile can define:
 
-## Notes for implementers
-Node names in `video_stack` and `audio_stack` are intended interfaces. Your engine should:
-- validate profiles
-- skip unknown nodes with warnings
-- apply safety clamps, Safe Mode, and Reduced Motion filtering consistently
+- weighted experience dimensions
+- ordered video and audio stacks
+- user controls
+- safety defaults and maximums
+- Safe Mode clamps
+- Reduced Motion behavior
+- warning text
+- bounded reactive mappings
 
+Node identifiers and parameters must match the runtime graph builders and `src/contractVerification/` registries. Unknown entries must fail validation or be reported and skipped by the runtime. They must not produce a false active state.
+
+## Required checks
+
+After changing a profile, dimension, mapping, schema, or node reference, run:
+
+```bash
+npm run conditions:validate
+npm run composer:validate
+npm run evidence:verify
+npm run verify:contracts
+npm test
+```
+
+Run `npm run docs:gen` and `npm run evidence:gen` when their source inputs change.
+
+## Safety boundary
+
+Profiles must keep conservative intensity and audio defaults, explicit maximums, Stop Everything, Safe Mode, Reduced Motion, and audio mute behavior. Do not add strobe effects, unbounded temporal feedback, abrupt motion, or sudden loud transients.
+
+See [../../docs/40_CONDITIONS.md](../../docs/40_CONDITIONS.md) and [../../docs/30_SAFETY_ETHICS.md](../../docs/30_SAFETY_ETHICS.md).

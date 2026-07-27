@@ -1,7 +1,7 @@
 /**
  * JSON Object Extraction
  *
- * Extracts JSON payloads from unpredictable sources (e.g., raw LLM text responses).
+ * Extracts JSON payloads from unpredictable sources such as mixed prose and tool output.
  *
  * Unlike a plain `JSON.parse()`, this utility can extract a valid JSON object
  * even when it is wrapped in markdown code blocks (e.g., \`\`\`json { ... } \`\`\`) or
@@ -16,31 +16,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value != null && typeof value === 'object' && !Array.isArray(value)
 }
 
-function extractBalancedObject(text: string, start: number): string | null {
-  if (text[start] !== '{') return null
-  let depth = 0
-  let inString = false
-  let escaped = false
-  for (let i = start; i < text.length; i++) {
-    const ch = text[i]
-    if (inString) {
-      if (escaped) escaped = false
-      else if (ch === '\\') escaped = true
-      else if (ch === '"') inString = false
-      continue
-    }
-    if (ch === '"') {
-      inString = true
-      continue
-    }
-    if (ch === '{') depth++
-    if (ch === '}') {
-      depth--
-      if (depth === 0) return text.slice(start, i + 1)
-    }
-  }
-  return null
-}
+import { extractBalancedObject } from './jsonObjectScanner'
 
 export interface ParseFirstJsonObjectOptions {
   predicate?: (value: unknown) => boolean
@@ -68,11 +44,7 @@ export function parseFirstJsonObject<T = unknown>(
   }
   const predicate = options.predicate ?? (() => true)
 
-  const tryAccept = (value: unknown): T | null => {
-    if (!isRecord(value)) return null
-    if (!predicate(value)) return null
-    return value as T
-  }
+  const tryAccept = (value: unknown): T | null => acceptRecord(value, predicate)
 
   const trimmed = source.trim()
   if (trimmed.length > 0) {
@@ -98,4 +70,8 @@ export function parseFirstJsonObject<T = unknown>(
   }
 
   throw new Error('No valid JSON object found')
+}
+
+function acceptRecord<T>(value: unknown, predicate: (value: unknown) => boolean): T | null {
+  return isRecord(value) && predicate(value) ? (value as T) : null
 }

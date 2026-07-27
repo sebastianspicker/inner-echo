@@ -14,35 +14,42 @@ export interface SafetyControlsProps {
   onReducedMotionChange: (value: boolean) => void
   onStart: () => void
   onStop: () => void
+  variant?: 'setup' | 'live'
+  showCameraActions?: boolean
 }
 
 export function SafetyControls(props: SafetyControlsProps) {
   return (
-    <section className="ie-safety" aria-labelledby="safety-controls-title">
+    <section
+      className={`ie-safety ie-safety--${props.variant ?? 'live'}`}
+      aria-labelledby="safety-controls-title"
+    >
       <div className="ie-safety__heading">
         <div>
-          <h2 id="safety-controls-title">Comfort &amp; camera</h2>
-          <p>Review these settings, then start the camera separately.</p>
+          <h2 id="safety-controls-title">Comfort</h2>
+          <p>These settings remain available while the camera is active.</p>
         </div>
-        <div className="ie-safety__actions">
-          <button
-            type="button"
-            className="ie-btn ie-btn--accent"
-            onClick={props.onStart}
-            disabled={!props.canStart || props.isRequesting || props.isActive}
-            aria-busy={props.isRequesting}
-          >
-            {props.isRequesting ? 'Requesting camera…' : 'Start camera'}
-          </button>
-          <button
-            type="button"
-            className="ie-btn ie-btn--danger"
-            onClick={props.onStop}
-            disabled={!props.canStop}
-          >
-            Stop Everything
-          </button>
-        </div>
+        {props.showCameraActions !== false && (
+          <div className="ie-safety__actions">
+            <button
+              type="button"
+              className="ie-btn ie-btn--accent"
+              onClick={props.onStart}
+              disabled={!props.canStart || props.isRequesting || props.isActive}
+              aria-busy={props.isRequesting}
+            >
+              {props.isRequesting ? 'Requesting camera…' : 'Start camera'}
+            </button>
+            <button
+              type="button"
+              className="ie-btn ie-btn--danger"
+              onClick={props.onStop}
+              disabled={!props.canStop}
+            >
+              Stop Everything
+            </button>
+          </div>
+        )}
       </div>
       <div className="ie-safety__controls">
         <LabeledSlider

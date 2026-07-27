@@ -30,7 +30,7 @@
 
 .ie-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--sp-4);
   padding: var(--sp-3) var(--sp-4);
@@ -45,8 +45,22 @@
 
 .ie-brand {
   display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.ie-brandMark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+}
+
+.ie-brandCopy {
+  display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .ie-title {
@@ -262,13 +276,24 @@
 .ie-placeholder {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  text-align: center;
   color: var(--faint);
   font-size: 13px;
   letter-spacing: 0.06em;
   text-transform: none;
   background: rgba(0, 0, 0, 0.35);
+}
+
+.ie-placeholderMark {
+  width: 76px;
+  height: 76px;
+  opacity: 0.78;
 }
 
 .ie-panel {
@@ -474,15 +499,28 @@ details[open] > .ie-summary::before {
   }
 }
 
+@media (max-width: 720px) {
+  .ie-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ie-brandMark {
+    width: 38px;
+    height: 38px;
+  }
+}
+
 .ie-btn--accent {
-  border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
-  background: color-mix(in oklab, rgba(123, 200, 192, 0.1) 70%, transparent);
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 650;
 }
 
 .ie-btn--accent:hover:not(:disabled) {
-  border-color: color-mix(in oklab, var(--accent) 60%, var(--border));
-  background: color-mix(in oklab, rgba(123, 200, 192, 0.16) 70%, transparent);
-  box-shadow: 0 4px 16px rgba(123, 200, 192, 0.1);
+  border-color: var(--accent-2);
+  background: var(--accent-2);
 }
 
 .ie-controlGroup {

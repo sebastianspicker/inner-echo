@@ -5,11 +5,8 @@
 
 import type { Profile, UIControl } from './schema'
 import { parseScopedTarget } from '../utils/targetPath'
-import {
-  getBuiltNodeIndex,
-  getProfileEntryForBuiltIndex,
-  type BuildVideoNodesOptions,
-} from './graphBuilder'
+import { getBuiltNodeIndex, type BuildVideoNodesOptions } from './graphBuilder'
+import { addBuiltNodeDefaults } from './controlDefaultBuilder'
 
 export interface ResolvedControl {
   control: UIControl
@@ -21,10 +18,19 @@ export interface ResolvedControl {
   defaultValue: number | boolean
 }
 
-function basicControl(
+function numericOrControlDefault(
+  params: Record<string, unknown> | undefined,
+  param: string,
   control: UIControl,
-  target: string,
+): number | boolean {
+  const value = params?.[param]
+  return typeof value === 'number' ? value : control.type === 'toggle' ? false : (control.min ?? 0)
+}
+
+function resolveGlobalControl(
+  control: UIControl,
   profile: Profile,
+  target: string,
 ): ResolvedControl | null {
   if (target === 'intensity' || (control.id === 'intensity' && !control.target)) {
     const value = profile.safety?.intensity_default
@@ -35,82 +41,72 @@ function basicControl(
       defaultValue: typeof value === 'number' ? value : 0.5,
     }
   }
-  const choices: Array<[boolean, ResolvedControl['paramKey'], ResolvedControl['kind']]> = [
-    [
-      target === 'safe_mode' ||
-        target === 'safemode' ||
-        control.id === 'safe_mode' ||
-        control.id === 'safeMode',
-      'safeMode',
-      'safeMode',
-    ],
-    [
-      target === 'reduced_motion' || control.id === 'reduced_motion',
-      'reducedMotion',
-      'reducedMotion',
-    ],
-    [target === 'audio_enabled' || control.id === 'audio_enabled', 'audioEnabled', 'audioEnabled'],
-  ]
-  const choice = choices.find(([matches]) => matches)
-  return choice ? { control, paramKey: choice[1], kind: choice[2], defaultValue: false } : null
-}
-
-function controlDefault(
-  control: UIControl,
-  params: Record<string, unknown> | undefined,
-  param: string,
-) {
-  return typeof params?.[param] === 'number'
-    ? params[param]
-    : control.type === 'toggle'
-      ? false
-      : (control.min ?? 0)
+  const globalControls: Record<
+    string,
+    Pick<ResolvedControl, 'paramKey' | 'kind' | 'defaultValue'>
+  > = {
+    safe_mode: { paramKey: 'safeMode', kind: 'safeMode', defaultValue: false },
+    safemode: { paramKey: 'safeMode', kind: 'safeMode', defaultValue: false },
+    reduced_motion: { paramKey: 'reducedMotion', kind: 'reducedMotion', defaultValue: false },
+    audio_enabled: { paramKey: 'audioEnabled', kind: 'audioEnabled', defaultValue: false },
+  }
+  const special = globalControls[target]
+  if (special) return { control, ...special }
+  if (control.id === 'safe_mode' || control.id === 'safeMode') {
+    return { control, ...globalControls.safe_mode }
+  }
+  if (control.id === 'reduced_motion') return { control, ...globalControls.reduced_motion }
+  if (control.id === 'audio_enabled') return { control, ...globalControls.audio_enabled }
+  return null
 }
 
 function resolveVideoControl(
   control: UIControl,
-  target: string,
   profile: Profile,
+  target: string,
   options?: BuildVideoNodesOptions,
-): ResolvedControl | null | undefined {
+): ResolvedControl | null {
   const parsed = parseScopedTarget(target, 'video')
-  if (!parsed) return undefined
-  const nodeIndex = getBuiltNodeIndex(profile, parsed.nodeId, options)
+  if (!parsed) return null
+  const { nodeId, param } = parsed
+  const nodeIndex = getBuiltNodeIndex(profile, nodeId, options)
   if (nodeIndex === -1) return null
-  const entry = profile.video_stack?.find(
-    (node) =>
-      (node.id ?? node.node ?? '').toLowerCase() === parsed.nodeId ||
-      (node.node ?? '').toLowerCase() === parsed.nodeId,
-  )
+  const entry = profile.video_stack.find((node) => {
+    const nodeName = (node.node ?? '').toLowerCase()
+    return (node.id ?? node.node ?? '').toLowerCase() === nodeId || nodeName === nodeId
+  })
   return {
     control,
-    paramKey: `${nodeIndex}.${parsed.param}`,
+    paramKey: `${nodeIndex}.${param}`,
     kind: 'node',
     nodeIndex,
-    defaultValue: controlDefault(control, entry?.params, parsed.param),
+    defaultValue: numericOrControlDefault(entry?.params, param, control),
   }
 }
 
 function resolveAudioControl(
   control: UIControl,
-  target: string,
   profile: Profile,
-): ResolvedControl | null | undefined {
+  target: string,
+): ResolvedControl | null {
   const parsed = parseScopedTarget(target, 'audio')
-  if (!parsed) return undefined
+  if (!parsed) return null
+  const { nodeId, param } = parsed
   const chain = profile.audio_stack?.chain ?? []
-  const nodeIndex = chain.findIndex(
-    (node) =>
-      ((node as { id?: string }).id ?? node.node ?? '').toLowerCase() === parsed.nodeId ||
-      node.node.toLowerCase() === parsed.nodeId,
-  )
+  const nodeIndex = chain.findIndex((node) => {
+    const nodeName = (node.node ?? '').toLowerCase()
+    return (
+      ((node as { id?: string }).id ?? node.node ?? '').toLowerCase() === nodeId ||
+      nodeName === nodeId
+    )
+  })
   if (nodeIndex === -1) return null
   return {
     control,
-    paramKey: `audio.${nodeIndex}.${parsed.param}`,
+    paramKey: `audio.${nodeIndex}.${param}`,
     kind: 'node',
     nodeIndex,
-    defaultValue: controlDefault(control, chain[nodeIndex]?.params, parsed.param),
+    defaultValue: numericOrControlDefault(chain[nodeIndex]?.params, param, control),
   }
 }
 
@@ -123,12 +119,11 @@ export function resolveControl(
   options?: BuildVideoNodesOptions,
 ): ResolvedControl | null {
   const target = (control.target ?? control.id ?? '').toLowerCase()
-  return (
-    basicControl(control, target, profile) ??
-    resolveVideoControl(control, target, profile, options) ??
-    resolveAudioControl(control, target, profile) ??
-    null
-  )
+  const global = resolveGlobalControl(control, profile, target)
+  if (global) return global
+  const video = resolveVideoControl(control, profile, target, options)
+  if (video) return video
+  return resolveAudioControl(control, profile, target)
 }
 
 /**
@@ -138,26 +133,31 @@ export function getDefaultControlValues(
   profile: Profile,
   options?: BuildVideoNodesOptions,
 ): Record<string, number | boolean> {
-  const out: Record<string, number | boolean> = {}
+  const out = defaultGlobalControls(profile)
+  addBuiltNodeDefaults({ out, profile, options })
+  applyControlDefaults(out, profile, options)
+  return out
+}
+
+function defaultGlobalControls(profile: Profile): Record<string, number | boolean> {
   const safety = profile.safety
-  out.intensity = typeof safety?.intensity_default === 'number' ? safety.intensity_default : 0.5
-  out.safeMode = false
-  out.reducedMotion = false
-  out.audioEnabled = false
-  for (let builtIndex = 0; ; builtIndex++) {
-    const entry = getProfileEntryForBuiltIndex(profile, builtIndex, options)
-    if (!entry) break
-    for (const [param, value] of Object.entries(entry.params ?? {})) {
-      if (typeof value === 'number' || typeof value === 'boolean') {
-        out[`${builtIndex}.${param}`] = value
-      }
-    }
+  return {
+    intensity: typeof safety?.intensity_default === 'number' ? safety.intensity_default : 0.5,
+    safeMode: false,
+    reducedMotion: false,
+    audioEnabled: false,
   }
+}
+
+function applyControlDefaults(
+  out: Record<string, number | boolean>,
+  profile: Profile,
+  options?: BuildVideoNodesOptions,
+): void {
   const controls = profile.ui?.controls ?? []
   for (const c of controls) {
     const resolved = resolveControl(c, profile, options)
     if (!resolved) continue
     out[resolved.paramKey] = resolved.defaultValue
   }
-  return out
 }

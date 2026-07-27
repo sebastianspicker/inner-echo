@@ -16,6 +16,16 @@ export interface VideoMetricsTracker {
 }
 
 import { clamp01, smoothStep } from '../../utils/numeric'
+import { computeEdgeEnergy, readLuma } from './videoMetricMath'
+
+function createNoopVideoMetricsTracker(): VideoMetricsTracker {
+  const metrics: VideoMetrics = { motion: 0, luminance: 0, edge: 0, instability: 0 }
+  return {
+    stepFromSource: () => metrics,
+    getLast: () => metrics,
+    dispose: () => {},
+  }
+}
 
 export function createVideoMetricsTracker(options?: {
   /** downsample size in pixels (square) */
@@ -32,16 +42,7 @@ export function createVideoMetricsTracker(options?: {
   const release = Math.max(0, options?.release ?? 0.35)
 
   if (typeof document === 'undefined') {
-    const noopMetrics: VideoMetrics = { motion: 0, luminance: 0, edge: 0, instability: 0 }
-    return {
-      stepFromSource() {
-        return noopMetrics
-      },
-      getLast() {
-        return noopMetrics
-      },
-      dispose() {},
-    }
+    return createNoopVideoMetricsTracker()
   }
   let off: HTMLCanvasElement | null = document.createElement('canvas')
   off.width = size
@@ -49,16 +50,7 @@ export function createVideoMetricsTracker(options?: {
   let ctx = off.getContext('2d', { willReadFrequently: true })
 
   if (!ctx) {
-    const noopMetrics: VideoMetrics = { motion: 0, luminance: 0, edge: 0, instability: 0 }
-    return {
-      stepFromSource() {
-        return noopMetrics
-      },
-      getLast() {
-        return noopMetrics
-      },
-      dispose() {},
-    }
+    return createNoopVideoMetricsTracker()
   }
 
   let frame = 0
@@ -69,42 +61,19 @@ export function createVideoMetricsTracker(options?: {
   // Pre-allocated output object to avoid per-frame allocation in stepFromSource.
   const out: VideoMetrics = { ...last }
 
-  function readLuma(data: Uint8ClampedArray, pixel: number): number {
-    const r = data[pixel] ?? 0
-    const g = data[pixel + 1] ?? 0
-    const b = data[pixel + 2] ?? 0
-    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
-  }
-
   function computeLumaMotion(
     data: Uint8ClampedArray,
     luma: Float32Array,
   ): { sumY: number; sumMotion: number } {
     let sumY = 0
     let sumMotion = 0
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        const i = y * size + x
-        const Y = readLuma(data, i * 4)
-        sumY += Y
-        sumMotion += Math.abs(Y - (luma[i] ?? 0))
-        luma[i] = Y
-      }
+    for (let i = 0; i < luma.length; i++) {
+      const value = readLuma(data, i * 4)
+      sumY += value
+      sumMotion += Math.abs(value - (luma[i] ?? 0))
+      luma[i] = value
     }
     return { sumY, sumMotion }
-  }
-
-  function computeEdgeEnergy(data: Uint8ClampedArray): number {
-    let sumEdge = 0
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        const i = y * size + x
-        const Y = readLuma(data, i * 4)
-        if (x < size - 1) sumEdge += Math.abs(readLuma(data, (i + 1) * 4) - Y)
-        if (y < size - 1) sumEdge += Math.abs(readLuma(data, (i + size) * 4) - Y)
-      }
-    }
-    return sumEdge
   }
 
   function computeOnce(source: CanvasImageSource): VideoMetrics {
@@ -119,7 +88,7 @@ export function createVideoMetricsTracker(options?: {
     const luma = prevLuma && prevLuma.length === n ? prevLuma : new Float32Array(n)
 
     const { sumY, sumMotion } = computeLumaMotion(data, luma)
-    const sumEdge = computeEdgeEnergy(data)
+    const sumEdge = computeEdgeEnergy(data, size)
 
     prevLuma = luma
     const luminance = sumY / n

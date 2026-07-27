@@ -1,9 +1,9 @@
 /**
- * SSOT: glass_veil — veiled/detached temporal self-image.
+ * SSOT: glass_veil: veiled/detached temporal self-image.
  * Params: veil, feedback, refraction, chroma.
  */
 
-import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
+import { ShaderMaterial, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -11,8 +11,13 @@ import {
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
-  QUAD_VERTEX_SHADER,
 } from './paramUtils'
+import {
+  bindInputTexture,
+  bindPreviousTexture,
+  createEffectMaterial,
+  disposeEffectMaterial,
+} from './shaderMaterial'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -95,32 +100,23 @@ export class GlassVeilNode implements VideoNode {
   }
 
   getMaterial(inputTexture: Texture, previousFrameTexture?: Texture | null): Material {
-    if (this.material) {
-      this.material.uniforms.u_map.value = inputTexture
-      this.material.uniforms.u_prev.value = previousFrameTexture ?? inputTexture
-      return this.material
-    }
-    this.material = new ShaderMaterial({
-      uniforms: {
-        u_map: { value: inputTexture },
+    if (!this.material) {
+      this.material = createEffectMaterial(inputTexture, FRAG, {
         u_prev: { value: previousFrameTexture ?? inputTexture },
-        u_uvScale: { value: new Vector2(1, 1) },
-        u_uvOffset: { value: new Vector2(0, 0) },
         u_veil: { value: 0 },
         u_feedback: { value: 0 },
         u_refraction: { value: 0 },
         u_chroma: { value: 0 },
         u_time: { value: 0 },
-      },
-      vertexShader: QUAD_VERTEX_SHADER,
-      fragmentShader: FRAG,
-      depthWrite: false,
-    })
+      })
+    } else {
+      bindInputTexture(this.material, inputTexture)
+      bindPreviousTexture(this.material, inputTexture, previousFrameTexture)
+    }
     return this.material
   }
 
   dispose(): void {
-    this.material?.dispose()
-    this.material = null
+    this.material = disposeEffectMaterial(this.material)
   }
 }

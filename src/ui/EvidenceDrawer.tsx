@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { listEvidenceDocPaths, loadEvidenceDoc, type EvidenceDocPath } from '../evidence/docs'
 import { renderEvidenceMarkdown } from '../evidence/markdown'
-import { useAsyncEffect } from './hooks/useAsyncEffect'
+import { useAsyncEffect, type AsyncEffectContext } from './hooks/useAsyncEffect'
 import { resolveEvidenceHref } from './evidenceHref'
 import { logger } from '../utils/logger'
-import './EvidenceDrawer.css'
+import './EvidencePrecision.css'
 
 export interface EvidenceDrawerProps {
   open: boolean
   docPath: EvidenceDocPath
   onNavigate: (docPath: EvidenceDocPath) => void
   onClose: () => void
+  safeMode?: boolean
+  reducedMotion?: boolean
+  mediaActive?: boolean
 }
 
 type DocState =
@@ -24,7 +27,7 @@ const TOPIC_LABELS: Partial<Record<EvidenceDocPath, string>> = {
   'docs/references/EVIDENCE_MATRIX.md': 'Evidence matrix',
   'docs/references/motifs/INDEX.md': 'Audiovisual motifs',
   'docs/references/CONTRIBUTIONS_AND_LIMITS.md': 'Limits and contributions',
-  'docs/REFERENCES_AUDIT.md': 'Source review',
+  'docs/references/MAPPING_SUMMARY.md': 'Mapping summary',
 }
 
 function isIndexLike(path: EvidenceDocPath): boolean {
@@ -44,6 +47,48 @@ function topicLabel(path: EvidenceDocPath): string {
   )
 }
 
+function syncEvidenceDialog(
+  dialog: HTMLDialogElement | null,
+  closeButton: HTMLButtonElement | null,
+  open: boolean,
+): (() => void) | undefined {
+  if (!dialog || !open) return
+  if (!dialog.open) {
+    if (typeof dialog.showModal === 'function') dialog.showModal()
+    else dialog.setAttribute('open', '')
+  }
+  closeButton?.focus()
+  return () => {
+    if (!dialog.open) return
+    if (typeof dialog.close === 'function') dialog.close()
+    else dialog.removeAttribute('open')
+  }
+}
+
+async function loadEvidenceState(
+  ctx: AsyncEffectContext,
+  open: boolean,
+  docPath: EvidenceDocPath,
+  setState: (state: DocState) => void,
+): Promise<void> {
+  if (!open) return
+  setState({ status: 'loading' })
+  try {
+    const markdown = await loadEvidenceDoc(docPath)
+    if (ctx.cancelled) return
+    if (!markdown) {
+      setState({ status: 'error', message: 'This evidence topic could not be found.' })
+      return
+    }
+    const { fragment, title } = renderEvidenceMarkdown(markdown)
+    setState({ status: 'ready', fragment, title })
+  } catch (error) {
+    if (ctx.cancelled) return
+    logger.error('Failed to load evidence document', docPath, error)
+    setState({ status: 'error', message: 'This evidence topic could not be loaded.' })
+  }
+}
+
 export function EvidenceDrawer(props: EvidenceDrawerProps) {
   const [state, setState] = useState<DocState>({ status: 'loading' })
   const [retryToken, setRetryToken] = useState(0)
@@ -60,41 +105,13 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     ]
   }, [])
 
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog || !props.open) return
-    if (!dialog.open) {
-      if (typeof dialog.showModal === 'function') dialog.showModal()
-      else dialog.setAttribute('open', '')
-    }
-    closeButtonRef.current?.focus()
-    return () => {
-      if (dialog.open) {
-        if (typeof dialog.close === 'function') dialog.close()
-        else dialog.removeAttribute('open')
-      }
-    }
-  }, [props.open])
+  useEffect(
+    () => syncEvidenceDialog(dialogRef.current, closeButtonRef.current, props.open),
+    [props.open],
+  )
 
   useAsyncEffect(
-    async (ctx) => {
-      if (!props.open) return
-      setState({ status: 'loading' })
-      try {
-        const markdown = await loadEvidenceDoc(props.docPath)
-        if (ctx.cancelled) return
-        if (!markdown) {
-          setState({ status: 'error', message: 'This evidence topic could not be found.' })
-          return
-        }
-        const { fragment, title } = renderEvidenceMarkdown(markdown)
-        setState({ status: 'ready', fragment, title })
-      } catch (error) {
-        if (ctx.cancelled) return
-        logger.error('Failed to load evidence document', props.docPath, error)
-        setState({ status: 'error', message: 'This evidence topic could not be loaded.' })
-      }
-    },
+    (ctx) => loadEvidenceState(ctx, props.open, props.docPath, setState),
     [props.open, props.docPath, retryToken],
   )
 
@@ -137,12 +154,9 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     >
       <div className="evidence-drawer">
         <header className="evidence-top">
-          <div>
-            <div className="evidence-kicker">Method &amp; Evidence</div>
-            <h2 id="evidence-title" className="evidence-title">
-              {state.status === 'ready' ? state.title : topicLabel(props.docPath)}
-            </h2>
-          </div>
+          <h2 id="evidence-title" className="evidence-title">
+            Method &amp; Evidence
+          </h2>
           <button
             ref={closeButtonRef}
             type="button"
@@ -216,7 +230,34 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
               />
             )}
           </section>
+
+          <aside className="evidence-safety" aria-label="Safety boundaries">
+            <div className="evidence-kicker">Safety boundaries</div>
+            <dl>
+              <div>
+                <dt>Safe Mode</dt>
+                <dd>{props.safeMode === false ? 'Off' : 'On'}</dd>
+              </div>
+              <div>
+                <dt>Reduced Motion</dt>
+                <dd>{props.reducedMotion ? 'On' : 'System'}</dd>
+              </div>
+              <div>
+                <dt>Media processing</dt>
+                <dd>Local</dd>
+              </div>
+              <div>
+                <dt>Recording</dt>
+                <dd>None</dd>
+              </div>
+            </dl>
+            <p>
+              Stop Everything remains available whenever media is{' '}
+              {props.mediaActive ? 'active' : 'started'}.
+            </p>
+          </aside>
         </div>
+        <footer className="evidence-footer">Sanitized Markdown / Local document</footer>
       </div>
     </dialog>
   )

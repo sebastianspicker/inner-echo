@@ -13,6 +13,30 @@ import {
   normalizeNodeType,
 } from './composeBlend'
 
+const VIDEO_HARD_CLAMP_PARAMS: Record<string, Record<string, string>> = {
+  temporal_smear: { feedback: 'maxFeedback' },
+  feedback_loop: { feedback: 'maxFeedback' },
+  focus_jitter: { amount: 'maxJitter' },
+  pulse: { depth: 'maxPulseDepth' },
+  chroma_aberration: { amount: 'maxChroma' },
+  chromatic_aberration: { amount: 'maxChroma' },
+}
+
+const VIDEO_DIRECT_CLAMP_PARAMS: Record<string, Record<string, string>> = {
+  temporal_smear: { jitter: 'maxJitter' },
+  feedback_loop: { jitter: 'maxJitter' },
+}
+
+const GENERIC_VIDEO_PARAM_EXCLUSIONS = new Set([
+  'rate',
+  'cutoff',
+  'burst_duration_ms',
+  'burst_min_gap_ms',
+  'scale',
+  'decay',
+  'jitter',
+])
+
 export function clampAudioParams(
   config: AudioStackConfig,
   settings: ComposerSettings,
@@ -26,22 +50,50 @@ export function clampAudioParams(
     typeof safeModeClamps.max_tremolo_depth === 'number' ? safeModeClamps.max_tremolo_depth : 0.15
   const hardMaxFeedback = clamp01(settings.maxFeedback)
 
-  const chain = (config.chain ?? []).map((n) => {
-    const node = normalizeNodeType(n.node)
-    const params = { ...(n.params ?? {}) }
-    if (node === 'noise_bed' && typeof params.level === 'number') {
-      params.level = clamp(params.level, 0, maxNoise)
-    }
-    if (node === 'tremolo') {
-      if (typeof params.rate === 'number') params.rate = clamp(params.rate, 0, maxTremoloRate)
-      if (typeof params.depth === 'number') params.depth = clamp(params.depth, 0, maxTremoloDepth)
-    }
-    if (node === 'delay' && typeof params.feedback === 'number') {
-      params.feedback = clamp(params.feedback, 0, 0.18 * hardMaxFeedback)
-    }
-    return { ...n, node, params }
-  })
+  const limits = { maxNoise, maxTremoloRate, maxTremoloDepth, hardMaxFeedback }
+  const chain = (config.chain ?? []).map((node) => clampAudioNode(node, limits))
   return { ...config, chain }
+}
+
+function clampAudioNode(
+  definition: NonNullable<AudioStackConfig['chain']>[number],
+  limits: {
+    maxNoise: number
+    maxTremoloRate: number
+    maxTremoloDepth: number
+    hardMaxFeedback: number
+  },
+) {
+  const node = normalizeNodeType(definition.node)
+  const params = { ...(definition.params ?? {}) }
+  clampAudioNodeValues(node, params, limits)
+  return { ...definition, node, params }
+}
+
+function clampAudioNodeValues(
+  node: string,
+  params: Record<string, unknown>,
+  limits: {
+    maxNoise: number
+    maxTremoloRate: number
+    maxTremoloDepth: number
+    hardMaxFeedback: number
+  },
+): void {
+  if (node === 'noise_bed' && typeof params.level === 'number')
+    params.level = clamp(params.level, 0, limits.maxNoise)
+  if (node === 'tremolo') clampTremoloParams(params, limits)
+  if (node === 'delay' && typeof params.feedback === 'number')
+    params.feedback = clamp(params.feedback, 0, 0.18 * limits.hardMaxFeedback)
+}
+
+function clampTremoloParams(
+  params: Record<string, unknown>,
+  limits: { maxTremoloRate: number; maxTremoloDepth: number },
+): void {
+  if (typeof params.rate === 'number') params.rate = clamp(params.rate, 0, limits.maxTremoloRate)
+  if (typeof params.depth === 'number')
+    params.depth = clamp(params.depth, 0, limits.maxTremoloDepth)
 }
 
 export function clampVideoParams(
@@ -59,64 +111,27 @@ export function clampVideoParams(
   const hardMaxFeedback = clamp01(settings.maxFeedback)
   const hard = (x: number, max: number) => clamp(x, 0, max * hardMaxFeedback)
 
-  return stack.map((def) =>
-    clampVideoNode(def, hard, { maxFeedback, maxJitter, maxPulseDepth, maxChroma }),
-  )
-}
+  const clampLimits = { maxFeedback, maxJitter, maxPulseDepth, maxChroma }
 
-const UNBOUNDED_VIDEO_PARAMS = new Set([
-  'rate',
-  'cutoff',
-  'burst_duration_ms',
-  'burst_min_gap_ms',
-  'scale',
-  'decay',
-  'jitter',
-])
+  const clampParam = (node: string, key: string, value: number): number => {
+    const hardLimitKey = VIDEO_HARD_CLAMP_PARAMS[node]?.[key]
+    if (hardLimitKey) return hard(value, clampLimits[hardLimitKey as keyof typeof clampLimits])
+    const directLimitKey = VIDEO_DIRECT_CLAMP_PARAMS[node]?.[key]
+    if (directLimitKey)
+      return clamp(value, 0, clampLimits[directLimitKey as keyof typeof clampLimits])
+    return GENERIC_VIDEO_PARAM_EXCLUSIONS.has(key) ? value : clamp(value, -1, 1)
+  }
 
-function clampVideoNode(
-  def: VideoStackNodeDef,
-  hard: (value: number, maximum: number) => number,
-  limits: { maxFeedback: number; maxJitter: number; maxPulseDepth: number; maxChroma: number },
-): VideoStackNodeDef {
-  const node = normalizeNodeType(def.node)
-  const params: Record<string, unknown> = { ...(def.params ?? {}) }
-  if (
-    (node === 'temporal_smear' || node === 'feedback_loop') &&
-    typeof params.feedback === 'number'
-  ) {
-    params.feedback = hard(params.feedback, limits.maxFeedback)
-  }
-  if (node === 'focus_jitter' && typeof params.amount === 'number') {
-    params.amount = hard(params.amount, limits.maxJitter)
-  }
-  if (node === 'pulse' && typeof params.depth === 'number') {
-    params.depth = hard(params.depth, limits.maxPulseDepth)
-  }
-  if (isChromaNode(node) && typeof params.amount === 'number') {
-    params.amount = hard(params.amount, limits.maxChroma)
-  }
-  if (
-    (node === 'temporal_smear' || node === 'feedback_loop') &&
-    typeof params.jitter === 'number'
-  ) {
-    params.jitter = clamp(params.jitter, 0, limits.maxJitter)
-  }
-  clampUnitVideoParams(params)
-  return { ...def, node, params }
-}
-
-function isChromaNode(node: string): boolean {
-  return node === 'chroma_aberration' || node === 'chromatic_aberration'
-}
-
-function clampUnitVideoParams(params: Record<string, unknown>): void {
-  for (const key of Object.keys(params)) {
-    const value = params[key]
-    if (typeof value === 'number' && !UNBOUNDED_VIDEO_PARAMS.has(key)) {
-      params[key] = clamp(value, -1, 1)
+  return stack.map((def) => {
+    const node = normalizeNodeType(def.node)
+    const params: Record<string, unknown> = { ...(def.params ?? {}) }
+    for (const k of Object.keys(params)) {
+      const v = params[k]
+      if (typeof v !== 'number') continue
+      params[k] = clampParam(node, k, v)
     }
-  }
+    return { ...def, node, params }
+  })
 }
 
 type DimensionSafetyEntry = {
@@ -136,34 +151,6 @@ type DerivedSafety = {
   composedSafety: Profile['safety']
 }
 
-function mergeDimensionSafety(
-  cleanedDims: Array<{ dimensionId: string; weight: number }>,
-  getDimensionSafety: (dimensionId: string) => DimensionSafetyEntry | null,
-  safeModeClampsList: Array<Record<string, unknown> | undefined>,
-  reducedMotionDisableLists: Array<string[] | undefined>,
-  warningsLists: string[][],
-) {
-  for (const { dimensionId } of cleanedDims) {
-    const safety = getDimensionSafety(dimensionId)?.safety
-    if (safety?.warnings?.length) warningsLists.push(safety.warnings)
-    if (safety?.clamps) safeModeClampsList.push(safety.clamps)
-    if (safety?.reduced_motion?.disable_nodes?.length) {
-      reducedMotionDisableLists.push(safety.reduced_motion.disable_nodes)
-    }
-  }
-}
-
-function presetIntensity(
-  safetyBlocks: Array<Profile['safety']>,
-  key: 'intensity_max' | 'intensity_default',
-  fallback: number,
-): number {
-  if (!safetyBlocks.length) return fallback
-  return safetyBlocks
-    .map((s) => (typeof s[key] === 'number' ? s[key] : key === 'intensity_max' ? 1 : 0.3))
-    .reduce((minimum, value) => Math.min(minimum, value), key === 'intensity_max' ? 1 : Infinity)
-}
-
 /**
  * Derive composed safety from preset safety blocks and dimension safety entries.
  */
@@ -180,20 +167,32 @@ export function deriveComposedSafety(
   )
   const warningsLists: string[][] = safetyBlocks.map((s) => s.warnings ?? [])
 
-  mergeDimensionSafety(
-    cleanedDims,
-    getDimensionSafety,
-    safeModeClampsList,
-    reducedMotionDisableLists,
-    warningsLists,
-  )
+  for (const d of cleanedDims) {
+    const entry = getDimensionSafety(d.dimensionId)
+    const dimSafety = entry?.safety
+    if (dimSafety?.warnings?.length) warningsLists.push(dimSafety.warnings)
+    if (dimSafety?.clamps) safeModeClampsList.push(dimSafety.clamps)
+    if (dimSafety?.reduced_motion?.disable_nodes?.length) {
+      reducedMotionDisableLists.push(dimSafety.reduced_motion.disable_nodes)
+    }
+  }
 
   const mergedSafeModeClamps = mergeSafeModeClamps(safeModeClampsList)
   const mergedWarnings = mergeWarnings(warningsLists)
   const mergedDisableNodes = mergeDisableNodes(reducedMotionDisableLists)
 
-  const intensityMaxByPresets = presetIntensity(safetyBlocks, 'intensity_max', 0.8)
-  const intensityDefaultByPresets = presetIntensity(safetyBlocks, 'intensity_default', 0.3)
+  const intensityMaxByPresets =
+    safetyBlocks.length > 0
+      ? safetyBlocks
+          .map((s) => (typeof s.intensity_max === 'number' ? s.intensity_max : 1))
+          .reduce((a, b) => Math.min(a, b), 1)
+      : 0.8
+  const intensityDefaultByPresets =
+    safetyBlocks.length > 0
+      ? safetyBlocks
+          .map((s) => (typeof s.intensity_default === 'number' ? s.intensity_default : 0.3))
+          .reduce((a, b) => Math.min(a, b), Infinity)
+      : 0.3
 
   const composedSafety: Profile['safety'] = {
     intensity_default: intensityDefaultByPresets,

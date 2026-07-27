@@ -1,9 +1,9 @@
 /**
- * SSOT: color_grade — gentle contrast/saturation/brightness/color-balance adjustments.
+ * SSOT: color_grade: gentle contrast/saturation/brightness/color-balance adjustments.
  * Safety: clamp contrast and chroma; never strobe.
  */
 
-import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
+import { ShaderMaterial, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -11,8 +11,8 @@ import {
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
-  QUAD_VERTEX_SHADER,
 } from './paramUtils'
+import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -93,30 +93,21 @@ export class ColorGradeNode implements VideoNode {
   }
 
   getMaterial(inputTexture: Texture): Material {
-    if (this.material) {
-      this.material.uniforms.u_map.value = inputTexture
-      return this.material
-    }
-    this.material = new ShaderMaterial({
-      uniforms: {
-        u_map: { value: inputTexture },
-        u_uvScale: { value: new Vector2(1, 1) },
-        u_uvOffset: { value: new Vector2(0, 0) },
+    if (!this.material) {
+      this.material = createEffectMaterial(inputTexture, FRAG, {
         u_contrast: { value: 0 },
         u_saturation: { value: 0 },
         u_brightness: { value: 0 },
         u_temperature: { value: 0 },
         u_tint: { value: 0 },
-      },
-      vertexShader: QUAD_VERTEX_SHADER,
-      fragmentShader: FRAG,
-      depthWrite: false,
-    })
+      })
+    } else {
+      bindInputTexture(this.material, inputTexture)
+    }
     return this.material
   }
 
   dispose(): void {
-    this.material?.dispose()
-    this.material = null
+    this.material = disposeEffectMaterial(this.material)
   }
 }

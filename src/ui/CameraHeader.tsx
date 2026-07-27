@@ -3,6 +3,7 @@ import { getAudioStateLabel } from './audioStatusMessages'
 import type { CameraState } from '../engine/video'
 import type { AudioContextStatus } from '../engine/audio'
 import type { EvidenceDocPath } from '../evidence/docs'
+import brandMarkUrl from '../../assets/brand/inner-echo-mark.svg'
 
 export interface CameraHeaderProps {
   cameraState: CameraState
@@ -26,23 +27,32 @@ export function CameraHeader({
   return (
     <header className="ie-header" role="banner">
       <div className="ie-brand" aria-label="Inner Echo">
-        <div className="ie-title">Inner Echo</div>
-        <div className="ie-subtitle">Reflective audiovisual metaphors, processed locally</div>
+        <img className="ie-brandMark" src={brandMarkUrl} alt="" aria-hidden="true" />
+        <div className="ie-brandCopy">
+          <div className="ie-title">Inner Echo</div>
+          <div className="ie-subtitle">Processed locally</div>
+        </div>
       </div>
 
       <div className="ie-headerRight">
         <div className="ie-statusRow" role="status" aria-live="polite" aria-label="Runtime status">
           <span className="ie-pill">
             <span className="ie-pillKey">Camera</span>
-            <span className="ie-pillVal">{getCameraStateLabel(cameraState)}</span>
+            <span className={`ie-pillVal${cameraState === 'active' ? ' is-active' : ''}`}>
+              {getCameraStateLabel(cameraState)}
+            </span>
           </span>
           <span className="ie-pill">
             <span className="ie-pillKey">Audio</span>
-            <span className="ie-pillVal">{getAudioStateLabel(audioStatus, audioEnabled)}</span>
+            <span className={`ie-pillVal${audioStatus === 'on' ? ' is-active' : ''}`}>
+              {getAudioStateLabel(audioStatus, audioEnabled)}
+            </span>
           </span>
           <span className="ie-pill">
             <span className="ie-pillKey">Effects</span>
-            <span className="ie-pillVal">{effectsLabel}</span>
+            <span className={`ie-pillVal${effectsLabel === 'Active' ? ' is-active' : ''}`}>
+              {effectsLabel}
+            </span>
           </span>
         </div>
 
@@ -60,8 +70,9 @@ export function CameraHeader({
             className="ie-btn ie-btn--danger"
             onClick={onStop}
             disabled={!canStop}
-            aria-label="Stop camera, microphone, sound, and effects"
+            aria-label="Stop Everything: stop camera, microphone, sound, and effects"
           >
+            <span className="ie-stopIcon" aria-hidden="true" />
             Stop Everything
           </button>
         </div>

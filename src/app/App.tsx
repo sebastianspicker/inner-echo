@@ -1,5 +1,6 @@
 import { CameraView } from '../ui/CameraView'
 import '../ui/CameraView.css'
+import '../ui/PrecisionInterface.css'
 
 function App() {
   return (

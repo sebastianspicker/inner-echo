@@ -13,7 +13,7 @@
     },
     {
       "dimensionId": "derealization",
-      "motif": "chromatic_aberration",
+      "motif": "chroma_aberration",
       "label": "artistic",
       "why": "Chromatic offset is used as a visual metaphor for 'unreal/behind-glass' feelings, but this specific technique is an artistic choice rather than an evidence-backed perceptual marker.",
       "sources": [
@@ -22,7 +22,7 @@
     },
     {
       "dimensionId": "depersonalization",
-      "motif": "chromatic_aberration",
+      "motif": "chroma_aberration",
       "label": "artistic",
       "why": "Chromatic offset is used as an artistic metaphor for detachment/observer stance; the evidence corpus supports the phenomenon but not this specific signal mapping.",
       "sources": [
@@ -31,3 +31,4 @@
     }
   ]
 }
+

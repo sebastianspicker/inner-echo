@@ -12,10 +12,12 @@
 - [ ] No sudden loud audio transients
 - [ ] Reduced Motion and Safe Mode still work
 - [ ] No new camera/mic usage without explicit user gesture
+- [ ] No secrets, personal health information, raw media, or device identifiers included
 
 ## Test plan
 
 - [ ] `npm run lint` passes
+- [ ] `npm run typecheck` passes
 - [ ] `npm test` passes
 - [ ] `npm run verify:contracts` passes
 - [ ] Manual browser test (describe below if relevant)

@@ -1,9 +1,9 @@
 /**
- * SSOT: somatic_pulse — slow body-wave tunnel/blur pulse.
+ * SSOT: somatic_pulse: slow body-wave tunnel/blur pulse.
  * Params: depth, rate, smoothing, tunnel, blur.
  */
 
-import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
+import { ShaderMaterial, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -11,8 +11,9 @@ import {
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
-  QUAD_VERTEX_SHADER,
 } from './paramUtils'
+import { advancePulsePhase, smoothPulseValue } from './pulseOscillator'
+import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -94,38 +95,34 @@ export class SomaticPulseNode implements VideoNode {
 
   tick(delta: number): void {
     if (!this.material) return
-    this.phase = (this.phase + delta * this.rateHz * Math.PI * 2) % (Math.PI * 2)
-    const target = Math.sin(this.phase) * 0.5 + 0.5
-    const tau = clamp((1 - this.smoothing) * 0.7, 0.03, 0.7)
-    const t = 1 - Math.exp(-delta / tau)
-    this.smoothed += (target - this.smoothed) * t
+    this.phase = advancePulsePhase(this.phase, delta, this.rateHz)
+    this.smoothed = smoothPulseValue(
+      this.phase,
+      this.smoothed,
+      delta,
+      this.smoothing,
+      0.7,
+      0.03,
+      0.7,
+    )
     this.material.uniforms.u_pulse.value = this.smoothed
   }
 
   getMaterial(inputTexture: Texture): Material {
-    if (this.material) {
-      this.material.uniforms.u_map.value = inputTexture
-      return this.material
-    }
-    this.material = new ShaderMaterial({
-      uniforms: {
-        u_map: { value: inputTexture },
-        u_uvScale: { value: new Vector2(1, 1) },
-        u_uvOffset: { value: new Vector2(0, 0) },
+    if (!this.material) {
+      this.material = createEffectMaterial(inputTexture, FRAG, {
         u_depth: { value: 0 },
         u_pulse: { value: 0.5 },
         u_tunnel: { value: 0.3 },
         u_blur: { value: 0.12 },
-      },
-      vertexShader: QUAD_VERTEX_SHADER,
-      fragmentShader: FRAG,
-      depthWrite: false,
-    })
+      })
+    } else {
+      bindInputTexture(this.material, inputTexture)
+    }
     return this.material
   }
 
   dispose(): void {
-    this.material?.dispose()
-    this.material = null
+    this.material = disposeEffectMaterial(this.material)
   }
 }

@@ -1,5 +1,5 @@
 /**
- * SSOT: salience_competition — competing attention anchors and small jumps.
+ * SSOT: salience_competition: competing attention anchors and small jumps.
  * Params: amount, marker_strength, shift, jump_rate.
  */
 
@@ -11,8 +11,8 @@ import {
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
-  QUAD_VERTEX_SHADER,
 } from './paramUtils'
+import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -95,30 +95,21 @@ export class SalienceCompetitionNode implements VideoNode {
   }
 
   getMaterial(inputTexture: Texture): Material {
-    if (this.material) {
-      this.material.uniforms.u_map.value = inputTexture
-      return this.material
-    }
-    this.material = new ShaderMaterial({
-      uniforms: {
-        u_map: { value: inputTexture },
-        u_uvScale: { value: new Vector2(1, 1) },
-        u_uvOffset: { value: new Vector2(0, 0) },
+    if (!this.material) {
+      this.material = createEffectMaterial(inputTexture, FRAG, {
         u_amount: { value: 0 },
         u_marker_strength: { value: 0.5 },
         u_shift: { value: 0.04 },
         u_anchor_a: { value: new Vector2(0.3, 0.35) },
         u_anchor_b: { value: new Vector2(0.68, 0.62) },
-      },
-      vertexShader: QUAD_VERTEX_SHADER,
-      fragmentShader: FRAG,
-      depthWrite: false,
-    })
+      })
+    } else {
+      bindInputTexture(this.material, inputTexture)
+    }
     return this.material
   }
 
   dispose(): void {
-    this.material?.dispose()
-    this.material = null
+    this.material = disposeEffectMaterial(this.material)
   }
 }

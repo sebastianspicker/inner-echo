@@ -54,7 +54,7 @@
   --duration-slow: 240ms;
 }
 
-/* Gentle breathing animation for ambient life — slow and soothing */
+/* Gentle breathing animation for ambient life: slow and soothing */
 @keyframes ie-breathe {
   0%,
   100% {

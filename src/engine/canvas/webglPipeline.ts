@@ -67,6 +67,7 @@ import {
   updateResourceDiagnostics,
   type WebGLDiagnostics,
 } from './webgl/diagnostics'
+import { createStartupCleanup } from './startupCleanup'
 
 export type { VideoPipelineParams }
 export type WebGLOverlayStop = () => void
@@ -82,11 +83,19 @@ export interface WebGLOverlayCallbacks {
 }
 
 function mergePipelineParams(current: VideoPipelineParams, next: VideoPipelineParams): void {
-  current.intensity = next.intensity ?? current.intensity
-  current.safeMode = next.safeMode ?? current.safeMode
-  current.controlValues = next.controlValues ?? current.controlValues
-  current.stressMode = next.stressMode ?? current.stressMode
-  current.safetyContext = next.safetyContext ?? current.safetyContext
+  mergeDefinedParam(current, next, 'intensity')
+  mergeDefinedParam(current, next, 'safeMode')
+  mergeDefinedParam(current, next, 'controlValues')
+  mergeDefinedParam(current, next, 'stressMode')
+  mergeDefinedParam(current, next, 'safetyContext')
+}
+
+function mergeDefinedParam<K extends keyof VideoPipelineParams>(
+  current: VideoPipelineParams,
+  next: VideoPipelineParams,
+  key: K,
+): void {
+  if (next[key] !== undefined) current[key] = next[key]
 }
 
 /** Optional reactive/coupling callbacks used by the frame loop. */
@@ -146,8 +155,8 @@ export function startWebGLOverlayLoop(
   let finalBlitMaterial: MeshBasicMaterial | null = null
   let rafId: number | null = null
   let stopped = false
-  let cleanedUp = false
   let consecutiveGlErrors = 0
+  const cleanupResources = createStartupCleanup(startupDisposers, () => gl)
   const currentParams: VideoPipelineParams = {
     intensity: 0.5,
     safeMode: false,
@@ -157,32 +166,6 @@ export function startWebGLOverlayLoop(
   }
 
   const usePassthrough = nodes.length === 0
-
-  function setParams(params: VideoPipelineParams): void {
-    mergePipelineParams(currentParams, params)
-  }
-
-  function cleanupResources(): void {
-    if (cleanedUp) return
-    cleanedUp = true
-    try {
-      if (gl) {
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
-      }
-    } catch {
-      /* ignore */
-    }
-
-    for (let i = startupDisposers.length - 1; i >= 0; i--) {
-      try {
-        startupDisposers[i]()
-      } catch {
-        /* ignore */
-      }
-    }
-    startupDisposers.length = 0
-  }
 
   try {
     renderer = new WebGLRenderer({
@@ -227,7 +210,7 @@ export function startWebGLOverlayLoop(
 
     const onContextLost = (event: Event): void => {
       event.preventDefault()
-      logger.warn('WebGL context lost — falling back')
+      logger.warn('WebGL context lost: falling back')
       stopInternal()
       callbacks?.onFatalRuntimeError?.(new Error('WebGL context lost. Render loop stopped.'))
     }
@@ -313,7 +296,7 @@ export function startWebGLOverlayLoop(
 
     // Diagnostics object is mutated each frame for the dev panel.
     // Note: activeVideoNodes reflects the initial chain configuration and is not
-    // refreshed at runtime. This is intentional — the node list is static for the
+    // refreshed at runtime. This is intentional: the node list is static for the
     // lifetime of a single pipeline instance.
     const diagnostics: WebGLDiagnostics = createDiagnostics(
       nodes.map((node) => toNodeName(node)),
@@ -539,7 +522,9 @@ export function startWebGLOverlayLoop(
       stop(): void {
         stopInternal()
       },
-      setParams,
+      setParams(params: VideoPipelineParams): void {
+        mergePipelineParams(currentParams, params)
+      },
       getDiagnostics: () => {
         return {
           ...diagnostics,

@@ -1,5 +1,5 @@
 /**
- * SSOT: flutter — subtle time instability via modulated micro-delay (safety-clamped).
+ * SSOT: flutter: subtle time instability via modulated micro-delay (safety-clamped).
  *
  * Params:
  * - rate (Hz)
@@ -8,6 +8,7 @@
 
 import type { AudioModule } from '../types'
 import { clamp } from '../../../utils/numeric'
+import { createRoutedAudioModule } from './routedAudioModule'
 
 export interface FlutterParams {
   rate?: number
@@ -38,7 +39,7 @@ export function createFlutter(context: BaseAudioContext, params: FlutterParams =
   depthGain.gain.value = 0.0003
 
   // The constant source provides a fixed DC offset for the delay line center point.
-  // Unlike tremolo, flutter intentionally keeps a fixed modulation depth — the LFO
+  // Unlike tremolo, flutter intentionally keeps a fixed modulation depth: the LFO
   // amplitude is set at construction and only the rate changes at runtime via setParams.
   const offset = context.createConstantSource()
   offset.offset.value = 0.008
@@ -66,13 +67,9 @@ export function createFlutter(context: BaseAudioContext, params: FlutterParams =
   input.connect(delay)
   delay.connect(out)
 
-  return {
-    connect(destination: AudioNode): void {
-      out.connect(destination)
-    },
-    getInput(): AudioNode {
-      return input
-    },
+  return createRoutedAudioModule({
+    input,
+    output: out,
     setParams(p: Record<string, unknown>): void {
       set({ rate: p.rate as number | undefined, depth: p.depth as number | undefined })
     },
@@ -90,5 +87,5 @@ export function createFlutter(context: BaseAudioContext, params: FlutterParams =
       depthGain.disconnect()
       offset.disconnect()
     },
-  }
+  })
 }

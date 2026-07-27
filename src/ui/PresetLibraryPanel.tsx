@@ -47,7 +47,7 @@ export function PresetLibraryPanel(props: PresetLibraryPanelProps) {
             <option value="">None saved</option>
             {props.library.map((item) => (
               <option key={item.id} value={item.id}>
-                {item.name} — {new Date(item.createdAt).toLocaleString()}
+                {item.name}: {new Date(item.createdAt).toLocaleString()}
               </option>
             ))}
           </select>

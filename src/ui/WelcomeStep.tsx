@@ -1,5 +1,6 @@
 import { logger } from '../utils/logger'
 import type { EvidenceDocPath } from '../evidence/docs'
+import brandMarkUrl from '../../assets/brand/inner-echo-mark.svg'
 import './WelcomeStep.css'
 
 export const WELCOME_ACKNOWLEDGEMENT_KEY = 'inner-echo-welcome-acknowledged-v2'
@@ -27,7 +28,7 @@ export interface WelcomeStepProps {
   onOpenEvidence: (docPath: EvidenceDocPath) => void
 }
 
-export function WelcomeStep({ onContinue, onOpenEvidence }: WelcomeStepProps) {
+export function WelcomeStep({ onContinue }: WelcomeStepProps) {
   const handleContinue = (): void => {
     setWelcomeAcknowledged()
     onContinue()
@@ -35,52 +36,70 @@ export function WelcomeStep({ onContinue, onOpenEvidence }: WelcomeStepProps) {
 
   return (
     <section className="welcome-step" aria-labelledby="welcome-title">
-      <div className="welcome-step__intro">
-        <p className="welcome-step__context">Reflective media lab</p>
-        <h1 id="welcome-title">Explore experience through audiovisual metaphor.</h1>
-        <p>
-          Inner Echo is a browser-based artwork for discussing patterns of attention, sensation, and
-          perception. It is not a diagnosis, simulation, treatment, or substitute for care.
+      <div className="welcome-step__lead">
+        <div className="welcome-step__brand" aria-label="Inner Echo">
+          <img className="welcome-step__mark" src={brandMarkUrl} alt="" aria-hidden="true" />
+          <span>Inner Echo</span>
+        </div>
+        <div className="welcome-step__intro">
+          <p className="welcome-step__context">Reflective media lab</p>
+          <h1 id="welcome-title">Notice what shifts.</h1>
+          <p>
+            Explore audiovisual metaphors for attention, sensation, and perception. Not a diagnosis
+            or clinical simulation.
+          </p>
+        </div>
+
+        <div className="welcome-step__actions">
+          <button type="button" className="ie-btn ie-btn--accent" onClick={handleContinue}>
+            Continue to setup
+          </button>
+        </div>
+        <p className="welcome-step__note">
+          Continuing does not request camera, microphone, or audio access.
         </p>
       </div>
 
       <div className="welcome-step__facts" aria-label="Before you continue">
+        <div className="welcome-step__factsLabel">Private by design</div>
         <section>
-          <h2>Your media stays on this device</h2>
-          <p>
-            Camera and microphone input are processed in your browser. Inner Echo does not record or
-            upload them. Camera, sound, and microphone each require a separate action.
-          </p>
+          <span className="welcome-step__factIcon" aria-hidden="true">
+            □
+          </span>
+          <div>
+            <h2>Media stays here</h2>
+            <p>
+              Camera and microphone are processed in this browser and are not recorded or uploaded.
+              Saved setups remain in this browser's local storage.
+            </p>
+          </div>
         </section>
         <section>
-          <h2>Some settings can remain locally</h2>
-          <p>
-            This welcome acknowledgement and presets you explicitly save use this browser's local
-            storage. A shared link contains configuration in its URL; it never starts media.
-          </p>
+          <span className="welcome-step__factIcon" aria-hidden="true">
+            ◇
+          </span>
+          <div>
+            <h2>Permission stays separate</h2>
+            <p>Setup never starts camera, sound, or microphone. Each requires a separate action.</p>
+          </div>
         </section>
         <section>
-          <h2>Comfort controls stay available</h2>
-          <p>
-            Safe Mode starts on. Reduced Motion follows your system preference. Stop Everything
-            remains one action away whenever media is starting or active.
-          </p>
+          <span className="welcome-step__factIcon" aria-hidden="true">
+            ○
+          </span>
+          <div>
+            <h2>Comfort stays close</h2>
+            <p>
+              Safe Mode starts on. Stop Everything remains one action away whenever media is active.
+            </p>
+          </div>
         </section>
       </div>
 
-      <div className="welcome-step__actions">
-        <button type="button" className="ie-btn ie-btn--accent" onClick={handleContinue}>
-          Continue to setup
-        </button>
-        <button
-          type="button"
-          className="ie-btn"
-          onClick={() => onOpenEvidence('docs/references/README.md')}
-        >
-          Method &amp; Evidence
-        </button>
+      <div className="welcome-step__localRail" aria-hidden="true">
+        <span />
+        Local / Client only
       </div>
-      <p className="welcome-step__note">Continuing does not request camera or audio access.</p>
     </section>
   )
 }

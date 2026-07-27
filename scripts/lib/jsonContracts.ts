@@ -1,6 +1,5 @@
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { profileSchema, type Profile } from '../../src/conditions/schema'
 import { parseFirstJsonObject } from '../../src/utils/jsonObjectParser'
 import type {
   ContractIssue,
@@ -8,24 +7,77 @@ import type {
   LoadedContracts,
   LoadedProfileContract,
 } from '../../src/contractVerification/types'
+import { loadProfileContracts } from './profileContracts'
+
+type ReferenceKind = ContractReference['kind']
+type StackReferenceType = Extract<
+  ContractReference['referenceType'],
+  | 'profile_video_stack_node'
+  | 'profile_video_stack_param'
+  | 'profile_audio_stack_node'
+  | 'profile_audio_stack_param'
+>
+type MotifReferenceType = Extract<
+  ContractReference['referenceType'],
+  | 'mapping_video_motif_node'
+  | 'mapping_video_motif_param'
+  | 'mapping_audio_motif_node'
+  | 'mapping_audio_motif_param'
+>
+type DimensionReferenceType = Extract<
+  ContractReference['referenceType'],
+  'dimensions_video_node' | 'dimensions_audio_node'
+>
+
+interface NodeWithParams {
+  node?: unknown
+  params?: Record<string, unknown>
+}
+
+interface MappingMotif {
+  node?: string
+  params_hint?: Record<string, unknown>
+}
+
+interface MappingEntry {
+  video_motifs?: MappingMotif[]
+  audio_motifs?: MappingMotif[]
+}
+
+interface MappingDocument {
+  mapping?: Record<string, MappingEntry>
+}
+
+interface DimensionEntry {
+  id?: string
+  motif_summary?: {
+    video_nodes?: string[]
+    audio_nodes?: string[]
+  }
+}
+
+interface DimensionsDocument {
+  dimensions?: DimensionEntry[]
+}
+
+interface NodeReferenceOptions {
+  kind: ReferenceKind
+  sourceFile: string
+  locationPrefix: string
+  nodeReferenceType: StackReferenceType | MotifReferenceType
+  paramReferenceType: StackReferenceType | MotifReferenceType
+  profileId?: string
+}
 
 function parseReactiveTarget(
   target: string,
-): { kind: 'video' | 'audio'; node: string; param: string } | null {
-  const raw = String(target ?? '')
-    .trim()
-    .toLowerCase()
-  if (!raw) return null
-  const isVideo = raw.startsWith('video.')
-  const isAudio = raw.startsWith('audio.')
-  if (!isVideo && !isAudio) return null
-  const rest = raw.slice(isVideo ? 'video.'.length : 'audio.'.length)
-  const dot = rest.indexOf('.')
-  if (dot <= 0 || dot >= rest.length - 1) return null
+): { kind: ReferenceKind; node: string; param: string } | null {
+  const match = /^(video|audio)\.([^.]*)\.(.+)$/i.exec(String(target ?? '').trim())
+  if (!match?.[2]) return null
   return {
-    kind: isVideo ? 'video' : 'audio',
-    node: rest.slice(0, dot),
-    param: rest.slice(dot + 1),
+    kind: match[1].toLowerCase() as ReferenceKind,
+    node: match[2].toLowerCase(),
+    param: match[3].toLowerCase(),
   }
 }
 
@@ -33,263 +85,284 @@ function rel(rootDir: string, filePath: string): string {
   return path.relative(rootDir, filePath).replaceAll(path.sep, '/')
 }
 
-export function loadContractJsonReferences(rootDir: string): LoadedContracts {
-  const parseErrors: ContractIssue[] = []
-  const references: ContractReference[] = []
-  const profiles: LoadedProfileContract[] = []
-
-  const profilesDir = path.join(rootDir, 'src', 'conditions', 'profiles')
-  const profileFiles = readdirSync(profilesDir)
-    .filter((name: string) => name.endsWith('.json'))
-    .sort((a: string, b: string) => a.localeCompare(b))
-
-  for (const fileName of profileFiles) {
-    const absolute = path.join(profilesDir, fileName)
-    const sourceFile = rel(rootDir, absolute)
-    let raw: unknown
-    try {
-      raw = JSON.parse(readFileSync(absolute, 'utf-8'))
-    } catch (error) {
-      parseErrors.push({
-        severity: 'error',
-        code: 'PROFILE_JSON_PARSE_ERROR',
-        message: error instanceof Error ? error.message : `Failed to parse ${sourceFile}`,
-        sourceFile,
-      })
-      continue
-    }
-
-    const parsed = profileSchema.safeParse(raw)
-    if (!parsed.success) {
-      parseErrors.push({
-        severity: 'error',
-        code: 'PROFILE_SCHEMA_ERROR',
-        message: `Profile schema validation failed for ${sourceFile}`,
-        sourceFile,
-        details: parsed.error.flatten(),
-      })
-      continue
-    }
-
-    const profile = parsed.data as Profile
-    profiles.push({
-      profileId: profile.id,
+function addNodeAndParamReferences(
+  references: ContractReference[],
+  def: NodeWithParams,
+  options: NodeReferenceOptions,
+) {
+  const { kind, sourceFile, locationPrefix, nodeReferenceType, paramReferenceType, profileId } =
+    options
+  const node = String(def.node ?? '').toLowerCase()
+  references.push({
+    kind,
+    node,
+    sourceFile,
+    profileId,
+    location: `${locationPrefix}.node`,
+    referenceType: nodeReferenceType,
+  })
+  for (const [param, value] of Object.entries(def.params ?? {})) {
+    references.push({
+      kind,
+      node,
+      param,
+      value,
       sourceFile,
-      profile,
+      profileId,
+      location: `${locationPrefix}.params.${param}`,
+      referenceType: paramReferenceType,
     })
-
-    for (let i = 0; i < profile.video_stack.length; i++) {
-      const def = profile.video_stack[i]
-      references.push({
-        kind: 'video',
-        node: String(def.node).toLowerCase(),
-        sourceFile,
-        profileId: profile.id,
-        location: `video_stack[${i}].node`,
-        referenceType: 'profile_video_stack_node',
-      })
-      for (const [param, value] of Object.entries(def.params ?? {})) {
-        references.push({
-          kind: 'video',
-          node: String(def.node).toLowerCase(),
-          param,
-          value,
-          sourceFile,
-          profileId: profile.id,
-          location: `video_stack[${i}].params.${param}`,
-          referenceType: 'profile_video_stack_param',
-        })
-      }
-    }
-
-    const chain = profile.audio_stack?.chain ?? []
-    for (let i = 0; i < chain.length; i++) {
-      const def = chain[i]
-      references.push({
-        kind: 'audio',
-        node: String(def.node).toLowerCase(),
-        sourceFile,
-        profileId: profile.id,
-        location: `audio_stack.chain[${i}].node`,
-        referenceType: 'profile_audio_stack_node',
-      })
-      for (const [param, value] of Object.entries(def.params ?? {})) {
-        references.push({
-          kind: 'audio',
-          node: String(def.node).toLowerCase(),
-          param,
-          value,
-          sourceFile,
-          profileId: profile.id,
-          location: `audio_stack.chain[${i}].params.${param}`,
-          referenceType: 'profile_audio_stack_param',
-        })
-      }
-    }
-
-    const reactive = profile.reactive?.analyser_to_params ?? []
-    for (let i = 0; i < reactive.length; i++) {
-      const entry = reactive[i]
-      const resolved = parseReactiveTarget(entry.target)
-      if (!resolved) {
-        parseErrors.push({
-          severity: 'warning',
-          code: 'REACTIVE_TARGET_PARSE_WARNING',
-          message: `Could not parse reactive target "${entry.target}" in ${profile.id}`,
-          sourceFile,
-          profileId: profile.id,
-          location: `reactive.analyser_to_params[${i}].target`,
-        })
-        continue
-      }
-      references.push({
-        kind: resolved.kind,
-        node: resolved.node,
-        param: resolved.param,
-        sourceFile,
-        profileId: profile.id,
-        location: `reactive.analyser_to_params[${i}].target`,
-        referenceType: 'profile_reactive_target',
-      })
-    }
   }
+}
 
-  const mappingAbsolute = path.join(
-    rootDir,
-    'src',
-    'conditions',
-    'dimension-to-signal-mapping.json',
-  )
-  const mappingSource = rel(rootDir, mappingAbsolute)
+function collectStackReferences(
+  references: ContractReference[],
+  stack: NodeWithParams[],
+  kind: ReferenceKind,
+  sourceFile: string,
+  profileId: string,
+  locationPrefix: string,
+  nodeReferenceType: StackReferenceType,
+  paramReferenceType: StackReferenceType,
+) {
+  for (let i = 0; i < stack.length; i++) {
+    addNodeAndParamReferences(references, stack[i], {
+      kind,
+      sourceFile,
+      locationPrefix: `${locationPrefix}[${i}]`,
+      nodeReferenceType,
+      paramReferenceType,
+      profileId,
+    })
+  }
+}
+
+function collectReactiveReferences(
+  references: ContractReference[],
+  profile: LoadedProfileContract,
+  parseErrors: ContractIssue[],
+) {
+  const reactive = profile.profile.reactive?.analyser_to_params ?? []
+  for (let i = 0; i < reactive.length; i++) {
+    const entry = reactive[i]
+    const resolved = parseReactiveTarget(entry.target)
+    const location = `reactive.analyser_to_params[${i}].target`
+    if (!resolved) {
+      parseErrors.push({
+        severity: 'warning',
+        code: 'REACTIVE_TARGET_PARSE_WARNING',
+        message: `Could not parse reactive target "${entry.target}" in ${profile.profileId}`,
+        sourceFile: profile.sourceFile,
+        profileId: profile.profileId,
+        location,
+      })
+      continue
+    }
+    references.push({
+      kind: resolved.kind,
+      node: resolved.node,
+      param: resolved.param,
+      sourceFile: profile.sourceFile,
+      profileId: profile.profileId,
+      location,
+      referenceType: 'profile_reactive_target',
+    })
+  }
+}
+
+function collectProfileReferences(
+  profiles: LoadedProfileContract[],
+  references: ContractReference[],
+  parseErrors: ContractIssue[],
+) {
+  for (const profile of profiles) {
+    const { profile: data, profileId, sourceFile } = profile
+    collectStackReferences(
+      references,
+      data.video_stack,
+      'video',
+      sourceFile,
+      profileId,
+      'video_stack',
+      'profile_video_stack_node',
+      'profile_video_stack_param',
+    )
+    collectStackReferences(
+      references,
+      data.audio_stack?.chain ?? [],
+      'audio',
+      sourceFile,
+      profileId,
+      'audio_stack.chain',
+      'profile_audio_stack_node',
+      'profile_audio_stack_param',
+    )
+    collectReactiveReferences(references, profile, parseErrors)
+  }
+}
+
+function collectMappingMotifs(
+  references: ContractReference[],
+  motifs: MappingMotif[] | undefined,
+  kind: ReferenceKind,
+  sourceFile: string,
+  locationPrefix: string,
+  nodeReferenceType: MotifReferenceType,
+  paramReferenceType: MotifReferenceType,
+) {
+  for (let i = 0; i < (motifs ?? []).length; i++) {
+    const motif = motifs?.[i]
+    const node = String(motif?.node ?? '').toLowerCase()
+    if (!node) continue
+    addNodeAndParamReferences(
+      references,
+      { node, params: motif?.params_hint },
+      {
+        kind,
+        sourceFile,
+        locationPrefix: `${locationPrefix}[${i}]`,
+        nodeReferenceType,
+        paramReferenceType,
+      },
+    )
+  }
+}
+
+function collectMappingReferences(
+  references: ContractReference[],
+  mapping: MappingDocument,
+  sourceFile: string,
+) {
+  for (const [dimensionId, entry] of Object.entries(mapping.mapping ?? {})) {
+    const prefix = `mapping.${dimensionId}`
+    collectMappingMotifs(
+      references,
+      entry.video_motifs,
+      'video',
+      sourceFile,
+      `${prefix}.video_motifs`,
+      'mapping_video_motif_node',
+      'mapping_video_motif_param',
+    )
+    collectMappingMotifs(
+      references,
+      entry.audio_motifs,
+      'audio',
+      sourceFile,
+      `${prefix}.audio_motifs`,
+      'mapping_audio_motif_node',
+      'mapping_audio_motif_param',
+    )
+  }
+}
+
+function addParseError(
+  parseErrors: ContractIssue[],
+  code: 'MAPPING_PARSE_ERROR' | 'DIMENSIONS_PARSE_ERROR',
+  error: unknown,
+  sourceFile: string,
+) {
+  parseErrors.push({
+    severity: 'error',
+    code,
+    message: error instanceof Error ? error.message : `Failed to parse ${sourceFile}`,
+    sourceFile,
+  })
+}
+
+function collectMappingJsonReferences(
+  rootDir: string,
+  references: ContractReference[],
+  parseErrors: ContractIssue[],
+) {
+  const absolute = path.join(rootDir, 'src', 'conditions', 'dimension-to-signal-mapping.json')
+  const sourceFile = rel(rootDir, absolute)
   try {
-    const mapping = parseFirstJsonObject<{
-      mapping?: Record<
-        string,
-        {
-          video_motifs?: Array<{
-            node?: string
-            params_hint?: Record<string, unknown>
-          }>
-          audio_motifs?: Array<{
-            node?: string
-            params_hint?: Record<string, unknown>
-          }>
-        }
-      >
-    }>(readFileSync(mappingAbsolute, 'utf-8'), {
+    const mapping = parseFirstJsonObject<MappingDocument>(readFileSync(absolute, 'utf-8'), {
       predicate(value) {
-        const m = (value as { mapping?: unknown }).mapping
+        const m = (value as MappingDocument).mapping
         return m != null && typeof m === 'object' && !Array.isArray(m)
       },
     })
-    for (const [dimensionId, entry] of Object.entries(mapping.mapping ?? {})) {
-      for (let i = 0; i < (entry.video_motifs ?? []).length; i++) {
-        const motif = entry.video_motifs?.[i]
-        const node = String(motif?.node ?? '').toLowerCase()
-        if (!node) continue
-        references.push({
-          kind: 'video',
-          node,
-          sourceFile: mappingSource,
-          location: `mapping.${dimensionId}.video_motifs[${i}].node`,
-          referenceType: 'mapping_video_motif_node',
-        })
-        for (const [param, value] of Object.entries(motif?.params_hint ?? {})) {
-          references.push({
-            kind: 'video',
-            node,
-            param,
-            value,
-            sourceFile: mappingSource,
-            location: `mapping.${dimensionId}.video_motifs[${i}].params_hint.${param}`,
-            referenceType: 'mapping_video_motif_param',
-          })
-        }
-      }
-      for (let i = 0; i < (entry.audio_motifs ?? []).length; i++) {
-        const motif = entry.audio_motifs?.[i]
-        const node = String(motif?.node ?? '').toLowerCase()
-        if (!node) continue
-        references.push({
-          kind: 'audio',
-          node,
-          sourceFile: mappingSource,
-          location: `mapping.${dimensionId}.audio_motifs[${i}].node`,
-          referenceType: 'mapping_audio_motif_node',
-        })
-        for (const [param, value] of Object.entries(motif?.params_hint ?? {})) {
-          references.push({
-            kind: 'audio',
-            node,
-            param,
-            value,
-            sourceFile: mappingSource,
-            location: `mapping.${dimensionId}.audio_motifs[${i}].params_hint.${param}`,
-            referenceType: 'mapping_audio_motif_param',
-          })
-        }
-      }
-    }
+    collectMappingReferences(references, mapping, sourceFile)
   } catch (error) {
-    parseErrors.push({
-      severity: 'error',
-      code: 'MAPPING_PARSE_ERROR',
-      message: error instanceof Error ? error.message : `Failed to parse ${mappingSource}`,
-      sourceFile: mappingSource,
+    addParseError(parseErrors, 'MAPPING_PARSE_ERROR', error, sourceFile)
+  }
+}
+
+function collectDimensionNodes(
+  references: ContractReference[],
+  nodes: string[] | undefined,
+  kind: ReferenceKind,
+  sourceFile: string,
+  locationPrefix: string,
+  referenceType: DimensionReferenceType,
+) {
+  for (let i = 0; i < (nodes ?? []).length; i++) {
+    const node = String(nodes?.[i] ?? '').toLowerCase()
+    if (!node) continue
+    references.push({
+      kind,
+      node,
+      sourceFile,
+      location: `${locationPrefix}[${i}]`,
+      referenceType,
     })
   }
+}
 
-  const dimensionsAbsolute = path.join(rootDir, 'src', 'conditions', 'experience-dimensions.json')
-  const dimensionsSource = rel(rootDir, dimensionsAbsolute)
+function collectDimensionsReferences(
+  references: ContractReference[],
+  dimensions: DimensionsDocument,
+  sourceFile: string,
+) {
+  for (let i = 0; i < (dimensions.dimensions ?? []).length; i++) {
+    const dim = dimensions.dimensions?.[i]
+    const id = String(dim?.id ?? `dim_${i}`)
+    const prefix = `dimensions[${i}].motif_summary`
+    collectDimensionNodes(
+      references,
+      dim?.motif_summary?.video_nodes,
+      'video',
+      sourceFile,
+      `${prefix}.video_nodes (${id})`,
+      'dimensions_video_node',
+    )
+    collectDimensionNodes(
+      references,
+      dim?.motif_summary?.audio_nodes,
+      'audio',
+      sourceFile,
+      `${prefix}.audio_nodes (${id})`,
+      'dimensions_audio_node',
+    )
+  }
+}
+
+function collectDimensionsJsonReferences(
+  rootDir: string,
+  references: ContractReference[],
+  parseErrors: ContractIssue[],
+) {
+  const absolute = path.join(rootDir, 'src', 'conditions', 'experience-dimensions.json')
+  const sourceFile = rel(rootDir, absolute)
   try {
-    const dimensions = parseFirstJsonObject<{
-      dimensions?: Array<{
-        id?: string
-        motif_summary?: {
-          video_nodes?: string[]
-          audio_nodes?: string[]
-        }
-      }>
-    }>(readFileSync(dimensionsAbsolute, 'utf-8'), {
+    const dimensions = parseFirstJsonObject<DimensionsDocument>(readFileSync(absolute, 'utf-8'), {
       predicate(value) {
-        const dims = (value as { dimensions?: unknown }).dimensions
-        return Array.isArray(dims)
+        return Array.isArray((value as DimensionsDocument).dimensions)
       },
     })
-    for (let i = 0; i < (dimensions.dimensions ?? []).length; i++) {
-      const dim = dimensions.dimensions?.[i]
-      const id = String(dim?.id ?? `dim_${i}`)
-      for (let j = 0; j < (dim?.motif_summary?.video_nodes ?? []).length; j++) {
-        const node = String(dim?.motif_summary?.video_nodes?.[j] ?? '').toLowerCase()
-        if (!node) continue
-        references.push({
-          kind: 'video',
-          node,
-          sourceFile: dimensionsSource,
-          location: `dimensions[${i}].motif_summary.video_nodes[${j}] (${id})`,
-          referenceType: 'dimensions_video_node',
-        })
-      }
-      for (let j = 0; j < (dim?.motif_summary?.audio_nodes ?? []).length; j++) {
-        const node = String(dim?.motif_summary?.audio_nodes?.[j] ?? '').toLowerCase()
-        if (!node) continue
-        references.push({
-          kind: 'audio',
-          node,
-          sourceFile: dimensionsSource,
-          location: `dimensions[${i}].motif_summary.audio_nodes[${j}] (${id})`,
-          referenceType: 'dimensions_audio_node',
-        })
-      }
-    }
+    collectDimensionsReferences(references, dimensions, sourceFile)
   } catch (error) {
-    parseErrors.push({
-      severity: 'error',
-      code: 'DIMENSIONS_PARSE_ERROR',
-      message: error instanceof Error ? error.message : `Failed to parse ${dimensionsSource}`,
-      sourceFile: dimensionsSource,
-    })
+    addParseError(parseErrors, 'DIMENSIONS_PARSE_ERROR', error, sourceFile)
   }
+}
 
+export function loadContractJsonReferences(rootDir: string): LoadedContracts {
+  const { profiles, issues: parseErrors } = loadProfileContracts(rootDir)
+  const references: ContractReference[] = []
+  collectProfileReferences(profiles, references, parseErrors)
+  collectMappingJsonReferences(rootDir, references, parseErrors)
+  collectDimensionsJsonReferences(rootDir, references, parseErrors)
   return { profiles, references, parseErrors }
 }

@@ -21,6 +21,7 @@ import {
   createPresetPayload,
   createPresetSnapshot,
   migrateLegacyPresetPayload,
+  type ApplyPresetPayloadCallbacks,
   parsePresetLibraryWithDiagnostics,
   type PresetPayload,
   type PresetSnapshotV2,
@@ -64,6 +65,9 @@ export interface ConditionComposerPanelProps {
   onInteractionAmountChange: (v: number) => void
 
   onOpenEvidence: (docPath: EvidenceDocPath) => void
+  variant?: 'setup' | 'compact'
+  cameraRequesting?: boolean
+  onStartCamera?: () => void
 }
 
 import { strengthBadge, EvidenceButton } from './composerUtils'
@@ -71,25 +75,65 @@ import { MultimorbidPresetList } from './MultimorbidPresetList'
 import { SymptomDimensionList } from './SymptomDimensionList'
 import { AdvancedComposerPanel } from './AdvancedComposerPanel'
 import { PresetLibraryPanel } from './PresetLibraryPanel'
+import { filterCatalog } from './composerCatalog'
+import { CompositionMap } from './CompositionMap'
 
 function nowIso(): string {
   return new Date().toISOString()
 }
 
-function applyPayload(props: ConditionComposerPanelProps, payload: PresetPayload): void {
-  applyPresetPayload(payload, {
-    onModeChange: props.onModeChange,
-    onConditionIdChange: props.onConditionIdChange,
-    onPresetsChange: props.onPresetsChange,
-    onDimensionsChange: props.onDimensionsChange,
-    onIntensityChange: props.onIntensityChange,
-    onSafeModeChange: props.onSafeModeChange,
-    onReducedMotionChange: props.onReducedMotionChange,
-    onAudioEnabledChange: props.onAudioEnabledChange,
-    onCouplingStrengthChange: props.onCouplingStrengthChange,
-    onMaxFeedbackChange: props.onMaxFeedbackChange,
-    onInteractionAmountChange: props.onInteractionAmountChange,
+interface LoadedPresetLibrary {
+  snapshots: PresetSnapshotV2[]
+  warning: string | null
+}
+
+const PRESET_LIBRARY_PARSE_WARNING =
+  'Saved preset library could not be read completely. Existing storage was left unchanged.'
+const LEGACY_PRESET_MIGRATION_WARNING =
+  'Legacy preset storage could not be migrated. Existing storage was left unchanged.'
+
+function parseLegacyPreset(raw: string): PresetPayload | null {
+  try {
+    return migrateLegacyPresetPayload(JSON.parse(raw))
+  } catch {
+    return null
+  }
+}
+
+function migrateLegacyPreset(raw: string): PresetSnapshotV2 | null {
+  const payload = parseLegacyPreset(raw)
+  if (!payload) return null
+  const snapshot = createPresetSnapshot(payload, {
+    name: 'Migrated Preset',
+    createdAt: nowIso(),
   })
+  localStorage.setItem(PRESET_LIBRARY_STORAGE_KEY, JSON.stringify([snapshot]))
+  localStorage.removeItem(LEGACY_PRESET_STORAGE_KEY)
+  return snapshot
+}
+
+function loadPresetLibrary(): LoadedPresetLibrary {
+  const raw = localStorage.getItem(PRESET_LIBRARY_STORAGE_KEY)
+  const parsedResult = raw ? parsePresetLibraryWithDiagnostics(raw) : null
+  const snapshots = parsedResult?.snapshots ?? []
+  const parseWarning = parsedResult && !parsedResult.diagnostics.ok
+
+  if (parseWarning && snapshots.length === 0) {
+    return { snapshots, warning: PRESET_LIBRARY_PARSE_WARNING }
+  }
+  if (snapshots.length > 0) {
+    return { snapshots, warning: parseWarning ? PRESET_LIBRARY_PARSE_WARNING : null }
+  }
+
+  const legacyRaw = localStorage.getItem(LEGACY_PRESET_STORAGE_KEY)
+  if (!legacyRaw) return { snapshots, warning: null }
+  const migrated = migrateLegacyPreset(legacyRaw)
+  if (!migrated) return { snapshots, warning: LEGACY_PRESET_MIGRATION_WARNING }
+  return { snapshots: [migrated], warning: null }
+}
+
+function applyPayload(callbacks: ApplyPresetPayloadCallbacks, payload: PresetPayload): void {
+  applyPresetPayload(payload, callbacks)
 }
 
 function evidenceStrengthRank(value: unknown): number {
@@ -130,7 +174,47 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
     couplingStrength,
     maxFeedback,
     interactionAmount,
+    onModeChange,
+    onConditionIdChange,
+    onPresetsChange,
+    onDimensionsChange,
+    onIntensityChange,
+    onSafeModeChange,
+    onReducedMotionChange,
+    onAudioEnabledChange,
+    onCouplingStrengthChange,
+    onMaxFeedbackChange,
+    onInteractionAmountChange,
   } = props
+
+  const payloadCallbacks = useMemo<ApplyPresetPayloadCallbacks>(
+    () => ({
+      onModeChange,
+      onConditionIdChange,
+      onPresetsChange,
+      onDimensionsChange,
+      onIntensityChange,
+      onSafeModeChange,
+      onReducedMotionChange,
+      onAudioEnabledChange,
+      onCouplingStrengthChange,
+      onMaxFeedbackChange,
+      onInteractionAmountChange,
+    }),
+    [
+      onModeChange,
+      onConditionIdChange,
+      onPresetsChange,
+      onDimensionsChange,
+      onIntensityChange,
+      onSafeModeChange,
+      onReducedMotionChange,
+      onAudioEnabledChange,
+      onCouplingStrengthChange,
+      onMaxFeedbackChange,
+      onInteractionAmountChange,
+    ],
+  )
 
   const dims = useMemo(() => getExperienceDimensions(), [])
   const dimById = useMemo(
@@ -193,54 +277,13 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(PRESET_LIBRARY_STORAGE_KEY)
-      const parsedResult = raw ? parsePresetLibraryWithDiagnostics(raw) : null
-      const parsed = parsedResult?.snapshots ?? []
-      if (parsedResult && !parsedResult.diagnostics.ok) {
-        setLibraryWarning(
-          'Saved preset library could not be read completely. Existing storage was left unchanged.',
-        )
-        if (parsed.length === 0) {
-          setLibrary([])
-          return
-        }
-      } else {
-        setLibraryWarning(null)
-      }
-
-      if (parsed.length === 0) {
-        const legacyRaw = localStorage.getItem(LEGACY_PRESET_STORAGE_KEY)
-        if (legacyRaw) {
-          let legacyJson: unknown
-          try {
-            legacyJson = JSON.parse(legacyRaw)
-          } catch {
-            legacyJson = null
-          }
-          const legacyParsed = legacyJson != null ? migrateLegacyPresetPayload(legacyJson) : null
-          if (legacyParsed) {
-            const migrated = createPresetSnapshot(legacyParsed, {
-              name: 'Migrated Preset',
-              createdAt: nowIso(),
-            })
-            const next = [migrated]
-            localStorage.setItem(PRESET_LIBRARY_STORAGE_KEY, JSON.stringify(next))
-            localStorage.removeItem(LEGACY_PRESET_STORAGE_KEY)
-            setLibrary(next)
-            setSelectedLibraryId(migrated.id)
-            setPresetName(migrated.name)
-            return
-          }
-          setLibraryWarning(
-            'Legacy preset storage could not be migrated. Existing storage was left unchanged.',
-          )
-        }
-      }
-
-      setLibrary(parsed)
-      if (parsed.length > 0) {
-        setSelectedLibraryId(parsed[0].id)
-        setPresetName(parsed[0].name)
+      const loaded = loadPresetLibrary()
+      setLibrary(loaded.snapshots)
+      setLibraryWarning(loaded.warning)
+      const selected = loaded.snapshots[0]
+      if (selected) {
+        setSelectedLibraryId(selected.id)
+        setPresetName(selected.name)
       }
     } catch (err) {
       logger.warn('ConditionComposerPanel preset library load failed', err)
@@ -261,53 +304,17 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
       audioEnabled: false,
     }
 
-    applyPresetPayload(sharedPayload, {
-      onModeChange: props.onModeChange,
-      onConditionIdChange: props.onConditionIdChange,
-      onPresetsChange: props.onPresetsChange,
-      onDimensionsChange: props.onDimensionsChange,
-      onIntensityChange: props.onIntensityChange,
-      onSafeModeChange: props.onSafeModeChange,
-      onReducedMotionChange: props.onReducedMotionChange,
-      onAudioEnabledChange: props.onAudioEnabledChange,
-      onCouplingStrengthChange: props.onCouplingStrengthChange,
-      onMaxFeedbackChange: props.onMaxFeedbackChange,
-      onInteractionAmountChange: props.onInteractionAmountChange,
-    })
+    applyPayload(payloadCallbacks, sharedPayload)
     setSaveStatusTimed('loaded')
 
     const clearedUrl = `${window.location.pathname}${window.location.search}`
     window.history.replaceState(window.history.state, '', clearedUrl)
-  }, [
-    props.onAudioEnabledChange,
-    props.onConditionIdChange,
-    props.onCouplingStrengthChange,
-    props.onDimensionsChange,
-    props.onIntensityChange,
-    props.onInteractionAmountChange,
-    props.onMaxFeedbackChange,
-    props.onModeChange,
-    props.onPresetsChange,
-    props.onReducedMotionChange,
-    props.onSafeModeChange,
-    setSaveStatusTimed,
-  ])
+  }, [payloadCallbacks, setSaveStatusTimed])
 
-  const filteredCatalog = useMemo(() => {
-    const q = conditionQuery.trim().toLowerCase()
-    const all = props.catalog ?? []
-    if (!q) return all
-    const next = all.filter((entry) => {
-      const hay =
-        `${entry.label} ${entry.description ?? ''} ${entry.id} ${(entry.tags ?? []).join(' ')}`.toLowerCase()
-      return hay.includes(q)
-    })
-    if (!next.some((entry) => entry.id === props.conditionId)) {
-      const selected = all.find((entry) => entry.id === props.conditionId)
-      if (selected) next.unshift(selected)
-    }
-    return next
-  }, [props.catalog, conditionQuery, props.conditionId])
+  const filteredCatalog = useMemo(
+    () => filterCatalog(props.catalog, props.conditionId, conditionQuery),
+    [props.catalog, conditionQuery, props.conditionId],
+  )
 
   const filteredDims = useMemo(() => {
     const q = dimensionQuery.trim().toLowerCase()
@@ -433,17 +440,26 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
 
   const handleLoadLocal = () => {
     if (!selectedSnapshot) return
-    applyPayload(props, selectedSnapshot.payload)
+    applyPayload(payloadCallbacks, selectedSnapshot.payload)
     setSaveStatusTimed('loaded')
   }
 
   return (
-    <section className="composer" aria-label="Experience settings">
+    <section
+      className={`composer composer--${props.variant ?? 'setup'}`}
+      aria-label="Experience settings"
+    >
       <div className="composer__header">
         <div>
-          <h2 className="composer__heading">Choose an experience</h2>
-          <p className="composer__hint">Start with dimensions or use a curated collection.</p>
+          <div className="composer__eyebrow">Setup / Experience</div>
+          <h2 className="composer__heading">Shape the metaphor.</h2>
+          <p className="composer__hint">
+            Choose patterns to combine into one bounded audiovisual profile.
+          </p>
         </div>
+      </div>
+
+      <div className="composer__workspace">
         <div className="composer__mode">
           {(
             [
@@ -451,127 +467,166 @@ export function ConditionComposerPanel(props: ConditionComposerPanelProps) {
               { id: 'preset', label: 'Curated collections' },
               { id: 'multimorbid', label: 'Combine collections' },
             ] as const
-          ).map((m) => (
-            <label key={m.id} className="composer__toggle">
+          ).map((mode) => (
+            <label key={mode.id} className="composer__toggle">
               <input
                 type="radio"
                 name="composer-mode"
-                checked={props.mode === m.id}
-                onChange={() => props.onModeChange(m.id)}
+                checked={props.mode === mode.id}
+                onChange={() => props.onModeChange(mode.id)}
               />
-              <span>{m.label}</span>
+              <span>{mode.label}</span>
             </label>
           ))}
         </div>
-      </div>
 
-      {(props.mode === 'preset' || props.mode === 'multimorbid') && (
-        <label className="composer__slider">
-          <span>Filter</span>
-          <input
-            type="text"
-            value={conditionQuery}
-            placeholder="Search experiences"
-            onChange={(e) => setConditionQuery(e.target.value)}
-            aria-label="Experience search"
-          />
-          <span className="composer__slider-val">{filteredCatalog.length}</span>
-        </label>
-      )}
-
-      {props.mode === 'preset' && (
-        <div className="composer__section">
-          <div className="composer__title">Curated collection</div>
-          <ConditionPicker
-            catalog={filteredCatalog}
-            value={props.conditionId}
-            onChange={props.onConditionIdChange}
-            aria-label="Curated collection"
-          />
-          <div className="composer__row-meta">
-            {currentConditionBadge && (
-              <span className={currentConditionBadge.className}>{currentConditionBadge.label}</span>
-            )}
-            <EvidenceButton
-              doc={`docs/references/conditions/${props.conditionId}.md`}
-              onOpen={props.onOpenEvidence}
-            />
-          </div>
-        </div>
-      )}
-
-      {props.mode === 'multimorbid' && (
-        <MultimorbidPresetList
-          catalog={filteredCatalog}
-          presetIds={presetIds}
+        <CompositionMap
+          mode={props.mode}
+          conditionId={props.conditionId}
+          dimensions={props.dimensions}
           presets={props.presets}
-          conditionStrength={conditionStrength}
-          onPresetsChange={props.onPresetsChange}
-          onOpenEvidence={props.onOpenEvidence}
         />
-      )}
 
-      {props.mode === 'symptom' && (
-        <>
-          <label className="composer__slider">
-            <span>Filter</span>
-            <input
-              type="text"
-              value={dimensionQuery}
-              placeholder="Search dimensions"
-              onChange={(e) => setDimensionQuery(e.target.value)}
-              aria-label="Dimension search"
-            />
-            <span className="composer__slider-val">{filteredDims.length}</span>
-          </label>
-          <SymptomDimensionList
-            dims={filteredDims}
-            dimById={dimById}
-            dimIds={dimIds}
-            dimensions={props.dimensions}
-            onDimensionsChange={props.onDimensionsChange}
-            onOpenEvidence={props.onOpenEvidence}
-          />
-          {props.dimensions.length === 0 && (
-            <p className="composer__empty" role="status">
-              No dimensions selected. Choose one or more to prepare an audiovisual profile.
-            </p>
+        <div className="composer__inspector">
+          <div className="composer__inspectorHeader">
+            <div className="composer__title">
+              {props.mode === 'symptom'
+                ? 'Experience dimensions'
+                : props.mode === 'preset'
+                  ? 'Curated collection'
+                  : 'Combined collections'}
+            </div>
+            <p className="composer__hint">Media remains off while you configure this view.</p>
+          </div>
+
+          {(props.mode === 'preset' || props.mode === 'multimorbid') && (
+            <label className="composer__slider">
+              <span>Filter</span>
+              <input
+                type="text"
+                value={conditionQuery}
+                placeholder="Search experiences"
+                onChange={(event) => setConditionQuery(event.target.value)}
+                aria-label="Experience search"
+              />
+              <span className="composer__slider-val">{filteredCatalog.length}</span>
+            </label>
           )}
-        </>
-      )}
 
-      <AdvancedComposerPanel
-        couplingStrength={props.couplingStrength}
-        maxFeedback={props.maxFeedback}
-        interactionAmount={props.interactionAmount}
-        onCouplingStrengthChange={props.onCouplingStrengthChange}
-        onMaxFeedbackChange={props.onMaxFeedbackChange}
-        onInteractionAmountChange={props.onInteractionAmountChange}
-      />
-      <PresetLibraryPanel
-        library={library}
-        selectedId={selectedLibraryId}
-        name={presetName}
-        warning={libraryWarning}
-        hasSelection={selectedSnapshot != null}
-        canUndoDelete={deletedSnapshot != null}
-        copyStatus={copyStatus}
-        copyAction={copyAction}
-        saveStatus={saveStatus}
-        onNameChange={setPresetName}
-        onSelectionChange={(id) => {
-          setSelectedLibraryId(id)
-          const selected = library.find((item) => item.id === id)
-          if (selected) setPresetName(selected.name)
-        }}
-        onSave={handleSaveLocal}
-        onUpdate={handleOverwriteLocal}
-        onLoad={handleLoadLocal}
-        onDelete={handleDeleteLocal}
-        onCopyConfiguration={() => void handleCopy()}
-        onCopyShareLink={() => void handleCopyShareLink()}
-        onUndoDelete={handleUndoDelete}
-      />
+          {props.mode === 'preset' && (
+            <div className="composer__section">
+              <ConditionPicker
+                catalog={filteredCatalog}
+                value={props.conditionId}
+                onChange={props.onConditionIdChange}
+                aria-label="Curated collection"
+              />
+              <div className="composer__row-meta">
+                {currentConditionBadge && (
+                  <span className={currentConditionBadge.className}>
+                    {currentConditionBadge.label}
+                  </span>
+                )}
+                <EvidenceButton
+                  doc={`docs/references/conditions/${props.conditionId}.md`}
+                  onOpen={props.onOpenEvidence}
+                />
+              </div>
+            </div>
+          )}
+
+          {props.mode === 'multimorbid' && (
+            <MultimorbidPresetList
+              catalog={filteredCatalog}
+              presetIds={presetIds}
+              presets={props.presets}
+              conditionStrength={conditionStrength}
+              onPresetsChange={props.onPresetsChange}
+              onOpenEvidence={props.onOpenEvidence}
+            />
+          )}
+
+          {props.mode === 'symptom' && (
+            <>
+              <label className="composer__slider">
+                <span>Filter</span>
+                <input
+                  type="text"
+                  value={dimensionQuery}
+                  placeholder="Search dimensions"
+                  onChange={(event) => setDimensionQuery(event.target.value)}
+                  aria-label="Dimension search"
+                />
+                <span className="composer__slider-val">{filteredDims.length}</span>
+              </label>
+              <SymptomDimensionList
+                dims={filteredDims}
+                dimById={dimById}
+                dimIds={dimIds}
+                dimensions={props.dimensions}
+                onDimensionsChange={props.onDimensionsChange}
+                onOpenEvidence={props.onOpenEvidence}
+              />
+              {props.dimensions.length === 0 && (
+                <p className="composer__empty" role="status">
+                  No dimensions selected. Choose one or more to prepare an audiovisual profile.
+                </p>
+              )}
+            </>
+          )}
+
+          <AdvancedComposerPanel
+            couplingStrength={props.couplingStrength}
+            maxFeedback={props.maxFeedback}
+            interactionAmount={props.interactionAmount}
+            onCouplingStrengthChange={props.onCouplingStrengthChange}
+            onMaxFeedbackChange={props.onMaxFeedbackChange}
+            onInteractionAmountChange={props.onInteractionAmountChange}
+          />
+          <PresetLibraryPanel
+            library={library}
+            selectedId={selectedLibraryId}
+            name={presetName}
+            warning={libraryWarning}
+            hasSelection={selectedSnapshot != null}
+            canUndoDelete={deletedSnapshot != null}
+            copyStatus={copyStatus}
+            copyAction={copyAction}
+            saveStatus={saveStatus}
+            onNameChange={setPresetName}
+            onSelectionChange={(id) => {
+              setSelectedLibraryId(id)
+              const selected = library.find((item) => item.id === id)
+              if (selected) setPresetName(selected.name)
+            }}
+            onSave={handleSaveLocal}
+            onUpdate={handleOverwriteLocal}
+            onLoad={handleLoadLocal}
+            onDelete={handleDeleteLocal}
+            onCopyConfiguration={() => void handleCopy()}
+            onCopyShareLink={() => void handleCopyShareLink()}
+            onUndoDelete={handleUndoDelete}
+          />
+
+          {props.onStartCamera && (
+            <div className="composer__readiness">
+              <div>
+                <strong>Ready to preview</strong>
+                <span>Camera, sound, and microphone remain off.</span>
+              </div>
+              <button
+                type="button"
+                className="ie-btn ie-btn--accent"
+                onClick={props.onStartCamera}
+                disabled={props.cameraRequesting}
+                aria-busy={props.cameraRequesting}
+              >
+                {props.cameraRequesting ? 'Requesting camera…' : 'Start camera'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </section>
   )
 }

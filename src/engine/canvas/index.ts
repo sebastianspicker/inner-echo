@@ -114,6 +114,17 @@ export function startOverlayLoop(
   let stopped = false
   let fallbackInstalled = false
 
+  const createControl = (): OverlayControl => ({
+    stop: () => {
+      if (stopped) return
+      stopped = true
+      delegateStop()
+      showCanvas(null)
+    },
+    setParams: (params) => delegateSetParams(params),
+    getDiagnostics: () => delegateGetDiagnostics(),
+  })
+
   const install2dFallback = (error: Error | null = null): void => {
     if (stopped || fallbackInstalled) return
     fallbackInstalled = true
@@ -153,28 +164,10 @@ export function startOverlayLoop(
       const effectsActive = nodes.length > 0
       delegateGetDiagnostics = () => ({ ...control.getDiagnostics(), effectsActive })
       runtimeCallbacks?.onStateChange?.({ rendererMode: 'webgl', effectsActive, error: null })
-      return {
-        stop: () => {
-          if (stopped) return
-          stopped = true
-          delegateStop()
-          showCanvas(null)
-        },
-        setParams: (params) => delegateSetParams(params),
-        getDiagnostics: () => delegateGetDiagnostics(),
-      }
+      return createControl()
     }
   }
 
   install2dFallback()
-  return {
-    stop: () => {
-      if (stopped) return
-      stopped = true
-      delegateStop()
-      showCanvas(null)
-    },
-    setParams: (params) => delegateSetParams(params),
-    getDiagnostics: () => delegateGetDiagnostics(),
-  }
+  return createControl()
 }

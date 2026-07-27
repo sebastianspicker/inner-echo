@@ -1,63 +1,47 @@
-# Evidence & Method (inner-echo)
+# Evidence method
 
-This folder is the project’s evidence navigation layer. It exists so the website and repo never have to say “trust us”: every experience dimension and every mapping can be traced to an in-repo evidence document.
+This directory documents the sources, rationale, and limits behind Inner Echo's experience dimensions and audiovisual motifs. It does not establish diagnostic, clinical, or therapeutic validity.
 
-## What this is / what this is not
+## Non-diagnostic disclaimer
 
-- **What this is**: a set of cautious, non-diagnostic design rationales for audiovisual metaphors (video/audio motifs) that users can browse and verify.
-- **What this is not**: a clinical simulation, a diagnostic tool, or medical advice. This project is an artistic, educational metaphor.
+The evidence corpus supports discussion of reported experience dimensions. Mapping those dimensions to a video or audio motif remains a design decision. A strong source for a phenomenon does not make an overlay an accurate representation of a diagnosis or an individual.
 
-## Non-diagnostic disclaimer (required reading)
+The application uses these in-repository sources:
 
-Inner Echo describes experience dimensions (e.g., “Hyperarousal”, “Rumination loop”) as metaphor targets, not diagnoses. Any mention of psychological or perceptual phenomena is framed as:
+- `research/` for long-form research notes and bibliographies
+- `EVIDENCE_MATRIX.md` for dimension-level source and confidence summaries
+- `dimensions/` for individual dimension pages
+- `motifs/` for audiovisual motif pages
+- `conditions/` for profile summaries assembled from dimensions
+- `MAPPING_SUMMARY.md` for mappings used by the current composer data
 
-- “consistent with reports of…”
-- “a cautious mapping hypothesis…”
-- “a design metaphor for…”
+## Evidence labels
 
-Never as “this is what disorder X looks like”.
+| Label | Meaning |
+|---|---|
+| High | Multiple sources in the corpus support the described phenomenon. |
+| Medium | The corpus supports the phenomenon, but details or interpretation remain limited. |
+| Low | Support in the corpus is limited. |
+| Hypothesis | The specific relationship is not supported clearly enough to state as evidence-backed. |
 
-## Methodology (how evidence is selected and represented)
+Motif relationships use these labels:
 
-### Evidence corpus (source of truth)
+| Label | Meaning |
+|---|---|
+| Supported | The corpus contains an explicit rationale for the motif relationship. |
+| Mixed | The phenomenon is supported, but the motif choice is partly interpretive. |
+| Hypothesis | The motif relationship is not clearly supported. |
+| Artistic | The motif is an artistic design choice without a source-backed relationship claim. |
 
-The only sources we cite in the product are documents that exist in this repo under:
+These labels communicate the state of this repository's source review. They are not certainty scores.
 
-- `docs/references/reports/` — long-form research synthesis (includes bibliographies)
-- `docs/references/EVIDENCE_MATRIX.md` — condensed mapping matrix
-- `docs/references/dimensions/*.md` — one page per experience dimension (short, navigable)
-- `docs/REFERENCES_AUDIT.md` — the current “what’s wired by default” inventory (dimension → motifs/nodes → rationale doc)
+## Authoring requirements
 
-If a claim is not supported by the corpus above, it must be labeled as an evidence gap and kept conservative / off-by-default.
+- Cite only sources present in the repository corpus.
+- Distinguish source-backed observations from implementation behavior and design inference.
+- Mark unsupported relationships as hypotheses.
+- Keep uncertain motifs conservative and off by default where practical.
+- Do not claim diagnosis, assessment, treatment, simulation accuracy, or mental-state inference.
+- Preserve Stop Everything, Safe Mode, Reduced Motion, bounded feedback, and conservative audio levels.
 
-### Evidence strength ratings (High / Medium / Low)
-
-Evidence strength is a communication tool, not a clinical certainty score.
-
-- **High**: multiple converging sources within the evidence corpus support the described phenomenon and the mapping is conservative.
-- **Medium**: some support exists, but there are plausible alternatives, missing details, or the mapping is more interpretive.
-- **Low**: limited discussion in the corpus; treat as fragile and keep subtle.
-- **Hypothesis (evidence gap)**: not clearly supported; must be labeled and default-conservative.
-
-### Supported vs Mixed vs Hypothesis (claim labeling)
-
-When we describe a dimension→motif relationship, we label it:
-
-- **Supported**: the corpus explicitly supports the relationship as a plausible metaphor.
-- **Mixed**: the corpus supports the phenomenon, but the specific motif choice is partly interpretive.
-- **Hypothesis**: the corpus does not support the relationship clearly; kept conservative and clearly marked.
-
-## Safety & ethics notes (product posture)
-
-- Avoid flicker/strobe and sudden loud transients.
-- Always provide Stop Everything, Safe Mode, and Reduced Motion.
-- Keep modulation smooth; clamp temporal feedback; keep audio under a conservative ceiling.
-
-## Navigation map (canonical files)
-
-- `docs/references/INDEX.md` — quick links to all evidence pages
-- `docs/references/EVIDENCE_MATRIX.md` — dimension → motifs → evidence
-- `docs/references/CONTRIBUTIONS_AND_LIMITS.md` — limitations, controversies, and what is not supported
-- `docs/references/dimensions/*.md` — per-dimension pages with careful summaries and links into the corpus
-- `docs/references/conditions/*.md` — per-condition evidence summaries (assembled from dimensions)
-- `docs/REFERENCES_AUDIT.md` — “what the product uses by default” inventory
+Start with [INDEX.md](INDEX.md) or [EVIDENCE_MATRIX.md](EVIDENCE_MATRIX.md).

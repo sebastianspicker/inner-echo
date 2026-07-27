@@ -1,63 +1,51 @@
-# Inner Echo — Documentation overview
+# Inner Echo documentation overview
 
-This repo contains a privacy-first, client-only web app: an audio-visual overlay on the webcam feed. Users begin with experience dimensions or optionally choose contextual curated collections, then apply a responsive visual and optional audio metaphor. It is an artistic, educational metaphor — not a diagnostic or therapy tool.
+This documentation describes the current client-only browser application, its runtime contracts, and the evidence and safety boundaries around its audiovisual metaphors.
 
----
+## Maintained documents
 
-## Documentation structure (canonical)
+| Document | Purpose |
+|---|---|
+| [../README.md](../README.md) | Public repository entry point, setup, usage, screenshots, and validation commands. |
+| [10_PRODUCT.md](10_PRODUCT.md) | Implemented alpha scope, supported uses, non-goals, and limitations. |
+| [20_ARCHITECTURE.md](20_ARCHITECTURE.md) | Runtime ownership, data flow, fallback behavior, and module boundaries. |
+| [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md) | Safety, permission, privacy, sensory, and language requirements. |
+| [40_CONDITIONS.md](40_CONDITIONS.md) | Profile and experience-dimension contracts and authoring rules. |
+| [RELIABILITY.md](RELIABILITY.md) | Browser evidence, runtime fallbacks, known issues, and manual checks. |
+| [SECURITY.md](SECURITY.md) | Security reporting, privacy boundaries, headers, and release checks. |
+| [RELEASING.md](RELEASING.md) | Local alpha validation, artifact checks, and proposed tag structure. |
+| [CONTRACT_VERIFICATION.md](CONTRACT_VERIFICATION.md) | Runtime node registry and JSON contract checks. |
+| [references/](references/README.md) | Evidence method, dimension pages, motif pages, condition summaries, and research notes. |
+| [generated/](generated/README.md) | Derived catalog and schema references. |
 
-| Doc | Purpose |
-|-----|--------|
-| [../PRODUCT.md](../PRODUCT.md) | Public product position, audience, boundaries, and accessibility commitment. |
-| [../DESIGN.md](../DESIGN.md) | Public-alpha visual system and UI guardrails. |
-| [frontend-ux-audit.md](frontend-ux-audit.md) | Source-reviewed UX baseline and implementation priorities. |
-| [00_OVERVIEW.md](00_OVERVIEW.md) | This file: navigation and conventions. |
-| [10_PRODUCT.md](10_PRODUCT.md) | Product goals, MVP scope, user stories, non-goals. |
-| [20_ARCHITECTURE.md](20_ARCHITECTURE.md) | System architecture, data flow, frontend/engine, reliability. |
-| [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md) | Safety (Stop Everything, Safe Mode, Reduced Motion), ethics, design principles. |
-| [40_CONDITIONS.md](40_CONDITIONS.md) | Conditions and experience dimensions; evidence and mapping; links to references. |
-| [RELEASE_RC.md](RELEASE_RC.md) | Release-candidate one-pass runbook and tag process. |
-| [references/](references/README.md) | Evidence rationale; dimension docs; Evidence Matrix; long-form reports. |
-| [generated/](generated/README.md) | Generated catalog and schema (do not edit by hand). |
+## Maintainer code path
 
-Completed audit, plan, status, and ledger files are not canonical documentation.
-Keep them out of active navigation; archive them locally under `docs/archive/`
-or delete them when they are superseded. `docs/archive/` is ignored and should
-not be committed.
+For an initial code read:
 
-The canonical public screenshot set is `assets/readme/screenshots/`. Local tool
-state, reports, archives, environment values, and ad-hoc captures are excluded by
-the root `.gitignore`; see [00_DOC_INVENTORY.md](00_DOC_INVENTORY.md) for the full boundary.
+1. `src/main.tsx` mounts the application.
+2. `src/app/App.tsx` defines the top-level shell.
+3. `src/ui/CameraView.tsx` coordinates visible state, permissions, safety controls, and runtime cleanup.
+4. `src/ui/hooks/useProfileLoad.ts` loads a profile or composer result.
+5. `src/conditions/graphBuilder.ts` converts `video_stack` entries into video nodes.
+6. `src/ui/hooks/useReactivePipeline.ts` starts the overlay and reactive audio and video coupling.
+7. `src/engine/audio/audioEngine.ts` owns WebAudio, optional microphone input, and audio effects.
+8. `src/engine/canvas/webglPipeline.ts` owns WebGL resources, the frame loop, metrics, and fallback boundaries.
+9. `src/contractVerification/` keeps profile references aligned with implemented audio and video nodes.
 
----
+Profile JSON under `src/conditions/profiles/` is runtime data. Validate changes with `npm run verify:contracts`, `npm run conditions:validate`, and the relevant tests.
 
-## New maintainer code path
+Tests are organized under `tests/unit/`, `tests/helpers/`, and `tests/e2e/`. Repository tooling is grouped by responsibility under `scripts/docs/`, `scripts/validation/`, `scripts/screenshots/`, `scripts/release/`, and `scripts/lib/`.
 
-For the first code read, follow this path instead of scanning files alphabetically:
+## Evidence sources
 
-1. `src/app/App.tsx` mounts the single app surface.
-2. `src/ui/CameraView.tsx` owns user-facing state and coordinates camera, audio, profile, and evidence UI.
-3. `src/ui/hooks/useProfileLoad.ts` selects either a preset profile or a composed profile.
-4. `src/conditions/graphBuilder.ts` converts profile `video_stack` entries into live `VideoNode` instances.
-5. `src/ui/hooks/useReactivePipeline.ts` starts the WebGL/Canvas overlay and wires reactive audio/video coupling.
-6. `src/engine/audio/audioEngine.ts` owns WebAudio, optional mic input, analyser metrics, and audio FX.
-7. `src/engine/canvas/webglPipeline.ts` owns the frame loop, render targets, video metrics, and 2D fallback boundary.
-8. `src/contractVerification/` keeps JSON profile references aligned with implemented audio/video node contracts.
+- `docs/references/` contains the maintained evidence corpus and stated limitations.
+- `docs/references/MAPPING_SUMMARY.md` records the current mapping from dimensions to motifs and evidence pages.
+- `src/conditions/` contains the executable profile and dimension mappings.
 
-The profile JSON under `src/conditions/profiles/` is runtime data, not sample data. Changes there should be treated as contract changes and verified with `npm run verify:contracts`.
+Do not infer clinical validity from an implemented mapping. Documentation must distinguish source-backed statements, design hypotheses, runtime behavior, and validation results.
 
----
+## Documentation boundary
 
-## Source of truth (evidence)
+The files linked above describe the current application. Historical release notes do not override runtime source, configuration, tests, or the current validation status.
 
-- **docs/references/**: canonical evidence corpus (dimension docs, motif docs, condition summaries, and reports).
-- **docs/REFERENCES_AUDIT.md**: current wiring view of what is used by defaults.
-- **Conditions data**: runtime data in `src/conditions/`; evidence linkage declared in profile references and dimension mappings.
-
----
-
-## Conventions
-
-- **Language:** Neutral, non-stigmatizing. Use "suggests", "is consistent with", "may align with" for evidence-based claims.
-- **Citations:** Link to repo paths (e.g. `references/dimensions/hyperarousal.md`); no invented external citations.
-- **Safety:** Stop Everything, Safe Mode, Reduced Motion, and Audio optional are required. See [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md).
+The public screenshot set is `assets/readme/screenshots/` and is verified by its manifest.

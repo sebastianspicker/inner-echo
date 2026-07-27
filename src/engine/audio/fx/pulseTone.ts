@@ -1,5 +1,5 @@
 /**
- * SSOT: pulse_tone — a very quiet pulsing tone mixed into the chain (safety-first).
+ * SSOT: pulse_tone: a very quiet pulsing tone mixed into the chain (safety-first).
  *
  * Params:
  * - rate (Hz)
@@ -9,6 +9,7 @@
 
 import type { AudioModule } from '../types'
 import { clamp } from '../../../utils/numeric'
+import { createRoutedAudioModule } from './routedAudioModule'
 
 export interface PulseToneParams {
   rate?: number
@@ -81,13 +82,9 @@ export function createPulseTone(
 
   set(params)
 
-  return {
-    connect(destination: AudioNode): void {
-      out.connect(destination)
-    },
-    getInput(): AudioNode {
-      return input
-    },
+  return createRoutedAudioModule({
+    input,
+    output: out,
     setParams(p: Record<string, unknown>): void {
       set({
         rate: p.rate as number | undefined,
@@ -111,5 +108,5 @@ export function createPulseTone(
       offset.disconnect()
       toneGain.disconnect()
     },
-  }
+  })
 }

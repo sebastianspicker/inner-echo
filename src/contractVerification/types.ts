@@ -1,5 +1,3 @@
-import type { Profile } from '../conditions/schema'
-
 export type ContractParamType = 'number' | 'boolean' | 'enum'
 export type IssueSeverity = 'error' | 'warning'
 export type CheckStatus = 'ok' | 'warning' | 'error'
@@ -100,7 +98,7 @@ export interface ContractReference {
 export interface LoadedProfileContract {
   profileId: string
   sourceFile: string
-  profile: Profile
+  profile: import('../conditions/schema').Profile
 }
 
 export interface LoadedContracts {

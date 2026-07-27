@@ -1,17 +1,23 @@
 ---
 name: Feature request
-about: Propose a new experience dimension, motif, or tool improvement
+about: Propose a scoped behavior, experience dimension, or motif change
 labels: enhancement
 ---
 
-**What would you like?**
-<!-- Describe the feature or change -->
+Do not post secrets, identifying health information, private first-person material, raw media, device identifiers, or confidential vulnerability details.
 
-**Why is this useful?**
-<!-- Context: who benefits, what problem it solves -->
+## Requested change
 
-**Evidence or references (if applicable)**
-<!-- For new experience dimensions or motifs, link to relevant research or first-person accounts -->
+Describe the behavior or contract you want to change.
 
-**Safety considerations**
-<!-- Does this involve camera, audio, visual effects, or sensitive content? Note any accessibility concerns -->
+## Use case
+
+Explain who needs the change and the current limitation. Do not include identifying personal details.
+
+## Evidence and references
+
+For an experience dimension or motif, link to sources that can be included in the public evidence corpus and state any evidence limits.
+
+## Safety, privacy, and accessibility
+
+Describe effects on camera, microphone, audio, motion, luminance, permissions, local data, keyboard access, and assistive technology.

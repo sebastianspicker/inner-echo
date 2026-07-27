@@ -1,0 +1,39 @@
+Inner Echo third-party notices
+
+This file records packages represented in the browser distribution generated
+from package-lock.json. Inner Echo does not relicense these packages. The
+corresponding license texts are distributed in third-party-licenses/.
+
+DOMPurify 3.4.12
+Package license: MPL-2.0 OR Apache-2.0
+Selected distribution terms: Apache-2.0
+License text: third-party-licenses/dompurify-3.4.12-Apache-2.0.txt
+
+@types/trusted-types 2.0.7
+Package license: MIT
+License text: third-party-licenses/types-trusted-types-2.0.7-MIT.txt
+This package supplies type declarations used by DOMPurify.
+
+marked 17.0.5
+Package license: MIT
+License and incorporated Markdown notice text: third-party-licenses/marked-17.0.5.txt
+
+react 19.2.4
+Package license: MIT
+License text: third-party-licenses/react-19.2.4-MIT.txt
+
+react-dom 19.2.4
+Package license: MIT
+License text: third-party-licenses/react-dom-19.2.4-MIT.txt
+
+scheduler 0.27.0
+Package license: MIT
+License text: third-party-licenses/scheduler-0.27.0-MIT.txt
+
+three 0.183.2
+Package license: MIT
+License text: third-party-licenses/three-0.183.2-MIT.txt
+
+zod 4.3.6
+Package license: MIT
+License text: third-party-licenses/zod-4.3.6-MIT.txt
