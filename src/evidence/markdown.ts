@@ -5,15 +5,16 @@ import DOMPurify from 'dompurify'
  * Render markdown to safe HTML for in-app evidence viewing.
  * Evidence docs are repo-controlled, but we still sanitize defensively.
  */
-export function renderEvidenceMarkdown(md: string): { html: string; title: string } {
+export function renderEvidenceMarkdown(md: string): { fragment: DocumentFragment; title: string } {
   const raw = marked.parse(md, {
     gfm: true,
     breaks: false,
     async: false,
   })
 
-  const html = DOMPurify.sanitize(raw, {
+  const fragment = DOMPurify.sanitize(raw, {
     USE_PROFILES: { html: true },
+    RETURN_DOM_FRAGMENT: true,
   })
 
   // Secure title extraction: read the first line and check if it starts with #.
@@ -21,5 +22,5 @@ export function renderEvidenceMarkdown(md: string): { html: string; title: strin
   const firstLine = md.split('\n')[0] || ''
   const titleMatch = firstLine.trim().match(/^#\s+(.+)$/)
   const title = titleMatch?.[1]?.trim() ?? 'Evidence'
-  return { html, title }
+  return { fragment, title }
 }

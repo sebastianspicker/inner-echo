@@ -1,11 +1,17 @@
 /**
- * SSOT: soft_blur — subtle blur (single-pass, low cost).
+ * SSOT: soft_blur: subtle blur (single-pass, low cost).
  * Note: We intentionally keep the kernel small to avoid performance issues.
  */
 
 import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
-import { applyUvParams, clamp, resolveNumberParam, QUAD_VERTEX_SHADER } from './paramUtils'
+import { applyUvParams, clamp, resolveNumberParam } from './paramUtils'
+import {
+  bindInputTexture,
+  createEffectMaterial,
+  disposeEffectMaterial,
+  updateTexelSize,
+} from './shaderMaterial'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -48,36 +54,23 @@ export class SoftBlurNode implements VideoNode {
     amount = clamp(amount, 0, 0.35)
     this.material.uniforms.u_amount.value = amount
     // Update texel size from texture dimensions for aspect-correct blur
-    const tex = this.material.uniforms.u_map.value as Texture | null
-    const img = tex?.image as { width?: number; height?: number } | undefined
-    const w = img?.width ?? 400
-    const h = img?.height ?? 400
-    this.material.uniforms.u_texelSize.value.set(1 / w, 1 / h)
+    updateTexelSize(this.material, this.material.uniforms.u_map.value as Texture)
     applyUvParams(this.material, params)
   }
 
   getMaterial(inputTexture: Texture): Material {
-    if (this.material) {
-      this.material.uniforms.u_map.value = inputTexture
-      return this.material
-    }
-    this.material = new ShaderMaterial({
-      uniforms: {
-        u_map: { value: inputTexture },
-        u_uvScale: { value: new Vector2(1, 1) },
-        u_uvOffset: { value: new Vector2(0, 0) },
+    if (!this.material) {
+      this.material = createEffectMaterial(inputTexture, FRAG, {
         u_amount: { value: 0 },
         u_texelSize: { value: new Vector2(1 / 400, 1 / 400) },
-      },
-      vertexShader: QUAD_VERTEX_SHADER,
-      fragmentShader: FRAG,
-      depthWrite: false,
-    })
+      })
+    } else {
+      bindInputTexture(this.material, inputTexture)
+    }
     return this.material
   }
 
   dispose(): void {
-    this.material?.dispose()
-    this.material = null
+    this.material = disposeEffectMaterial(this.material)
   }
 }

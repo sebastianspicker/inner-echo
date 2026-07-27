@@ -1,9 +1,9 @@
 /**
- * SSOT: color_grade — gentle contrast/saturation/brightness adjustments.
+ * SSOT: color_grade: gentle contrast/saturation/brightness/color-balance adjustments.
  * Safety: clamp contrast and chroma; never strobe.
  */
 
-import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
+import { ShaderMaterial, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -11,8 +11,8 @@ import {
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
-  QUAD_VERTEX_SHADER,
 } from './paramUtils'
+import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -21,6 +21,8 @@ uniform vec2 u_uvOffset;
 uniform float u_contrast;
 uniform float u_saturation;
 uniform float u_brightness;
+uniform float u_temperature;
+uniform float u_tint;
 varying vec2 vUv;
 
 float ieLuma(vec3 c) {
@@ -43,6 +45,13 @@ void main() {
   // Brightness offset.
   color.rgb += u_brightness;
 
+  // Gentle color balance: temperature warms/cools, tint shifts green/magenta.
+  color.rgb += vec3(
+    u_temperature * 0.16 - u_tint * 0.06,
+    u_tint * 0.12,
+    -u_temperature * 0.16 - u_tint * 0.06
+  );
+
   gl_FragColor = clamp(color, 0.0, 1.0);
 }
 `
@@ -55,10 +64,12 @@ export class ColorGradeNode implements VideoNode {
     if (!this.material) return
     const intensity = clamp(params.intensity ?? 0, 0, 1)
 
-    // SSOT params: contrast, saturation, brightness (small, user-controlled).
+    // SSOT params: small, user-controlled grade and color-balance adjustments.
     let contrast = resolveNumberParam(params, 'contrast', 0) * intensity
     let saturation = resolveNumberParam(params, 'saturation', 0) * intensity
     let brightness = resolveNumberParam(params, 'brightness', 0) * intensity
+    let temperature = resolveNumberParam(params, 'temperature', 0) * intensity
+    let tint = resolveNumberParam(params, 'tint', 0) * intensity
 
     const globalMaxContrast = getGlobalClampNumber(params, 'max_global_contrast', 0.25)
     contrast = clamp(contrast, -Math.abs(globalMaxContrast), Math.abs(globalMaxContrast))
@@ -67,39 +78,36 @@ export class ColorGradeNode implements VideoNode {
       contrast = clamp(contrast, -Math.abs(safeMaxContrast), Math.abs(safeMaxContrast))
     }
 
-    // Saturation and brightness do not have explicit SSOT clamp keys; keep conservative.
+    // These do not have explicit SSOT clamp keys; keep conservative.
     saturation = clamp(saturation, -0.7, 0.25)
     brightness = clamp(brightness, -0.12, 0.12)
+    temperature = clamp(temperature, -1, 1)
+    tint = clamp(tint, -1, 1)
 
     this.material.uniforms.u_contrast.value = contrast
     this.material.uniforms.u_saturation.value = saturation
     this.material.uniforms.u_brightness.value = brightness
+    this.material.uniforms.u_temperature.value = temperature
+    this.material.uniforms.u_tint.value = tint
     applyUvParams(this.material, params)
   }
 
   getMaterial(inputTexture: Texture): Material {
-    if (this.material) {
-      this.material.uniforms.u_map.value = inputTexture
-      return this.material
-    }
-    this.material = new ShaderMaterial({
-      uniforms: {
-        u_map: { value: inputTexture },
-        u_uvScale: { value: new Vector2(1, 1) },
-        u_uvOffset: { value: new Vector2(0, 0) },
+    if (!this.material) {
+      this.material = createEffectMaterial(inputTexture, FRAG, {
         u_contrast: { value: 0 },
         u_saturation: { value: 0 },
         u_brightness: { value: 0 },
-      },
-      vertexShader: QUAD_VERTEX_SHADER,
-      fragmentShader: FRAG,
-      depthWrite: false,
-    })
+        u_temperature: { value: 0 },
+        u_tint: { value: 0 },
+      })
+    } else {
+      bindInputTexture(this.material, inputTexture)
+    }
     return this.material
   }
 
   dispose(): void {
-    this.material?.dispose()
-    this.material = null
+    this.material = disposeEffectMaterial(this.material)
   }
 }

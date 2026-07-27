@@ -49,9 +49,9 @@
 .debug-panel__btn {
   padding: 8px 12px;
   font-size: 12px;
-  border-radius: 999px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-control);
   color: var(--text);
   cursor: pointer;
   transition:
@@ -62,13 +62,11 @@
 }
 
 .debug-panel__btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface-control-hover);
   border-color: var(--border-strong);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
 
 .debug-panel__btn:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
+  background: var(--surface-3);
   transition-duration: 80ms;
 }

@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "description": "Release-candidate README screenshots generated with deterministic fake-media harness.",
+  "description": "Public README screenshots captured with deterministic synthetic media.",
   "shots": [
     {
       "id": "01-onboarding",
       "baseName": "01-onboarding",
       "section": "core-flow",
-      "purpose": "Initial onboarding modal before consent.",
+      "purpose": "In-flow welcome and privacy disclosure before setup.",
       "viewport": { "width": 1440, "height": 900 },
       "preferredFormat": "webp",
       "fallbackFormat": "png",

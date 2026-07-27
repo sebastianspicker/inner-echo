@@ -14,6 +14,7 @@
 
 import type { AudioContextStatus } from './types'
 import { logger } from '../../utils/logger'
+import { getAudioStartErrorMessage } from './audioContextStartMessages'
 
 export type AudioContextManagerListener = (status: AudioContextStatus, error?: string) => void
 
@@ -45,64 +46,59 @@ function notify(status: AudioContextStatus, error?: string): void {
 /**
  * Initializes or resumes the global `AudioContext`.
  *
- * **IMPORTANT:** This function MUST be triggered by a direct user interaction event
+ * This function must be triggered by a direct user interaction event
  * (e.g., an `onClick` handler on a "Start" button) to comply with browser autoplay policies.
  *
  * @returns A promise resolving to the new `AudioContextStatus`.
  */
 export async function startAudioContext(): Promise<AudioContextStatus> {
   if (startingPromise) return startingPromise
-
-  startingPromise = (async () => {
-    notify('starting')
-    try {
-      // Wait for any pending shutdown to finish before trying to start again.
-      if (closingPromise) {
-        await closingPromise
-      }
-
-      // If we don't have a context yet, or the previous one was permenantly closed, create a new one.
-      if (!sharedContext || sharedContext.state === 'closed') {
-        const AudioCtx =
-          window.AudioContext ??
-          (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-        sharedContext = new AudioCtx()
-      }
-
-      if (sharedContext.state !== 'running') {
-        await sharedContext.resume()
-      }
-
-      if (sharedContext.state === 'running') {
-        notify('on')
-        return 'on' as const
-      }
-
-      let errorType = 'Failed to start audio.'
-      if (sharedContext.state === 'suspended') {
-        errorType =
-          'Audio blocked by browser. Please interact with the page (click or tap) and try again.'
-      }
-
-      const message = `${errorType} (Current state: ${sharedContext.state})`
-      notify('error', message)
-      return 'error' as const
-    } catch (e) {
-      const rawMessage = e instanceof Error ? e.message : String(e)
-      let userMessage = `Audio initialization failed: ${rawMessage}`
-
-      if (rawMessage.includes('hardware') || rawMessage.includes('device')) {
-        userMessage = 'Audio hardware error. Please check your output device and try again.'
-      }
-
-      notify('error', userMessage)
-      return 'error' as const
-    }
-  })().finally(() => {
-    startingPromise = null
-  })
+  startingPromise = runAudioContextStart().finally(clearStartingPromise)
 
   return startingPromise
+}
+
+async function runAudioContextStart(): Promise<AudioContextStatus> {
+  notify('starting')
+  try {
+    if (closingPromise) await closingPromise
+    const context = getOrCreateAudioContext()
+    if (context.state !== 'running') await context.resume()
+    return reportStartedContext(context)
+  } catch (error) {
+    return reportAudioStartError(error)
+  }
+}
+
+function getOrCreateAudioContext(): AudioContext {
+  if (sharedContext && sharedContext.state !== 'closed') return sharedContext
+  const AudioCtx =
+    window.AudioContext ??
+    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  sharedContext = new AudioCtx()
+  return sharedContext
+}
+
+function reportStartedContext(context: AudioContext): AudioContextStatus {
+  if (context.state === 'running') {
+    notify('on')
+    return 'on'
+  }
+  const errorType =
+    context.state === 'suspended'
+      ? 'Audio blocked by browser. Please interact with the page (click or tap) and try again.'
+      : 'Failed to start audio.'
+  notify('error', `${errorType} (Current state: ${context.state})`)
+  return 'error'
+}
+
+function reportAudioStartError(error: unknown): AudioContextStatus {
+  notify('error', getAudioStartErrorMessage(error))
+  return 'error'
+}
+
+function clearStartingPromise(): void {
+  startingPromise = null
 }
 
 /**

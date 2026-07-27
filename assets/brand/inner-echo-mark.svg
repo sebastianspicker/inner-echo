@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Inner Echo aperture mark</title>
+  <g fill="none" stroke="#8BD8CE" stroke-linecap="round">
+    <path d="M47 10.7A24 24 0 1 0 47 53.3" stroke-width="2" />
+    <path d="M44 17.2A18 18 0 1 0 44 46.8" stroke-width="2.5" />
+    <path d="M41 23.7A12 12 0 1 0 41 40.3" stroke-width="3" />
+  </g>
+  <circle cx="32" cy="32" r="3" fill="#8BD8CE" />
+</svg>

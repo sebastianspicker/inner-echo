@@ -48,6 +48,25 @@ export const presetSnapshotV2Schema = z.object({
 
 export type PresetSnapshotV2 = z.infer<typeof presetSnapshotV2Schema>
 
+export type PresetLibraryParseReason =
+  | 'empty'
+  | 'valid'
+  | 'invalid-json'
+  | 'not-array'
+  | 'invalid-items'
+
+export interface PresetLibraryParseDiagnostics {
+  ok: boolean
+  reason: PresetLibraryParseReason
+  totalItems: number
+  invalidItems: number
+}
+
+export interface PresetLibraryParseResult {
+  snapshots: PresetSnapshotV2[]
+  diagnostics: PresetLibraryParseDiagnostics
+}
+
 function normalizeWeight(value: number): number {
   return clamp01(Number.isFinite(value) ? value : 0)
 }
@@ -118,17 +137,42 @@ export function createPresetSnapshot(
 }
 
 export function parsePresetLibrary(serialized: string): PresetSnapshotV2[] {
+  return parsePresetLibraryWithDiagnostics(serialized).snapshots
+}
+
+export function parsePresetLibraryWithDiagnostics(serialized: string): PresetLibraryParseResult {
   try {
     const parsed = JSON.parse(serialized)
-    if (!Array.isArray(parsed)) return []
+    if (!Array.isArray(parsed)) {
+      return {
+        snapshots: [],
+        diagnostics: { ok: false, reason: 'not-array', totalItems: 0, invalidItems: 0 },
+      }
+    }
     const out: PresetSnapshotV2[] = []
+    let invalidItems = 0
     for (const item of parsed) {
       const result = presetSnapshotV2Schema.safeParse(item)
-      if (result.success) out.push(result.data)
+      if (result.success) {
+        out.push(result.data)
+      } else {
+        invalidItems += 1
+      }
     }
-    return out
+    return {
+      snapshots: out,
+      diagnostics: {
+        ok: invalidItems === 0,
+        reason: parsed.length === 0 ? 'empty' : invalidItems === 0 ? 'valid' : 'invalid-items',
+        totalItems: parsed.length,
+        invalidItems,
+      },
+    }
   } catch {
-    return []
+    return {
+      snapshots: [],
+      diagnostics: { ok: false, reason: 'invalid-json', totalItems: 0, invalidItems: 0 },
+    }
   }
 }
 
@@ -166,7 +210,7 @@ export function migrateLegacyPresetPayload(raw: unknown): PresetPayload | null {
   const parsed = legacySchema.safeParse(raw)
   if (!parsed.success) return null
   const value = parsed.data
-  return createPresetPayload({
+  const payload = createPresetPayload({
     mode: value.mode ?? 'preset',
     conditionId: value.conditionId ?? 'none',
     presets: value.presets ?? [],
@@ -179,19 +223,8 @@ export function migrateLegacyPresetPayload(raw: unknown): PresetPayload | null {
     maxFeedback: value.maxFeedback ?? 0.35,
     interactionAmount: value.interactionAmount ?? 0.15,
   })
-}
-
-export function readPresetLibrary(storage: Pick<Storage, 'getItem'>): PresetSnapshotV2[] {
-  const raw = storage.getItem(PRESET_LIBRARY_STORAGE_KEY)
-  if (!raw) return []
-  return parsePresetLibrary(raw)
-}
-
-export function writePresetLibrary(
-  storage: Pick<Storage, 'setItem'>,
-  snapshots: PresetSnapshotV2[],
-): void {
-  storage.setItem(PRESET_LIBRARY_STORAGE_KEY, JSON.stringify(snapshots))
+  const validated = presetPayloadSchema.safeParse(payload)
+  return validated.success ? validated.data : null
 }
 
 export interface ApplyPresetPayloadCallbacks {

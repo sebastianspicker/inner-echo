@@ -1,9 +1,11 @@
 /**
- * SSOT: delay — short echo with low feedback (safety-clamped).
+ * SSOT: delay: short echo with low feedback (safety-clamped).
  */
 
 import type { AudioModule } from '../types'
 import { clamp } from '../../../utils/numeric'
+import { createDryWetMix } from './dryWetMix'
+import { createRoutedAudioModule } from './routedAudioModule'
 
 export interface DelayParams {
   /** Delay time in seconds. */
@@ -19,44 +21,39 @@ const DEFAULT_FEEDBACK = 0.06
 const DEFAULT_MIX = 0.03
 
 export function createDelay(context: BaseAudioContext, params: DelayParams = {}): AudioModule {
-  const input = context.createGain()
-  input.gain.value = 1
-
-  const dry = context.createGain()
-  const wet = context.createGain()
-  const out = context.createGain()
+  let current: Required<DelayParams> = {
+    time: params.time ?? DEFAULT_TIME,
+    feedback: params.feedback ?? DEFAULT_FEEDBACK,
+    mix: params.mix ?? DEFAULT_MIX,
+  }
+  const mixNodes = createDryWetMix(context)
 
   const delay = context.createDelay(1.0)
   const feedbackGain = context.createGain()
 
   const set = (p: DelayParams) => {
-    const time = clamp(p.time ?? DEFAULT_TIME, 0.05, 0.35)
-    const feedback = clamp(p.feedback ?? DEFAULT_FEEDBACK, 0, 0.18)
-    const mix = clamp(p.mix ?? DEFAULT_MIX, 0, 0.12)
+    current = {
+      time: p.time ?? current.time,
+      feedback: p.feedback ?? current.feedback,
+      mix: p.mix ?? current.mix,
+    }
+    const time = clamp(current.time, 0.05, 0.35)
+    const feedback = clamp(current.feedback, 0, 0.18)
+    const mix = clamp(current.mix, 0, 0.12)
     delay.delayTime.setValueAtTime(time, context.currentTime)
     feedbackGain.gain.setValueAtTime(feedback, context.currentTime)
-    dry.gain.setValueAtTime(1 - mix, context.currentTime)
-    wet.gain.setValueAtTime(mix, context.currentTime)
+    mixNodes.setMix(mix)
   }
 
   set(params)
 
-  input.connect(dry)
-  input.connect(delay)
   delay.connect(feedbackGain)
   feedbackGain.connect(delay)
-  delay.connect(wet)
+  mixNodes.connectWetSource(delay)
 
-  dry.connect(out)
-  wet.connect(out)
-
-  return {
-    connect(destination: AudioNode): void {
-      out.connect(destination)
-    },
-    getInput(): AudioNode {
-      return input
-    },
+  return createRoutedAudioModule({
+    input: mixNodes.input,
+    output: mixNodes.out,
     setParams(p: Record<string, unknown>): void {
       set({
         time: p.time as number | undefined,
@@ -65,12 +62,9 @@ export function createDelay(context: BaseAudioContext, params: DelayParams = {})
       })
     },
     dispose(): void {
-      input.disconnect()
-      dry.disconnect()
-      wet.disconnect()
-      out.disconnect()
+      mixNodes.dispose()
       delay.disconnect()
       feedbackGain.disconnect()
     },
-  }
+  })
 }

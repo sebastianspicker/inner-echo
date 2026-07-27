@@ -1,11 +1,8 @@
-import { readFileSync, readdirSync } from 'node:fs'
-import path from 'node:path'
 import * as THREE from 'three'
 
 import { getDefaultControlValues } from '../../src/conditions/controlTargets'
 import { buildVideoNodes } from '../../src/conditions/graphBuilder'
 import { clampIntensity, getSafetyContext } from '../../src/conditions/normalize'
-import { profileSchema, type Profile } from '../../src/conditions/schema'
 import {
   buildAudioChain,
   connectAudioChain,
@@ -17,6 +14,8 @@ import {
   type FakeCreatedNodes,
 } from '../../src/contractVerification/fakeAudioContext'
 import { withSeededRandom } from '../../src/contractVerification/utils'
+import { appendUnhandledRejections, buildInspectReport } from './inspectReport'
+import { loadProfileContracts } from './profileContracts'
 
 export type InspectSeverity = 'warning' | 'error'
 
@@ -74,11 +73,7 @@ export interface InspectHarnessOptions {
   frames?: number
 }
 
-interface LoadedProfile {
-  profile: Profile
-  profileId: string
-  sourceFile: string
-}
+type LoadedProfile = import('../../src/contractVerification/types').LoadedProfileContract
 
 interface IssueSink {
   push(issue: InspectIssue): void
@@ -87,10 +82,6 @@ interface IssueSink {
 interface IssuesByProfile {
   warnings: number
   errors: number
-}
-
-function rel(rootDir: string, filePath: string): string {
-  return path.relative(rootDir, filePath).replaceAll(path.sep, '/')
 }
 
 function clamp01(value: number): number {
@@ -113,52 +104,7 @@ function loadProfiles(rootDir: string): {
   profiles: LoadedProfile[]
   issues: InspectIssue[]
 } {
-  const issues: InspectIssue[] = []
-  const profiles: LoadedProfile[] = []
-
-  const profilesDir = path.join(rootDir, 'src', 'conditions', 'profiles')
-  const files = readdirSync(profilesDir)
-    .filter((name) => name.endsWith('.json'))
-    .sort((a, b) => a.localeCompare(b))
-
-  for (const fileName of files) {
-    const absolute = path.join(profilesDir, fileName)
-    const sourceFile = rel(rootDir, absolute)
-
-    let raw: unknown
-    try {
-      raw = JSON.parse(readFileSync(absolute, 'utf-8'))
-    } catch (error) {
-      issues.push({
-        severity: 'error',
-        code: 'PROFILE_JSON_PARSE_ERROR',
-        message: error instanceof Error ? error.message : `Failed to parse ${sourceFile}`,
-        sourceFile,
-      })
-      continue
-    }
-
-    const parsed = profileSchema.safeParse(raw)
-    if (!parsed.success) {
-      issues.push({
-        severity: 'error',
-        code: 'PROFILE_SCHEMA_ERROR',
-        message: `Profile schema validation failed for ${sourceFile}`,
-        sourceFile,
-        details: parsed.error.flatten(),
-      })
-      continue
-    }
-
-    const profile = parsed.data as Profile
-    profiles.push({
-      profile,
-      profileId: profile.id,
-      sourceFile,
-    })
-  }
-
-  return { profiles, issues }
+  return loadProfileContracts(rootDir)
 }
 
 function collectFiniteIssues(value: unknown, keyPath: string, output: string[]): void {
@@ -462,32 +408,19 @@ function inspectAudioPipeline(
 
     const created = context.collectSince(mark)
 
-    for (let frame = 0; frame < frames; frame++) {
-      for (let i = 0; i < chain.length; i++) {
-        const baseParams = (chainDefs[i]?.params ?? {}) as Record<string, unknown>
-        const params = dynamicAudioParams(baseParams, frame, i)
-        chain[i].setParams(params)
-      }
+    for (let frame = 0; frame < frames; frame++)
+      nonFiniteReadings += inspectAudioFrame(
+        chain,
+        chainDefs,
+        created,
+        frame,
+        profileId,
+        sourceFile,
+        sink,
+        perProfile,
+      )
 
-      const finiteIssues: string[] = []
-      collectAudioFiniteIssues(created, 'audioCreated', finiteIssues, new Set<unknown>())
-
-      if (finiteIssues.length > 0) {
-        nonFiniteReadings += finiteIssues.length
-        recordIssue(sink, perProfile, {
-          severity: 'error',
-          code: 'AUDIO_NON_FINITE_STATE',
-          message: `Non-finite audio state detected (${finiteIssues.length})`,
-          profileId,
-          sourceFile,
-          details: { frame, paths: finiteIssues.slice(0, 24) },
-        })
-      }
-    }
-
-    for (const module of chain) {
-      module.dispose()
-    }
+    disposeAudioModules(chain)
 
     assertAudioDisposal(created, profileId, sourceFile, sink, perProfile)
   } catch (error) {
@@ -500,13 +433,7 @@ function inspectAudioPipeline(
       sourceFile,
     })
   } finally {
-    for (const module of chain) {
-      try {
-        module.dispose()
-      } catch {
-        // idempotency best-effort; first dispose already validated above
-      }
-    }
+    disposeAudioModulesQuietly(chain)
   }
 
   return {
@@ -514,6 +441,80 @@ function inspectAudioPipeline(
     frames,
     activeNodes,
     nonFiniteReadings,
+  }
+}
+
+function inspectAudioFrame(
+  chain: AudioModule[],
+  chainDefs: Array<{ params?: Record<string, unknown> }>,
+  created: unknown[],
+  frame: number,
+  profileId: string,
+  sourceFile: string,
+  sink: IssueSink,
+  perProfile: Map<string, IssuesByProfile>,
+) {
+  for (let i = 0; i < chain.length; i++)
+    chain[i].setParams(dynamicAudioParams(chainDefs[i]?.params ?? {}, frame, i))
+  const finiteIssues: string[] = []
+  collectAudioFiniteIssues(created, 'audioCreated', finiteIssues, new Set<unknown>())
+  if (finiteIssues.length > 0)
+    recordIssue(sink, perProfile, {
+      severity: 'error',
+      code: 'AUDIO_NON_FINITE_STATE',
+      message: `Non-finite audio state detected (${finiteIssues.length})`,
+      profileId,
+      sourceFile,
+      details: { frame, paths: finiteIssues.slice(0, 24) },
+    })
+  return finiteIssues.length
+}
+
+function disposeAudioModules(chain: AudioModule[]) {
+  for (const module of chain) module.dispose()
+}
+
+function disposeAudioModulesQuietly(chain: AudioModule[]) {
+  for (const module of chain) {
+    try {
+      module.dispose()
+    } catch {
+      /* idempotency best-effort; first dispose already validated above */
+    }
+  }
+}
+
+function inspectProfile(
+  profile: LoadedProfile,
+  frames: number,
+  sink: IssueSink,
+  countsByProfile: Map<string, IssuesByProfile>,
+  seed: number,
+): ProfileInspectResult {
+  const video: InspectScenarioResult[] = []
+  withSeededRandom(seed, () =>
+    video.push(inspectVideoScenario(profile, false, false, frames, sink, countsByProfile)),
+  )
+  withSeededRandom(seed + 1, () =>
+    video.push(inspectVideoScenario(profile, true, true, frames, sink, countsByProfile)),
+  )
+  let audio: ProfileInspectResult['audio'] = {
+    enabled: false,
+    frames,
+    activeNodes: [],
+    nonFiniteReadings: 0,
+  }
+  withSeededRandom(seed + 2, () => {
+    audio = inspectAudioPipeline(profile, frames, sink, countsByProfile)
+  })
+  const counts = countsByProfile.get(profile.profileId) ?? { warnings: 0, errors: 0 }
+  return {
+    profileId: profile.profileId,
+    sourceFile: profile.sourceFile,
+    video,
+    audio,
+    warnings: counts.warnings,
+    errors: counts.errors,
   }
 }
 
@@ -547,78 +548,13 @@ export async function runInspectHarness(
   let seed = 11
 
   for (const profile of loaded.profiles) {
-    const videoScenarios: InspectScenarioResult[] = []
-
-    withSeededRandom(seed++, () => {
-      videoScenarios.push(
-        inspectVideoScenario(profile, false, false, frames, sink, perProfileIssueCounts),
-      )
-    })
-
-    withSeededRandom(seed++, () => {
-      videoScenarios.push(
-        inspectVideoScenario(profile, true, true, frames, sink, perProfileIssueCounts),
-      )
-    })
-
-    let audioResult: ProfileInspectResult['audio'] = {
-      enabled: false,
-      frames,
-      activeNodes: [],
-      nonFiniteReadings: 0,
-    }
-    withSeededRandom(seed++, () => {
-      audioResult = inspectAudioPipeline(profile, frames, sink, perProfileIssueCounts)
-    })
-
-    const counts = perProfileIssueCounts.get(profile.profileId) ?? {
-      warnings: 0,
-      errors: 0,
-    }
-
-    profileResults.push({
-      profileId: profile.profileId,
-      sourceFile: profile.sourceFile,
-      video: videoScenarios,
-      audio: audioResult,
-      warnings: counts.warnings,
-      errors: counts.errors,
-    })
+    profileResults.push(inspectProfile(profile, frames, sink, perProfileIssueCounts, seed))
+    seed += 3
   }
 
-  for (const reason of unhandledRejections) {
-    issues.push({
-      severity: 'error',
-      code: 'UNHANDLED_REJECTION',
-      message: reason instanceof Error ? reason.message : `Unhandled rejection: ${String(reason)}`,
-    })
-  }
+  appendUnhandledRejections(issues, unhandledRejections)
 
   process.off('unhandledRejection', rejectionHandler)
 
-  const warnings = issues.filter((issue) => issue.severity === 'warning')
-  const errors = issues.filter((issue) => issue.severity === 'error')
-
-  const scenarios = profileResults.length * 3
-  const failedScenarios = new Set(errors.map((e) => e.profileId ?? '')).size
-  const ok = Math.max(0, scenarios - failedScenarios)
-
-  return {
-    generatedAt: new Date().toISOString(),
-    environment: {
-      node: process.version,
-      platform: process.platform,
-      arch: process.arch,
-    },
-    summary: {
-      profiles: profileResults.length,
-      scenarios,
-      ok,
-      warnings: warnings.length,
-      errors: errors.length,
-    },
-    profiles: profileResults,
-    warnings,
-    errors,
-  }
+  return buildInspectReport(profileResults, issues)
 }

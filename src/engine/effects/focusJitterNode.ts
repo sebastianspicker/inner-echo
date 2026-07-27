@@ -1,5 +1,5 @@
 /**
- * SSOT: focus_jitter — gentle, smoothed UV wobble (disabled by Reduced Motion).
+ * SSOT: focus_jitter: gentle, smoothed UV wobble (disabled by Reduced Motion).
  * Params: amount, smoothing.
  */
 
@@ -11,8 +11,8 @@ import {
   getGlobalClampNumber,
   getSafeModeClampNumber,
   resolveNumberParam,
-  QUAD_VERTEX_SHADER,
 } from './paramUtils'
+import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
 
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
@@ -75,21 +75,10 @@ export class FocusJitterNode implements VideoNode {
   }
 
   getMaterial(inputTexture: Texture): Material {
-    if (this.material) {
-      this.material.uniforms.u_map.value = inputTexture
-      return this.material
-    }
-    this.material = new ShaderMaterial({
-      uniforms: {
-        u_map: { value: inputTexture },
-        u_uvScale: { value: new Vector2(1, 1) },
-        u_uvOffset: { value: new Vector2(0, 0) },
-        u_amount: { value: 0 },
-        u_smoothing: { value: 0.92 },
-        u_offset: { value: new Vector2(0, 0) },
-      },
-      vertexShader: QUAD_VERTEX_SHADER,
-      fragmentShader: `
+    if (!this.material) {
+      this.material = createEffectMaterial(
+        inputTexture,
+        `
 uniform sampler2D u_map;
 uniform vec2 u_uvScale;
 uniform vec2 u_uvOffset;
@@ -101,13 +90,19 @@ void main() {
   gl_FragColor = clamp(color, 0.0, 1.0);
 }
 `,
-      depthWrite: false,
-    })
+        {
+          u_amount: { value: 0 },
+          u_smoothing: { value: 0.92 },
+          u_offset: { value: new Vector2(0, 0) },
+        },
+      )
+    } else {
+      bindInputTexture(this.material, inputTexture)
+    }
     return this.material
   }
 
   dispose(): void {
-    this.material?.dispose()
-    this.material = null
+    this.material = disposeEffectMaterial(this.material)
   }
 }

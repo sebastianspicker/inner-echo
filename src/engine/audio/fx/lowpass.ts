@@ -1,45 +1,21 @@
 /**
- * Phase 7: Lowpass filter FX (BiquadFilterNode).
+ * Lowpass filter FX (BiquadFilterNode).
  */
 
 import type { AudioModule } from '../types'
-import { clamp } from '../../../utils/numeric'
+import { createBiquadFilterModule, type BiquadFilterParams } from './biquadFilter'
 
-export interface LowpassParams {
-  cutoff?: number
-  q?: number
-}
+export interface LowpassParams extends BiquadFilterParams {}
 
 const DEFAULT_CUTOFF = 800
 const DEFAULT_Q = 0.7
 
 export function createLowpass(context: BaseAudioContext, params: LowpassParams = {}): AudioModule {
-  const filter = context.createBiquadFilter()
-  filter.type = 'lowpass'
-  filter.frequency.value = clamp(params.cutoff ?? DEFAULT_CUTOFF, 300, 12000)
-  filter.Q.value = clamp(params.q ?? DEFAULT_Q, 0.5, 1.2)
-
-  const input = context.createGain()
-  input.gain.value = 1
-  input.connect(filter)
-
-  return {
-    connect(destination: AudioNode): void {
-      filter.connect(destination)
-    },
-    getInput(): AudioNode {
-      return input
-    },
-    setParams(p: Record<string, unknown>): void {
-      const cutoff = p.cutoff as number | undefined
-      const q = p.q as number | undefined
-      if (typeof cutoff === 'number')
-        filter.frequency.setValueAtTime(clamp(cutoff, 300, 12000), context.currentTime)
-      if (typeof q === 'number') filter.Q.setValueAtTime(clamp(q, 0.5, 1.2), context.currentTime)
-    },
-    dispose(): void {
-      input.disconnect()
-      filter.disconnect()
-    },
-  }
+  return createBiquadFilterModule(context, params, {
+    type: 'lowpass',
+    defaultCutoff: DEFAULT_CUTOFF,
+    cutoffRange: [300, 12000],
+    defaultQ: DEFAULT_Q,
+    qRange: [0.5, 1.2],
+  })
 }

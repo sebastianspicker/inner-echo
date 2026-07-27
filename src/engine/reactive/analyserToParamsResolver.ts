@@ -1,5 +1,5 @@
 /**
- * Phase 8: Resolve profile reactive.analyser_to_params targets to pipeline param keys.
+ * Resolve profile reactive.analyser_to_params targets to runtime parameter keys.
  * Target format: "video.<nodeId>.<param>" → paramKey "builtIndex.param".
  * Uses built-node index (skipped nodes excluded) so keys match what the pipeline passes to nodes.
  * Unknown targets log a warning and are skipped (no crash).
@@ -32,25 +32,32 @@ export function resolveAnalyserTarget(
   options?: { reducedMotion?: boolean },
 ): { kind: 'video' | 'audio'; paramKey: string } | null {
   const t = target.trim().toLowerCase()
-  if (t.startsWith(VIDEO_PREFIX)) {
-    const parsed = parseScopedTarget(t, 'video')
-    if (!parsed) return null
-    const { nodeId, param } = parsed
-    const builtIndex = getBuiltNodeIndex(profile, nodeId, { reducedMotion: options?.reducedMotion })
-    if (builtIndex === -1) return null
-    return { kind: 'video', paramKey: `${builtIndex}.${param}` }
-  }
-
-  if (t.startsWith(AUDIO_PREFIX)) {
-    // Resolve by audio_stack.chain index: "audio.<nodeId>.<param>" -> "audio.<chainIndex>.<param>"
-    const parsed = parseScopedTarget(t, 'audio')
-    if (!parsed) return null
-    const { nodeId, param } = parsed
-    const chain = profile.audio_stack?.chain ?? []
-    const idx = chain.findIndex((n) => (n.id ?? n.node ?? '').toLowerCase() === nodeId)
-    if (idx === -1) return null
-    return { kind: 'audio', paramKey: `audio.${idx}.${param}` }
-  }
-
+  if (t.startsWith(VIDEO_PREFIX)) return resolveVideoTarget(t, profile, options)
+  if (t.startsWith(AUDIO_PREFIX)) return resolveAudioTarget(t, profile)
   return null
+}
+
+function resolveVideoTarget(
+  target: string,
+  profile: Profile,
+  options?: { reducedMotion?: boolean },
+): { kind: 'video'; paramKey: string } | null {
+  const parsed = parseScopedTarget(target, 'video')
+  if (!parsed) return null
+  const builtIndex = getBuiltNodeIndex(profile, parsed.nodeId, {
+    reducedMotion: options?.reducedMotion,
+  })
+  return builtIndex === -1 ? null : { kind: 'video', paramKey: `${builtIndex}.${parsed.param}` }
+}
+
+function resolveAudioTarget(
+  target: string,
+  profile: Profile,
+): { kind: 'audio'; paramKey: string } | null {
+  const parsed = parseScopedTarget(target, 'audio')
+  if (!parsed) return null
+  const index = (profile.audio_stack?.chain ?? []).findIndex(
+    (node) => (node.id ?? node.node ?? '').toLowerCase() === parsed.nodeId,
+  )
+  return index === -1 ? null : { kind: 'audio', paramKey: `audio.${index}.${parsed.param}` }
 }

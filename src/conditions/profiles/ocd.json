@@ -1,7 +1,7 @@
 {
   "id": "ocd",
   "label": "OCD (Intrusion + Compulsive Loop)",
-  "summary": "A metaphor of sticky loops and repeated checking pressure—subtle feedback/echo cues with strict safety caps.",
+  "summary": "A metaphor of sticky loops and repeated checking pressure: loop persistence, grid alignment, and restrained repetitive cues.",
   "framing": {
     "type": "metaphor",
     "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
@@ -21,7 +21,7 @@
     }
   ],
   "safety": {
-    "intensity_default": 0.34,
+    "intensity_default": 0.5,
     "intensity_max": 0.66,
     "warnings": [
       "Loops are subtle, but may feel 'sticky' or uncomfortable.",
@@ -90,44 +90,23 @@
       "id": "loop",
       "node": "feedback_loop",
       "params": {
-        "decay": 0.94,
-        "feedback": 0.14,
-        "jitter": 0.03
+        "decay": 0.96,
+        "feedback": 0.22,
+        "jitter": 0.02
       }
     },
     {
       "id": "grid",
       "node": "grid_hint",
       "params": {
-        "amount": 0.06
-      }
-    },
-    {
-      "id": "intrusions",
-      "node": "interference",
-      "params": {
-        "amount": 0.08,
-        "banding": 0.05,
-        "smoothing": 0.92,
-        "burst_probability": 0.06,
-        "burst_duration_ms": 280,
-        "burst_min_gap_ms": 1100
-      }
-    },
-    {
-      "id": "grain",
-      "node": "grain",
-      "params": {
-        "amount": 0.14,
-        "scale": 1.3,
-        "speed": 0.06
+        "amount": 0.1
       }
     },
     {
       "id": "vignette",
       "node": "vignette",
       "params": {
-        "amount": 0.16,
+        "amount": 0.14,
         "softness": 0.9
       }
     }
@@ -143,8 +122,8 @@
         "node": "delay",
         "params": {
           "time": 0.16,
-          "feedback": 0.1,
-          "mix": 0.05
+          "feedback": 0.12,
+          "mix": 0.07
         }
       },
       {
@@ -175,17 +154,6 @@
   },
   "reactive": {
     "analyser_to_params": [
-      {
-        "source": "rms",
-        "target": "video.grain.amount",
-        "scale": 0.15,
-        "offset": 0,
-        "smoothing": {
-          "attack": 0.08,
-          "release": 0.25
-        },
-        "clamp": [0, 0.45]
-      },
       {
         "source": "rms",
         "target": "video.feedback_loop.feedback",
