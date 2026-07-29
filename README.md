@@ -38,7 +38,6 @@ Alpha status has practical consequences:
 - The evidence mappings describe metaphor design choices and documented hypotheses. They do not establish clinical validity.
 - The published GitHub Pages surface is a non-commanding static demo, not the live application. Deploying the live runtime still requires a static host to serve `dist/` and apply the policy documented in `public/_headers`.
 - The production CSP currently blocks inline style attributes used by the composition map. Resolve and test that conflict before deployment.
-- The current lockfile fails the moderate-threshold dependency audit because `sharp@0.34.5` is covered by high-severity inherited libvips advisories.
 
 ## Requirements
 
