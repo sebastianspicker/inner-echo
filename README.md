@@ -6,6 +6,8 @@ Inner Echo is a client-only Vite and React application that applies profile-driv
 
 The browser requests camera, microphone, and audio access only after direct user actions. Media is processed in the page and is not uploaded by the application.
 
+[Open the static demo](https://sebastianspicker.github.io/inner-echo/) for a short, simulated walkthrough built from the repository's canonical synthetic-media screenshots. It does not request permissions or run the camera, audio, or effects engine.
+
 ## Project scope
 
 The package version is `0.1.0-alpha.1`. The application is an alpha-stage research and design tool.
@@ -34,7 +36,7 @@ Alpha status has practical consequences:
 - WebGL availability and performance vary by browser, GPU, and device. Fallback modes do not provide the full effect stack.
 - Automated Playwright coverage uses synthetic media. It does not replace real-device, real-permission, or screen-reader testing.
 - The evidence mappings describe metaphor design choices and documented hypotheses. They do not establish clinical validity.
-- Deployment is not configured in this repository. A static host must serve `dist/` and apply the policy documented in `public/_headers`.
+- The published GitHub Pages surface is a non-commanding static demo, not the live application. Deploying the live runtime still requires a static host to serve `dist/` and apply the policy documented in `public/_headers`.
 - The production CSP currently blocks inline style attributes used by the composition map. Resolve and test that conflict before deployment.
 - The current lockfile fails the moderate-threshold dependency audit because `sharp@0.34.5` is covered by high-severity inherited libvips advisories.
 
@@ -233,7 +235,7 @@ Derived contract references under `docs/generated/` are tracked and must match t
 
 ## Deployment and operation
 
-`npm run build` writes the static application to `dist/`. The repository does not contain a deployment-provider configuration, container image, server process, public URL, or publication workflow.
+`npm run build` writes the live application to `dist/`. The GitHub Pages workflow publishes only the isolated static demo in `demo/`; it does not deploy the camera, audio, or effects runtime. The repository does not contain a live-runtime deployment-provider configuration, container image, or server process.
 
 A deployment must:
 
