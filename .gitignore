@@ -49,6 +49,7 @@ service-account*.json
 # Local analysis, automation, and editor state.
 /.codacy/
 /.codegraph/
+/.continue/
 /.serena/
 /.impeccable/
 /.codex/
@@ -59,6 +60,7 @@ service-account*.json
 /.idea/
 /.vscode/
 /progress.md
+/WIP.md
 /AUDIT.md
 /AGENTS.md
 /docs/agent/
