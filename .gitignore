@@ -77,3 +77,8 @@ ehthumbs.db
 
 # Canonical public screenshots live in assets/readme/screenshots/ and are
 # verified by the manifest. Test-failure captures stay under ignored E2E paths.
+/.repowise/
+/.mcp.json
+/AUDIT_LEDGER.md
+/work-in-progress/
+/wip/
