@@ -85,7 +85,7 @@ describe('canvas overlay runtime state', () => {
   it('reports raw video after context loss when a 2D context is unavailable', () => {
     let callbacks: WebGLOverlayCallbacks | undefined
     startWebGLOverlayLoopMock.mockImplementation((...args: unknown[]) => {
-      callbacks = args[5] as WebGLOverlayCallbacks
+      callbacks = (args[0] as { callbacks?: WebGLOverlayCallbacks }).callbacks
       return webglControl()
     })
     start2DOverlayLoopMock.mockReturnValue(null)

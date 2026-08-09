@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A static, simulated walkthrough of Inner Echo using synthetic fixture media."
+    />
+    <meta name="color-scheme" content="dark" />
+    <title>Inner Echo | Static demo</title>
+    <link rel="icon" href="./assets/inner-echo-favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./demo.css" />
+    <script src="./demo.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#walkthrough">Skip to walkthrough</a>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Inner Echo static demo home">
+        <img src="./assets/inner-echo-mark.svg" alt="" width="42" height="42" />
+        <span>
+          <strong>Inner Echo</strong>
+          <small>Static demo</small>
+        </span>
+      </a>
+      <a class="repo-link" href="https://github.com/sebastianspicker/inner-echo">View repository</a>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="intro-title">
+        <div class="intro-copy">
+          <p class="context">Reflective media lab</p>
+          <h1 id="intro-title">Notice what shifts.</h1>
+          <p class="lede">
+            Explore the shape of Inner Echo through a short, static walkthrough. The images use
+            deterministic synthetic media from the repository. This page never starts camera,
+            microphone, audio, or effects.
+          </p>
+          <a class="primary-link" href="#walkthrough">Explore the simulated flow</a>
+        </div>
+        <aside class="boundary-note" aria-label="Static demo boundaries">
+          <p class="boundary-label">Static by design</p>
+          <dl>
+            <div><dt>Media</dt><dd>Synthetic fixture only</dd></div>
+            <div><dt>Permissions</dt><dd>Never requested</dd></div>
+            <div><dt>Runtime</dt><dd>Not loaded</dd></div>
+          </dl>
+        </aside>
+      </section>
+
+      <section class="walkthrough" id="walkthrough" aria-labelledby="walkthrough-title">
+        <div class="walkthrough-head">
+          <div>
+            <p class="context">Four repository-backed states</p>
+            <h2 id="walkthrough-title">A guided product snapshot</h2>
+          </div>
+          <p class="simulation-key"><span aria-hidden="true"></span> All walkthrough controls are simulated</p>
+        </div>
+
+        <div class="demo-frame">
+          <div class="frame-topline">
+            <span id="step-counter">Step 1 of 4</span>
+            <span>Fixture media · processed locally during capture</span>
+          </div>
+          <figure>
+            <img
+              id="demo-image"
+              src="./screenshots/01-onboarding.webp"
+              alt="Inner Echo welcome and privacy disclosure screen"
+              width="1440"
+              height="900"
+            />
+            <figcaption>
+              <p id="step-kicker">Welcome and boundaries</p>
+              <h3 id="step-title">Begin without requesting access</h3>
+              <p id="step-description">
+                The real product explains its metaphor, privacy model, and permission boundaries
+                before any media action is available.
+              </p>
+            </figcaption>
+          </figure>
+          <div class="demo-controls" aria-label="Simulated walkthrough controls">
+            <button id="previous-step" type="button" disabled>
+              Previous <span class="simulated-label">Simulated</span>
+            </button>
+            <div class="step-dots" aria-label="Walkthrough position">
+              <button type="button" class="step-dot is-current" data-step="0" aria-label="Show simulated step 1" aria-current="step"><span class="simulated-label">Simulated</span></button>
+              <button type="button" class="step-dot" data-step="1" aria-label="Show simulated step 2"><span class="simulated-label">Simulated</span></button>
+              <button type="button" class="step-dot" data-step="2" aria-label="Show simulated step 3"><span class="simulated-label">Simulated</span></button>
+              <button type="button" class="step-dot" data-step="3" aria-label="Show simulated step 4"><span class="simulated-label">Simulated</span></button>
+            </div>
+            <button id="next-step" type="button">
+              Next <span class="simulated-label">Simulated</span>
+            </button>
+          </div>
+          <p class="status-message" id="status-message" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="product-truth" aria-labelledby="truth-title">
+        <div>
+          <p class="context">What the demo preserves</p>
+          <h2 id="truth-title">The product boundaries stay intact.</h2>
+        </div>
+        <div class="truth-list">
+          <article>
+            <span>01</span>
+            <h3>Explicit activation</h3>
+            <p>The real application keeps camera, sound, and microphone behind separate user actions.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Comfort controls</h3>
+            <p>Safe Mode begins on, Reduced Motion stays visible, and Stop Everything remains close.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Metaphor, not diagnosis</h3>
+            <p>Profiles support reflection and discussion. They are not clinical results or objective simulations.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Static demonstration · No camera, microphone, audio, storage, analytics, or application runtime.</p>
+      <a href="https://github.com/sebastianspicker/inner-echo#readme">Read the project documentation</a>
+    </footer>
+  </body>
+</html>

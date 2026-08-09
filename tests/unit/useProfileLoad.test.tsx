@@ -44,6 +44,13 @@ describe('ui/hooks/useProfileLoad preset selection', () => {
     'clears loading state when a stale preset load resolves after a newer selection',
     stalePresetLoadDoesNotSetLoadingState,
   )
+  it('keeps an empty preset selection idle without requesting a profile', () => {
+    const { result } = renderHook(() => useProfileLoad(makeParams({ conditionId: '' })))
+
+    expect(result.current.profileLoadStatus).toBe('idle')
+    expect(result.current.profileLoadError).toBeNull()
+    expect(loadProfileMock).not.toHaveBeenCalled()
+  })
 })
 
 describe('ui/hooks/useProfileLoad failures and retries', () => {

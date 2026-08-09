@@ -2,6 +2,10 @@
 
 Inner Echo is a client-only Vite and React application. React owns visible state and permission flows. Engine modules own browser media, rendering, audio, reactive processing, and cleanup. Profile JSON declares the audiovisual graph that those modules construct.
 
+Durable implementation boundaries are recorded under [`decisions/`](decisions/README.md). Those
+records govern media activation, runtime ownership, and production diagnostics; this overview
+describes the resulting architecture.
+
 ## Entry and ownership
 
 ```text

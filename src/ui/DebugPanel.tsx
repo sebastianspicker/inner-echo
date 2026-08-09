@@ -12,133 +12,19 @@ import {
   type MutableRefObject,
   type SetStateAction,
 } from 'react'
-import type { OverlayDiagnostics, VideoMetrics } from '../engine/canvas'
-import type {
-  AudioContextStatus,
-  MicStatus,
-  AudioMetrics,
-  AudioEngineDebugState,
-} from '../engine/audio'
 import { copyTextToClipboard } from './clipboard'
 import { logger } from '../utils/logger'
-import type { AppliedClampSnapshot } from './hooks/useOverlayController'
 import { useDebugDiagnostics } from './hooks/useDebugDiagnostics'
+import {
+  formatDiagnosticsJson,
+  formatDiagnosticsText,
+  type DebugDiagnosticsSources,
+} from './debugDiagnosticsFormatting'
 import './DebugPanel.css'
 
 export type { AppliedClampSnapshot } from './hooks/useOverlayController'
 
-export interface DebugPanelProps {
-  /** Returns current overlay diagnostics when overlay is active; undefined otherwise. */
-  getOverlayDiagnostics: () => OverlayDiagnostics | undefined
-  audioStatus: AudioContextStatus
-  micStatus: MicStatus
-  /** Last user-facing error (camera, audio, or mic). Not sensitive data. */
-  lastError?: string | null
-
-  /** Optional: pull current audio metrics (post-chain; may include mic fields). */
-  getAudioMetrics?: () => AudioMetrics | undefined
-  /** Optional: pull current video metrics (computed from rendered canvas). */
-  getVideoMetrics?: () => VideoMetrics | undefined
-  /** Optional: pull current audio debug metadata (active nodes, gate state). */
-  getAudioDebugState?: () => AudioEngineDebugState | undefined
-  /** Optional: pull currently applied clamps (safe mode + reduced motion). */
-  getAppliedClamps?: () => AppliedClampSnapshot | undefined
-
-  couplingStrength?: number
-  maxFeedback?: number
-  micSensitivity?: number
-  micGate?: number
-}
-
-function formatDiagnosticsText(
-  props: DebugPanelProps,
-  overlay: OverlayDiagnostics | undefined,
-): string {
-  const audioMetrics = props.getAudioMetrics?.()
-  const videoMetrics = props.getVideoMetrics?.()
-  const audioDebug = props.getAudioDebugState?.()
-  const appliedClamps = props.getAppliedClamps?.()
-  const lines: string[] = [
-    `Inner Echo diagnostics: ${new Date().toISOString()}`,
-    '---',
-    `renderer: ${overlay?.rendererMode ?? 'none'}`,
-    `fps: ${overlay?.fps != null ? overlay.fps.toFixed(1) : 'n/a'}`,
-    `frameTimeMs: ${overlay?.frameTimeMs != null ? overlay.frameTimeMs.toFixed(2) : 'n/a'}`,
-    `renderScale: ${overlay?.renderScale ?? 'n/a'}`,
-    `resources.renderTargets: ${overlay?.resourceCounts?.renderTargets ?? 'n/a'}`,
-    `resources.temporalPairs: ${overlay?.resourceCounts?.temporalPairs ?? 'n/a'}`,
-    `resources.estimatedTextures: ${overlay?.resourceCounts?.estimatedTextures ?? 'n/a'}`,
-    `resources.estimatedFramebuffers: ${overlay?.resourceCounts?.estimatedFramebuffers ?? 'n/a'}`,
-    `video.activeNodes: ${(overlay?.activeVideoNodes ?? []).join(', ') || 'n/a'}`,
-    `audio: ${props.audioStatus}`,
-    `mic: ${props.micStatus}`,
-    `couplingStrength: ${props.couplingStrength ?? 'n/a'}`,
-    `maxFeedback: ${props.maxFeedback ?? 'n/a'}`,
-  ]
-  if (audioMetrics) {
-    lines.push(`audio.rms: ${audioMetrics.rms.toFixed(3)}`)
-    lines.push(`audio.centroid: ${audioMetrics.centroid.toFixed(3)}`)
-    lines.push(`audio.flux: ${audioMetrics.flux.toFixed(3)}`)
-    if (typeof audioMetrics.micRms === 'number')
-      lines.push(`mic.rms: ${audioMetrics.micRms.toFixed(3)}`)
-    if (typeof audioMetrics.micCentroid === 'number')
-      lines.push(`mic.centroid: ${audioMetrics.micCentroid.toFixed(3)}`)
-    if (typeof audioMetrics.micFlux === 'number')
-      lines.push(`mic.flux: ${audioMetrics.micFlux.toFixed(3)}`)
-  }
-  if (videoMetrics) {
-    lines.push(`video.motion: ${videoMetrics.motion.toFixed(3)}`)
-    lines.push(`video.luminance: ${videoMetrics.luminance.toFixed(3)}`)
-    lines.push(`video.edge: ${videoMetrics.edge.toFixed(3)}`)
-    lines.push(`video.instability: ${videoMetrics.instability.toFixed(3)}`)
-  }
-  if (audioDebug) {
-    lines.push(`audio.activeNodes: ${audioDebug.activeNodes.join(', ') || 'n/a'}`)
-    lines.push(`audio.inputMode: ${audioDebug.inputMode}`)
-    lines.push(`audio.micEnabled: ${audioDebug.micEnabled ? 'yes' : 'no'}`)
-    lines.push(
-      `audio.micGateGain: ${audioDebug.micGateGain != null ? audioDebug.micGateGain.toFixed(3) : 'n/a'}`,
-    )
-  }
-  if (appliedClamps) {
-    lines.push(
-      `clamps.intensity: ${appliedClamps.intensityInput.toFixed(3)} -> ${appliedClamps.intensityEffective.toFixed(3)}`,
-    )
-    lines.push(`clamps.safeMode: ${appliedClamps.safeMode ? 'on' : 'off'}`)
-    lines.push(`clamps.reducedMotion: ${appliedClamps.reducedMotion ? 'on' : 'off'}`)
-    lines.push(`clamps.safeModeKeys: ${appliedClamps.safeModeClampKeys.join(', ') || 'none'}`)
-    lines.push(
-      `clamps.reducedMotionDisabledNodes: ${appliedClamps.reducedMotionDisabledNodes.join(', ') || 'none'}`,
-    )
-  }
-  if (props.lastError) {
-    lines.push(`lastError: ${props.lastError}`)
-  }
-  return lines.join('\n')
-}
-
-function formatDiagnosticsJson(
-  props: DebugPanelProps,
-  overlay: OverlayDiagnostics | undefined,
-): string {
-  return JSON.stringify(
-    {
-      ts: new Date().toISOString(),
-      overlay,
-      audioStatus: props.audioStatus,
-      micStatus: props.micStatus,
-      couplingStrength: props.couplingStrength,
-      maxFeedback: props.maxFeedback,
-      lastError: props.lastError ?? null,
-      audioMetrics: props.getAudioMetrics?.() ?? null,
-      videoMetrics: props.getVideoMetrics?.() ?? null,
-      audioDebug: props.getAudioDebugState?.() ?? null,
-      appliedClamps: props.getAppliedClamps?.() ?? null,
-    },
-    null,
-    2,
-  )
-}
+export interface DebugPanelProps extends DebugDiagnosticsSources {}
 
 async function copyDiagnostics(
   text: string,

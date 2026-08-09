@@ -5,7 +5,8 @@
  */
 
 import type { VideoNode } from '../effects/VideoNode'
-import { startOverlayLoop as start2DOverlayLoop, syncCanvasToContainer } from './overlayRenderer'
+import { syncCanvasToContainer } from './overlayRenderer'
+import { createOverlayRuntime } from './overlayRuntime'
 import {
   startWebGLOverlayLoop,
   type WebGLOverlayCallbacks,
@@ -71,73 +72,14 @@ export function startOverlayLoop(
   reactiveOptions?: ReactiveLoopOptions | null,
   runtimeCallbacks?: OverlayRuntimeCallbacks,
 ): OverlayControl {
-  const noOpSetParams: OverlayControl['setParams'] = () => {}
-  const get2dDiagnostics = (): OverlayDiagnostics => ({
-    rendererMode: '2d',
-    effectsActive: false,
-    fps: null,
-    frameTimeMs: null,
-    renderScale: 1,
-    resourceCounts: null,
-    activeVideoNodes: [],
-  })
-  const getInactiveDiagnostics = (rendererMode: 'raw' | 'unavailable'): OverlayDiagnostics => ({
-    rendererMode,
-    effectsActive: false,
-    fps: null,
-    frameTimeMs: null,
-    renderScale: 1,
-    resourceCounts: null,
-    activeVideoNodes: [],
-  })
-
-  const showCanvas = (active: HTMLCanvasElement | null): void => {
-    if (webglCanvas) webglCanvas.hidden = active !== webglCanvas
-    if (fallbackCanvas) fallbackCanvas.hidden = active !== fallbackCanvas
-  }
+  const runtime = createOverlayRuntime(
+    { video, webglCanvas, fallbackCanvas, container },
+    runtimeCallbacks,
+  )
 
   if (!video || !container) {
-    showCanvas(null)
-    const diagnostics = getInactiveDiagnostics('unavailable')
-    runtimeCallbacks?.onStateChange?.({
-      rendererMode: diagnostics.rendererMode,
-      effectsActive: false,
-      error: null,
-    })
-    return { stop: () => {}, setParams: noOpSetParams, getDiagnostics: () => diagnostics }
-  }
-
-  let delegateStop: OverlayControl['stop'] = () => {}
-  let delegateSetParams: OverlayControl['setParams'] = noOpSetParams
-  let delegateGetDiagnostics: NonNullable<OverlayControl['getDiagnostics']> = () =>
-    getInactiveDiagnostics('raw')
-  let stopped = false
-  let fallbackInstalled = false
-
-  const createControl = (): OverlayControl => ({
-    stop: () => {
-      if (stopped) return
-      stopped = true
-      delegateStop()
-      showCanvas(null)
-    },
-    setParams: (params) => delegateSetParams(params),
-    getDiagnostics: () => delegateGetDiagnostics(),
-  })
-
-  const install2dFallback = (error: Error | null = null): void => {
-    if (stopped || fallbackInstalled) return
-    fallbackInstalled = true
-    const stop2d = start2DOverlayLoop(video, fallbackCanvas, container)
-    delegateStop = stop2d ?? (() => {})
-    delegateSetParams = noOpSetParams
-    delegateGetDiagnostics = stop2d ? get2dDiagnostics : () => getInactiveDiagnostics('raw')
-    showCanvas(stop2d ? fallbackCanvas : null)
-    runtimeCallbacks?.onStateChange?.({
-      rendererMode: stop2d ? '2d' : 'raw',
-      effectsActive: false,
-      error,
-    })
+    runtime.reportUnavailable()
+    return runtime.control
   }
 
   if (USE_WEBGL && webglCanvas) {
@@ -146,28 +88,23 @@ export function startOverlayLoop(
       onFatalRuntimeError(error) {
         if (switchedTo2d) return
         switchedTo2d = true
-        install2dFallback(error)
+        runtime.install2dFallback(error)
       },
     }
-    const control = startWebGLOverlayLoop(
+    const control = startWebGLOverlayLoop({
       video,
-      webglCanvas,
+      canvas: webglCanvas,
       container,
       nodes,
-      reactiveOptions ?? undefined,
+      reactiveOptions: reactiveOptions ?? undefined,
       callbacks,
-    )
+    })
     if (control) {
-      showCanvas(webglCanvas)
-      delegateStop = () => control.stop()
-      delegateSetParams = (params) => control.setParams(params)
-      const effectsActive = nodes.length > 0
-      delegateGetDiagnostics = () => ({ ...control.getDiagnostics(), effectsActive })
-      runtimeCallbacks?.onStateChange?.({ rendererMode: 'webgl', effectsActive, error: null })
-      return createControl()
+      runtime.installWebgl(control, nodes.length > 0)
+      return runtime.control
     }
   }
 
-  install2dFallback()
-  return createControl()
+  runtime.install2dFallback()
+  return runtime.control
 }

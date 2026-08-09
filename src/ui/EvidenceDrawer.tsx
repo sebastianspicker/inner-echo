@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
-import { listEvidenceDocPaths, loadEvidenceDoc, type EvidenceDocPath } from '../evidence/docs'
-import { renderEvidenceMarkdown } from '../evidence/markdown'
-import { useAsyncEffect, type AsyncEffectContext } from './hooks/useAsyncEffect'
+import { useEffect, useMemo, useRef, type KeyboardEvent, type MouseEvent } from 'react'
+import { listEvidenceDocPaths, type EvidenceDocPath } from '../evidence/docs'
 import { resolveEvidenceHref } from './evidenceHref'
-import { logger } from '../utils/logger'
+import { useEvidenceDocument } from './hooks/useEvidenceDocument'
 import './EvidencePrecision.css'
 
 export interface EvidenceDrawerProps {
@@ -15,11 +13,6 @@ export interface EvidenceDrawerProps {
   reducedMotion?: boolean
   mediaActive?: boolean
 }
-
-type DocState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'ready'; title: string; fragment: DocumentFragment }
 
 const TOPIC_LABELS: Partial<Record<EvidenceDocPath, string>> = {
   'docs/references/README.md': 'Overview',
@@ -65,36 +58,14 @@ function syncEvidenceDialog(
   }
 }
 
-async function loadEvidenceState(
-  ctx: AsyncEffectContext,
-  open: boolean,
-  docPath: EvidenceDocPath,
-  setState: (state: DocState) => void,
-): Promise<void> {
-  if (!open) return
-  setState({ status: 'loading' })
-  try {
-    const markdown = await loadEvidenceDoc(docPath)
-    if (ctx.cancelled) return
-    if (!markdown) {
-      setState({ status: 'error', message: 'This evidence topic could not be found.' })
-      return
-    }
-    const { fragment, title } = renderEvidenceMarkdown(markdown)
-    setState({ status: 'ready', fragment, title })
-  } catch (error) {
-    if (ctx.cancelled) return
-    logger.error('Failed to load evidence document', docPath, error)
-    setState({ status: 'error', message: 'This evidence topic could not be loaded.' })
-  }
-}
-
 export function EvidenceDrawer(props: EvidenceDrawerProps) {
-  const [state, setState] = useState<DocState>({ status: 'loading' })
-  const [retryToken, setRetryToken] = useState(0)
   const dialogRef = useRef<HTMLDialogElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
-  const evidenceContentRef = useRef<HTMLElement | null>(null)
+  const {
+    state,
+    contentRef: evidenceContentRef,
+    retry,
+  } = useEvidenceDocument(props.open, props.docPath)
 
   const navItems = useMemo(() => {
     const all = listEvidenceDocPaths()
@@ -109,16 +80,6 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     () => syncEvidenceDialog(dialogRef.current, closeButtonRef.current, props.open),
     [props.open],
   )
-
-  useAsyncEffect(
-    (ctx) => loadEvidenceState(ctx, props.open, props.docPath, setState),
-    [props.open, props.docPath, retryToken],
-  )
-
-  useEffect(() => {
-    if (state.status !== 'ready') return
-    evidenceContentRef.current?.replaceChildren(state.fragment.cloneNode(true))
-  }, [state])
 
   const handleArticleActivation = (
     event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
@@ -212,11 +173,7 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
             {state.status === 'error' && (
               <div className="evidence-error" role="alert">
                 <p>{state.message}</p>
-                <button
-                  type="button"
-                  className="evidence-btn"
-                  onClick={() => setRetryToken((value) => value + 1)}
-                >
+                <button type="button" className="evidence-btn" onClick={retry}>
                   Retry
                 </button>
               </div>

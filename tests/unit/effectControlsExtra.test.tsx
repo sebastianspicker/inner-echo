@@ -37,6 +37,12 @@ function makeProfile(overrides?: Partial<Profile>): Profile {
           step: 0.01,
           target: 'video.grain.amount',
         },
+        {
+          id: 'grain_enabled',
+          type: 'toggle',
+          label: 'Grain Enabled',
+          target: 'video.grain.enabled',
+        },
       ],
     },
     references: { dimensions: [] },
@@ -103,9 +109,28 @@ describe('ui/EffectControls – additional coverage', () => {
     expect(onControlValuesChange).toHaveBeenCalled()
   })
 
+  it('calls onControlValuesChange when a profile-specific toggle changes', () => {
+    const onControlValuesChange = vi.fn()
+    render(
+      <EffectControls
+        {...defaultProps({
+          controlValues: { '0.enabled': false },
+          onControlValuesChange,
+        })}
+      />,
+    )
+
+    fireEvent.click(screen.getByLabelText('Grain Enabled'))
+    const update = onControlValuesChange.mock.calls[0][0] as (
+      previous: Record<string, number | boolean>,
+    ) => Record<string, number | boolean>
+    expect(update({ '0.enabled': false })).toEqual({ '0.enabled': true })
+  })
+
   it('renders only profile-specific controls', () => {
     render(<EffectControls {...defaultProps()} />)
     expect(screen.getByText('Grain')).toBeTruthy()
+    expect(screen.getByText('Grain Enabled')).toBeTruthy()
     expect(screen.queryByText('Intensity')).toBeNull()
     expect(screen.queryByText('Reduced Motion')).toBeNull()
     expect(screen.queryByText('Audio')).toBeNull()
