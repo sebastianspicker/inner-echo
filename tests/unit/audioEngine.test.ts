@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { FakeAudioContext } from '../../src/contractVerification/fakeAudioContext'
+import { logger } from '../../src/utils/logger'
 
 // ---------------------------------------------------------------------------
 // Fake AnalyserNode that lets us control time-domain and frequency data.
@@ -332,6 +333,22 @@ describe('engine/audio/audioEngine', () => {
     }).not.toThrow()
   })
 
+  it('treats an already-disconnected audio node as a best-effort cleanup', async () => {
+    const control = await createInitializedAudioEngine()
+    const analyser = getLastAnalyser()
+    analyser.disconnect = () => {
+      throw new Error('already disconnected')
+    }
+    const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {})
+
+    expect(() => control.stop()).not.toThrow()
+    expect(debugSpy).toHaveBeenCalledWith(
+      'Audio node disconnect ignored',
+      expect.objectContaining({ message: 'already disconnected' }),
+    )
+    debugSpy.mockRestore()
+  })
+
   // -----------------------------------------------------------------------
   // setConditionAudio rebuilds the chain
   // -----------------------------------------------------------------------
@@ -499,6 +516,20 @@ describe('engine/audio/audioEngine', () => {
     const control = await createInitializedAudioEngine(null, { onStatusChange: onStatus })
     // addAudioContextListener should have been called during init.
     expect(mocks.addAudioContextListenerMock).toHaveBeenCalled()
+    const listener = mocks.addAudioContextListenerMock.mock.calls[0][0]
+    listener('suspended', 'paused')
+    expect(onStatus).toHaveBeenCalledWith('suspended', 'paused')
+    control.stop()
+  })
+
+  it('reports an AudioContext startup rejection through the status callback', async () => {
+    const onStatus = vi.fn()
+    mocks.startAudioContextMock.mockRejectedValueOnce(new Error('startup failed'))
+
+    const control = createAudioEngine(null, { onStatusChange: onStatus })
+    await waitForAudio()
+
+    expect(onStatus).toHaveBeenCalledWith('error', 'startup failed')
     control.stop()
   })
 })

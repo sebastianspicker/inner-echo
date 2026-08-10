@@ -211,6 +211,26 @@ function storageFailureIsNotReportedAsSaved(): void {
   expect(storageMap.has(PRESET_LIBRARY_STORAGE_KEY)).toBe(false)
 }
 
+async function modeAndCopyActionsRemainWired(): Promise<void> {
+  const writeText = vi.fn().mockResolvedValue(undefined)
+  vi.stubGlobal('navigator', { clipboard: { writeText } })
+  const props = buildProps()
+
+  render(<ConditionComposerPanel {...props} />)
+
+  fireEvent.click(screen.getByRole('radio', { name: 'Experience dimensions' }))
+  expect(props.__spies.onModeChange).toHaveBeenCalledWith('symptom')
+
+  fireEvent.click(screen.getByText('Saved setups & sharing'))
+  fireEvent.click(screen.getByRole('button', { name: 'Copy configuration' }))
+  await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1))
+  expect(screen.getByRole('status').textContent).toBe('Configuration copied.')
+
+  fireEvent.click(screen.getByRole('button', { name: 'Copy share link' }))
+  await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2))
+  expect(screen.getByRole('status').textContent).toBe('Share link copied.')
+}
+
 describe('ui/ConditionComposerPanel shared preset hash', () => {
   it(
     'applies a shared preset hash only once without enabling audio and clears it after import',
@@ -241,5 +261,10 @@ describe('ui/ConditionComposerPanel saved setup storage', () => {
   it(
     'surfaces storage write failure without claiming that a setup was saved',
     storageFailureIsNotReportedAsSaved,
+  )
+
+  it(
+    'keeps mode selection and both copy actions wired through the panel',
+    modeAndCopyActionsRemainWired,
   )
 })

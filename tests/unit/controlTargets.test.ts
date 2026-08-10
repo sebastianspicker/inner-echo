@@ -83,4 +83,26 @@ describe('conditions/controlTargets', () => {
     expect(defaults['1.amount']).toBe(0.2)
     expect(defaults['2.amount']).toBeUndefined()
   })
+
+  it('keeps numeric node params ahead of control fallback defaults', () => {
+    const profile = makeProfile()
+    profile.ui = {
+      controls: [
+        {
+          ...makeSliderControl('edge-amount', 'video.edge.amount'),
+          min: 0.75,
+        },
+        {
+          id: 'edge-toggle',
+          type: 'toggle',
+          target: 'video.edge.enabled',
+        },
+      ],
+    }
+
+    const defaults = getDefaultControlValues(profile)
+
+    expect(defaults['1.amount']).toBe(0.12)
+    expect(defaults['1.enabled']).toBe(false)
+  })
 })
