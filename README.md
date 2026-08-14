@@ -6,6 +6,10 @@ Inner Echo is a client-only Vite and React application that applies profile-driv
 
 The browser requests camera, microphone, and audio access only after direct user actions. Media is processed in the page and is not uploaded by the application.
 
+After an authorized GitHub Pages deployment, the live application is served at [sebastianspicker.github.io/inner-echo](https://sebastianspicker.github.io/inner-echo/). The current local candidate has not been published, so that URL is not release evidence. Each media capability remains off until its direct activation control is selected.
+
+That deployment also serves a [static demo](https://sebastianspicker.github.io/inner-echo/demo/) built from the repository's canonical synthetic-media screenshots. It does not request permissions or run the camera, audio, or effects engine.
+
 ## Project scope
 
 The package version is `0.1.0-alpha.1`. The application is an alpha-stage research and design tool.
@@ -34,9 +38,7 @@ Alpha status has practical consequences:
 - WebGL availability and performance vary by browser, GPU, and device. Fallback modes do not provide the full effect stack.
 - Automated Playwright coverage uses synthetic media. It does not replace real-device, real-permission, or screen-reader testing.
 - The evidence mappings describe metaphor design choices and documented hypotheses. They do not establish clinical validity.
-- Deployment is not configured in this repository. A static host must serve `dist/` and apply the policy documented in `public/_headers`.
-- The production CSP currently blocks inline style attributes used by the composition map. Resolve and test that conflict before deployment.
-- The current lockfile fails the moderate-threshold dependency audit because `sharp@0.34.5` is covered by high-severity inherited libvips advisories.
+- GitHub Pages cannot apply the full response-header policy in `public/_headers`, and all projects under `sebastianspicker.github.io` share one browser origin. See [Security and privacy](docs/SECURITY.md#github-pages-boundary) before treating that host as a permission or storage boundary.
 
 ## Requirements
 
@@ -224,6 +226,7 @@ Coverage thresholds in `vite.config.ts` are 85 percent statements, 70 percent br
 | `scripts/validation/` | Contract, profile, composer, and inspection commands. |
 | `scripts/screenshots/` | README screenshot capture, conversion, and verification. |
 | `scripts/release/` | Static artifact notice verification. |
+| `scripts/deploy/` | GitHub Pages assembly, base-path handling, CSP fallback, and artifact verification. |
 | `scripts/lib/` | Shared script implementation modules. |
 | `docs/` | Architecture, product, safety, reliability, release, and evidence documentation. |
 | `assets/readme/screenshots/` | Manifest-backed public screenshot set. |
@@ -233,17 +236,31 @@ Derived contract references under `docs/generated/` are tracked and must match t
 
 ## Deployment and operation
 
-`npm run build` writes the static application to `dist/`. The repository does not contain a deployment-provider configuration, container image, server process, public URL, or publication workflow.
+`npm run build` writes a root-based live application to `dist/`. The Pages-specific commands build the exact project-site artifact locally:
+
+```bash
+npm run pages:build
+npm run pages:verify
+npm run notices:verify
+npm run pages:preview
+npm run test:e2e:pages
+```
+
+The default Pages base path is `/inner-echo/`. Set `INNER_ECHO_PAGES_BASE_PATH=/` when preparing an artifact for a root custom domain. The assembled `dist/` serves the live application at the site root, preserves the capability-free walkthrough under `demo/`, includes `.nojekyll`, and adds a strict CSP meta fallback to both documents.
+
+`pages:preview` serves the built artifact at the same base path used in production. `test:e2e:pages` rebuilds that artifact and exercises the live camera/stop flow plus the isolated demo at the production base in Chrome, Firefox, and WebKit with synthetic media. The CI release-candidate job runs this gate before it can authorize an automatic deployment. The GitHub Pages workflow installs with lifecycle scripts disabled, rebuilds only `esbuild` and `sharp`, runs the dependency audit and application gate, assembles and verifies the exact Pages artifact, then uploads `dist/`. Deployment is triggered only by a successful push-triggered `main` CI run.
+
+Before the first authorized deployment, set **Repository settings → Pages → Source** to **GitHub Actions**. The workflow reads the existing Pages configuration but deliberately does not change or self-enable repository settings.
 
 A deployment must:
 
 1. Serve `dist/index.html` and its referenced assets over HTTPS.
 2. Route the application root to `index.html`.
-3. Resolve the composition-map inline-style conflict with the production CSP, then apply and verify the final response-header policy.
-4. Keep camera and microphone permissions restricted to the application origin.
-5. Verify the deployed response headers and same-origin request behavior.
+3. Keep every generated asset below the configured base path.
+4. Keep camera and microphone permissions restricted to the intended origin.
+5. Verify the delivered CSP, response headers, and same-origin request behavior on the actual host.
 
-Some static hosts recognize `public/_headers`; others ignore it. Treat that file as the intended policy, not evidence that a deployed host enforces it.
+GitHub Pages does not process `public/_headers`. The Pages artifact's meta CSP constrains scripts, styles, images, media, connections, objects, base URLs, and forms, but it cannot enforce `frame-ancestors`, `X-Frame-Options`, `X-Content-Type-Options`, or `Permissions-Policy`. Use a dedicated origin on a header-capable host or proxy when the complete policy is required. Treat `public/_headers` as the intended policy, not evidence that any host enforces it.
 
 ## Troubleshooting
 

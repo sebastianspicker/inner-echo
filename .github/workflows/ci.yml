@@ -116,6 +116,9 @@ jobs:
       - name: Run alpha local gate parity
         run: npm run release:alpha:local
 
+      - name: Verify GitHub Pages artifact in browsers
+        run: npm run test:e2e:pages
+
       - name: Verify README screenshot assets
         run: npm run screenshots:verify
 

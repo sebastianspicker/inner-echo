@@ -57,9 +57,23 @@ Referrer-Policy: strict-origin-when-cross-origin
 
 Deliver CSP as an HTTP response header so `frame-ancestors` is enforceable. Verify the actual deployed response because a static host may ignore or replace `public/_headers`.
 
-The current composition map uses React style attributes for node position and strength. The production `style-src 'self'` policy blocks those attributes. Treat this as a deployment blocker: resolve the implementation or CSP policy, then verify the final page under the deployed header. Do not weaken the policy without reviewing the security impact.
+The composition map uses stylesheet-backed position and strength classes so it remains compatible with the production `style-src 'self'` policy. Verify the final page under the deployed header; local source compatibility does not prove that a host delivered the intended policy.
 
 The Vite development server uses a development-only policy compatible with its bootstrap and hot-module reload. Do not copy that looser development policy to a production host.
+
+## GitHub Pages boundary
+
+The GitHub Pages workflow publishes the live application at `/inner-echo/` and the capability-free static walkthrough at `/inner-echo/demo/`. The Pages build injects this CSP fallback into both generated HTML documents:
+
+```http
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';
+```
+
+This is a document-level meta policy, not a response header. GitHub Pages does not process `public/_headers`, and meta CSP cannot enforce `frame-ancestors`. The Pages host therefore cannot provide the repository's intended frame denial, MIME-sniffing protection, or Permissions Policy. The effective referrer policy remains the standard `meta name="referrer"` declaration in `index.html`.
+
+GitHub project sites are also path-separated, not origin-separated. `/inner-echo/` shares the `https://sebastianspicker.github.io` origin with every other project site under that account. Browser media permissions and local storage are origin-scoped, so another application on that origin is inside the same browser trust boundary. A dedicated custom domain isolates that state from other `github.io` projects. A header-capable host or proxy is still required to enforce the complete header policy.
+
+Do not describe the bare GitHub Pages deployment as satisfying the full production-header contract. Verify its HTTPS response, base path, asset requests, meta CSP, and media activation flows after deployment, and retain the missing header controls as an explicit limitation.
 
 ## Logging and local data
 
@@ -87,7 +101,7 @@ Before an alpha tag:
 3. Confirm that camera, microphone, and audio remain direct-user-gesture actions.
 4. Confirm that passive preset imports do not activate media or sound.
 5. Verify the production build contains no debug interface, local path, secret, source map, or unintended remote request.
-6. Verify CSP, permission policy, frame denial, MIME sniffing protection, and referrer policy on the intended host.
+6. Verify the controls the intended host can deliver. For GitHub Pages, verify the meta CSP and record the unavailable header-only controls. For a header-capable host, verify CSP, permission policy, frame denial, MIME sniffing protection, and referrer policy from the actual response.
 7. Verify that public screenshots use synthetic media and contain no personal information.
 8. Run `npm run notices:verify` after the build and retain the verified notice files in the exact artifact.
 
