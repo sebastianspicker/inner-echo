@@ -197,6 +197,40 @@ async function undoDeletedPresetKeepsPayload(): Promise<void> {
   expect(restored[0].payload).toEqual(snapshot.payload)
 }
 
+async function loadingSavedSetupKeepsAudioOptIn(): Promise<void> {
+  const payload: PresetPayload = {
+    mode: 'preset',
+    conditionId: 'panic',
+    presets: [],
+    dimensions: [],
+    intensity: 0.7,
+    safeMode: true,
+    reducedMotion: false,
+    audioEnabled: true,
+    couplingStrength: 0.5,
+    maxFeedback: 0.3,
+    interactionAmount: 0.2,
+  }
+  const snapshot = createPresetSnapshot(payload, {
+    name: 'Audio fixture',
+    createdAt: '2026-08-12T12:00:00.000Z',
+  })
+  storageMap.set(PRESET_LIBRARY_STORAGE_KEY, JSON.stringify([snapshot]))
+  const props = buildProps()
+
+  render(<ConditionComposerPanel {...props} />)
+  await waitFor(() =>
+    expect((document.getElementById('saved-setup-select') as HTMLSelectElement | null)?.value).toBe(
+      snapshot.id,
+    ),
+  )
+  fireEvent.click(screen.getByText('Saved setups & sharing'))
+  fireEvent.click(screen.getByRole('button', { name: 'Load' }))
+
+  expect(props.__spies.onAudioEnabledChange).toHaveBeenCalledWith(false)
+  expect(props.__spies.onAudioEnabledChange).not.toHaveBeenCalledWith(true)
+}
+
 function storageFailureIsNotReportedAsSaved(): void {
   render(<ConditionComposerPanel {...buildProps()} />)
   fireEvent.click(screen.getByText('Saved setups & sharing'))
@@ -209,6 +243,26 @@ function storageFailureIsNotReportedAsSaved(): void {
   expect(screen.getByRole('alert').textContent).toMatch(/storage may be unavailable or full/i)
   expect(screen.queryByText('Saved setup updated.')).toBeNull()
   expect(storageMap.has(PRESET_LIBRARY_STORAGE_KEY)).toBe(false)
+}
+
+async function modeAndCopyActionsRemainWired(): Promise<void> {
+  const writeText = vi.fn().mockResolvedValue(undefined)
+  vi.stubGlobal('navigator', { clipboard: { writeText } })
+  const props = buildProps()
+
+  render(<ConditionComposerPanel {...props} />)
+
+  fireEvent.click(screen.getByRole('radio', { name: 'Experience dimensions' }))
+  expect(props.__spies.onModeChange).toHaveBeenCalledWith('symptom')
+
+  fireEvent.click(screen.getByText('Saved setups & sharing'))
+  fireEvent.click(screen.getByRole('button', { name: 'Copy configuration' }))
+  await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1))
+  expect(screen.getByRole('status').textContent).toBe('Configuration copied.')
+
+  fireEvent.click(screen.getByRole('button', { name: 'Copy share link' }))
+  await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2))
+  expect(screen.getByRole('status').textContent).toBe('Share link copied.')
 }
 
 describe('ui/ConditionComposerPanel shared preset hash', () => {
@@ -234,6 +288,8 @@ describe('ui/ConditionComposerPanel preset storage migration', () => {
 })
 
 describe('ui/ConditionComposerPanel saved setup storage', () => {
+  it('loads saved configuration without activating audio', loadingSavedSetupKeepsAudioOptIn)
+
   it(
     'allows an eight-second preset deletion to be undone without changing the payload',
     undoDeletedPresetKeepsPayload,
@@ -241,5 +297,10 @@ describe('ui/ConditionComposerPanel saved setup storage', () => {
   it(
     'surfaces storage write failure without claiming that a setup was saved',
     storageFailureIsNotReportedAsSaved,
+  )
+
+  it(
+    'keeps mode selection and both copy actions wired through the panel',
+    modeAndCopyActionsRemainWired,
   )
 })

@@ -27,6 +27,10 @@ let closingPromise: Promise<void> | null = null
 
 // Tracks if an asynchronous start operation is currently in progress.
 let startingPromise: Promise<AudioContextStatus> | null = null
+let startingGeneration: number | null = null
+
+// Invalidates a pending start when a teardown wins the lifecycle race.
+let lifecycleGeneration = 0
 
 // A set of callback functions (listeners) that want to be updated when the audio status changes.
 const listeners = new Set<AudioContextManagerListener>()
@@ -51,19 +55,30 @@ function notify(status: AudioContextStatus, error?: string): void {
  *
  * @returns A promise resolving to the new `AudioContextStatus`.
  */
-export async function startAudioContext(): Promise<AudioContextStatus> {
-  if (startingPromise) return startingPromise
-  startingPromise = runAudioContextStart().finally(clearStartingPromise)
+export function startAudioContext(): Promise<AudioContextStatus> {
+  const generation = lifecycleGeneration
+  if (startingPromise) {
+    if (startingGeneration === generation) return startingPromise
+    return Promise.resolve('off')
+  }
+  if (closingPromise) return Promise.resolve('off')
+  startingGeneration = generation
+  startingPromise = runAudioContextStart(generation).finally(clearStartingPromise)
 
   return startingPromise
 }
 
-async function runAudioContextStart(): Promise<AudioContextStatus> {
+async function runAudioContextStart(generation: number): Promise<AudioContextStatus> {
   notify('starting')
   try {
     if (closingPromise) await closingPromise
+    if (generation !== lifecycleGeneration) return 'off'
     const context = getOrCreateAudioContext()
     if (context.state !== 'running') await context.resume()
+    if (generation !== lifecycleGeneration) {
+      await closeManagedContext(context)
+      return 'off'
+    }
     return reportStartedContext(context)
   } catch (error) {
     return reportAudioStartError(error)
@@ -99,6 +114,7 @@ function reportAudioStartError(error: unknown): AudioContextStatus {
 
 function clearStartingPromise(): void {
   startingPromise = null
+  startingGeneration = null
 }
 
 /**
@@ -156,6 +172,7 @@ export function addAudioContextListener(fn: AudioContextManagerListener): () => 
  * Used during complete application teardown.
  */
 export async function closeAudioContext(): Promise<void> {
+  lifecycleGeneration += 1
   if (!sharedContext) {
     notify('off')
     return
@@ -164,7 +181,19 @@ export async function closeAudioContext(): Promise<void> {
     await closingPromise
     return
   }
-  const ctx = sharedContext
+  await closeManagedContext(sharedContext)
+}
+
+async function closeManagedContext(ctx: AudioContext): Promise<void> {
+  if (ctx.state === 'closed') {
+    if (sharedContext === ctx) sharedContext = null
+    notify('off')
+    return
+  }
+  if (closingPromise) {
+    await closingPromise
+    return
+  }
   closingPromise = (async () => {
     try {
       // Safari may hang on ctx.close(); use a timeout to avoid blocking indefinitely.

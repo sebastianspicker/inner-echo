@@ -1,21 +1,25 @@
 /**
- * Coupling Engine
+ * Per-profile audiovisual coupling orchestration.
  *
- * Per-profile AV coupling layer. It runs inside the WebGL frame loop and returns
- * small, smoothed, clamped overrides so audio metrics can nudge video parameters
- * and camera-derived video metrics can nudge audio FX parameters.
- *
- * This is a metaphorical feedback layer, not a clinical model. Keep new mappings
- * conservative and profile-specific so Safe Mode and Reduced Motion remain effective.
+ * Mapping definitions and their frame evaluation live alongside this entry point
+ * so this module can remain responsible for profile settings and lifecycle only.
  */
 
 import type { Profile } from '../../conditions/schema'
 import type { AudioMetrics } from '../audio'
 import type { VideoMetrics } from '../canvas'
+import { clamp01 } from '../../utils/numeric'
+import { getBaseNumeric, getProfileVideoBase } from './couplingBaseValues'
+import { evaluateCouplingMappings } from './couplingEvaluation'
+import {
+  createAudioCouplingMappings,
+  createVideoCouplingMappings,
+  type CouplingMapping,
+} from './couplingMappings'
 
 export interface CouplingSettings {
-  couplingStrength: number // 0..1
-  maxFeedback: number // 0..1 hard cap
+  couplingStrength: number
+  maxFeedback: number
   reducedMotion: boolean
   safeMode: boolean
 }
@@ -25,34 +29,6 @@ export interface CouplingStepResult {
   audio: Record<string, number>
 }
 
-import { clamp, clamp01, smoothStep } from '../../utils/numeric'
-import { resolveAudioKeys, resolveCouplingVideoKeys } from './couplingKeys'
-import { getBaseNumeric, getProfileAudioBase, getProfileVideoBase } from './couplingBaseValues'
-
-type Mapping = {
-  kind: 'video' | 'audio'
-  key: string
-  attack: number
-  release: number
-  clampMin: number
-  clampMax: number
-  /** Base value for audio params (read once from profile); video bases come from UI/controlValues. */
-  base0?: number
-  // compute target absolute value
-  compute: (audio: AudioMetrics, video: VideoMetrics, strength: number, base: number) => number
-  smoothed: number
-}
-
-/**
- * Creates a coupling engine instance for the given profile and UI settings.
- *
- * It pre-calculates which specific audio/video parameters exist in the current profile
- * (e.g., checking if the 'noise_bed' or 'pulse' nodes actually exist in the stack).
- * If they don't, it skips coupling them to save CPU cycles.
- *
- * @param profile The active condition profile.
- * @param settings The user's current UI slider settings (Coupling Strength, Safe Mode, etc.)
- */
 export function createCouplingEngine(
   profile: Profile,
   settings: CouplingSettings,
@@ -73,335 +49,15 @@ export function createCouplingEngine(
   let couplingStrength = clamp01(settings.couplingStrength)
   let maxFeedback = clamp01(settings.maxFeedback)
   let safeMode = settings.safeMode === true
+  let mappings: CouplingMapping[] = [
+    ...createVideoCouplingMappings(profile, reducedMotion),
+    ...createAudioCouplingMappings(profile),
+  ]
 
-  let videoKeys = resolveCouplingVideoKeys(profile, reducedMotion)
-
-  const audioTremoloRates = resolveAudioKeys(profile, 'tremolo', 'rate')
-  const audioTremoloDepths = resolveAudioKeys(profile, 'tremolo', 'depth')
-  const audioLowpassCutoffs = resolveAudioKeys(profile, 'lowpass', 'cutoff')
-  const audioNoiseLevels = resolveAudioKeys(profile, 'noise_bed', 'level')
-  const audioDelayMixes = resolveAudioKeys(profile, 'delay', 'mix')
-  const audioReverbMixes = resolveAudioKeys(profile, 'reverb', 'mix')
-  const audioPulseToneMixes = resolveAudioKeys(profile, 'pulse_tone', 'mix')
-
-  const micRmsOr = (a: AudioMetrics) => (typeof a.micRms === 'number' ? a.micRms : a.rms)
-  const micCentroidOr = (a: AudioMetrics) =>
-    typeof a.micCentroid === 'number' ? a.micCentroid : a.centroid
-  const micFluxOr = (a: AudioMetrics) => (typeof a.micFlux === 'number' ? a.micFlux : a.flux)
-
-  function buildVideoMappings(): Mapping[] {
-    const out: Mapping[] = []
-    for (const k of videoKeys.grain) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.12,
-        release: 0.35,
-        clampMin: 0,
-        clampMax: 0.5,
-        smoothed: 0,
-        compute: (a, _v, strength, base) => base + micRmsOr(a) * (0.18 * strength),
-      })
-    }
-    for (const k of videoKeys.vignette) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.18,
-        release: 0.45,
-        clampMin: 0,
-        clampMax: 0.6,
-        smoothed: 0,
-        compute: (a, _v, strength, base) => base + micRmsOr(a) * (0.1 * strength),
-      })
-    }
-    for (const k of videoKeys.interference) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.25,
-        release: 0.6,
-        clampMin: 0,
-        clampMax: 0.2,
-        smoothed: 0,
-        compute: (a, _v, strength, base) => base + micRmsOr(a) * (0.08 * strength),
-      })
-    }
-    for (const k of videoKeys.sharpen) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.35,
-        release: 0.7,
-        clampMin: 0,
-        clampMax: 0.2,
-        smoothed: 0,
-        compute: (a, _v, strength, base) => base + micCentroidOr(a) * (0.06 * strength),
-      })
-    }
-    for (const k of videoKeys.chroma) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.35,
-        release: 0.8,
-        clampMin: 0,
-        clampMax: 0.25,
-        smoothed: 0,
-        compute: (a, _v, strength, base) =>
-          base + Math.max(0, micCentroidOr(a) - 0.4) * (0.08 * strength),
-      })
-    }
-    for (const k of videoKeys.pulse) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.35,
-        release: 0.9,
-        clampMin: 0,
-        clampMax: 0.18,
-        smoothed: 0,
-        compute: (a, _v, strength, base) => base + micFluxOr(a) * (0.06 * strength),
-      })
-    }
-    for (const k of videoKeys.gaze) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.18,
-        release: 0.45,
-        clampMin: 0,
-        clampMax: 0.85,
-        smoothed: 0,
-        compute: (a, _v, strength, base) => base + micRmsOr(a) * (0.1 * strength),
-      })
-    }
-    for (const k of videoKeys.gazeEdge) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.25,
-        release: 0.55,
-        clampMin: 0,
-        clampMax: 0.35,
-        smoothed: 0,
-        compute: (a, _v, strength, base) =>
-          base + Math.max(0, micCentroidOr(a) - 0.35) * (0.08 * strength),
-      })
-    }
-    for (const k of videoKeys.somaticDepth) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.12,
-        release: 0.45,
-        clampMin: 0,
-        clampMax: 0.18,
-        smoothed: 0,
-        compute: (a, _v, strength, base) =>
-          base + (micRmsOr(a) * 0.04 + micFluxOr(a) * 0.05) * strength,
-      })
-    }
-    for (const k of videoKeys.somaticTunnel) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.16,
-        release: 0.5,
-        clampMin: 0,
-        clampMax: 0.75,
-        smoothed: 0,
-        compute: (a, _v, strength, base) => base + micRmsOr(a) * (0.12 * strength),
-      })
-    }
-    for (const k of videoKeys.intrusion) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.08,
-        release: 0.32,
-        clampMin: 0,
-        clampMax: 0.26,
-        smoothed: 0,
-        compute: (a, _v, strength, base) =>
-          base + (micFluxOr(a) * 0.04 + micRmsOr(a) * 0.03) * strength,
-      })
-    }
-    for (const k of videoKeys.salience) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.08,
-        release: 0.28,
-        clampMin: 0,
-        clampMax: 0.3,
-        smoothed: 0,
-        compute: (a, _v, strength, base) =>
-          base + (micCentroidOr(a) * 0.05 + micFluxOr(a) * 0.04) * strength,
-      })
-    }
-    for (const k of videoKeys.salienceShift) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.08,
-        release: 0.3,
-        clampMin: 0,
-        clampMax: 0.08,
-        smoothed: 0,
-        compute: (a, _v, strength, base) => base + micFluxOr(a) * (0.02 * strength),
-      })
-    }
-    for (const k of videoKeys.glassVeil) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.4,
-        release: 0.9,
-        clampMin: 0,
-        clampMax: 0.45,
-        smoothed: 0,
-        compute: (a, v, strength, base) =>
-          base + (micRmsOr(a) * 0.04 + Math.max(0, 0.5 - v.luminance) * 0.08) * strength,
-      })
-    }
-    for (const k of videoKeys.glassRefraction) {
-      out.push({
-        kind: 'video',
-        key: k,
-        attack: 0.35,
-        release: 0.85,
-        clampMin: 0,
-        clampMax: 0.06,
-        smoothed: 0,
-        compute: (a, _v, strength, base) =>
-          base + Math.max(0, micCentroidOr(a) - 0.4) * (0.018 * strength),
-      })
-    }
-    return out
+  const rebuildVideoMappings = () => {
+    const audioMappings = mappings.filter((mapping) => mapping.kind === 'audio')
+    mappings = [...createVideoCouplingMappings(profile, reducedMotion), ...audioMappings]
   }
-
-  function buildAudioMappings(): Mapping[] {
-    const out: Mapping[] = []
-    for (const k of audioTremoloDepths) {
-      const base0 = getProfileAudioBase(profile, k)
-      out.push({
-        kind: 'audio',
-        key: k,
-        attack: 0.25,
-        release: 0.6,
-        clampMin: 0,
-        clampMax: 0.15,
-        base0,
-        smoothed: base0,
-        compute: (a, v, strength, base) =>
-          base + v.motion * (0.05 * strength) + micRmsOr(a) * (0.07 * strength),
-      })
-    }
-    for (const k of audioTremoloRates) {
-      const base0 = getProfileAudioBase(profile, k)
-      out.push({
-        kind: 'audio',
-        key: k,
-        attack: 0.35,
-        release: 0.8,
-        clampMin: 0.1,
-        clampMax: 4,
-        base0,
-        smoothed: base0,
-        compute: (a, v, strength, base) =>
-          base + v.motion * (1.0 * strength) + micFluxOr(a) * (1.2 * strength),
-      })
-    }
-    for (const k of audioLowpassCutoffs) {
-      const base0 = getProfileAudioBase(profile, k)
-      out.push({
-        kind: 'audio',
-        key: k,
-        attack: 0.4,
-        release: 0.9,
-        clampMin: 300,
-        clampMax: 12000,
-        base0,
-        smoothed: base0,
-        compute: (a, v, strength, base) => {
-          const delta = (v.luminance - 0.5) * 2000 * strength
-          const micDelta =
-            micRmsOr(a) * (1400 * strength) +
-            Math.max(0, micCentroidOr(a) - 0.45) * (1200 * strength)
-          return base + delta + micDelta
-        },
-      })
-    }
-    for (const k of audioNoiseLevels) {
-      const base0 = getProfileAudioBase(profile, k)
-      out.push({
-        kind: 'audio',
-        key: k,
-        attack: 0.25,
-        release: 0.65,
-        clampMin: 0,
-        clampMax: 0.08,
-        base0,
-        smoothed: base0,
-        compute: (a, v, strength, base) =>
-          base + v.edge * (0.02 * strength) + micRmsOr(a) * (0.035 * strength),
-      })
-    }
-    for (const k of audioDelayMixes) {
-      const base0 = getProfileAudioBase(profile, k)
-      out.push({
-        kind: 'audio',
-        key: k,
-        attack: 0.18,
-        release: 0.55,
-        clampMin: 0,
-        clampMax: 0.12,
-        base0,
-        smoothed: base0,
-        compute: (a, _v, strength, base) =>
-          base + micRmsOr(a) * (0.015 * strength) + micFluxOr(a) * (0.025 * strength),
-      })
-    }
-    for (const k of audioReverbMixes) {
-      const base0 = getProfileAudioBase(profile, k)
-      out.push({
-        kind: 'audio',
-        key: k,
-        attack: 0.35,
-        release: 0.9,
-        clampMin: 0,
-        clampMax: 0.12,
-        base0,
-        smoothed: base0,
-        compute: (a, _v, strength, base) => base + micRmsOr(a) * (0.02 * strength),
-      })
-    }
-    for (const k of audioPulseToneMixes) {
-      const base0 = getProfileAudioBase(profile, k)
-      out.push({
-        kind: 'audio',
-        key: k,
-        attack: 0.12,
-        release: 0.45,
-        clampMin: 0,
-        clampMax: 0.12,
-        base0,
-        smoothed: base0,
-        compute: (a, _v, strength, base) =>
-          base + micRmsOr(a) * (0.035 * strength) + micFluxOr(a) * (0.02 * strength),
-      })
-    }
-    return out
-  }
-
-  function rebuildVideoKeys(): void {
-    videoKeys = resolveCouplingVideoKeys(profile, reducedMotion)
-    const audioMappings = mappings.filter((m) => m.kind === 'audio')
-    mappings = [...buildVideoMappings(), ...audioMappings]
-  }
-
-  let mappings: Mapping[] = [...buildVideoMappings(), ...buildAudioMappings()]
 
   return {
     setSettings(next) {
@@ -410,36 +66,21 @@ export function createCouplingEngine(
       safeMode = next.safeMode === true
       if (typeof next.reducedMotion === 'boolean' && next.reducedMotion !== reducedMotion) {
         reducedMotion = next.reducedMotion
-        rebuildVideoKeys()
+        rebuildVideoMappings()
       }
     },
     step(deltaSec, audio, video, baseControlValues) {
       const safetyDamping = safeMode ? 0.6 : 1
       const strength = couplingStrength * maxFeedback * safetyDamping
-      const outVideo: Record<string, number> = {}
-      const outAudio: Record<string, number> = {}
-
-      for (const m of mappings) {
-        let base = 0
-        if (m.kind === 'video') {
-          base = getBaseNumeric(
-            baseControlValues,
-            m.key,
-            getProfileVideoBase(profile, m.key, reducedMotion),
-          )
-        } else {
-          base = m.base0 ?? 0
-        }
-
-        const target = m.compute(audio, video, strength, base)
-        const smoothed = smoothStep(m.smoothed, target, deltaSec, m.attack, m.release)
-        m.smoothed = smoothed
-        const v = clamp(smoothed, m.clampMin, m.clampMax)
-        if (m.kind === 'video') outVideo[m.key] = v
-        else outAudio[m.key] = v
-      }
-
-      return { video: outVideo, audio: outAudio }
+      return evaluateCouplingMappings(mappings, deltaSec, audio, video, strength, (mapping) =>
+        mapping.kind === 'audio'
+          ? (mapping.base0 ?? 0)
+          : getBaseNumeric(
+              baseControlValues,
+              mapping.key,
+              getProfileVideoBase(profile, mapping.key, reducedMotion),
+            ),
+      )
     },
   }
 }

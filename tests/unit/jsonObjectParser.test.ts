@@ -21,8 +21,8 @@ describe('utils/jsonObjectParser', () => {
   })
 
   it('throws on input exceeding max length', () => {
-    const huge = `{"x":"${'a'.repeat(1_048_576 + 100)}"}`
-    expect(() => parseFirstJsonObject(huge)).toThrow('Input too large')
+    const huge = 'a'.repeat(1_048_577)
+    expect(() => parseFirstJsonObject(huge)).toThrow('Input too large (1048577 chars, max 1048576)')
   })
 
   it('skips earlier object candidates that do not satisfy predicate', () => {
@@ -37,4 +37,33 @@ describe('utils/jsonObjectParser', () => {
 
     expect(value.mapping.ok).toBe(true)
   })
+
+  it('continues after a malformed balanced candidate', () => {
+    const value = parseFirstJsonObject<{ mapping: { recovered: boolean } }>(
+      'prefix {"broken":} then {"mapping":{"recovered":true}}',
+      { predicate: hasMapping },
+    )
+
+    expect(value).toEqual({ mapping: { recovered: true } })
+  })
+
+  it('does not treat braces or escaped quotes inside JSON strings as object boundaries', () => {
+    const value = parseFirstJsonObject<{ mapping: { message: string } }>(
+      'prefix {"mapping":{"message":"brace } and escaped quote \\" with {"}}',
+      { predicate: hasMapping },
+    )
+
+    expect(value).toEqual({ mapping: { message: 'brace } and escaped quote " with {' } })
+  })
+
+  it('rejects an array even when its predicate accepts every value', () => {
+    expect(() => parseFirstJsonObject('["array candidate"]', { predicate: () => true })).toThrow(
+      'No valid JSON object found',
+    )
+  })
 })
+
+function hasMapping(value: unknown): value is { mapping: unknown } {
+  const mapping = (value as { mapping?: unknown }).mapping
+  return mapping != null && typeof mapping === 'object'
+}

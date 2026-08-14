@@ -11,7 +11,9 @@ import { createDevServerHarness, destroyServerHarness } from './support/server.m
 
 const HOST = process.env.HOST ?? '127.0.0.1'
 const PORT = Number(process.env.PORT ?? '4173')
-const BASE_URL = `http://${HOST}:${PORT}`
+const BASE_PATH = process.env.BASE_PATH ?? '/'
+const BASE_URL = new URL(BASE_PATH, `http://${HOST}:${PORT}`).href
+const DEMO_URL = process.env.DEMO_PATH ? new URL(process.env.DEMO_PATH, BASE_URL).href : null
 
 const BROWSERS = [
   { name: 'chrome', launcher: chromium, launchOptions: { channel: 'chrome' } },
@@ -124,6 +126,49 @@ async function runSmoke(browserName, browser) {
   }
 }
 
+async function runDemoSmoke(browserName, browser) {
+  if (!DEMO_URL) return
+
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const page = await context.newPage()
+  const failures = []
+  page.on('console', (message) => {
+    if (message.type() === 'error') failures.push(`console: ${message.text()}`)
+  })
+  page.on('pageerror', (error) => failures.push(`page: ${error.message}`))
+  page.on('requestfailed', (request) => {
+    failures.push(`request: ${request.url()} ${request.failure()?.errorText ?? 'failed'}`)
+  })
+  page.on('response', (response) => {
+    if (response.status() >= 400) failures.push(`response: ${response.status()} ${response.url()}`)
+  })
+
+  try {
+    const response = await page.goto(DEMO_URL, { waitUntil: 'networkidle' })
+    assert.equal(response?.ok(), true, `${browserName}: static demo navigation failed`)
+    assert.match(await page.title(), /Static demo/i, `${browserName}: static demo title missing`)
+    assert.equal(
+      await page.locator('video, audio, input').count(),
+      0,
+      `${browserName}: static demo exposed a runtime media element or input`,
+    )
+
+    await page.getByRole('button', { name: /next.*simulated/i }).click()
+    assert.match(
+      (await page.getByRole('status').textContent()) ?? '',
+      /step 2/i,
+      `${browserName}: static demo interaction did not advance`,
+    )
+    assert.equal(
+      failures.length,
+      0,
+      `${browserName}: static demo emitted browser failures\n${failures.join('\n')}`,
+    )
+  } finally {
+    await context.close()
+  }
+}
+
 async function main() {
   const harness = await createHarness()
   const failures = []
@@ -134,6 +179,7 @@ async function main() {
       const browser = await launcher.launch({ headless: true, ...(launchOptions ?? {}) })
       try {
         await runSmoke(name, browser)
+        await runDemoSmoke(name, browser)
       } finally {
         await browser.close()
       }

@@ -1,0 +1,117 @@
+name: Deploy live application to Pages
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      should_deploy: ${{ steps.freshness.outputs.should_deploy }}
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          ref: main
+
+      - name: Reject stale CI completion
+        id: freshness
+        env:
+          CANDIDATE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          current_sha="$(git rev-parse HEAD)"
+          if [[ "$current_sha" == "$CANDIDATE_SHA" ]]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping stale Pages candidate $CANDIDATE_SHA; main is $current_sha."
+          fi
+
+  configure:
+    needs: gate
+    if: needs.gate.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pages: read
+    outputs:
+      base_path: ${{ steps.pages.outputs.base_path }}
+    steps:
+      - name: Read Pages configuration
+        id: pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+
+  build:
+    needs: configure
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      INNER_ECHO_PAGES_BASE_PATH: ${{ needs.configure.outputs.base_path }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Rebuild approved native tooling
+        run: npm rebuild esbuild sharp
+
+      - name: Audit dependencies
+        run: npm run audit:dependencies
+
+      - name: Run application gate
+        run: npm run verify
+
+      - name: Build Pages artifact
+        run: npm run pages:build
+
+      - name: Verify Pages artifact
+        run: npm run pages:verify && npm run notices:verify
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist
+          include-hidden-files: true
+
+  deploy:
+    needs: [configure, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

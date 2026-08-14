@@ -12,6 +12,7 @@ import { useProfileLoad } from './hooks/useProfileLoad'
 import { useCameraController } from './hooks/useCameraController'
 import { useOverlayController } from './hooks/useOverlayController'
 import { useReactivePipeline } from './hooks/useReactivePipeline'
+import { useAudioRuntime } from './hooks/useAudioRuntime'
 import { profileHasTemporalNodes, TEMPORAL_NODE_TYPES } from '../conditions/motionPolicy'
 import { CameraHeader } from './CameraHeader'
 import { CameraStage } from './CameraStage'
@@ -28,14 +29,6 @@ import {
   getSafetyContext,
 } from '../conditions/normalize'
 import { type CameraState } from '../engine/video'
-import {
-  startAudioContext,
-  createAudioEngine,
-  type AudioEngineControl,
-  type AudioContextStatus,
-  type MicStatus,
-  type AudioInputMode,
-} from '../engine/audio'
 import { ConditionComposerPanel } from './ConditionComposerPanel'
 import { WelcomeStep, getWelcomeAcknowledged } from './WelcomeStep'
 import { DebugPanel } from './DebugPanel'
@@ -85,24 +78,6 @@ function getActiveVideoNodeIds(profile: Profile | null, reducedMotion: boolean):
   return active
 }
 
-function profileHasEnabledAudio(profile: Profile | null): boolean {
-  return profile?.audio_stack?.enabled === true
-}
-
-function selectAudioStack(
-  profile: Profile | null,
-  profileHasAudio: boolean,
-  audioRequested: boolean,
-): Profile['audio_stack'] | null {
-  if (profileHasAudio) return profile?.audio_stack ?? { enabled: false }
-  if (audioRequested) return profile?.audio_stack ?? null
-  return { enabled: false }
-}
-
-function selectMasterVolume(profile: Profile | null, audioRequested: boolean): number {
-  return audioRequested ? (profile?.audio_stack?.master?.volume ?? 0.22) : 0
-}
-
 function seedPresetStack(previous: SelectedPreset[], conditionId: string): SelectedPreset[] {
   if (previous.length > 0) return previous
   return conditionId && conditionId !== 'none' ? [{ profileId: conditionId, weight: 1 }] : []
@@ -119,19 +94,10 @@ export function CameraView() {
   const [intensity, setIntensity] = useState(DEFAULT_INTENSITY)
   const [safeMode, setSafeMode] = useState(true)
   const [stressMode, setStressMode] = useState(false)
-  const [audioStatus, setAudioStatus] = useState<AudioContextStatus>('off')
-  const [audioError, setAudioError] = useState<string | null>(null)
-  const [masterVolume, setMasterVolume] = useState(0.22)
-  const [audioEnabled, setAudioEnabled] = useState(false)
-  const [micStatus, setMicStatus] = useState<MicStatus>('off')
-  const [micError, setMicError] = useState<string | null>(null)
-  const [inputMode, setInputMode] = useState<AudioInputMode>('synth')
   const [welcomeAcknowledged, setWelcomeAcknowledged] = useState(getWelcomeAcknowledged)
   const [reducedMotion, setReducedMotion] = useState(
     () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
   )
-  const [micSensitivity, setMicSensitivity] = useState(0.5)
-  const [micGate, setMicGate] = useState(0.25)
   const [couplingStrength, setCouplingStrength] = useState(0.5)
   const [maxFeedback, setMaxFeedback] = useState(0.35)
   const [interactionAmount, setInteractionAmount] = useState(0.15)
@@ -145,6 +111,34 @@ export function CameraView() {
   const [evidenceDocPath, setEvidenceDocPath] = useState<EvidenceDocPath>(
     'docs/references/README.md',
   )
+  const profileRef = useRef<Profile | null>(null)
+  const {
+    audioStatus,
+    setAudioStatus,
+    audioError,
+    setAudioError,
+    masterVolume,
+    setMasterVolume,
+    audioEnabled,
+    micStatus,
+    setMicStatus,
+    micError,
+    setMicError,
+    inputMode,
+    micSensitivity,
+    micGate,
+    audioEngineControlRef,
+    audioRequestSeqRef,
+    handleEnableAudio,
+    handleDisableAudio,
+    handleAudioEnabledChange,
+    handleMasterVolumeChange,
+    handleEnableMic,
+    handleDisableMic,
+    handleInputModeChange,
+    handleMicSensitivityChange,
+    handleMicGateChange,
+  } = useAudioRuntime({ profileRef })
 
   const {
     profile,
@@ -172,9 +166,6 @@ export function CameraView() {
   // Render-loop consumers should read settings from refs to avoid stale captures.
   // By using mutable refs, the WebGL render loop running at 60fps can read the latest UI slider
   // values immediately without needing React to re-render the whole `CameraView` component tree.
-  const inputModeRef = useRef(inputMode)
-  const micSensitivityRef = useRef(micSensitivity)
-  const micGateRef = useRef(micGate)
   const couplingStrengthRef = useRef(couplingStrength)
   const maxFeedbackRef = useRef(maxFeedback)
   const safeModeRef = useRef(safeMode)
@@ -187,15 +178,11 @@ export function CameraView() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const fallbackCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const overlayControlRef = useRef<OverlayControl | null>(null)
-  const audioEngineControlRef = useRef<AudioEngineControl | null>(null)
   const rmsDebugRef = useRef<HTMLSpanElement | null>(null)
   const videoMetricsRef = useRef<VideoMetrics | null>(null)
   const cameraRequestSeqRef = useRef(0)
-  const audioRequestSeqRef = useRef(0)
   const reducedMotionPrevRef = useRef(reducedMotion)
   const profilePrevRef = useRef<Profile | null>(null)
-  const profileRef = useRef<Profile | null>(profile)
-  const audioEnabledRef = useRef(audioEnabled)
   const cameraStateRef = useRef<CameraState>(cameraState)
 
   const cameraRuntimeContext = useMemo<CameraRuntimeContext>(
@@ -215,7 +202,14 @@ export function CameraView() {
       setMicStatus,
       setMicError,
     }),
-    [],
+    [
+      audioEngineControlRef,
+      audioRequestSeqRef,
+      setAudioStatus,
+      setAudioError,
+      setMicStatus,
+      setMicError,
+    ],
   )
 
   const cameraInterruptionContext = useMemo<CameraInterruptionContext>(
@@ -230,9 +224,6 @@ export function CameraView() {
     [],
   )
 
-  inputModeRef.current = inputMode
-  micSensitivityRef.current = micSensitivity
-  micGateRef.current = micGate
   couplingStrengthRef.current = couplingStrength
   maxFeedbackRef.current = maxFeedback
   safeModeRef.current = safeMode
@@ -240,7 +231,6 @@ export function CameraView() {
   controlValuesRef.current = controlValues
   stressModeRef.current = stressMode
   profileRef.current = profile
-  audioEnabledRef.current = audioEnabled
   cameraStateRef.current = cameraState
 
   const openEvidence = useCallback((docPath: EvidenceDocPath) => {
@@ -292,131 +282,6 @@ export function CameraView() {
 
   // Ensure all runtime resources are released even if the view unmounts unexpectedly.
   useEffect(() => () => releaseCameraRuntime(cameraRuntimeContext), [cameraRuntimeContext])
-
-  const handleMicStatusChange = (status: MicStatus, error?: string): void => {
-    setMicStatus(status)
-    setMicError(error ?? null)
-    if (status === 'on') {
-      setInputMode('mix')
-      audioEngineControlRef.current?.setInputMode('mix')
-      return
-    }
-    if (!['off', 'denied', 'error'].includes(status) || inputModeRef.current === 'synth') return
-    setInputMode('synth')
-    audioEngineControlRef.current?.setInputMode('synth')
-  }
-
-  function installAudioEngine(forceEnabled: boolean, requestSeq: number): void {
-    audioEngineControlRef.current?.stop()
-    audioEngineControlRef.current = null
-    const currentProfile = profileRef.current
-    const currentAudioEnabled = forceEnabled || audioEnabledRef.current
-    const profileHasAudio = profileHasEnabledAudio(currentProfile)
-    const audioRequested = profileHasAudio || currentAudioEnabled
-    const audioStack = selectAudioStack(currentProfile, profileHasAudio, audioRequested)
-    if (profileHasAudio || forceEnabled) setAudioEnabled(true)
-    const control = createAudioEngine(audioStack, {
-      onStatusChange(status, error) {
-        setAudioStatus(status)
-        setAudioError(error ?? null)
-      },
-      onMicStatusChange: handleMicStatusChange,
-    })
-    if (requestSeq !== audioRequestSeqRef.current) {
-      control.stop()
-      return
-    }
-    audioEngineControlRef.current = control
-    setAudioStatus('on')
-    const volume = selectMasterVolume(currentProfile, audioRequested)
-    control.setMasterVolume(volume)
-    control.setInputMode(inputModeRef.current)
-    control.setMicSensitivity(micSensitivityRef.current)
-    control.setMicGate(micGateRef.current)
-    setMasterVolume(volume)
-  }
-
-  const finishAudioStart = (
-    status: AudioContextStatus,
-    forceEnabled: boolean,
-    requestSeq: number,
-  ): void => {
-    if (requestSeq !== audioRequestSeqRef.current) return
-    if (status === 'on') installAudioEngine(forceEnabled, requestSeq)
-    else setAudioStatus(status)
-  }
-
-  const failAudioStart = (error: unknown, requestSeq: number): void => {
-    if (requestSeq !== audioRequestSeqRef.current) return
-    setAudioStatus('error')
-    setAudioError(error instanceof Error ? error.message : String(error))
-  }
-
-  function startAudio(forceEnabled: boolean): void {
-    const requestSeq = ++audioRequestSeqRef.current
-    setAudioError(null)
-    setAudioStatus('starting')
-    startAudioContext()
-      .then((status) => finishAudioStart(status, forceEnabled, requestSeq))
-      .catch((error) => failAudioStart(error, requestSeq))
-  }
-
-  const handleEnableAudio = (): void => {
-    startAudio(false)
-  }
-
-  const handleDisableAudio = useCallback(() => {
-    audioRequestSeqRef.current += 1
-    audioEngineControlRef.current?.stop()
-    audioEngineControlRef.current = null
-    setAudioEnabled(false)
-    setAudioStatus('off')
-    setAudioError(null)
-    setMicStatus('off')
-    setMicError(null)
-    setInputMode('synth')
-  }, [])
-
-  const handleAudioEnabledChange = (enabled: boolean): void => {
-    setAudioEnabled(enabled)
-    if (enabled && audioStatus !== 'on' && audioStatus !== 'starting') {
-      startAudio(true)
-    }
-  }
-
-  const handleMasterVolumeChange = useCallback((value: number) => {
-    setMasterVolume(value)
-    audioEngineControlRef.current?.setMasterVolume(value)
-  }, [])
-
-  const handleEnableMic = useCallback(() => {
-    setMicError(null)
-    setInputMode('mix')
-    audioEngineControlRef.current?.setInputMode('mix')
-    audioEngineControlRef.current?.requestMic()
-  }, [])
-
-  const handleDisableMic = useCallback(() => {
-    audioEngineControlRef.current?.stopMic()
-    if (inputModeRef.current !== 'synth') {
-      setInputMode('synth')
-      audioEngineControlRef.current?.setInputMode('synth')
-    }
-    setMicStatus('off')
-    setMicError(null)
-  }, [])
-
-  const handleInputModeChange = useCallback((mode: AudioInputMode) => {
-    setInputMode(mode)
-    audioEngineControlRef.current?.setInputMode(mode)
-  }, [])
-
-  useEffect(() => {
-    if (micStatus === 'on') return
-    if (inputMode !== 'mic') return
-    setInputMode('synth')
-    audioEngineControlRef.current?.setInputMode('synth')
-  }, [micStatus, inputMode])
 
   useEffect(() => {
     reducedMotionPrevRef.current = reducedMotion
@@ -473,7 +338,7 @@ export function CameraView() {
         profile,
         setMasterVolume,
       ),
-    [profile, audioStatus, audioEnabled],
+    [profile, audioStatus, audioEnabled, audioEngineControlRef, setMasterVolume],
   )
 
   // Dev-only live RMS display; avoid React state so the audio meter does not re-render each frame.
@@ -484,7 +349,7 @@ export function CameraView() {
         audioEngineControlRef,
         rmsDebugRef,
       ),
-    [audioStatus, debugOverlay],
+    [audioStatus, debugOverlay, audioEngineControlRef],
   )
 
   const cameraController = useCameraController({
@@ -766,14 +631,8 @@ export function CameraView() {
                     onEnableMic={handleEnableMic}
                     onDisableMic={handleDisableMic}
                     onMasterVolumeChange={handleMasterVolumeChange}
-                    onMicSensitivityChange={(v) => {
-                      setMicSensitivity(v)
-                      audioEngineControlRef.current?.setMicSensitivity?.(v)
-                    }}
-                    onMicGateChange={(v) => {
-                      setMicGate(v)
-                      audioEngineControlRef.current?.setMicGate?.(v)
-                    }}
+                    onMicSensitivityChange={handleMicSensitivityChange}
+                    onMicGateChange={handleMicGateChange}
                     onInputModeChange={handleInputModeChange}
                     defaultOpen={cameraController.isActive}
                   />

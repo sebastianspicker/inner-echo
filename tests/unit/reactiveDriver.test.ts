@@ -71,6 +71,10 @@ describe('engine/reactive/reactiveDriver', () => {
     expect(high).toBeGreaterThan(low)
   })
 
+  it('uses the default unit clamp when a mapping omits its clamp range', () => {
+    expect(getGrainOverride({ clamp: undefined }, 0.5)).toBeCloseTo(0.7)
+  })
+
   it('returns empty overrides when profile has no reactive mappings', () => {
     const profile = makeProfile({ reactive: { analyser_to_params: [] } })
     const driver = createReactiveDriver(profile)

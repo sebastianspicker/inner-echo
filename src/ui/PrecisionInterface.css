@@ -589,6 +589,89 @@ body::before {
   transform: translate(-50%, -50%);
 }
 
+.composition-map__node--position-1 {
+  top: 31%;
+  left: 24%;
+}
+
+.composition-map__node--position-2 {
+  top: 43%;
+  left: 70%;
+}
+
+.composition-map__node--position-3 {
+  top: 72%;
+  left: 48%;
+}
+
+.composition-map__node--strength-20 {
+  --node-strength: 0.2;
+}
+
+.composition-map__node--strength-25 {
+  --node-strength: 0.25;
+}
+
+.composition-map__node--strength-30 {
+  --node-strength: 0.3;
+}
+
+.composition-map__node--strength-35 {
+  --node-strength: 0.35;
+}
+
+.composition-map__node--strength-40 {
+  --node-strength: 0.4;
+}
+
+.composition-map__node--strength-45 {
+  --node-strength: 0.45;
+}
+
+.composition-map__node--strength-50 {
+  --node-strength: 0.5;
+}
+
+.composition-map__node--strength-55 {
+  --node-strength: 0.55;
+}
+
+.composition-map__node--strength-60 {
+  --node-strength: 0.6;
+}
+
+.composition-map__node--strength-65 {
+  --node-strength: 0.65;
+}
+
+.composition-map__node--strength-70 {
+  --node-strength: 0.7;
+}
+
+.composition-map__node--strength-75 {
+  --node-strength: 0.75;
+}
+
+.composition-map__node--strength-80 {
+  --node-strength: 0.8;
+}
+
+.composition-map__node--strength-85 {
+  --node-strength: 0.85;
+}
+
+.composition-map__node--strength-90 {
+  --node-strength: 0.9;
+}
+
+.composition-map__node--strength-95 {
+  --node-strength: 0.95;
+}
+
+.composition-map__node--strength-100 {
+  --node-strength: 1;
+}
+
 .composition-map__contours {
   position: absolute;
   inset: 0;

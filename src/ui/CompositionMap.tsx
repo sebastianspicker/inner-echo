@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react'
 import {
   getExperienceDimensions,
   type ComposerMode,
@@ -19,13 +18,18 @@ interface CompositionPoint {
   weight: number
 }
 
-type CompositionNodeStyle = CSSProperties & { '--node-strength': number }
-
-const NODE_POSITIONS = [
-  { left: '24%', top: '31%' },
-  { left: '70%', top: '43%' },
-  { left: '48%', top: '72%' },
+const NODE_POSITION_CLASSES = [
+  'composition-map__node--position-1',
+  'composition-map__node--position-2',
+  'composition-map__node--position-3',
 ] as const
+
+function nodeStrengthClass(weight: number): string {
+  const safeWeight = Number.isFinite(weight) ? weight : 0.2
+  const clampedWeight = Math.min(1, Math.max(0.2, safeWeight))
+  const bucket = Math.round(clampedWeight * 20) * 5
+  return `composition-map__node--strength-${bucket}`
+}
 
 function selectedPoints({
   mode,
@@ -93,13 +97,7 @@ export function CompositionMap(props: CompositionMapProps) {
             {points.map((point, index) => (
               <div
                 key={point.id}
-                className="composition-map__node"
-                style={
-                  {
-                    ...NODE_POSITIONS[index],
-                    '--node-strength': Math.max(0.2, point.weight),
-                  } as CompositionNodeStyle
-                }
+                className={`composition-map__node ${NODE_POSITION_CLASSES[index]} ${nodeStrengthClass(point.weight)}`}
               >
                 <span className="composition-map__contours" aria-hidden="true" />
                 <span className="composition-map__label">{point.label}</span>

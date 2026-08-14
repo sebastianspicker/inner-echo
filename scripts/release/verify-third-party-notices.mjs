@@ -9,10 +9,10 @@ const noticePath = path.join(root, 'public', 'THIRD_PARTY_NOTICES.txt')
 const entries = [
   {
     name: 'dompurify',
-    version: '3.4.12',
+    version: '3.4.13',
     license: '(MPL-2.0 OR Apache-2.0)',
     source: 'node_modules/dompurify/LICENSE',
-    published: 'third-party-licenses/dompurify-3.4.12-Apache-2.0.txt',
+    published: 'third-party-licenses/dompurify-3.4.13-Apache-2.0.txt',
   },
   {
     name: '@types/trusted-types',

@@ -66,6 +66,17 @@ npm run browsers:install
 
 For an alpha candidate, use `npm run release:alpha:local` so the dependency audit runs before `check`.
 
+Prepare the GitHub Pages upload artifact separately with:
+
+```bash
+npm run pages:build
+npm run pages:verify
+npm run notices:verify
+npm run test:e2e:pages
+```
+
+This verifies the `/inner-echo/` base path, live entry assets, isolated static demo, Pages CSP fallback, absence of source maps and local paths, distributed notices, and the synthetic-media camera/stop flow in Chrome, Firefox, and WebKit. It does not prove the public host served the artifact or supplied any response header.
+
 ## Manual verification
 
 Automated evidence does not replace these checks:
@@ -76,7 +87,7 @@ Automated evidence does not replace these checks:
 4. VoiceOver with Safari, plus NVDA with Chrome or Firefox when available.
 5. WebGL-disabled fallback and context-loss behavior.
 6. Permission denial and later recovery for camera and microphone.
-7. Actual deployment headers and same-origin request behavior.
+7. Actual deployment CSP, response headers, shared-origin behavior, and same-origin requests. GitHub Pages cannot supply the complete intended header policy.
 
 Record the browser, version, operating system, device class, input hardware, and observed result. Do not include device identifiers, raw media, or personal information.
 

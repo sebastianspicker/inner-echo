@@ -20,7 +20,7 @@ const argv = new Set(process.argv.slice(2))
 const REQUIRE_AUDIO = process.env.REQUIRE_AUDIO === '1' || argv.has('--require-audio')
 const REQUIRE_MIC = process.env.REQUIRE_MIC === '1' || argv.has('--require-mic')
 const HEADLESS = process.env.HEADLESS ? process.env.HEADLESS === '1' : true
-const AUDIO_ENGINE_READY_RE = /Audio:\s*(on|muted \(engine on\))/i
+const AUDIO_ENGINE_READY_RE = /Audio:\s*on/i
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms))
@@ -171,18 +171,34 @@ async function reportAudioStartFailure(audioGroup: ReturnType<Page['getByRole']>
   console.warn(`[runtime-matrix] WARN: audio not on${detail}`)
 }
 
+async function hasEnabledAudioOutput(audioGroup: ReturnType<Page['getByRole']>): Promise<boolean> {
+  const statusText =
+    (await audioGroup
+      .getByRole('status')
+      .first()
+      .textContent()
+      .catch(() => null)) ?? ''
+  if (!AUDIO_ENGINE_READY_RE.test(statusText)) return false
+  const volume = Number(
+    await audioGroup
+      .getByRole('slider', { name: /Master volume/i })
+      .inputValue()
+      .catch(() => '0'),
+  )
+  return Number.isFinite(volume) && volume > 0
+}
+
 async function enableAudio(audioGroup: ReturnType<Page['getByRole']>): Promise<boolean> {
   const audioStatus = audioGroup.getByRole('status').first()
-  if (AUDIO_ENGINE_READY_RE.test((await audioStatus.textContent().catch(() => null)) ?? ''))
-    return true
+  if (await hasEnabledAudioOutput(audioGroup)) return true
   const enableButton = audioGroup.getByRole('button', { name: /Enable audio/i })
   if (await enableButton.isVisible().catch(() => false)) await enableButton.click()
   try {
     await audioStatus
-      .filter({ hasText: /Audio:\s*(on|muted \(engine on\)|error)/i })
+      .filter({ hasText: /Audio:\s*(on|error)/i })
       .first()
       .waitFor({ timeout: 20_000 })
-    if (AUDIO_ENGINE_READY_RE.test((await audioStatus.textContent()) ?? '')) return true
+    if (await hasEnabledAudioOutput(audioGroup)) return true
     await reportAudioStartFailure(audioGroup)
   } catch (error) {
     if (REQUIRE_AUDIO) throw error

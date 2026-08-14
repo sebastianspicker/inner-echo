@@ -3,10 +3,12 @@ import { spawnNpmServer, stopServer, waitForServerReady } from './support/server
 
 const HOST = process.env.HOST ?? '127.0.0.1'
 const PORT = process.env.PORT ?? '4174'
-const BASE_URL = `http://${HOST}:${PORT}`
+const BASE_PATH = process.env.BASE_PATH ?? '/'
+const BASE_URL = new URL(BASE_PATH, `http://${HOST}:${PORT}`).href
+const PREVIEW_SCRIPT = process.env.PREVIEW_SCRIPT ?? 'preview'
 
 function spawnPreviewServer() {
-  return spawnNpmServer('preview', HOST, PORT)
+  return spawnNpmServer(PREVIEW_SCRIPT, HOST, PORT)
 }
 
 async function main() {

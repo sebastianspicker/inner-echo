@@ -1,5 +1,6 @@
 /node_modules/
 /dist/
+/pages-dist/
 *.tsbuildinfo
 /reports/
 /coverage/
@@ -25,6 +26,12 @@
 # Secrets and credentials. The application does not require a public env file.
 .env
 .env.*
+!.env.example
+!.env.*.example
+!.env.sample
+!.env.template
+secrets.local.*
+credentials.local.*
 .envrc
 .direnv/
 .npmrc
@@ -48,6 +55,8 @@ service-account*.json
 # Local analysis, automation, and editor state.
 /.codacy/
 /.codegraph/
+.repowise/
+/.mcp.json
 /.serena/
 /.impeccable/
 /.codex/
@@ -60,6 +69,11 @@ service-account*.json
 /progress.md
 /AUDIT.md
 /AGENTS.md
+/CLAUDE.md
+/GEMINI.md
+/AUDIT_LEDGER.md
+/remediation-ledger.md
+/plan.md
 /docs/agent/
 /docs/archive/
 
@@ -71,6 +85,42 @@ ehthumbs.db
 *.sw?
 *.orig
 *.rej
+
+# Nested local tooling and generated artifacts
+node_modules/
+.agents/
+.claude/
+.codex/
+.codegraph/
+.serena/
+.kilo/
+.cursor/
+.codacy/generated/
+.codacy/logs/
+.codacy/tools-configs/
+.codacy/cli-config.yaml
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+junit*.xml
+*.sarif
+target/
+.build/
+DerivedData/
+xcuserdata/
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+*.local.db
+*.local.sqlite
+*.local.sqlite3
 
 # Canonical public screenshots live in assets/readme/screenshots/ and are
 # verified by the manifest. Test-failure captures stay under ignored E2E paths.

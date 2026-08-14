@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 /**
  * Tests for src/conditions/loader.ts
@@ -111,6 +111,11 @@ describe('conditions/loader: loadProfile and loadCatalog behavior', () => {
     vi.resetModules()
   })
 
+  afterEach(() => {
+    vi.doUnmock('../../src/conditions/catalog.json')
+    vi.doUnmock('../../src/conditions/profiles/anxiety.json')
+  })
+
   it('loadProfile with empty id returns null', async () => {
     // The loadProfile function guards against empty ids before hitting import.meta.glob.
     // We can test this by importing the real module (the empty-id path doesn't touch Vite globs).
@@ -141,6 +146,22 @@ describe('conditions/loader: loadProfile and loadCatalog behavior', () => {
       expect(typeof entry.label).toBe('string')
       expect(entry.label.length).toBeGreaterThan(0)
     }
+  })
+
+  it('returns null when the catalog module fails schema validation', async () => {
+    vi.doMock('../../src/conditions/catalog.json', () => ({ default: {} }))
+    const { loadCatalog } = await import('../../src/conditions/loader')
+
+    await expect(loadCatalog()).resolves.toBeNull()
+  })
+
+  it('returns null when importing the catalog module fails', async () => {
+    vi.doMock('../../src/conditions/catalog.json', () => {
+      throw new Error('catalog import failed')
+    })
+    const { loadCatalog } = await import('../../src/conditions/loader')
+
+    await expect(loadCatalog()).resolves.toBeNull()
   })
 
   it('loadProfile("anxiety") returns valid profile with video_stack', async () => {

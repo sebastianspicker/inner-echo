@@ -53,7 +53,7 @@ Require both jobs in `.github/workflows/ci.yml` on the exact candidate commit:
 - `validate`
 - `release_candidate_gate`
 
-Both jobs use a lockfile install with lifecycle scripts disabled, followed by explicit `esbuild` and `sharp` rebuilds. Both run the moderate-threshold dependency audit. The release candidate job also installs the Playwright engines, runs the local alpha gate, and verifies the screenshot manifest.
+Both jobs use a lockfile install with lifecycle scripts disabled, followed by explicit `esbuild` and `sharp` rebuilds. Both run the moderate-threshold dependency audit. The release candidate job also installs the Playwright engines, runs the local alpha gate, exercises the exact GitHub Pages artifact and isolated demo at `/inner-echo/` in Chrome, Firefox, and WebKit, and verifies the screenshot manifest.
 
 ## Manual evidence
 
@@ -64,22 +64,34 @@ Before publishing an alpha, record the following against the exact static artifa
 3. Keyboard-only navigation through welcome, setup, camera activation, safety controls, evidence dialog, and stop.
 4. A VoiceOver and Safari pass. Add an NVDA pass in Chrome or Firefox when a Windows test environment is available.
 5. WebGL-disabled behavior that reports a 2D, raw-preview, or unavailable state truthfully.
-6. Resolution of the composition-map inline-style conflict, followed by verification of the final response headers on the intended host.
+6. The final CSP behavior and available response headers on the intended host, with GitHub Pages header limitations recorded rather than inferred away.
 7. Runtime requests limited to same-origin static application delivery.
 
 Automated Playwright WebKit results do not substitute for real Safari permission and accessibility evidence.
 
 ## Static artifact
 
-`npm run build` produces `dist/`. The directory is ignored and should not be committed. Validate the exact `dist/` contents before deployment, including:
+`npm run build` produces a root-based `dist/`. For the configured GitHub project site, prepare and verify the exact upload artifact with:
+
+```bash
+npm run pages:build
+npm run pages:verify
+npm run notices:verify
+npm run pages:preview
+npm run test:e2e:pages
+```
+
+The Pages build uses `/inner-echo/` by default, publishes the live application at the root, and copies the capability-free walkthrough to `demo/`. `test:e2e:pages` runs the existing synthetic-media camera and Stop Everything smoke against that production-base artifact in Chrome, Firefox, and WebKit. The directory is ignored and should not be committed. Validate the exact `dist/` contents before deployment, including:
 
 - `index.html` and referenced asset paths
 - favicon and brand asset presence
-- final CSP and permission policy behavior on the chosen host
+- final CSP behavior and the host's documented header limitations
 - absence of source maps or local paths not intended for publication
 - `THIRD_PARTY_NOTICES.txt` and `third-party-licenses/` matching the verified public copies
 
-This repository does not define a deployment target or release publication workflow.
+`.github/workflows/pages.yml` is the publication workflow for the GitHub Pages target. A successful push-triggered `main` CI run can deploy, so do not commit or push a candidate until publication is authorized. The workflow does not remove the manual browser, device, accessibility, origin-isolation, or live-response verification requirements.
+
+Before the first authorized run, confirm that **Repository settings → Pages → Source** is **GitHub Actions**. The workflow does not self-enable Pages or change that repository setting.
 
 ## Release notes
 
@@ -99,7 +111,8 @@ Do not claim production, clinical, accessibility, browser, or device readiness b
 - Automated browser tests use synthetic media.
 - Real Safari, physical mobile camera, and assistive-technology evidence must be recorded separately.
 - WebGL performance varies by device and browser; fallback modes omit the full effect stack.
-- There is no backend, account system, recording, export, analytics, offline cache, or deployment configuration.
+- There is no backend, account system, recording, export, analytics, or offline cache.
+- Bare GitHub Pages cannot deliver the full security-header policy and shares its origin with other project sites under the same account.
 - The evidence mappings are metaphor design inputs, not diagnostic or clinical claims.
 
 ## Compatibility and migration

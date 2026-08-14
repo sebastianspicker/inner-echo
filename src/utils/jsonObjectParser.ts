@@ -44,29 +44,17 @@ export function parseFirstJsonObject<T = unknown>(
   }
   const predicate = options.predicate ?? (() => true)
 
-  const tryAccept = (value: unknown): T | null => acceptRecord(value, predicate)
-
   const trimmed = source.trim()
   if (trimmed.length > 0) {
-    try {
-      const parsed = JSON.parse(trimmed)
-      const accepted = tryAccept(parsed)
-      if (accepted != null) return accepted
-    } catch {
-      // fall through to balanced-object scanning
-    }
+    const accepted = tryParseAndAccept<T>(trimmed, predicate)
+    if (accepted != null) return accepted
   }
 
   for (let start = source.indexOf('{'); start >= 0; start = source.indexOf('{', start + 1)) {
     const slice = extractBalancedObject(source, start)
     if (!slice) continue
-    try {
-      const parsed = JSON.parse(slice)
-      const accepted = tryAccept(parsed)
-      if (accepted != null) return accepted
-    } catch {
-      // keep scanning next candidate
-    }
+    const accepted = tryParseAndAccept<T>(slice, predicate)
+    if (accepted != null) return accepted
   }
 
   throw new Error('No valid JSON object found')
@@ -74,4 +62,12 @@ export function parseFirstJsonObject<T = unknown>(
 
 function acceptRecord<T>(value: unknown, predicate: (value: unknown) => boolean): T | null {
   return isRecord(value) && predicate(value) ? (value as T) : null
+}
+
+function tryParseAndAccept<T>(text: string, predicate: (value: unknown) => boolean): T | null {
+  try {
+    return acceptRecord(JSON.parse(text), predicate)
+  } catch {
+    return null
+  }
 }
