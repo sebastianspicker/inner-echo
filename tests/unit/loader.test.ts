@@ -114,6 +114,7 @@ describe('conditions/loader: loadProfile and loadCatalog behavior', () => {
   afterEach(() => {
     vi.doUnmock('../../src/conditions/catalog.json')
     vi.doUnmock('../../src/conditions/profiles/anxiety.json')
+    vi.resetModules()
   })
 
   it('loadProfile with empty id returns null', async () => {
