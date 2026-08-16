@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "metadata": {
+    "source": "remote",
+    "provider": "gh",
+    "organization": "sebastianspicker",
+    "repositoryId": "879354",
+    "repositoryName": "inner-echo",
+    "createdAt": "2026-08-15T08:30:23.137Z",
+    "updatedAt": "2026-08-15T08:30:23.137Z",
+    "languages": [
+      "CSS",
+      "HTML",
+      "Javascript",
+      "JSON",
+      "Markdown",
+      "TypeScript",
+      "YAML"
+    ]
+  },
+  "tools": [
+    {
+      "toolId": "Biome",
+      "localConfigurationFile": "/Users/sebastian/Git/inner-echo/biome.json",
+      "useLocalConfigurationFile": true,
+      "patterns": []
+    }
+  ],
+  "exclude": []
+}

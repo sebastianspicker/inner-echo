@@ -53,7 +53,10 @@ service-account*.json
 **/secrets/
 
 # Local analysis, automation, and editor state.
-/.codacy/
+/.codacy/*
+!/.codacy/codacy.config.json
+!/.codacy/codacy.yaml
+!/.codacy/codacy.yml
 /.codegraph/
 .repowise/
 /.mcp.json
@@ -95,10 +98,6 @@ node_modules/
 .serena/
 .kilo/
 .cursor/
-.codacy/generated/
-.codacy/logs/
-.codacy/tools-configs/
-.codacy/cli-config.yaml
 __pycache__/
 .pytest_cache/
 .ruff_cache/
