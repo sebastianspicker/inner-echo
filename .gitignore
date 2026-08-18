@@ -53,10 +53,7 @@ service-account*.json
 **/secrets/
 
 # Local analysis, automation, and editor state.
-/.codacy/*
-!/.codacy/codacy.config.json
-!/.codacy/codacy.yaml
-!/.codacy/codacy.yml
+/.codacy/
 /.codegraph/
 .repowise/
 /.mcp.json
