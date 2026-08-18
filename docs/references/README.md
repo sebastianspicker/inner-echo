@@ -2,6 +2,11 @@
 
 This directory documents the sources, rationale, and limits behind Inner Echo's experience dimensions and audiovisual motifs. It does not establish diagnostic, clinical, or therapeutic validity.
 
+The individual `dimensions/`, `motifs/`, and `conditions/` pages are generated
+references. They summarize the current composer data and the in-repository
+corpus; the research notes, evidence matrix, and mapping summary remain the
+sources to review when evaluating a claim.
+
 ## Non-diagnostic disclaimer
 
 The evidence corpus supports discussion of reported experience dimensions. Mapping those dimensions to a video or audio motif remains a design decision. A strong source for a phenomenon does not make an overlay an accurate representation of a diagnosis or an individual.

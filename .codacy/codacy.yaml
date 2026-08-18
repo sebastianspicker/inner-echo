@@ -1,4 +1,0 @@
-runtimes: null
-tools:
-    - opengrep@1.26.0
-    - trivy@0.72.0

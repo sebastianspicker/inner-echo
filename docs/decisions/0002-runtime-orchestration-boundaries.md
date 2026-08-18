@@ -44,7 +44,7 @@ consolidated. Preserve façade names and observable ordering when extracting pha
 - Characterization tests around façades and extracted lifecycle helpers.
 - Composition, condition, contract, and focused media tests before structural changes.
 - `npm run check` after changes crossing UI, media, audio, rendering, or fallback boundaries.
-- RepoWise context and risk review before moving shared or hotspot code, followed by live health and
-  change review after the candidate stabilizes.
+- Review callers, co-changing modules, ownership, tests, and current hotspot evidence before moving
+  shared code; repeat the risk and change review after the candidate stabilizes.
 
 Related overview: [architecture](../20_ARCHITECTURE.md).
