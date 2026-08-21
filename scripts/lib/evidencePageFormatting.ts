@@ -89,6 +89,11 @@ export function motifIndexPage(motifs: string[]) {
 
 This index lists audiovisual motifs (video and audio nodes) and links to their evidence pages.
 
+It is generated from the motifs referenced by
+\`src/conditions/experience-dimensions.json\`. Review the source data and
+in-repository evidence corpus; do not treat this index as an independent
+research document.
+
 > Important: evidence in this project primarily supports experience dimensions and reported phenomena. A specific node is an artistic and engineering implementation of a metaphor and must be interpreted cautiously.
 
 ## Motifs
@@ -176,6 +181,9 @@ function motifScientificSourcesMarkdown(sources: ScientificSource[]) {
 
 function motifPageIntroduction(motif: string) {
   return `# \`${motif}\`: motif evidence
+
+> Generated reference: this page summarizes the current composer mapping and
+> in-repository corpus. It is not an independent research document.
 
 > Non-diagnostic metaphor framing: This page documents how an audiovisual motif is used as a design metaphor. It does not diagnose and does not claim clinical equivalence.
 
@@ -289,6 +297,9 @@ function dimPageIntroduction(
   audio: string[],
 ) {
   return `# ${dim.label}
+
+> Generated reference: this page summarizes the current dimension definition,
+> mapping, and in-repository corpus. It is not an independent research document.
 
 > Non-diagnostic metaphor framing: This page supports design rationale for audiovisual metaphors. It does not diagnose or simulate a disorder.
 

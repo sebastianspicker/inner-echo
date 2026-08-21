@@ -67,17 +67,14 @@ See [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md) for the implementation-facing saf
 
 ## Accessibility status
 
-The implementation includes semantic controls, visible focus styles, keyboard handling for the evidence dialog, critical 44 CSS-pixel targets, and a narrow single-column layout. Automated tests cover selected keyboard, focus, target-size, and overflow behavior.
+The implementation includes semantic controls, visible focus styles, keyboard handling for the evidence dialog, critical 44 CSS-pixel targets, and a narrow single-column layout.
 
 The project does not currently claim WCAG 2.2 AA conformance. Manual VoiceOver, NVDA, real Safari, and physical mobile evidence is still required.
 
 ## Validation targets
 
 - A clean lockfile install can build the static application.
-- Type checking, linting, unit and component tests, contract validation, and data validation pass.
-- Chrome, Firefox, and WebKit Playwright flows run with synthetic media.
-- Required fake camera, audio, and microphone runtime paths pass.
-- The ten canonical README screenshots match the current interface and contain no real media or personal information.
+- Type checking, linting, compact core-contract tests, contract validation, and data validation pass.
 - Moderate or higher dependency advisories are resolved for the candidate lockfile.
 - Manual browser, device, permission, and assistive-technology gaps are listed as limitations.
 

@@ -1,5 +1,8 @@
 # `vignette`: motif evidence
 
+> Generated reference: this page summarizes the current composer mapping and
+> in-repository corpus. It is not an independent research document.
+
 > Non-diagnostic metaphor framing: This page documents how an audiovisual motif is used as a design metaphor. It does not diagnose and does not claim clinical equivalence.
 
 ## Technical summary

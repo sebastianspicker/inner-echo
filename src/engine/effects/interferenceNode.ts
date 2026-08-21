@@ -10,18 +10,10 @@
  * - burst_min_gap_ms
  */
 
-import { ShaderMaterial, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import { fastRandom, type FastRandom } from '../../utils/fastRandom'
-import {
-  applyUvParams,
-  clamp,
-  getGlobalClampNumber,
-  getSafeModeClampNumber,
-  resolveNumberParam,
-} from './paramUtils'
-import { BurstEnvelopeState } from './burstEnvelope'
-import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
+import { clamp, resolveNumberParam } from './paramUtils'
+import { BurstShaderNode } from './burstShaderNode'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -56,70 +48,42 @@ void main() {
 }
 `
 
-export class InterferenceNode extends BurstEnvelopeState implements VideoNode {
+export class InterferenceNode extends BurstShaderNode implements VideoNode {
   readonly nodeName = 'interference'
-  private material: ShaderMaterial | null = null
-  private time = 0
 
   constructor(random: FastRandom = fastRandom) {
-    super(0.18, 0.6, random)
+    super(
+      0.18,
+      0.6,
+      {
+        fragmentShader: FRAG,
+        uniforms: () => ({
+          u_amount: { value: 0 },
+          u_banding: { value: 0.06 },
+          u_smoothing: { value: 0.9 },
+          u_time: { value: 0 },
+          u_burst: { value: 0 },
+        }),
+        syncTimeUniform: false,
+        burstPolicy: {
+          amountCap: 0.2,
+          safeModeAmountFactor: 0.2,
+          probability: { fallback: 0, min: 0, max: 1 },
+          durationMs: { fallback: 180, min: 120, max: 500 },
+          minGapMs: { fallback: 600, min: 350, max: 3000 },
+        },
+      },
+      random,
+    )
   }
 
   setParams(params: VideoNodeParams): void {
-    if (!this.material) return
-    const intensity = clamp(params.intensity ?? 0, 0, 1)
-    let amount = resolveNumberParam(params, 'amount', 0) * intensity
+    const material = this.applyBurstShaderParams(params)
+    if (!material) return
     const banding = resolveNumberParam(params, 'banding', 0.06)
     const smoothing = resolveNumberParam(params, 'smoothing', 0.9)
-    const burstProbability = resolveNumberParam(params, 'burst_probability', 0)
-    const burstDurationMs = resolveNumberParam(params, 'burst_duration_ms', 180)
-    const burstMinGapMs = resolveNumberParam(params, 'burst_min_gap_ms', 600)
 
-    const globalMax = getGlobalClampNumber(params, 'max_luminance_delta_per_frame', 0.25)
-    // Keep interference strength conservative regardless; SSOT profiles keep it low.
-    // Use the global luminance delta clamp as a soft cap: prevent "spiky" changes in burst.
-    amount = clamp(amount, 0, Math.min(0.2, globalMax))
-    if (params.safeMode) {
-      const maxIntensity = getSafeModeClampNumber(params, 'max_intensity', 1)
-      amount = Math.min(amount, 0.2 * clamp(maxIntensity, 0, 1))
-    }
-
-    this.material.uniforms.u_amount.value = amount
-    this.material.uniforms.u_banding.value = clamp(banding, 0, 1)
-    this.material.uniforms.u_smoothing.value = clamp(smoothing, 0, 1)
-    this.material.uniforms.u_time.value = this.time
-
-    // Burst scheduling params (kept conservative + non-strobing).
-    this.burstProbPerSec = clamp(burstProbability, 0, 1)
-    this.burstDuration = clamp(burstDurationMs / 1000, 0.12, 0.5)
-    this.burstMinGap = clamp(burstMinGapMs / 1000, 0.35, 3)
-
-    applyUvParams(this.material, params)
-  }
-
-  tick(delta: number): void {
-    if (!this.material) return
-    this.time = (this.time + delta) % 1000
-
-    this.material.uniforms.u_burst.value = this.tickBurstEnvelope(delta)
-  }
-
-  getMaterial(inputTexture: Texture): Material {
-    if (!this.material) {
-      this.material = createEffectMaterial(inputTexture, FRAG, {
-        u_amount: { value: 0 },
-        u_banding: { value: 0.06 },
-        u_smoothing: { value: 0.9 },
-        u_time: { value: 0 },
-        u_burst: { value: 0 },
-      })
-    } else {
-      bindInputTexture(this.material, inputTexture)
-    }
-    return this.material
-  }
-
-  dispose(): void {
-    this.material = disposeEffectMaterial(this.material)
+    material.uniforms.u_banding.value = clamp(banding, 0, 1)
+    material.uniforms.u_smoothing.value = clamp(smoothing, 0, 1)
   }
 }

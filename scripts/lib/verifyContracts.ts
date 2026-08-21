@@ -30,6 +30,17 @@ import { loadContractJsonReferences } from './jsonContracts'
 
 export { asNumber, differs, outOfRangeHigh, outOfRangeLow }
 
+interface RegistryLookups {
+  video: Map<string, ContractNodeDefinition>
+  audio: Map<string, ContractNodeDefinition>
+}
+
+interface IssueBuckets {
+  issues: ContractIssue[]
+  missingNodes: ContractIssue[]
+  missingParams: ContractIssue[]
+}
+
 function appendIssue(issues: ContractIssue[], category: ContractIssue[], issue: ContractIssue) {
   issues.push(issue)
   category.push(issue)
@@ -37,15 +48,13 @@ function appendIssue(issues: ContractIssue[], category: ContractIssue[], issue: 
 
 function verifyNodeReferences(
   references: ContractReference[],
-  videoLookup: Map<string, ContractNodeDefinition>,
-  audioLookup: Map<string, ContractNodeDefinition>,
-  issues: ContractIssue[],
-  missingNodes: ContractIssue[],
-  missingParams: ContractIssue[],
+  lookups: RegistryLookups,
+  buckets: IssueBuckets,
 ) {
+  const { issues, missingNodes, missingParams } = buckets
   for (const ref of references) {
     if (ref.referenceType === 'profile_reactive_target') continue
-    const nodeDef = (ref.kind === 'video' ? videoLookup : audioLookup).get(ref.node)
+    const nodeDef = (ref.kind === 'video' ? lookups.video : lookups.audio).get(ref.node)
     if (!nodeDef) {
       appendIssue(issues, missingNodes, {
         severity: 'error',
@@ -77,15 +86,20 @@ function reactiveLocation(index: number) {
   return `reactive.analyser_to_params[${index}].target`
 }
 
-function verifyReactiveVideo(
-  profileContract: LoadedProfileContract,
-  index: number,
-  paramKey: string,
-  videoLookup: Map<string, ContractNodeDefinition>,
-  issues: ContractIssue[],
-  missingNodes: ContractIssue[],
-  missingParams: ContractIssue[],
-) {
+function verifyReactiveVideo({
+  profileContract,
+  index,
+  paramKey,
+  videoLookup,
+  buckets,
+}: {
+  profileContract: LoadedProfileContract
+  index: number
+  paramKey: string
+  videoLookup: Map<string, ContractNodeDefinition>
+  buckets: IssueBuckets
+}) {
+  const { issues, missingNodes, missingParams } = buckets
   const dot = paramKey.indexOf('.')
   const entry = getProfileEntryForBuiltIndex(
     profileContract.profile,
@@ -125,10 +139,9 @@ function verifyReactiveAudio(
   profileContract: LoadedProfileContract,
   paramKey: string,
   audioLookup: Map<string, ContractNodeDefinition>,
-  issues: ContractIssue[],
-  missingNodes: ContractIssue[],
-  missingParams: ContractIssue[],
+  buckets: IssueBuckets,
 ) {
+  const { issues, missingNodes, missingParams } = buckets
   const parts = paramKey.split('.')
   const param = parts.slice(2).join('.')
   const nodeName = String(
@@ -163,12 +176,10 @@ function verifyReactiveAudio(
 
 function verifyReactiveTargets(
   profiles: LoadedProfileContract[],
-  videoLookup: Map<string, ContractNodeDefinition>,
-  audioLookup: Map<string, ContractNodeDefinition>,
-  issues: ContractIssue[],
-  missingNodes: ContractIssue[],
-  missingParams: ContractIssue[],
+  lookups: RegistryLookups,
+  buckets: IssueBuckets,
 ) {
+  const { issues, missingNodes } = buckets
   for (const profileContract of profiles) {
     const mappings = profileContract.profile.reactive?.analyser_to_params ?? []
     for (const [index, mapping] of mappings.entries()) {
@@ -185,39 +196,36 @@ function verifyReactiveTargets(
           location: reactiveLocation(index),
         })
       } else if (resolved.kind === 'video') {
-        verifyReactiveVideo(
+        verifyReactiveVideo({
           profileContract,
           index,
-          resolved.paramKey,
-          videoLookup,
-          issues,
-          missingNodes,
-          missingParams,
-        )
+          paramKey: resolved.paramKey,
+          videoLookup: lookups.video,
+          buckets,
+        })
       } else {
-        verifyReactiveAudio(
-          profileContract,
-          resolved.paramKey,
-          audioLookup,
-          issues,
-          missingNodes,
-          missingParams,
-        )
+        verifyReactiveAudio(profileContract, resolved.paramKey, lookups.audio, buckets)
       }
     }
   }
 }
 
-function buildReport(
-  loaded: LoadedContracts,
-  issues: ContractIssue[],
-  missingNodes: ContractIssue[],
-  missingParams: ContractIssue[],
-  unusedParams: ContractIssue[],
-  rangeChecks: RangeCheckResult[],
-  policyChecks: PolicyCheckResult[],
-  referencedParamCount: number,
-): ContractVerificationReport {
+function buildReport(input: {
+  loaded: LoadedContracts
+  buckets: IssueBuckets
+  unusedParams: ContractIssue[]
+  rangeChecks: RangeCheckResult[]
+  policyChecks: PolicyCheckResult[]
+  referencedParamCount: number
+}): ContractVerificationReport {
+  const {
+    loaded,
+    buckets: { issues, missingNodes, missingParams },
+    unusedParams,
+    rangeChecks,
+    policyChecks,
+    referencedParamCount,
+  } = input
   const warnings = issues.filter((issue) => issue.severity === 'warning')
   const errors = issues.filter((issue) => issue.severity === 'error')
   const ok =
@@ -252,22 +260,10 @@ export function verifyContracts(rootDir: string) {
   const issues: ContractIssue[] = [...loaded.parseErrors]
   const missingNodes: ContractIssue[] = []
   const missingParams: ContractIssue[] = []
-  verifyNodeReferences(
-    loaded.references,
-    videoLookup,
-    audioLookup,
-    issues,
-    missingNodes,
-    missingParams,
-  )
-  verifyReactiveTargets(
-    loaded.profiles,
-    videoLookup,
-    audioLookup,
-    issues,
-    missingNodes,
-    missingParams,
-  )
+  const lookups: RegistryLookups = { video: videoLookup, audio: audioLookup }
+  const buckets: IssueBuckets = { issues, missingNodes, missingParams }
+  verifyNodeReferences(loaded.references, lookups, buckets)
+  verifyReactiveTargets(loaded.profiles, lookups, buckets)
   const { unusedParams, rangeChecks, referencedParamCount } = evaluateReferencedParams(
     loaded.references,
     videoLookup,
@@ -275,14 +271,12 @@ export function verifyContracts(rootDir: string) {
     issues,
   )
   const policyChecks = evaluatePolicyChecks(loaded.profiles, videoLookup, audioLookup, issues)
-  return buildReport(
+  return buildReport({
     loaded,
-    issues,
-    missingNodes,
-    missingParams,
+    buckets,
     unusedParams,
     rangeChecks,
     policyChecks,
     referencedParamCount,
-  )
+  })
 }

@@ -10,8 +10,7 @@ Use Node.js 22 and npm:
 git clone https://github.com/sebastianspicker/inner-echo.git
 cd inner-echo
 npm ci --ignore-scripts
-npm rebuild esbuild sharp
-npm run browsers:install
+npm rebuild esbuild
 npm run dev
 ```
 
@@ -27,8 +26,7 @@ Common checks:
 |---|---|
 | `npm run typecheck` | Browser and Node TypeScript projects. |
 | `npm run lint` | Biome checks for source, tests, and scripts. Warnings fail. |
-| `npm test` | Vitest unit and component tests. |
-| `npm run test:coverage` | Vitest with V8 coverage. |
+| `npm test` | Compact Vitest core-contract tests. |
 | `npm run build` | TypeScript build and Vite production build. |
 | `npm run notices:verify` | Installed and distributed third-party license texts. Run after `npm run build`. |
 | `npm run docs:links` | Local targets in maintained Markdown documentation. |
@@ -36,11 +34,8 @@ Common checks:
 | `npm run conditions:validate` | Condition profiles and mapping data. |
 | `npm run composer:validate` | Composer output and safety ranges. |
 | `npm run evidence:verify` | Evidence pages and links. |
-| `npm run test:e2e` | Chrome UI flows plus Chrome, Firefox, and WebKit smoke. |
-| `npm run test:e2e:preview` | Cross-browser smoke against the production preview. |
-| `npm run runtime:matrix:required` | Required fake camera, audio, and microphone runtime paths. |
 | `npm run verify` | Build, notice and link checks, lint, tests, and contract or data validation. |
-| `npm run check` | `verify`, browser checks, preview smoke, and the required runtime matrix. |
+| `npm run check` | Alias for `verify`. |
 | `npm run audit:dependencies` | Moderate-threshold npm advisory check. |
 | `npm run release:alpha:local` | Dependency audit plus the complete local gate. |
 
@@ -50,10 +45,7 @@ The complete clean-install and screenshot sequence is documented in [docs/RELEAS
 
 - Run `npm run docs:gen` after changing catalog or schema inputs that affect `docs/generated/`.
 - Run `npm run evidence:gen` when source mappings or evidence-page templates change.
-- Run `npm run screenshots:readme` after a visible interface change that affects the documented flows.
-- Run `npm run screenshots:verify` before proposing a screenshot change.
-
-Do not hand-edit derived catalog, schema, evidence, or screenshot files. Update the source and run the corresponding command.
+Do not hand-edit derived catalog, schema, or evidence files. Update the source and run the corresponding command.
 
 ## Change scope
 
@@ -62,7 +54,7 @@ Do not hand-edit derived catalog, schema, evidence, or screenshot files. Update 
 - Add a regression test for a corrected contract or failure mode when practical.
 - Treat `src/conditions/profiles/*.json`, schemas, mappings, graph builders, and node registries as one runtime contract.
 - Do not preserve a deprecated path without evidence that a supported consumer still needs it.
-- Do not commit build output, reports, coverage, local environment values, analysis databases, editor state, or ad hoc screenshots.
+- Do not commit build output, reports, local environment values, analysis databases, or editor state.
 
 ## Safety and privacy requirements
 

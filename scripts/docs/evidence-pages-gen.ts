@@ -98,6 +98,140 @@ function extractDois(text: string) {
   return Array.from(dois)
 }
 
+type PendingCitation = { line: string; dois: string[] }
+
+type CorpusParseState = {
+  currentDim: string | null
+  inBib: boolean
+  pendingCitation: PendingCitation | null
+  inMarkdownBlock: boolean
+}
+
+function addPendingCitation(
+  state: CorpusParseState,
+  corpusPath: string,
+  sourcesByDimension: Map<string, ScientificSource[]>,
+) {
+  if (!state.currentDim || !state.pendingCitation) return
+  const [doi] = state.pendingCitation.dois
+  if (!doi) return
+  const sources = sourcesByDimension.get(state.currentDim) ?? []
+  sources.push({
+    citation: state.pendingCitation.line,
+    doi,
+    doiUrl: `https://doi.org/${doi}`,
+    corpusPath,
+    dimensionId: state.currentDim,
+  })
+  sourcesByDimension.set(state.currentDim, sources)
+  state.pendingCitation = null
+}
+
+function updateMarkdownBlock(state: CorpusParseState, line: string, flush: () => void) {
+  if (!line.trimStart().startsWith('```')) return false
+  const fence = line.trim()
+  if (!state.inMarkdownBlock && fence.toLowerCase().startsWith('```markdown')) {
+    state.inMarkdownBlock = true
+  } else if (state.inMarkdownBlock) {
+    flush()
+    state.inMarkdownBlock = false
+    state.inBib = false
+  }
+  return true
+}
+
+function dimensionHeading(line: string, inMarkdownBlock: boolean) {
+  const fileFor = line.match(/^##\s+File\s+for\s+([a-z0-9_]+)\s*$/i)
+  const h1 = inMarkdownBlock ? line.match(/^#\s+([a-z0-9_]+)\s*$/i) : null
+  return { fileFor, h1, dimensionId: fileFor?.[1] ?? h1?.[1] }
+}
+
+function updateBibliographyState(
+  state: CorpusParseState,
+  line: string,
+  hasDimensionHeading: boolean,
+  flush: () => void,
+) {
+  if (/^##\s+Bibliography\b/i.test(line)) {
+    flush()
+    state.inBib = true
+    return true
+  }
+  if (state.inBib && /^##\s+/.test(line) && !/^##\s+Bibliography\b/i.test(line)) {
+    flush()
+    state.inBib = false
+    state.currentDim = null
+    return true
+  }
+  if (!state.inBib && /^##\s+/.test(line) && !hasDimensionHeading) {
+    state.currentDim = null
+    return true
+  }
+  return false
+}
+
+function updatePendingCitation(state: CorpusParseState, line: string, flush: () => void) {
+  if (line.startsWith('- ')) {
+    flush()
+    const citationLine = line.slice(2).trim()
+    const dois = extractDois(citationLine)
+    state.pendingCitation = dois.length ? { line: citationLine, dois } : null
+    return
+  }
+  if (state.pendingCitation && /^\s*DOI:\s*/i.test(line)) {
+    const doi = extractDois(line)[0]
+    if (doi && !state.pendingCitation.dois.includes(doi)) state.pendingCitation.dois.unshift(doi)
+  }
+}
+
+function parseCorpusSourceLine(line: string, state: CorpusParseState, flush: () => void) {
+  if (updateMarkdownBlock(state, line, flush)) return
+
+  const heading = dimensionHeading(line, state.inMarkdownBlock)
+  if (heading.dimensionId) {
+    flush()
+    state.currentDim = heading.dimensionId.toLowerCase()
+    state.inBib = false
+    return
+  }
+  if (!state.currentDim) return
+  if (updateBibliographyState(state, line, Boolean(heading.fileFor || heading.h1), flush)) return
+  if (state.inBib) updatePendingCitation(state, line, flush)
+}
+
+function parseCorpusSourceFile(
+  root: string,
+  corpusPath: string,
+  sourcesByDimension: Map<string, ScientificSource[]>,
+) {
+  const filePath = path.join(root, corpusPath)
+  if (!fs.existsSync(filePath)) return
+  const state: CorpusParseState = {
+    currentDim: null,
+    inBib: false,
+    pendingCitation: null,
+    inMarkdownBlock: false,
+  }
+  const flush = () => addPendingCitation(state, corpusPath, sourcesByDimension)
+
+  for (const line of fs.readFileSync(filePath, 'utf-8').split('\n'))
+    parseCorpusSourceLine(line, state, flush)
+
+  flush()
+}
+
+function deduplicateSourcesByDimension(sourcesByDimension: Map<string, ScientificSource[]>) {
+  for (const [dimensionId, sources] of sourcesByDimension.entries()) {
+    const seen = new Set<string>()
+    const uniqueSources = sources.filter((source) => {
+      if (seen.has(source.doi)) return false
+      seen.add(source.doi)
+      return true
+    })
+    sourcesByDimension.set(dimensionId, uniqueSources)
+  }
+}
+
 function parseCorpusSourcesByDimension(root: string) {
   const corpusPaths = [
     'docs/references/research/initial-dimensions.md',
@@ -105,127 +239,8 @@ function parseCorpusSourcesByDimension(root: string) {
   ]
   const out = new Map<string, ScientificSource[]>()
 
-  for (const corpusPath of corpusPaths) {
-    const filePath = path.join(root, corpusPath)
-    if (!fs.existsSync(filePath)) continue
-    const lines = fs.readFileSync(filePath, 'utf-8').split('\n')
-
-    let currentDim: string | null = null
-    let inBib = false
-    let pendingCitation: { line: string; dois: string[] } | null = null
-    let inMarkdownBlock = false
-
-    const flushPending = () => {
-      if (!currentDim || !pendingCitation) return
-      const [doi] = pendingCitation.dois
-      if (!doi) return
-      const list = out.get(currentDim) ?? []
-      list.push({
-        citation: pendingCitation.line,
-        doi,
-        doiUrl: `https://doi.org/${doi}`,
-        corpusPath,
-        dimensionId: currentDim,
-      })
-      out.set(currentDim, list)
-      pendingCitation = null
-    }
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i] ?? ''
-
-      // Track markdown code blocks that contain dimension documentation.
-      if (line.trimStart().startsWith('```')) {
-        const fence = line.trim()
-        if (!inMarkdownBlock && fence.toLowerCase().startsWith('```markdown')) {
-          inMarkdownBlock = true
-        } else if (inMarkdownBlock) {
-          // close current code block
-          flushPending()
-          inMarkdownBlock = false
-          inBib = false
-          // do not clear currentDim; it may continue with another file, but we’ll reset on next heading
-        }
-        continue
-      }
-
-      // Dimension identity can appear either as a repo section header (File for ...) or as the H1 in a markdown block.
-      const fileFor = line.match(/^##\s+File\s+for\s+([a-z0-9_]+)\s*$/i)
-      if (fileFor?.[1]) {
-        // New dimension section begins.
-        flushPending()
-        currentDim = fileFor[1].toLowerCase()
-        inBib = false
-        continue
-      }
-
-      const h1 = inMarkdownBlock ? line.match(/^#\s+([a-z0-9_]+)\s*$/i) : null
-      if (h1?.[1]) {
-        flushPending()
-        currentDim = h1[1].toLowerCase()
-        inBib = false
-        continue
-      }
-
-      if (!currentDim) continue
-
-      if (/^##\s+Bibliography\b/i.test(line)) {
-        flushPending()
-        inBib = true
-        continue
-      }
-
-      // Bibliography ends at the next top-level section header.
-      if (inBib && /^##\s+/.test(line) && !/^##\s+Bibliography\b/i.test(line)) {
-        flushPending()
-        inBib = false
-        // Reset dimension so citations in generic sections are not attributed.
-        currentDim = null
-        continue
-      }
-
-      // Non-dimension ## section outside bibliography: reset currentDim to avoid
-      // attributing subsequent citations to the wrong dimension.
-      if (!inBib && /^##\s+/.test(line) && !fileFor && !h1) {
-        currentDim = null
-        continue
-      }
-
-      if (!inBib) continue
-
-      if (line.startsWith('- ')) {
-        flushPending()
-        const citationLine = line.slice(2).trim()
-        const dois = extractDois(citationLine)
-        if (dois.length) {
-          pendingCitation = { line: citationLine, dois }
-        } else {
-          pendingCitation = null
-        }
-        continue
-      }
-
-      // Some entries have a second line like "DOI: 10...."
-      if (pendingCitation && /^\s*DOI:\s*/i.test(line)) {
-        const doi = extractDois(line)[0]
-        if (doi && !pendingCitation.dois.includes(doi)) pendingCitation.dois.unshift(doi)
-      }
-    }
-
-    flushPending()
-  }
-
-  // Deduplicate per dimension by DOI.
-  for (const [dim, list] of out.entries()) {
-    const seen = new Set<string>()
-    const uniq: ScientificSource[] = []
-    for (const s of list) {
-      if (seen.has(s.doi)) continue
-      seen.add(s.doi)
-      uniq.push(s)
-    }
-    out.set(dim, uniq)
-  }
+  for (const corpusPath of corpusPaths) parseCorpusSourceFile(root, corpusPath, out)
+  deduplicateSourcesByDimension(out)
 
   return out
 }

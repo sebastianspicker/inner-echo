@@ -1,5 +1,8 @@
 # Attention Fragmentation
 
+> Generated reference: this page summarizes the current dimension definition,
+> mapping, and in-repository corpus. It is not an independent research document.
+
 > Non-diagnostic metaphor framing: This page supports design rationale for audiovisual metaphors. It does not diagnose or simulate a disorder.
 
 ## Summary

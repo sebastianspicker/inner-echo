@@ -1,5 +1,10 @@
 import type { Profile } from '../conditions/schema'
-import type { AudioContextStatus, AudioEngineControl, MicStatus } from '../engine/audio'
+import {
+  closeAudioContext,
+  type AudioContextStatus,
+  type AudioEngineControl,
+  type MicStatus,
+} from '../engine/audio'
 import type { OverlayControl } from '../engine/canvas'
 import { requestVideoStream, stopVideoStream, type CameraState } from '../engine/video'
 import { logger } from '../utils/logger'
@@ -61,7 +66,9 @@ function clearFallbackCanvas(canvas: HTMLCanvasElement | null): void {
 function releaseCameraResources(context: CameraRuntimeRefs): void {
   context.overlayControlRef.current?.stop()
   context.overlayControlRef.current = null
-  context.audioEngineControlRef.current?.stop()
+  const audioControl = context.audioEngineControlRef.current
+  if (audioControl) audioControl.stop()
+  else void closeAudioContext()
   context.audioEngineControlRef.current = null
   clearVideoTrackEndHandlers(context.streamRef.current)
   stopVideoStream(context.streamRef.current ?? undefined)
@@ -161,7 +168,12 @@ export function syncConditionAudio(
   setMasterVolume: (volume: number) => void,
 ): void {
   if (audioStatus !== 'on' || !control) return
-  const audioStack = audioEnabled ? (profile?.audio_stack ?? null) : { enabled: false }
+  const configuredStack = profile?.audio_stack
+  const audioStack = audioEnabled
+    ? configuredStack
+      ? { ...configuredStack, enabled: true }
+      : { enabled: true }
+    : { enabled: false }
   control.setConditionAudio(audioStack)
   const volume = audioEnabled ? (profile?.audio_stack?.master?.volume ?? 0.22) : 0
   setMasterVolume(volume)

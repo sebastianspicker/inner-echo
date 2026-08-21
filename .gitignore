@@ -1,21 +1,9 @@
 /node_modules/
 /dist/
+/pages-dist/
 *.tsbuildinfo
 /reports/
-/coverage/
 /.vite/
-/playwright-report/
-/test-results/
-/blob-report/
-/.vitest/
-/tests/.cache/
-/tests/.tmp/
-/tests/.env/
-/tests/fixtures/generated/
-/tests/runtime-snapshots/
-/tests/e2e/artifacts/
-/tests/e2e/screenshots/
-/tests/e2e/videos/
 /.cache/
 /.npm/
 /.node_repl_history
@@ -25,6 +13,12 @@
 # Secrets and credentials. The application does not require a public env file.
 .env
 .env.*
+!.env.example
+!.env.*.example
+!.env.sample
+!.env.template
+secrets.local.*
+credentials.local.*
 .envrc
 .direnv/
 .npmrc
@@ -48,6 +42,8 @@ service-account*.json
 # Local analysis, automation, and editor state.
 /.codacy/
 /.codegraph/
+.repowise/
+/.mcp.json
 /.serena/
 /.impeccable/
 /.codex/
@@ -60,6 +56,11 @@ service-account*.json
 /progress.md
 /AUDIT.md
 /AGENTS.md
+/CLAUDE.md
+/GEMINI.md
+/AUDIT_LEDGER.md
+/remediation-ledger.md
+/plan.md
 /docs/agent/
 /docs/archive/
 
@@ -72,5 +73,47 @@ ehthumbs.db
 *.orig
 *.rej
 
-# Canonical public screenshots live in assets/readme/screenshots/ and are
-# verified by the manifest. Test-failure captures stay under ignored E2E paths.
+# Nested local tooling and generated artifacts
+node_modules/
+.agents/
+.claude/
+.codex/
+.codegraph/
+.serena/
+.kilo/
+.cursor/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+junit*.xml
+*.sarif
+target/
+.build/
+DerivedData/
+xcuserdata/
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+*.local.db
+*.local.sqlite
+*.local.sqlite3
+
+# Generated test and coverage output (local only)
+/coverage/
+/htmlcov/
+/.coverage
+/.coverage.*
+/.pytest_cache/
+/test-results/
+/playwright-report/
+/blob-report/
+/coverage.xml
+/junit.xml
+/junit-*.xml

@@ -20,4 +20,4 @@
 - [ ] `npm run typecheck` passes
 - [ ] `npm test` passes
 - [ ] `npm run verify:contracts` passes
-- [ ] Manual browser test (describe below if relevant)
+- [ ] Manual runtime check (describe below if relevant)
