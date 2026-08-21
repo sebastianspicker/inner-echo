@@ -16,5 +16,4 @@ const basePath = getPagesBasePath()
 
 console.log(`Building the GitHub Pages artifact for ${basePath}`)
 runScript('build', [`--base=${basePath}`])
-runScript('demo:build')
 await import('./assemble-pages.mjs')

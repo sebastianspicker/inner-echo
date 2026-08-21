@@ -63,7 +63,7 @@ The Vite development server uses a development-only policy compatible with its b
 
 ## GitHub Pages boundary
 
-The GitHub Pages workflow publishes the live application at `/inner-echo/` and the capability-free static walkthrough at `/inner-echo/demo/`. The Pages build injects this CSP fallback into both generated HTML documents:
+The GitHub Pages workflow publishes the live application at `/inner-echo/`. The Pages build injects this CSP fallback into the generated HTML document:
 
 ```http
 Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';
@@ -86,7 +86,7 @@ Do not describe the bare GitHub Pages deployment as satisfying the full producti
 
 - `npm run audit:dependencies` fails on moderate or higher npm advisories.
 - Release-critical local and CI gates use the same threshold.
-- CI installs the lockfile with lifecycle scripts disabled, then runs explicit rebuilds only for `esbuild` and `sharp`, which are required by build and screenshot tooling.
+- CI installs the lockfile with lifecycle scripts disabled, then rebuilds `esbuild` for the Vite build.
 - Dependabot covers npm and GitHub Actions updates. Updates still require review and the complete relevant gate.
 - GitHub Actions references are pinned to full commit identifiers.
 
@@ -97,12 +97,11 @@ An advisory-free audit is evidence about the current npm advisory database, not 
 Before an alpha tag:
 
 1. Run `npm run release:alpha:local` against the candidate lockfile.
-2. Require both CI jobs on the exact candidate commit.
+2. Require the CI validation job on the exact candidate commit.
 3. Confirm that camera, microphone, and audio remain direct-user-gesture actions.
 4. Confirm that passive preset imports do not activate media or sound.
 5. Verify the production build contains no debug interface, local path, secret, source map, or unintended remote request.
 6. Verify the controls the intended host can deliver. For GitHub Pages, verify the meta CSP and record the unavailable header-only controls. For a header-capable host, verify CSP, permission policy, frame denial, MIME sniffing protection, and referrer policy from the actual response.
-7. Verify that public screenshots use synthetic media and contain no personal information.
-8. Run `npm run notices:verify` after the build and retain the verified notice files in the exact artifact.
+7. Run `npm run notices:verify` after the build and retain the verified notice files in the exact artifact.
 
 See [RELEASING.md](RELEASING.md) for the complete alpha procedure.

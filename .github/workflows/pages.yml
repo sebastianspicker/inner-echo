@@ -81,7 +81,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Rebuild approved native tooling
-        run: npm rebuild esbuild sharp
+        run: npm rebuild esbuild
 
       - name: Audit dependencies
         run: npm run audit:dependencies
