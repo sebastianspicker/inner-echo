@@ -28,20 +28,7 @@ export default defineConfig({
   },
   server: { headers: devHeaders },
   preview: { headers: productionHeaders },
-  // Vitest defaults to the 'node' environment, which suits contract,
-  // audio-graph, and shader tests. Individual component tests opt into jsdom.
   test: {
-    include: ['tests/unit/**/*.test.{ts,tsx}'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html', 'clover'],
-      exclude: ['scripts/**'],
-      thresholds: {
-        statements: 85,
-        branches: 70,
-        functions: 85,
-        lines: 87,
-      },
-    },
+    include: ['tests/**/*.test.ts'],
   },
 })

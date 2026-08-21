@@ -35,8 +35,7 @@ visible state claims activity before the resource is live.
 
 ## Verification contract
 
-- Unit tests for camera, audio, microphone, pending-request, and teardown seams.
-- `npm run test:e2e` and `npm run runtime:matrix:required` with deterministic fake media.
+- Direct schema, graph-safety, sanitization, and inactive activation-state tests.
 - Manual real Safari, physical mobile camera, and assistive-technology evidence before a release
   readiness claim.
 

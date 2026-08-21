@@ -3,20 +3,7 @@
 /pages-dist/
 *.tsbuildinfo
 /reports/
-/coverage/
 /.vite/
-/playwright-report/
-/test-results/
-/blob-report/
-/.vitest/
-/tests/.cache/
-/tests/.tmp/
-/tests/.env/
-/tests/fixtures/generated/
-/tests/runtime-snapshots/
-/tests/e2e/artifacts/
-/tests/e2e/screenshots/
-/tests/e2e/videos/
 /.cache/
 /.npm/
 /.node_repl_history
@@ -118,5 +105,15 @@ xcuserdata/
 *.local.sqlite
 *.local.sqlite3
 
-# Canonical public screenshots live in assets/readme/screenshots/ and are
-# verified by the manifest. Test-failure captures stay under ignored E2E paths.
+# Generated test and coverage output (local only)
+/coverage/
+/htmlcov/
+/.coverage
+/.coverage.*
+/.pytest_cache/
+/test-results/
+/playwright-report/
+/blob-report/
+/coverage.xml
+/junit.xml
+/junit-*.xml

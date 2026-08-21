@@ -16,7 +16,6 @@ The package remains private because this repository produces a static web applic
 - Use Node.js 22 and the checked-in `package-lock.json`.
 - Freeze the intended candidate diff and account for every untracked source, test, document, and asset.
 - Confirm that no local environment value, local report, analysis database, or ad hoc capture is in the candidate.
-- Install the Chrome, Firefox, and WebKit binaries used by Playwright.
 - Resolve all moderate or higher findings from `npm run audit:dependencies`.
 
 ## Local candidate gate
@@ -31,14 +30,10 @@ It performs this sequence:
 
 1. Remove local `dist/`, `reports/`, and TypeScript build-state output.
 2. Run `npm ci --ignore-scripts`.
-3. Run lifecycle rebuilds only for `esbuild` and `sharp`, which are required by the build and screenshot workflows.
-4. Install the Playwright browser binaries.
-5. Run the moderate-threshold dependency audit and `npm run check`.
-6. Capture the README screenshots with synthetic media.
-7. Verify the screenshot manifest and both image formats.
+3. Rebuild `esbuild` for the Vite build.
+4. Run the moderate-threshold dependency audit and `npm run check`.
 
-The application gate can be rerun without reinstalling dependencies or
-capturing screenshots with:
+The application gate can be rerun without reinstalling dependencies with:
 
 ```bash
 npm run release:alpha:local
@@ -48,12 +43,7 @@ That command runs `npm run audit:dependencies` followed by `npm run check`.
 
 ## CI evidence
 
-Require both jobs in `.github/workflows/ci.yml` on the exact candidate commit:
-
-- `validate`
-- `release_candidate_gate`
-
-Both jobs use a lockfile install with lifecycle scripts disabled, followed by explicit `esbuild` and `sharp` rebuilds. Both run the moderate-threshold dependency audit. The release candidate job also installs the Playwright engines, runs the local alpha gate, exercises the exact GitHub Pages artifact and isolated demo at `/inner-echo/` in Chrome, Firefox, and WebKit, and verifies the screenshot manifest.
+Require the `validate` job in `.github/workflows/ci.yml` on the exact candidate commit. It uses a lockfile install with lifecycle scripts disabled, rebuilds `esbuild`, and runs the moderate-threshold dependency audit and deterministic local gate.
 
 ## Manual evidence
 
@@ -67,7 +57,7 @@ Before publishing an alpha, record the following against the exact static artifa
 6. The final CSP behavior and available response headers on the intended host, with GitHub Pages header limitations recorded rather than inferred away.
 7. Runtime requests limited to same-origin static application delivery.
 
-Automated Playwright WebKit results do not substitute for real Safari permission and accessibility evidence.
+Local validation does not substitute for real Safari permission and accessibility evidence.
 
 ## Static artifact
 
@@ -77,11 +67,9 @@ Automated Playwright WebKit results do not substitute for real Safari permission
 npm run pages:build
 npm run pages:verify
 npm run notices:verify
-npm run pages:preview
-npm run test:e2e:pages
 ```
 
-The Pages build uses `/inner-echo/` by default, publishes the live application at the root, and copies the capability-free walkthrough to `demo/`. `test:e2e:pages` runs the existing synthetic-media camera and Stop Everything smoke against that production-base artifact in Chrome, Firefox, and WebKit. The directory is ignored and should not be committed. Validate the exact `dist/` contents before deployment, including:
+The Pages build uses `/inner-echo/` by default and publishes the live application at the root. The directory is ignored and should not be committed. Validate the exact `dist/` contents before deployment, including:
 
 - `index.html` and referenced asset paths
 - favicon and brand asset presence
@@ -108,7 +96,6 @@ Do not claim production, clinical, accessibility, browser, or device readiness b
 ## Known limitations for `0.1.0-alpha.1`
 
 - Profile, preset, and interface contracts may change before a stable release.
-- Automated browser tests use synthetic media.
 - Real Safari, physical mobile camera, and assistive-technology evidence must be recorded separately.
 - WebGL performance varies by device and browser; fallback modes omit the full effect stack.
 - There is no backend, account system, recording, export, analytics, or offline cache.

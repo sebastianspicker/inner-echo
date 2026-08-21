@@ -6,7 +6,7 @@ This documentation describes the current client-only browser application, its ru
 
 | Document | Purpose |
 |---|---|
-| [../README.md](../README.md) | Public repository entry point, setup, usage, screenshots, and validation commands. |
+| [../README.md](../README.md) | Public repository entry point, setup, usage, and validation commands. |
 | [10_PRODUCT.md](10_PRODUCT.md) | Implemented alpha scope, supported uses, non-goals, and limitations. |
 | [20_ARCHITECTURE.md](20_ARCHITECTURE.md) | Runtime ownership, data flow, fallback behavior, and module boundaries. |
 | [30_SAFETY_ETHICS.md](30_SAFETY_ETHICS.md) | Safety, permission, privacy, sensory, and language requirements. |
@@ -34,7 +34,7 @@ For an initial code read:
 
 Profile JSON under `src/conditions/profiles/` is runtime data. Validate changes with `npm run verify:contracts`, `npm run conditions:validate`, and the relevant tests.
 
-Tests are organized under `tests/unit/`, `tests/helpers/`, and `tests/e2e/`. Repository tooling is grouped by responsibility under `scripts/docs/`, `scripts/validation/`, `scripts/screenshots/`, `scripts/release/`, and `scripts/lib/`.
+The compact direct core-contract suite lives under `tests/`. Repository tooling is grouped by responsibility under `scripts/docs/`, `scripts/validation/`, `scripts/release/`, and `scripts/lib/`.
 
 ## Evidence sources
 
@@ -47,5 +47,3 @@ Do not infer clinical validity from an implemented mapping. Documentation must d
 ## Documentation boundary
 
 The files linked above describe the current application. Historical release notes do not override runtime source, configuration, tests, or the current validation status.
-
-The public screenshot set is `assets/readme/screenshots/` and is verified by its manifest.

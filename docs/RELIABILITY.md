@@ -1,18 +1,6 @@
-# Reliability and browser evidence
+# Reliability and runtime boundaries
 
-This document describes implemented fallback behavior and the scope of automated browser evidence.
-
-## Automated browser scope
-
-The custom Playwright scripts target:
-
-| Engine or channel | Automated scope | What it does not prove |
-|---|---|---|
-| Installed Chrome channel | Detailed welcome, setup, camera, fallback, safety, evidence, responsive, and status flows | Other Chromium versions, real devices, and all permission combinations |
-| Playwright Firefox | Cross-browser synthetic-media smoke | Real microphone hardware and every Firefox platform combination |
-| Playwright WebKit | Cross-browser synthetic-media smoke | Real Safari, iOS, Safari permission behavior, and VoiceOver |
-
-Synthetic media makes the checks deterministic and prevents real camera images from entering test artifacts. It also means the checks cannot establish hardware compatibility or real permission behavior.
+This document describes implemented fallback behavior and the manual evidence required before a release claim.
 
 ## Runtime state requirements
 
@@ -48,21 +36,15 @@ A fallback must not be labelled as active WebGL effects.
 | Resize | Canvas and WebGL resources resize with the stage. There is no explicit debounce, so rapid resizing can show transient artifacts. |
 | Offline use | No service worker or offline cache is included. |
 
-## Automated verification
+## Deterministic verification
 
-Run the complete application gate with:
+Run the complete local gate with:
 
 ```bash
 npm run check
 ```
 
-It runs the production build, lint, Vitest, condition and composer validation, evidence verification, contract checks, detailed Chrome UI flows, Chrome, Firefox, and WebKit smoke, preview smoke, and the required fake camera, audio, and microphone runtime matrix.
-
-Install matching Playwright binaries first:
-
-```bash
-npm run browsers:install
-```
+It runs the production build, lint, compact core-contract tests, condition and composer validation, evidence verification, and contract checks.
 
 For an alpha candidate, use `npm run release:alpha:local` so the dependency audit runs before `check`.
 
@@ -72,14 +54,13 @@ Prepare the GitHub Pages upload artifact separately with:
 npm run pages:build
 npm run pages:verify
 npm run notices:verify
-npm run test:e2e:pages
 ```
 
-This verifies the `/inner-echo/` base path, live entry assets, isolated static demo, Pages CSP fallback, absence of source maps and local paths, distributed notices, and the synthetic-media camera/stop flow in Chrome, Firefox, and WebKit. It does not prove the public host served the artifact or supplied any response header.
+This verifies the `/inner-echo/` base path, live entry assets, Pages CSP fallback, absence of source maps and local paths, and distributed notices. It does not prove the public host served the artifact or supplied any response header.
 
 ## Manual verification
 
-Automated evidence does not replace these checks:
+Deterministic local checks do not replace these checks:
 
 1. Real Safari camera, microphone, audio, and stop flow.
 2. One physical mobile browser with camera permission.

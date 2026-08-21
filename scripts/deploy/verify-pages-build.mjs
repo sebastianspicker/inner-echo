@@ -72,37 +72,18 @@ async function verifyAssetReferences(document, documentPath, documentUrl) {
   await Promise.all(artifactPaths.map(requirePath))
 }
 
-for (const path of [
-  'index.html',
-  '.nojekyll',
-  'THIRD_PARTY_NOTICES.txt',
-  'third-party-licenses',
-  'demo/index.html',
-  'demo/demo.css',
-  'demo/demo.js',
-]) {
+for (const path of ['index.html', '.nojekyll', 'THIRD_PARTY_NOTICES.txt', 'third-party-licenses']) {
   await requirePath(path)
 }
 
 const rootHtml = await readFile(resolve(output, 'index.html'), 'utf8')
-const demoHtml = await readFile(resolve(output, 'demo/index.html'), 'utf8')
 const rootDocument = new JSDOM(rootHtml).window.document
-const demoDocument = new JSDOM(demoHtml).window.document
 
 verifyCsp(rootDocument, 'index.html')
-verifyCsp(demoDocument, 'demo/index.html')
 await verifyAssetReferences(rootDocument, 'index.html', `https://pages.invalid${basePath}`)
-await verifyAssetReferences(
-  demoDocument,
-  'demo/index.html',
-  `https://pages.invalid${basePath}demo/`,
-)
 
 if (!rootDocument.querySelector('script[type="module"]')) {
   failures.push('index.html: missing the live application module')
-}
-if (!demoDocument.body.textContent?.includes('Static demo')) {
-  failures.push('demo/index.html: missing the static-demo boundary label')
 }
 
 const files = await listFiles(output)
@@ -136,6 +117,6 @@ if (failures.length > 0) {
   process.exitCode = 1
 } else {
   console.log(
-    `Pages artifact verification passed for ${basePath}: live assets stay under the base path, the demo is isolated, CSP fallbacks are present, and no source maps or local paths are published.`,
+    `Pages artifact verification passed for ${basePath}: live assets stay under the base path, the CSP fallback is present, and no source maps or local paths are published.`,
   )
 }

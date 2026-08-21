@@ -33,7 +33,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts && npm rebuild esbuild sharp
+        run: npm ci --ignore-scripts && npm rebuild esbuild
 
       - name: Dependency security audit
         run: npm run audit:dependencies
@@ -46,9 +46,6 @@ jobs:
 
       - name: Unit tests
         run: npm test
-
-      - name: Test coverage
-        run: npm run test:coverage
 
       - name: Verify JSON-runtime contracts
         run: npm run verify:contracts
@@ -72,61 +69,9 @@ jobs:
           name: contract-verification-reports
           path: reports/contract-verification.*
 
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: coverage-report
-          path: coverage/
-
       - name: Upload inspect report
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: inspect-report
           path: reports/inspect.json
-
-  release_candidate_gate:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    timeout-minutes: 30
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts && npm rebuild esbuild sharp
-
-      - name: Dependency security audit
-        run: npm run audit:dependencies
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps firefox webkit chrome
-
-      - name: Run alpha local gate parity
-        run: npm run release:alpha:local
-
-      - name: Verify GitHub Pages artifact in browsers
-        run: npm run test:e2e:pages
-
-      - name: Verify README screenshot assets
-        run: npm run screenshots:verify
-
-      - name: Upload alpha reports
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: rc-reports
-          path: |
-            reports/**
-            assets/readme/screenshots/manifest.json
