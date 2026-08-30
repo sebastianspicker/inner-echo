@@ -2,8 +2,8 @@
 
 - Status: accepted
 - Date: 2026-08-09
-- Governs: `src/utils/logger.ts`, `src/ui/DebugPanel.tsx`, `src/ui/EffectControls.tsx`,
-  `src/engine/canvas/webglPipeline.ts`
+- Governs: `src/platform/logger.ts`, `src/app/experience/components/DebugPanel.tsx`,
+  `src/app/experience/components/EffectControls.tsx`, `src/runtime/visual/overlay/webglPipeline.ts`
 
 ## Context
 

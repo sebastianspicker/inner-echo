@@ -8,13 +8,13 @@ Profiles do not diagnose a user or claim to reproduce a condition. Evidence page
 
 | Path | Role |
 |---|---|
-| `src/conditions/catalog.json` | Profile labels, descriptions, tags, and evidence links used by the interface. |
-| `src/conditions/profiles/*.json` | Runtime video, audio, safety, control, warning, and reactive definitions. |
-| `src/conditions/schema.ts` | Zod contract for loaded profile data. |
-| `src/conditions/experience-dimensions.json` | Available experience dimensions. |
-| `src/conditions/dimension-to-signal-mapping.json` | Dimension-to-motif defaults and safety guidance. |
-| `src/conditions/graphBuilder.ts` | Registered video-node construction. |
-| `src/contractVerification/` | Audio and video node metadata and deterministic probes. |
+| `src/content/experience/catalog.json` | Profile labels, descriptions, tags, and evidence links used by the interface. |
+| `src/content/experience/profiles/*.json` | Runtime video, audio, safety, control, warning, and reactive definitions. |
+| `src/domain/experience/schema.ts` | Zod contract for loaded profile data. |
+| `src/content/experience/experience-dimensions.json` | Available experience dimensions. |
+| `src/content/experience/dimension-to-signal-mapping.json` | Dimension-to-motif defaults and safety guidance. |
+| `src/runtime/visual/graph/graphBuilder.ts` | Registered video-node construction. |
+| `tools/contracts/probes/` | Audio and video node metadata and deterministic probes. |
 | `docs/references/` | Evidence method, citations, rationale pages, and stated gaps. |
 
 These paths form one runtime contract. Keep them aligned when a node, parameter, profile, or mapping changes.

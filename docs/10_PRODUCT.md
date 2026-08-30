@@ -15,7 +15,7 @@ The application is intended for voluntary individual exploration, technical demo
 - Bundled evidence and method documents available from the interface.
 - Development-only runtime diagnostics.
 
-The runtime profile data in `src/conditions/` is an application contract, not example data. Changes to profiles, mappings, schemas, or node names require the validation described in [CONTRACT_VERIFICATION.md](CONTRACT_VERIFICATION.md).
+The runtime profile data in `src/content/experience/` is an application contract, not example data. Changes to profiles, mappings, schemas, or node names require the validation described in [CONTRACT_VERIFICATION.md](CONTRACT_VERIFICATION.md).
 
 ## Boundaries
 

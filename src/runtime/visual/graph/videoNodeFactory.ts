@@ -1,0 +1,43 @@
+import type { VideoNode } from '../effects/VideoNode'
+import type { VideoNodeId } from '../../capabilities'
+import {
+  ChromaAberrationNode,
+  ColorGradeNode,
+  EdgeSharpenNode,
+  FeedbackLoopNode,
+  FocusJitterNode,
+  GazeTunnelNode,
+  GlassVeilNode,
+  GrainNode,
+  GridHintNode,
+  HazeNode,
+  InterferenceNode,
+  IntrusionBurstNode,
+  PulseNode,
+  SalienceCompetitionNode,
+  SoftBlurNode,
+  SomaticPulseNode,
+  TemporalSmearNode,
+  VignetteNode,
+} from '../effects'
+
+export const NODE_FACTORY: Record<string, () => VideoNode> = {
+  grain: () => new GrainNode(),
+  vignette: () => new VignetteNode(),
+  chroma_aberration: () => new ChromaAberrationNode(),
+  temporal_smear: () => new TemporalSmearNode(),
+  color_grade: () => new ColorGradeNode(),
+  haze: () => new HazeNode(),
+  soft_blur: () => new SoftBlurNode(),
+  edge_sharpen: () => new EdgeSharpenNode(),
+  pulse: () => new PulseNode(),
+  interference: () => new InterferenceNode(),
+  focus_jitter: () => new FocusJitterNode(),
+  feedback_loop: () => new FeedbackLoopNode(),
+  grid_hint: () => new GridHintNode(),
+  gaze_tunnel: () => new GazeTunnelNode(),
+  somatic_pulse: () => new SomaticPulseNode(),
+  intrusion_burst: () => new IntrusionBurstNode(),
+  salience_competition: () => new SalienceCompetitionNode(),
+  glass_veil: () => new GlassVeilNode(),
+} satisfies Record<VideoNodeId, () => VideoNode>

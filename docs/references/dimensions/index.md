@@ -1,6 +1,6 @@
 # Dimension Reference Index
 
-This file exists because `src/conditions/catalog.json` references `docs/references/dimensions/index.md`.
+This file exists because `src/content/experience/catalog.json` references `docs/references/dimensions/index.md`.
 
 The individual dimension pages are generated from the current composer data and
 the in-repository evidence corpus. Use the canonical index for navigation and

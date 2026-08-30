@@ -24,23 +24,23 @@ For an initial code read:
 
 1. `src/main.tsx` mounts the application.
 2. `src/app/App.tsx` defines the top-level shell.
-3. `src/ui/CameraView.tsx` coordinates visible state, permissions, safety controls, and runtime cleanup.
-4. `src/ui/hooks/useProfileLoad.ts` loads a profile or composer result.
-5. `src/conditions/graphBuilder.ts` converts `video_stack` entries into video nodes.
-6. `src/ui/hooks/useReactivePipeline.ts` starts the overlay and reactive audio and video coupling.
-7. `src/engine/audio/audioEngine.ts` owns WebAudio, optional microphone input, and audio effects.
-8. `src/engine/canvas/webglPipeline.ts` owns WebGL resources, the frame loop, metrics, and fallback boundaries.
-9. `src/contractVerification/` keeps profile references aligned with implemented audio and video nodes.
+3. `src/app/experience/ExperienceWorkspace.tsx` coordinates visible state, permissions, safety controls, and runtime cleanup.
+4. `src/app/experience/hooks/useProfileLoad.ts` loads a profile or composer result.
+5. `src/runtime/visual/graph/graphBuilder.ts` converts `video_stack` entries into video nodes.
+6. `src/app/experience/session/useReactivePipeline.ts` starts the overlay and reactive audio and video coupling.
+7. `src/runtime/audio/audioEngine.ts` owns WebAudio, optional microphone input, and audio effects.
+8. `src/runtime/visual/overlay/webglPipeline.ts` owns WebGL resources, the frame loop, metrics, and fallback boundaries.
+9. `tools/contracts/probes/` keeps profile references aligned with implemented audio and video nodes.
 
-Profile JSON under `src/conditions/profiles/` is runtime data. Validate changes with `npm run verify:contracts`, `npm run conditions:validate`, and the relevant tests.
+Profile JSON under `src/content/experience/profiles/` is runtime data. Validate changes with `npm run verify:contracts`, `npm run conditions:validate`, and the relevant tests.
 
-The compact direct core-contract suite lives under `tests/`. Repository tooling is grouped by responsibility under `scripts/docs/`, `scripts/validation/`, `scripts/release/`, and `scripts/lib/`.
+The compact direct core-contract suite lives under `tests/`. Repository tooling is grouped by responsibility under `tools/docs/`, `tools/validation/`, `tools/release/`, and `tools/shared/`.
 
 ## Evidence sources
 
 - `docs/references/` contains the maintained evidence corpus and stated limitations.
 - `docs/references/MAPPING_SUMMARY.md` records the current mapping from dimensions to motifs and evidence pages.
-- `src/conditions/` contains the executable profile and dimension mappings.
+- `src/content/experience/` contains the executable profile and dimension mappings.
 
 Do not infer clinical validity from an implemented mapping. Documentation must distinguish source-backed statements, design hypotheses, runtime behavior, and validation results.
 

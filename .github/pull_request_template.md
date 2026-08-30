@@ -16,8 +16,5 @@
 
 ## Test plan
 
-- [ ] `npm run lint` passes
-- [ ] `npm run typecheck` passes
-- [ ] `npm test` passes
-- [ ] `npm run verify:contracts` passes
+- [ ] `npm run verify` passes
 - [ ] Manual runtime check (describe below if relevant)

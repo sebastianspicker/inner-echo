@@ -6,7 +6,7 @@ Inner Echo is a client-only Vite and React application that applies profile-driv
 
 The browser requests camera, microphone, and audio access only after direct user actions. Media is processed in the page and is not uploaded by the application.
 
-After an authorized GitHub Pages deployment, the live application is served at [sebastianspicker.github.io/inner-echo](https://sebastianspicker.github.io/inner-echo/). The current local candidate has not been published, so that URL is not release evidence. Each media capability remains off until its direct activation control is selected.
+The GitHub Pages deployment is served at [sebastianspicker.github.io/inner-echo](https://sebastianspicker.github.io/inner-echo/). Each media capability remains off until its direct activation control is selected.
 
 
 ## Project scope
@@ -27,7 +27,7 @@ Alpha status has practical consequences:
 - Safe Mode, Reduced Motion, global intensity, and Stop Everything controls.
 - Optional synthesized audio and optional microphone input with separate activation controls.
 - Local preset storage and URL-hash sharing of visual and composer state. Passive imports do not enable media or audio.
-- Bundled evidence documents rendered through the sanitized Markdown path in `src/evidence/markdown.ts`.
+- Bundled evidence documents rendered through the sanitized Markdown path in `src/content/evidence/markdown.ts`.
 - Contract validation for profile JSON, video nodes, audio nodes, safety ranges, and evidence links.
 
 ## Known limitations
@@ -103,17 +103,20 @@ See [docs/SECURITY.md](docs/SECURITY.md), [docs/RELIABILITY.md](docs/RELIABILITY
 
 | Command | Purpose |
 |---|---|
-| `npm run typecheck` | Check both TypeScript projects without emitting files. |
-| `npm run lint` | Run Biome against `src/`, `tests/`, and `scripts/`; warnings fail the command. |
+| `npm run typecheck` | Check the browser, pure-domain, build-config, and repository-tool TypeScript projects without emitting files. |
+| `npm run lint` | Run Biome against `src/`, `tests/`, and `tools/`; warnings fail the command. |
+| `npm run architecture:check` | Reject forbidden source dependency edges and import cycles. |
 | `npm test` | Run the compact Vitest core-contract suite. |
 | `npm run build` | Type-check and build the production static files. |
+| `npm run bundle:verify` | Enforce deferred Three.js loading and production-only diagnostic removal. |
 | `npm run notices:verify` | Verify installed license texts and their copies in the current production build. |
+| `npm run docs:verify` | Check that tracked generated catalog and schema documentation is current. |
 | `npm run docs:links` | Check local file targets in maintained Markdown documentation. |
 | `npm run verify:contracts` | Verify JSON references against implemented audio and video nodes. |
 | `npm run conditions:validate` | Validate condition profiles and mappings. |
 | `npm run composer:validate` | Validate composer behavior and safety ranges. |
 | `npm run evidence:verify` | Verify evidence documents and links. |
-| `npm run verify` | Build, verify notices and links, lint, test, and run contract and data validation. |
+| `npm run verify` | Run the complete build, architecture, test, documentation, contract, data, and inspect gate. |
 | `npm run check` | Alias for the complete deterministic local verification gate. |
 | `npm run audit:dependencies` | Fail on moderate or higher npm advisories. |
 | `npm run release:alpha:local` | Run the dependency audit and the complete local check. |
@@ -132,18 +135,21 @@ Vitest covers direct schema, graph-safety, sanitization, and inactive activation
 | Path | Responsibility |
 |---|---|
 | `src/app/` | React application composition. |
-| `src/ui/` | Permission flows, controls, status, evidence dialog, and runtime hooks. |
-| `src/engine/` | Camera, audio, WebGL or Canvas, effects, coupling, and cleanup. |
-| `src/conditions/` | Catalog, profiles, schemas, mappings, and graph construction. |
-| `src/composer/` | Profile and experience-dimension composition. |
-| `src/contractVerification/` | Runtime node registries and contract probes. |
-| `src/evidence/` | Bundled document loading and sanitized Markdown rendering. |
+| `src/app/experience/components/` | Permission flows, controls, and status. |
+| `src/app/experience/evidence/` | Evidence dialog and document loading. |
+| `src/app/experience/hooks/` and `src/app/experience/session/` | Runtime hooks and session orchestration. |
+| `src/runtime/` | Camera, audio, WebGL or Canvas, effects, coupling, and cleanup. |
+| `src/content/experience/` | Catalog, profiles, and dimension mappings. |
+| `src/domain/experience/` | Schemas, safety, motion, and experience composition. |
+| `src/runtime/visual/graph/` | Video graph construction. |
+| `tools/contracts/probes/` | Runtime node registries and contract probes. |
+| `src/content/evidence/` | Bundled document loading and sanitized Markdown rendering. |
 | `tests/` | Compact direct Vitest core-contract coverage. |
-| `scripts/docs/` | Documentation derivation and evidence validation. |
-| `scripts/validation/` | Contract, profile, composer, and inspection commands. |
-| `scripts/release/` | Static artifact notice verification. |
-| `scripts/deploy/` | GitHub Pages assembly, base-path handling, CSP fallback, and artifact verification. |
-| `scripts/lib/` | Shared script implementation modules. |
+| `tools/docs/` | Documentation derivation and evidence validation. |
+| `tools/validation/` | Contract, profile, composer, and inspection commands. |
+| `tools/release/` | Static artifact notice verification. |
+| `tools/deployment/` | GitHub Pages assembly, base-path handling, CSP fallback, and artifact verification. |
+| `tools/shared/` | Shared tool implementation modules. |
 | `docs/` | Architecture, product, safety, reliability, release, and evidence documentation. |
 | `public/` | Static response-header policy and third-party license notices copied into the build. |
 
