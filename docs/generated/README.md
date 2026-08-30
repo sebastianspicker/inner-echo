@@ -6,7 +6,7 @@ Do not edit the catalog or schema reference files by hand. Update their source c
 npm run docs:gen
 ```
 
-`scripts/docs/gen-docs.ts` derives the files deterministically.
+`tools/docs/gen-docs.ts` derives the files deterministically.
 
 | File | Source and purpose |
 |---|---|

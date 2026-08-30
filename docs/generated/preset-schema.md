@@ -1,8 +1,8 @@
 # Preset profile JSON Schema
 
-<!-- Source: scripts/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen. -->
+<!-- Source: tools/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen. -->
 
-This document describes the JSON Schema for condition profile files under `src/conditions/profiles/<id>.json`.
+This document describes the JSON Schema for experience profile files under `src/content/experience/profiles/<id>.json`.
 
 ## Required keys
 
@@ -377,6 +377,6 @@ The machine-readable JSON Schema is embedded below and also written to `preset-s
     "safety"
   ],
   "additionalProperties": {},
-  "$comment": "Source: scripts/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen."
+  "$comment": "Source: tools/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen."
 }
 ```

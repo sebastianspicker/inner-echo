@@ -28,4 +28,4 @@ See also: `docs/references/EVIDENCE_MATRIX.md`.
 
 ## Hypotheses / evidence gaps
 
-- None detected from `src/conditions/experience-dimensions.json` and `src/conditions/dimension-to-signal-mapping.json`.
+- None detected from `src/content/experience/experience-dimensions.json` and `src/content/experience/dimension-to-signal-mapping.json`.

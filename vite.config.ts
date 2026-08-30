@@ -23,8 +23,8 @@ const productionHeaders = {
 export default defineConfig({
   plugins: [react()],
   build: {
+    manifest: 'manifest.json',
     sourcemap: false, // Defence-in-depth: never ship sourcemaps to production.
-    chunkSizeWarningLimit: 1100, // Three.js main chunk is ~1004 KB; acknowledge known size.
   },
   server: { headers: devHeaders },
   preview: { headers: productionHeaders },

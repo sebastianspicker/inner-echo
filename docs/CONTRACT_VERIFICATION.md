@@ -19,8 +19,8 @@ It exits nonzero when contract errors exist. Warnings are reported separately.
 
 Implemented node metadata is defined in:
 
-- `src/contractVerification/videoNodeRegistry.ts`
-- `src/contractVerification/audioNodeRegistry.ts`
+- `tools/contracts/probes/videoNodeRegistry.ts`
+- `tools/contracts/probes/audioNodeRegistry.ts`
 
 Each contract can declare an identifier, aliases, supported parameters, parameter type, default, bounds, Safe Mode clamp linkage, and deterministic probe reader.
 
@@ -30,9 +30,9 @@ Registry metadata is introspection-only. It must describe runtime behavior witho
 
 The verifier reads:
 
-- `src/conditions/profiles/*.json`
-- `src/conditions/dimension-to-signal-mapping.json`
-- `src/conditions/experience-dimensions.json`
+- `src/content/experience/profiles/*.json`
+- `src/content/experience/dimension-to-signal-mapping.json`
+- `src/content/experience/experience-dimensions.json`
 
 It checks:
 

@@ -1,6 +1,6 @@
 # Conditions catalog
 
-<!-- Source: scripts/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen. -->
+<!-- Source: tools/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen. -->
 
 Summary of all conditions and their profiles (id, label, tags, safety, nodes).
 
