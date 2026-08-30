@@ -3,7 +3,7 @@
 ## Search strategy and safeguards
 
 This report covers the first three experience dimensions from
-`src/conditions/experience-dimensions.json`: hyperarousal, hypervigilance, and
+`src/content/experience/experience-dimensions.json`: hyperarousal, hypervigilance, and
 panic_peaks. The intent is to support metaphorical, non-diagnostic audiovisual
 (AV) design hypotheses, not to depict “what a condition looks/sounds like,”
 simulate clinical states, or provide medical advice.
@@ -354,7 +354,7 @@ We avoid stigmatizing or sensational language, and we prioritize safety and user
 
 ## Methodology (evidence selection)
 For each experience dimension we:
-1. Use the repo’s definition from `src/conditions/experience-dimensions.json`.
+1. Use the repo’s definition from `src/content/experience/experience-dimensions.json`.
 2. Identify 6–10 peer-reviewed sources where possible:
  - ≥2 reviews/meta-analyses or clinical guidelines
  - ≥2 primary empirical studies

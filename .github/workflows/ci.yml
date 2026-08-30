@@ -38,29 +38,8 @@ jobs:
       - name: Dependency security audit
         run: npm run audit:dependencies
 
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Unit tests
-        run: npm test
-
-      - name: Verify JSON-runtime contracts
-        run: npm run verify:contracts
-
-      - name: Validate conditions
-        run: npm run conditions:validate
-
-      - name: Validate composer
-        run: npm run composer:validate
-
-      - name: Verify evidence
-        run: npm run evidence:verify
-
-      - name: Debug inspect harness
-        run: npm run debug:inspect
+      - name: Run repository gate
+        run: npm run verify
 
       - name: Upload contract reports
         if: always()

@@ -24,17 +24,20 @@ Common checks:
 
 | Command | Scope |
 |---|---|
-| `npm run typecheck` | Browser and Node TypeScript projects. |
-| `npm run lint` | Biome checks for source, tests, and scripts. Warnings fail. |
+| `npm run typecheck` | Browser, pure-domain, build-config, and repository-tool TypeScript projects. |
+| `npm run lint` | Biome checks for source, tests, and tools. Warnings fail. |
+| `npm run architecture:check` | Source dependency direction and cycle enforcement. |
 | `npm test` | Compact Vitest core-contract tests. |
 | `npm run build` | TypeScript build and Vite production build. |
+| `npm run bundle:verify` | Lazy Three.js boundary and production diagnostic exclusion. |
 | `npm run notices:verify` | Installed and distributed third-party license texts. Run after `npm run build`. |
+| `npm run docs:verify` | Tracked generated catalog and schema freshness. |
 | `npm run docs:links` | Local targets in maintained Markdown documentation. |
 | `npm run verify:contracts` | Profile references and runtime node contracts. |
 | `npm run conditions:validate` | Condition profiles and mapping data. |
 | `npm run composer:validate` | Composer output and safety ranges. |
 | `npm run evidence:verify` | Evidence pages and links. |
-| `npm run verify` | Build, notice and link checks, lint, tests, and contract or data validation. |
+| `npm run verify` | Complete build, architecture, test, documentation, contract, data, and inspect gate. |
 | `npm run check` | Alias for `verify`. |
 | `npm run audit:dependencies` | Moderate-threshold npm advisory check. |
 | `npm run release:alpha:local` | Dependency audit plus the complete local gate. |
@@ -50,9 +53,8 @@ Do not hand-edit derived catalog, schema, or evidence files. Update the source a
 ## Change scope
 
 - Keep changes focused on one reviewable concern.
-- Preserve unrelated worktree changes.
 - Add a regression test for a corrected contract or failure mode when practical.
-- Treat `src/conditions/profiles/*.json`, schemas, mappings, graph builders, and node registries as one runtime contract.
+- Treat `src/content/experience/profiles/*.json`, schemas, mappings, graph builders, and node registries as one runtime contract.
 - Do not preserve a deprecated path without evidence that a supported consumer still needs it.
 - Do not commit build output, reports, local environment values, analysis databases, or editor state.
 
@@ -63,7 +65,7 @@ Do not hand-edit derived catalog, schema, or evidence files. Update the source a
 - Keep Safe Mode, Reduced Motion, Stop Everything, permission errors, and fallback status truthful.
 - Do not add recording, upload, analytics, tracking, external fonts, or remote APIs without an explicitly approved scope and updated privacy documentation.
 - Avoid strobe behavior, abrupt luminance changes, unbounded feedback, and sudden loud transients.
-- Keep evidence HTML on the sanitized `src/evidence/markdown.ts` path.
+- Keep evidence HTML on the sanitized `src/content/evidence/markdown.ts` path.
 
 See [docs/30_SAFETY_ETHICS.md](docs/30_SAFETY_ETHICS.md) and [docs/SECURITY.md](docs/SECURITY.md).
 

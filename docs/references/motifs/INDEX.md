@@ -3,7 +3,7 @@
 This index lists audiovisual motifs (video and audio nodes) and links to their evidence pages.
 
 It is generated from the motifs referenced by
-`src/conditions/experience-dimensions.json`. Review the source data and
+`src/content/experience/experience-dimensions.json`. Review the source data and
 in-repository evidence corpus; do not treat this index as an independent
 research document.
 

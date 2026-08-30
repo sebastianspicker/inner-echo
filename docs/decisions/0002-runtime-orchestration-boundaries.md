@@ -2,8 +2,9 @@
 
 - Status: accepted
 - Date: 2026-08-09
-- Governs: `src/ui/CameraView.tsx`, `src/ui/hooks/`, `src/conditions/`, `src/composer/`,
-  `src/engine/audio/`, `src/engine/canvas/`, `src/engine/reactive/`
+- Governs: `src/app/experience/ExperienceWorkspace.tsx`, `src/app/experience/hooks/` and `src/app/experience/session/`,
+  `src/content/experience/`, `src/domain/experience/composition/`, `src/runtime/audio/`,
+  `src/runtime/visual/overlay/`, `src/runtime/coupling/`
 
 ## Context
 
@@ -26,7 +27,7 @@ remain executable authority.
 
 ## Alternatives considered
 
-- Keep all lifecycle logic in `CameraView`: rejected because independent async resources then share
+- Keep all lifecycle logic in `ExperienceWorkspace`: rejected because independent async resources then share
   one large cleanup and race surface.
 - Move visible state into engine singletons: rejected because UI truth would become implicit and
   test isolation would weaken.

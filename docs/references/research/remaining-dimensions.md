@@ -14,7 +14,7 @@ Across dimensions, the empirical patterns used for design include: (1) involunta
 Safety is treated as a first-class requirement: avoid flicker/strobing, harsh
 audio transients, and nausea-inducing motion; provide hard clamps, “Reduced
 Motion,” quick stop/mute, and conservative defaults aligned with
-`src/conditions/experience-dimensions.json`.
+`src/content/experience/experience-dimensions.json`.
 
 ## Search strategy and databases used
 
@@ -862,7 +862,7 @@ and compulsive loop.
 # References & Evidence Methodology (inner-echo)
 
 ## What this folder is for
-This directory documents evidence-backed, non-diagnostic design rationales for mapping *experience dimensions* (see `src/conditions/experience-dimensions.json`) to audiovisual metaphor hypotheses used in `inner-echo`.
+This directory documents evidence-backed, non-diagnostic design rationales for mapping *experience dimensions* (see `src/content/experience/experience-dimensions.json`) to audiovisual metaphor hypotheses used in `inner-echo`.
 
 This project:
 - is NOT diagnostic

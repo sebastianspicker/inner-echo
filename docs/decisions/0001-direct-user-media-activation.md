@@ -2,8 +2,8 @@
 
 - Status: accepted
 - Date: 2026-08-09
-- Governs: `src/ui/CameraView.tsx`, `src/ui/hooks/useAudioRuntime.ts`,
-  `src/ui/cameraRuntime.ts`, `src/engine/audio/`
+- Governs: `src/app/experience/ExperienceWorkspace.tsx`, `src/app/experience/session/useAudioRuntime.ts`,
+  `src/app/experience/session/cameraRuntime.ts`, `src/runtime/audio/`
 
 ## Context
 

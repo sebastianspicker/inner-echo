@@ -33,7 +33,7 @@ Changes to these boundaries require focused regression tests.
 
 ## HTML and link handling
 
-Evidence Markdown is parsed and sanitized through `src/evidence/markdown.ts` before it reaches the rendered dialog. Do not introduce another `dangerouslySetInnerHTML` path for evidence content.
+Evidence Markdown is parsed and sanitized through `src/content/evidence/markdown.ts` before it reaches the rendered dialog. Do not introduce another `dangerouslySetInnerHTML` path for evidence content.
 
 Evidence links are resolved through the local navigation policy. External link activation must reject unsafe schemes and use `noopener noreferrer` where a new browsing context is opened.
 
