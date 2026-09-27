@@ -66,24 +66,21 @@ export interface PlateCaptionProps {
 export function PlateCaption({ selection, catalog, id }: PlateCaptionProps) {
   const entries = captionEntries(selection, catalog)
   return (
-    <figcaption className="ie-plateCaption" id={id}>
-      <p className="ie-plateCaption__subject">
+    <figcaption className="ie-caption" id={id}>
+      <p className="ie-gloss">
         {entries.length === 0
           ? emptyCaption(selection.composerMode)
           : entries.map((entry, index) => (
-              <span key={entry.id} className="ie-plateCaption__entry">
+              <span key={entry.id}>
                 {entry.label}
                 {entry.weight !== null && (
-                  <span className="ie-plateCaption__weight">
-                    {' '}
-                    {Math.round(entry.weight * 100)}%
-                  </span>
+                  <span className="ie-captionWeight"> {Math.round(entry.weight * 100)}%</span>
                 )}
                 {index < entries.length - 1 ? ', ' : '.'}
               </span>
             ))}
       </p>
-      <p className="ie-plateCaption__note">An interpretation, not a reproduction.</p>
+      <p className="ie-caption__note">An interpretation, not a reproduction.</p>
     </figcaption>
   )
 }

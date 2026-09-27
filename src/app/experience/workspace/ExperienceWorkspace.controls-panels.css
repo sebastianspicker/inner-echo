@@ -203,14 +203,6 @@ fieldset.ie-panelSection {
   font-weight: 600;
 }
 
-.ie-controlHint,
-.ie-hint {
-  margin: 0;
-  color: var(--ink-3);
-  font-size: var(--t-14);
-  line-height: var(--lh-ui);
-}
-
 .ie-controlInputMode {
   display: grid;
   gap: var(--s-2);

@@ -1,0 +1,319 @@
+/* Shared components: the pieces that make the app and the device-free demo one product.
+ * Title page, ringed numerals, masthead, the arched mirror, its chips, and its caption. */
+
+/* Typographic roles shared across screens. Each role is declared once; screens add only layout. */
+
+/* Section title: the serif head of a section, a dialog, or a document chapter. */
+.ie-sectionHead,
+.evidence-title,
+.evidence-markdown h2 {
+  font-family: var(--font-serif);
+  font-size: var(--t-28);
+  font-weight: 400;
+  font-variation-settings: "opsz" 32;
+  line-height: var(--lh-title);
+}
+
+/* Small print: hints, notes, and footnotes. */
+.ie-titlePage__note,
+.ie-hint,
+.ie-controlHint,
+.composer__hint,
+.rail-note,
+.rail-footer p,
+.evidence-note p {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: var(--t-14);
+  line-height: var(--lh-ui);
+}
+
+/* Serif italic gloss: descriptions, captions, and empty states speak in the book voice. */
+.ie-gloss {
+  font-family: var(--font-serif);
+  font-size: var(--t-18);
+  font-style: italic;
+  font-variation-settings: "opsz" 18;
+  line-height: 1.4;
+}
+
+/* Ringed numeral: a small echo of the aperture mark. */
+.ie-ring,
+.ie-notes > li::before {
+  display: inline-grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font-family: var(--font-serif);
+  font-size: var(--t-16);
+  font-style: italic;
+  font-variant-numeric: lining-nums;
+  line-height: 1;
+}
+
+/* Title page: running head, the title with an italic second line, a lede, and numbered notes. */
+
+.ie-titlePage {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: min(100%, 1320px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: var(--s-5) clamp(var(--s-4), 5vw, var(--s-8)) var(--s-8);
+}
+
+.ie-titlePage__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-5);
+  padding-bottom: var(--s-4);
+  border-bottom: 1px solid var(--rule);
+}
+
+.ie-titlePage__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+  font-variation-settings: "opsz" 24;
+}
+
+.ie-titlePage__brand img {
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+
+.ie-titlePage__running {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: var(--t-14);
+}
+
+.ie-titlePage__body {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+  column-gap: clamp(var(--s-6), 8vw, var(--s-9));
+  align-items: end;
+  align-self: center;
+  padding-block: var(--s-7);
+}
+
+.ie-titlePage__title {
+  margin: 0 0 var(--s-6);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: clamp(var(--t-48), 8.4vw, 7.5rem);
+  font-weight: 300;
+  font-variation-settings: "opsz" 72;
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+}
+
+.ie-titlePage__title span,
+.ie-titlePage__title em {
+  display: block;
+}
+
+.ie-titlePage__title em {
+  padding-left: 0.62em;
+  font-variation-settings: "opsz" 36;
+}
+
+.ie-titlePage__lede {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+  font-variation-settings: "opsz" 18;
+  line-height: 1.5;
+}
+
+.ie-titlePage__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3) var(--s-5);
+  margin-top: var(--s-7);
+}
+
+.ie-titlePage__actions .ie-btn {
+  min-width: 13.5rem;
+  min-height: 52px;
+  font-size: var(--t-18);
+}
+
+.ie-titlePage__note {
+  max-width: 26ch;
+}
+
+.ie-notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: note;
+}
+
+.ie-notes > li {
+  position: relative;
+  padding: var(--s-5) 0 var(--s-5) 2.75rem;
+  border-top: 1px solid var(--rule);
+  counter-increment: note;
+}
+
+.ie-notes > li:last-child {
+  padding-bottom: 0;
+}
+
+.ie-notes > li::before {
+  position: absolute;
+  top: calc(var(--s-5) - 2px);
+  left: 0;
+  content: counter(note);
+}
+
+.ie-notes h2 {
+  margin: 0 0 var(--s-2);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+  font-weight: 400;
+  font-variation-settings: "opsz" 24;
+  line-height: 1.2;
+}
+
+.ie-notes p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--t-16);
+  line-height: var(--lh-read);
+}
+
+@media (max-width: 960px) {
+  .ie-titlePage__body {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .ie-notes {
+    margin-top: var(--s-8);
+  }
+}
+
+@media (max-width: 560px) {
+  .ie-titlePage {
+    padding-top: var(--s-4);
+    padding-bottom: var(--s-7);
+  }
+
+  .ie-titlePage__running {
+    display: none;
+  }
+
+  .ie-titlePage__title {
+    margin-bottom: var(--s-5);
+    font-size: clamp(2.75rem, 15vw, var(--t-64));
+  }
+
+  .ie-titlePage__title em {
+    padding-left: 0.4em;
+  }
+
+  .ie-titlePage__lede {
+    font-size: var(--t-18);
+  }
+
+  .ie-titlePage__actions {
+    margin-top: var(--s-6);
+  }
+
+  .ie-titlePage__actions .ie-btn {
+    width: 100%;
+  }
+
+  .ie-titlePage__note {
+    max-width: none;
+  }
+
+  .ie-notes {
+    margin-top: var(--s-7);
+  }
+}
+
+/* Masthead: the running head of every working screen. */
+
+.ie-masthead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-5);
+  padding: var(--s-2) clamp(var(--s-4), 4vw, var(--s-7));
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.ie-masthead__note {
+  padding-left: var(--s-4);
+  border-left: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-family: var(--font-ui);
+  font-size: var(--t-14);
+  white-space: nowrap;
+}
+
+/* The mirror: the only arched object on the page, on a near-black ground in both themes. */
+
+.ie-mirror {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 50% 50% 6px 6px / 16% 16% 6px 6px;
+  background: var(--plate);
+  color: var(--plate-ink);
+}
+
+.ie-mirrorChip {
+  position: absolute;
+  left: var(--s-3);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  background: rgb(9 11 11 / 0.8);
+  color: var(--plate-ink);
+  font-size: var(--t-13);
+}
+
+/* The caption under the mirror: what it shows, then what it is not. */
+
+.ie-caption {
+  display: grid;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0 var(--s-1);
+  text-align: center;
+}
+
+.ie-caption > * {
+  margin: 0;
+}
+
+.ie-caption__note {
+  color: var(--ink-3);
+  font-size: var(--t-14);
+}

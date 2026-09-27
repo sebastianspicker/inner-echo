@@ -129,7 +129,7 @@ function DimensionSelection(props: InspectorSelectionProps) {
         onOpenEvidence={props.onOpenEvidence}
       />
       {props.selection.dimensions.length === 0 && (
-        <p className="composer__empty" role="status">
+        <p className="composer__empty ie-gloss" role="status">
           No dimensions selected. Choose one or more to prepare an audiovisual profile.
         </p>
       )}
@@ -215,7 +215,7 @@ export function ExperienceComposerInspector({
       )}
 
       {selection.mode === 'symptom' && filteredDims.length === 0 ? (
-        <p className="composer__empty" role="status">
+        <p className="composer__empty ie-gloss" role="status">
           No dimensions match your search. Try a different word.
         </p>
       ) : (

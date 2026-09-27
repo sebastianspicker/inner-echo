@@ -35,37 +35,37 @@ export function WelcomeStep({ onContinue, onOpenEvidence }: WelcomeStepProps) {
   }
 
   return (
-    <section className="welcome-step" aria-labelledby="welcome-title">
-      <header className="welcome-step__head">
-        <div className="welcome-step__brand">
-          <img className="welcome-step__mark" src={brandMarkUrl} alt="" aria-hidden="true" />
+    <section className="welcome-step ie-titlePage" aria-labelledby="welcome-title">
+      <header className="ie-titlePage__head">
+        <div className="ie-titlePage__brand">
+          <img src={brandMarkUrl} alt="" aria-hidden="true" />
           <span>Inner Echo</span>
         </div>
-        <p className="welcome-step__running">A camera mirror for talking about inner experience</p>
+        <p className="ie-titlePage__running">A camera mirror for talking about inner experience</p>
       </header>
 
-      <div className="welcome-step__lead">
-        <div className="welcome-step__intro">
-          <h1 id="welcome-title">
+      <div className="ie-titlePage__body">
+        <div>
+          <h1 id="welcome-title" className="ie-titlePage__title">
             <span>Notice</span> <em>what shifts.</em>
           </h1>
-          <p>
+          <p className="ie-titlePage__lede">
             Inner Echo lays a gentle audiovisual metaphor over your own camera feed, in this
             browser, so that something hard to describe has something to point at. It is a way to
             talk about inner experience, not a diagnosis or a measurement.
           </p>
-          <div className="welcome-step__actions">
+          <div className="ie-titlePage__actions">
             <button type="button" className="ie-btn ie-btn--accent" onClick={handleContinue}>
               Continue to setup
             </button>
-            <p className="welcome-step__note">
+            <p className="ie-titlePage__note">
               Continuing does not request camera, microphone, or audio access.
             </p>
           </div>
         </div>
 
-        <section className="welcome-step__facts" aria-label="Before you continue">
-          <ol>
+        <section aria-label="Before you continue">
+          <ol className="ie-notes">
             <li>
               <h2>Media stays here</h2>
               <p>

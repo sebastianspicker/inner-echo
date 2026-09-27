@@ -40,9 +40,6 @@
 
 .composer__hint {
   max-width: var(--measure);
-  margin: 0;
-  color: var(--ink-3);
-  font-size: var(--t-14);
   line-height: var(--lh-read);
 }
 
@@ -231,31 +228,14 @@
 
 .composer__evidenceBtn {
   min-height: 24px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--accent);
-  cursor: pointer;
   font-size: var(--t-14);
   font-weight: 600;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.22em;
-}
-
-.composer__evidenceBtn:hover {
-  text-decoration-thickness: 2px;
 }
 
 .composer__empty {
   margin: 0;
   padding: var(--s-6) 0;
   color: var(--ink-3);
-  font-family: var(--font-serif);
-  font-size: var(--t-18);
-  font-style: italic;
-  font-variation-settings: "opsz" 18;
-  line-height: var(--lh-read);
 }
 
 .composer__summary {
@@ -294,29 +274,6 @@
   gap: var(--s-2);
 }
 
-.composer__quick-buttons button {
-  min-height: 40px;
-  padding: 0 var(--s-4);
-  border: 1px solid var(--rule-control);
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-  font-size: var(--t-14);
-  font-weight: 600;
-}
-
-.composer__quick-buttons button:hover:not(:disabled) {
-  border-color: var(--ink);
-  background: var(--paper-recessed);
-}
-
-.composer__quick-buttons button:disabled {
-  border-style: dashed;
-  color: var(--ink-3);
-  cursor: not-allowed;
-}
-
 .composer__readiness {
   display: flex;
   align-items: center;
@@ -344,12 +301,9 @@
   margin: 0;
 }
 
-.ie-experienceFraming > .composer__hint:first-child {
+.ie-experienceFraming > .ie-gloss {
+  margin: 0;
   color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: var(--t-18);
-  font-style: italic;
-  font-variation-settings: "opsz" 18;
 }
 
 .ie-experienceFraming .composer__advanced {

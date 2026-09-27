@@ -10,7 +10,7 @@ export function ExperienceFraming({
   return (
     <section className="ie-experienceFraming" aria-label="About this interpretation">
       {!isLoading && (
-        <p className="composer__hint">
+        <p className="ie-gloss">
           {profile?.summary.trim() || 'No experience description is available.'}
         </p>
       )}

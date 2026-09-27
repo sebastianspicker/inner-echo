@@ -19,9 +19,4 @@
 .condition-picker__description {
   margin: 0;
   color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: var(--t-18);
-  font-style: italic;
-  font-variation-settings: "opsz" 18;
-  line-height: 1.45;
 }

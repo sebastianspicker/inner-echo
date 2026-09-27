@@ -47,7 +47,7 @@ export function CuratedProfilePicker({
         ))}
       </select>
       {selected?.description ? (
-        <p id={`${id}-desc`} className="condition-picker__description">
+        <p id={`${id}-desc`} className="condition-picker__description ie-gloss">
           {selected.description}
         </p>
       ) : selectedMissing ? (

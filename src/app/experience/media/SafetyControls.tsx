@@ -26,7 +26,7 @@ export function SafetyControls(props: SafetyControlsProps) {
     >
       <div className="ie-safety__heading">
         <h2 id="safety-controls-title" className="ie-sectionHead">
-          <span className="ie-sectionNo" aria-hidden="true">
+          <span className="ie-sectionNo ie-ring" aria-hidden="true">
             2
           </span>
           Comfort

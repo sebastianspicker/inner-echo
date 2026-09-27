@@ -24,21 +24,7 @@
   white-space: nowrap;
 }
 
-/* Header: a running head. Brand at the left, the truth about media and the stop path at the right. */
-
-.ie-header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  min-height: 64px;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-5);
-  padding: var(--s-2) clamp(var(--s-4), 4vw, var(--s-7));
-  border-bottom: 1px solid var(--rule);
-  background: var(--paper);
-}
+/* Header: the shared masthead (brand at the left; media truth and the stop path at the right). */
 
 .ie-brand,
 .ie-brandCopy,
@@ -69,14 +55,6 @@
   font-size: var(--t-22);
   font-variation-settings: "opsz" 24;
   line-height: 1;
-  white-space: nowrap;
-}
-
-.ie-subtitle {
-  padding-left: var(--s-4);
-  border-left: 1px solid var(--rule);
-  color: var(--ink-3);
-  font-size: var(--t-14);
   white-space: nowrap;
 }
 
@@ -183,31 +161,13 @@
   gap: var(--s-3);
   margin: 0;
   color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: var(--t-28);
-  font-weight: 400;
-  font-variation-settings: "opsz" 32;
-  line-height: var(--lh-title);
 }
 
 .ie-sectionNo {
-  display: inline-grid;
-  width: 1.9rem;
-  height: 1.9rem;
-  flex: 0 0 auto;
-  place-items: center;
   align-self: center;
-  border: 1px solid var(--accent);
-  border-radius: 50%;
   box-shadow:
     0 0 0 3px var(--paper),
     0 0 0 4px var(--accent-wash);
-  color: var(--accent);
-  font-family: var(--font-serif);
-  font-size: var(--t-16);
-  font-style: italic;
-  font-variant-numeric: lining-nums;
-  line-height: 1;
 }
 
 .ie-choiceColumn > .ie-sectionHead {
@@ -238,17 +198,6 @@
   display: grid;
   gap: var(--s-3);
   margin: 0;
-}
-
-/* The mirror: the only arched object on the page. The arch is shallow enough to keep the frame. */
-.ie-stage {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  border-radius: 50% 50% 6px 6px / 16% 16% 6px 6px;
-  background: var(--plate);
-  color: var(--plate-ink);
 }
 
 .ie-video,
@@ -307,11 +256,6 @@
   max-width: 26ch;
   margin: 0;
   color: var(--plate-ink);
-  font-family: var(--font-serif);
-  font-size: var(--t-18);
-  font-style: italic;
-  font-variation-settings: "opsz" 18;
-  line-height: 1.35;
 }
 
 .ie-placeholder span {
@@ -325,17 +269,7 @@
 }
 
 .ie-stageTruth {
-  position: absolute;
   bottom: var(--s-3);
-  left: var(--s-3);
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  background: rgb(9 11 11 / 0.8);
-  color: var(--plate-ink);
-  font-size: var(--t-13);
 }
 
 .ie-statusDot {
@@ -352,35 +286,10 @@
   font: var(--t-12) var(--font-mono);
 }
 
-.ie-plateCaption {
-  display: grid;
-  gap: var(--s-1);
-  padding: 0 var(--s-1);
-  text-align: center;
-}
-
-.ie-plateCaption p {
-  margin: 0;
-}
-
-.ie-plateCaption__subject {
-  color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: var(--t-18);
-  font-style: italic;
-  font-variation-settings: "opsz" 18;
-  line-height: 1.4;
-}
-
-.ie-plateCaption__weight {
+.ie-captionWeight {
   color: var(--ink-2);
   font-style: normal;
   font-variant-numeric: lining-nums tabular-nums;
-}
-
-.ie-plateCaption__note {
-  color: var(--ink-3);
-  font-size: var(--t-14);
 }
 
 .ie-previewStart {
