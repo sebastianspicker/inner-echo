@@ -1,6 +1,7 @@
 import { access, readdir, readFile } from 'node:fs/promises'
 import { relative, resolve, sep } from 'node:path'
 import { JSDOM } from 'jsdom'
+import { demoAllowedLayers, listSourceLayers } from '../architecture/layers.mjs'
 import {
   collectChunkClosure,
   findForbiddenCapabilitiesInChunkClosure,
@@ -12,6 +13,8 @@ const root = resolve(import.meta.dirname, '../..')
 const output = resolve(root, 'dist')
 const basePath = getPagesBasePath()
 const failures = []
+const forbiddenDemoLayers = listSourceLayers(root).filter((layer) => !demoAllowedLayers.has(layer))
+const forbiddenDemoLayerPattern = new RegExp(`src/(?:${forbiddenDemoLayers.join('|')})/`)
 
 async function listFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true })
@@ -126,7 +129,7 @@ if (demoEntry) {
   for (const key of demoClosure) {
     const chunk = manifest[key]
     const identity = `${key} ${chunk?.src ?? ''} ${chunk?.file ?? ''}`
-    if (/src\/(?:app|content|domain|runtime)\//.test(identity) || /(?:^|\/)main-/.test(identity)) {
+    if (forbiddenDemoLayerPattern.test(identity) || /(?:^|\/)main-/.test(identity)) {
       failures.push(`mock demo bundle reaches a production application chunk: ${identity}`)
     }
   }

@@ -146,7 +146,7 @@ describe('experience domain contracts', () => {
     })
 
     expect(result.profile.video_stack.map((node) => node.node)).toEqual(['grain', 'temporal_smear'])
-    expect(result.profile.video_stack[1]?.params.feedback).toBeCloseTo(0.09)
+    expect(result.profile.video_stack[1]?.params?.feedback).toBeCloseTo(0.09)
   })
 
   it('clamps delay feedback to the profile safe-mode max_feedback override, like video feedback', async () => {

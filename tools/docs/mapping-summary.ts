@@ -1,7 +1,7 @@
 /**
  * Generate the current dimension, motif, and evidence mapping.
  *
- * Generates `docs/references/MAPPING_SUMMARY.md` listing:
+ * Builds `docs/references/MAPPING_SUMMARY.md` listing:
  * - each experience dimension
  * - default motifs/nodes (video + audio) used by dimension mapping
  * - the evidence doc(s) supporting them (rationale_doc + evidence strength)
@@ -9,9 +9,12 @@
  * Notes:
  * - This does NOT add new claims; it only points at existing repo docs.
  * - Anything marked evidence_strength "hypothesis" is flagged as experimental.
+ *
+ * Folded into `npm run evidence:gen` (write) and `npm run evidence:verify` (check);
+ * there is no standalone script.
  */
 
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type {
   DimensionToSignalMappingFile,
@@ -20,8 +23,6 @@ import type {
 import { loadRepoJson } from './repoJson'
 import { motifNodes } from '../contracts/motifs/nodes'
 import { dimensionMappingValues } from './dimensionMappingValues'
-
-const ROOT = process.cwd()
 
 function mdEscape(s: string) {
   return s.replace(/\|/g, '\\|')
@@ -65,13 +66,13 @@ function appendMappingFindings(rows: string[], experimental: string[], gaps: str
   if (gaps.length) rows.push('### Gaps / missing links', '', ...gaps, '')
 }
 
-function main() {
+function buildMappingSummaryMarkdown(root: string) {
   const dimsFile = loadRepoJson<ExperienceDimensionsFile>(
-    ROOT,
+    root,
     'src/content/experience/experience-dimensions.json',
   )
   const mapFile = loadRepoJson<DimensionToSignalMappingFile>(
-    ROOT,
+    root,
     'src/content/experience/dimension-to-signal-mapping.json',
   )
 
@@ -110,9 +111,24 @@ function main() {
   for (const dimension of dims) mapDimension(dimension, mapping, rows, gaps, experimental)
   appendMappingFindings(rows, experimental, gaps)
 
-  const outPath = join(ROOT, 'docs', 'references', 'MAPPING_SUMMARY.md')
-  writeFileSync(outPath, rows.join('\n'), 'utf-8')
-  console.log(`Wrote docs/references/MAPPING_SUMMARY.md (${dims.length} dimensions)`)
+  return { contents: rows.join('\n'), dimensionCount: dims.length }
 }
 
-main()
+function mappingSummaryPath(root: string) {
+  return join(root, 'docs', 'references', 'MAPPING_SUMMARY.md')
+}
+
+export function writeMappingSummary(root: string) {
+  const { contents, dimensionCount } = buildMappingSummaryMarkdown(root)
+  writeFileSync(mappingSummaryPath(root), contents, 'utf-8')
+  console.log(`Wrote docs/references/MAPPING_SUMMARY.md (${dimensionCount} dimensions)`)
+}
+
+export function checkMappingSummary(root: string) {
+  const { contents } = buildMappingSummaryMarkdown(root)
+  const outPath = mappingSummaryPath(root)
+  const current = readFileSync(outPath, 'utf-8')
+  if (current !== contents) {
+    throw new Error(`${outPath} is stale. Regenerate with npm run evidence:gen.`)
+  }
+}
