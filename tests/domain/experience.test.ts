@@ -82,7 +82,7 @@ async function composedDelayFeedback(safeModeClamps: Record<string, unknown>): P
     supportedVideoNodeIds: new Set(),
     supportedAudioNodeIds: new Set(['delay']),
   })
-  const feedback = result.profile.audio_stack?.chain?.[0]?.params.feedback
+  const feedback = result.profile.audio_stack?.chain?.[0]?.params?.feedback
   if (typeof feedback !== 'number') throw new Error('expected a numeric delay feedback param')
   return feedback
 }
