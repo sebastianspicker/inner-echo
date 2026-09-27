@@ -43,27 +43,34 @@ function upsertKeyed<T extends { weight: number }, K extends keyof T & string>(
   return next
 }
 
-export function strengthBadge(strength?: string): { label: string; className: string } | null {
+export interface StrengthBadge {
+  /** Full accessible label; states that the grade concerns the experience, not the effect. */
+  label: string
+  /** The grade word shown beside the tally. */
+  grade: string
+  className: string
+}
+
+export function strengthBadge(strength?: string): StrengthBadge | null {
   if (!strength) return null
   const s = String(strength).toLowerCase()
-  if (s === 'high')
+  if (s === 'high' || s === 'medium' || s === 'low')
     return {
-      label: 'Experience evidence: high',
-      className: 'composer__badge composer__badge--high',
+      label: `Experience evidence: ${s}`,
+      grade: s,
+      className: `composer__badge composer__badge--${s}`,
     }
-  if (s === 'medium')
-    return {
-      label: 'Experience evidence: medium',
-      className: 'composer__badge composer__badge--medium',
-    }
-  if (s === 'low')
-    return { label: 'Experience evidence: low', className: 'composer__badge composer__badge--low' }
   if (s === 'hypothesis')
     return {
       label: 'Experience hypothesis (evidence gap)',
+      grade: 'hypothesis',
       className: 'composer__badge composer__badge--hyp',
     }
-  return { label: `Experience evidence: ${strength}`, className: 'composer__badge' }
+  return {
+    label: `Experience evidence: ${strength}`,
+    grade: strength,
+    className: 'composer__badge',
+  }
 }
 
 export function filterCatalog(

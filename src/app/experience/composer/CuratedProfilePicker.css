@@ -1,39 +1,27 @@
-@import "../ui/ExperienceFormPrimitives.css";
-
 .condition-picker {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
+  display: grid;
+  gap: var(--s-2);
   width: 100%;
+  max-width: 34rem;
 }
 
 .condition-picker__label {
-  color: var(--faint);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  letter-spacing: 0;
-  text-transform: none;
+  color: var(--ink);
+  font-size: var(--t-16);
+  font-weight: 600;
 }
 
 .condition-picker__select {
+  width: 100%;
   min-height: 48px;
-  cursor: pointer;
-  font-size: 15px;
-  transition:
-    border-color var(--duration-normal) var(--ease-gentle),
-    background var(--duration-normal) var(--ease-gentle);
 }
-
-.condition-picker__select:hover {
-  border-color: var(--muted);
-  background: var(--surface-control-hover);
-}
-
-/* focus handled by :focus-visible global rule */
 
 .condition-picker__description {
   margin: 0;
-  color: var(--faint);
-  font-size: 12.5px;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--t-18);
+  font-style: italic;
+  font-variation-settings: "opsz" 18;
   line-height: 1.45;
 }
