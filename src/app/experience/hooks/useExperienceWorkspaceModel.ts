@@ -114,6 +114,17 @@ function useMultimorbidPresetSeeding(state: WorkspaceState): void {
   ])
 }
 
+/** An explicit retry reloads the profile and restarts the overlay even for an equivalent profile. */
+function useProfileRetry(
+  session: ExperienceSession,
+  retryProfileLoad: ReturnType<typeof useProfileLoad>['retryProfileLoad'],
+) {
+  return useCallback(() => {
+    retryProfileLoad()
+    session.retryOverlay()
+  }, [session, retryProfileLoad])
+}
+
 function useOpenEvidence(state: WorkspaceState) {
   return useCallback(
     (docPath: EvidenceDocPath) => {
@@ -157,6 +168,7 @@ export function useExperienceWorkspaceModel() {
   const audio = useAudioModel(session, snapshot)
   const diagnostics = useDiagnosticsModel(session, profileLoad.profile, state.safety)
   const camera = useCameraModel(snapshot)
+  const retryProfileLoad = useProfileRetry(session, profileLoad.retryProfileLoad)
   useMultimorbidPresetSeeding(state)
   const openEvidence = useOpenEvidence(state)
   return {
@@ -164,7 +176,7 @@ export function useExperienceWorkspaceModel() {
     state,
     camera,
     audio,
-    profileLoad,
+    profileLoad: { ...profileLoad, retryProfileLoad },
     refs,
     cameraController,
     diagnostics,

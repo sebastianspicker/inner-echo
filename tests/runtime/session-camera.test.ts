@@ -208,6 +208,35 @@ describe('release then reuse', () => {
   })
 })
 
+describe('active camera monitoring', () => {
+  it('watches for device removal only while active and stops watching on release', async () => {
+    const listeners = new Set<EventListenerOrEventListenerObject>()
+    const mediaDevices = {
+      addEventListener: vi.fn((_type: string, listener: EventListenerOrEventListenerObject) =>
+        listeners.add(listener),
+      ),
+      removeEventListener: vi.fn((_type: string, listener: EventListenerOrEventListenerObject) =>
+        listeners.delete(listener),
+      ),
+    }
+    const track = fakeTrack()
+    const session = createExperienceSession({
+      requestVideoStream: async () => ({ ok: true, stream: fakeStream([track]) }),
+      mediaDevices,
+    })
+    session.attachStage({ video: fakeVideo(), canvas: null, fallbackCanvas: null, container: null })
+    expect(listeners.size).toBe(0)
+
+    session.startCamera()
+    await flushAsync()
+    expect(listeners.size).toBe(1)
+
+    session.release()
+    expect(listeners.size).toBe(0)
+    expect(session.getSnapshot().camera).toBe('idle')
+  })
+})
+
 describe('microphone before sound', () => {
   it('is a no-op for getUserMedia because no audio engine control exists yet', () => {
     const session = createExperienceSession({})

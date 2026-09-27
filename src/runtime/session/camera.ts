@@ -40,11 +40,18 @@ interface CameraInternalState {
   stream: MediaStream | null
   video: HTMLVideoElement | null
   seq: number
-  pollTimer: ReturnType<typeof setInterval> | null
+  stopMonitoring: (() => void) | null
 }
 
 function createInternalState(): CameraInternalState {
-  return { cameraState: 'idle', issue: null, stream: null, video: null, seq: 0, pollTimer: null }
+  return {
+    cameraState: 'idle',
+    issue: null,
+    stream: null,
+    video: null,
+    seq: 0,
+    stopMonitoring: null,
+  }
 }
 
 function setState(
@@ -55,12 +62,12 @@ function setState(
 ): void {
   internal.cameraState = nextState
   internal.issue = nextIssue
-  if (nextState === 'active' && !internal.pollTimer) {
-    internal.pollTimer = setInterval(() => checkStreamHealth(internal, deps), HEALTH_POLL_MS)
+  if (nextState === 'active' && !internal.stopMonitoring) {
+    internal.stopMonitoring = monitorActiveStream(internal, deps)
   }
-  if (nextState !== 'active' && internal.pollTimer) {
-    clearInterval(internal.pollTimer)
-    internal.pollTimer = null
+  if (nextState !== 'active' && internal.stopMonitoring) {
+    internal.stopMonitoring()
+    internal.stopMonitoring = null
   }
   deps.onStateChange(nextState, nextIssue)
 }
@@ -88,14 +95,20 @@ function checkStreamHealth(internal: CameraInternalState, deps: CameraManagerDep
   interrupt(internal, deps, internal.stream, 'interrupted')
 }
 
-function subscribeDeviceChange(internal: CameraInternalState, deps: CameraManagerDeps): void {
+/** Watches the active stream for ended tracks and device removal; returns the unsubscribe. */
+function monitorActiveStream(internal: CameraInternalState, deps: CameraManagerDeps): () => void {
+  const pollTimer = setInterval(() => checkStreamHealth(internal, deps), HEALTH_POLL_MS)
   const mediaDevices =
     deps.mediaDevices ?? (typeof navigator === 'undefined' ? undefined : navigator.mediaDevices)
-  mediaDevices?.addEventListener?.('devicechange', () => {
-    if (internal.cameraState !== 'active' || !internal.stream || hasLiveVideoTrack(internal.stream))
-      return
+  const onDeviceChange = (): void => {
+    if (!internal.stream || hasLiveVideoTrack(internal.stream)) return
     interrupt(internal, deps, internal.stream, 'disconnected')
-  })
+  }
+  mediaDevices?.addEventListener?.('devicechange', onDeviceChange)
+  return () => {
+    clearInterval(pollTimer)
+    mediaDevices?.removeEventListener?.('devicechange', onDeviceChange)
+  }
 }
 
 function handlePlaybackFailure(
@@ -166,7 +179,6 @@ async function start(
 export function createCameraManager(deps: CameraManagerDeps): CameraManager {
   const requestVideoStream = deps.requestVideoStream ?? defaultRequestVideoStream
   const internal = createInternalState()
-  subscribeDeviceChange(internal, deps)
 
   return {
     attachVideo(nextVideo) {
@@ -181,6 +193,7 @@ export function createCameraManager(deps: CameraManagerDeps): CameraManager {
     release() {
       internal.seq += 1
       releaseStreamResources(internal)
+      if (internal.cameraState !== 'idle') setState(internal, deps, 'idle', null)
     },
     getState: () => internal.cameraState,
     getIssue: () => internal.issue,
