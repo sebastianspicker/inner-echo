@@ -219,6 +219,21 @@ describe('shared preset hash', () => {
   })
 })
 
+describe('preset load forces sound off', () => {
+  // Importing a preset updates the desired configuration with audio forced off
+  // (docs/ARCHITECTURE.md "Media and coupling flow").
+  it('loading a saved preset while sound is on stops sound', async () => {
+    handle = await mountWorkspace()
+    await enableSound(handle.container)
+    click(getButton(handle.container, 'Save new'))
+    click(getButton(handle.container, 'Load'))
+    await flushAsync()
+
+    expect(handle.container.textContent).toContain('Audio: off')
+    expect(getCloseMock(audioContexts.instances[0])).toHaveBeenCalled()
+  })
+})
+
 describe('unmount cleanup', () => {
   it('releases camera and audio resources when the workspace unmounts while active', async () => {
     handle = await mountWorkspace()
