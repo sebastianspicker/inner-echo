@@ -10,7 +10,7 @@ import {
   createTremolo,
 } from '../../../src/runtime/audio/fx'
 import type { AudioModule } from '../../../src/runtime/audio'
-import { FakeAudioContext, type FakeAudioBuffer, hashBuffer } from './fakeAudioContext'
+import { FakeAudioContext, type FakeAudioBuffer, hashBuffer } from '../../shared/fakeWebAudio'
 import type { ContractNodeDefinition, ContractParamMetadata, ProbeHarness } from './types'
 import { buildNodeLookup, numberParam, summarizeNodeDefinitions } from './nodeRegistry'
 import { getByPath, withSeededRandom } from './utils'
