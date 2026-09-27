@@ -25,12 +25,7 @@ function seedFromCrypto(): number {
   return values[0] ?? 0
 }
 
-let sharedRandom = createFastRandom(seedFromCrypto())
+const sharedRandom = createFastRandom(seedFromCrypto())
 
 /** Shared runtime generator, seeded once from the platform CSPRNG. */
 export const fastRandom: FastRandom = () => sharedRandom()
-
-/** Replaces the shared seed for deterministic runtime tests. */
-export function setFastRandomSeedForTests(seed: number): void {
-  sharedRandom = createFastRandom(seed)
-}
