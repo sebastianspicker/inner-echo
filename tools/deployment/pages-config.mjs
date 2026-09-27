@@ -1,16 +1,6 @@
-const DEFAULT_PROJECT_BASE_PATH = '/inner-echo/'
+export { pagesContentSecurityPolicy } from '../shared/csp.mjs'
 
-export const pagesContentSecurityPolicy = [
-  "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self'",
-  "img-src 'self' data:",
-  "media-src 'self' blob:",
-  "connect-src 'self'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-].join('; ')
+const DEFAULT_PROJECT_BASE_PATH = '/inner-echo/'
 
 export function getPagesBasePath(environment = process.env) {
   const configured = Object.hasOwn(environment, 'INNER_ECHO_PAGES_BASE_PATH')

@@ -1,6 +1,4 @@
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
-import { parseFirstJsonObject } from '../shared/json/jsonObjectParser'
+import { loadRepoJson } from '../docs/repoJson'
 import type {
   ContractIssue,
   ContractReference,
@@ -79,10 +77,6 @@ function parseReactiveTarget(
     node: match[2].toLowerCase(),
     param: match[3].toLowerCase(),
   }
-}
-
-function rel(rootDir: string, filePath: string): string {
-  return path.relative(rootDir, filePath).replaceAll(path.sep, '/')
 }
 
 function addNodeAndParamReferences(
@@ -275,21 +269,9 @@ function collectMappingJsonReferences(
   references: ContractReference[],
   parseErrors: ContractIssue[],
 ) {
-  const absolute = path.join(
-    rootDir,
-    'src',
-    'content',
-    'experience',
-    'dimension-to-signal-mapping.json',
-  )
-  const sourceFile = rel(rootDir, absolute)
+  const sourceFile = 'src/content/experience/dimension-to-signal-mapping.json'
   try {
-    const mapping = parseFirstJsonObject<MappingDocument>(readFileSync(absolute, 'utf-8'), {
-      predicate(value) {
-        const m = (value as MappingDocument).mapping
-        return m != null && typeof m === 'object' && !Array.isArray(m)
-      },
-    })
+    const mapping = loadRepoJson<MappingDocument>(rootDir, sourceFile)
     collectMappingReferences(references, mapping, sourceFile)
   } catch (error) {
     addParseError(parseErrors, 'MAPPING_PARSE_ERROR', error, sourceFile)
@@ -350,14 +332,9 @@ function collectDimensionsJsonReferences(
   references: ContractReference[],
   parseErrors: ContractIssue[],
 ) {
-  const absolute = path.join(rootDir, 'src', 'content', 'experience', 'experience-dimensions.json')
-  const sourceFile = rel(rootDir, absolute)
+  const sourceFile = 'src/content/experience/experience-dimensions.json'
   try {
-    const dimensions = parseFirstJsonObject<DimensionsDocument>(readFileSync(absolute, 'utf-8'), {
-      predicate(value) {
-        return Array.isArray((value as DimensionsDocument).dimensions)
-      },
-    })
+    const dimensions = loadRepoJson<DimensionsDocument>(rootDir, sourceFile)
     collectDimensionsReferences(references, dimensions, sourceFile)
   } catch (error) {
     addParseError(parseErrors, 'DIMENSIONS_PARSE_ERROR', error, sourceFile)

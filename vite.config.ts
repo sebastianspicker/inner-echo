@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
+import { devContentSecurityPolicy, headerContentSecurityPolicy } from './tools/shared/csp.mjs'
 
 const baseSecurityHeaders = {
   'X-Frame-Options': 'DENY',
@@ -11,14 +12,12 @@ const baseSecurityHeaders = {
 
 const devHeaders = {
   ...baseSecurityHeaders,
-  'Content-Security-Policy':
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
+  'Content-Security-Policy': devContentSecurityPolicy,
 }
 
 const productionHeaders = {
   ...baseSecurityHeaders,
-  'Content-Security-Policy':
-    "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
+  'Content-Security-Policy': headerContentSecurityPolicy,
 }
 
 export default defineConfig({

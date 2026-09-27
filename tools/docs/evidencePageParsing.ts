@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { parseFirstJsonObject } from '../shared/json/jsonObjectParser'
+import { loadRepoJson } from './repoJson'
 import type {
   EvidenceMatrixRow,
   ExperienceDimensionDef,
@@ -24,15 +24,11 @@ export type Profile = {
   safety?: { warnings?: string[] }
 }
 
-function readJsonFirstObject<T>(filePath: string) {
-  const text = fs.readFileSync(filePath, 'utf-8')
-  return parseFirstJsonObject(text) as T
-}
-
 export function loadDimensions(root: string) {
   return (
-    readJsonFirstObject<ExperienceDimensionsFile>(
-      path.join(root, 'src/content/experience/experience-dimensions.json'),
+    loadRepoJson<ExperienceDimensionsFile>(
+      root,
+      'src/content/experience/experience-dimensions.json',
     ).dimensions ?? []
   )
 }
@@ -40,7 +36,7 @@ export function loadDimensions(root: string) {
 export function loadProfiles(root: string) {
   const profilesDir = path.join(root, 'src/content/experience/profiles')
   const files = fs.readdirSync(profilesDir).filter((file) => file.endsWith('.json'))
-  return files.map((file) => readJsonFirstObject<Profile>(path.join(profilesDir, file)))
+  return files.map((file) => loadRepoJson<Profile>(root, `src/content/experience/profiles/${file}`))
 }
 
 export function parseEvidenceMatrix(root: string) {

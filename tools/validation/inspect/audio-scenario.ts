@@ -1,7 +1,7 @@
 import { IMPLEMENTED_AUDIO_NODES } from '../../../src/runtime/capabilities'
 import { buildAudioChain, connectAudioChain } from '../../../src/runtime/audio'
 import type { AudioModule } from '../../../src/runtime/audio'
-import { FakeAudioContext, type FakeCreatedNodes } from '../../contracts/probes/fakeAudioContext'
+import { FakeAudioContext, type FakeCreatedNodes } from '../../shared/fakeWebAudio'
 import type { ProfileInspectResult } from './types'
 import {
   type IssueSink,
