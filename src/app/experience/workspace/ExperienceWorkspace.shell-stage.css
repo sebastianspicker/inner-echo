@@ -102,11 +102,6 @@
   scroll-margin-top: 88px;
 }
 
-.ie-choiceColumn:focus,
-.ie-panel:focus {
-  outline: none;
-}
-
 .ie-workspaceIntro {
   max-width: var(--measure);
   margin-bottom: var(--s-5);

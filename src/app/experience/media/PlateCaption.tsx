@@ -1,4 +1,5 @@
 import type { CatalogEntry } from '../../../domain/experience/schema'
+import { clamp01 } from '../../../shared/numbers'
 import type { ExperienceSettings } from '../workspace/settings'
 import { getExperienceDimensions } from '../../../content/experience/experienceDimensions'
 
@@ -13,6 +14,8 @@ interface CaptionEntry {
   weight: number | null
 }
 
+export type PlateCaptionStatus = 'idle' | 'loading' | 'ready' | 'error'
+
 function catalogLabel(catalog: CatalogEntry[], id: string): string {
   return catalog.find((entry) => entry.id === id)?.label ?? id.replace(/_/g, ' ')
 }
@@ -24,18 +27,22 @@ export function captionEntries(
 ): CaptionEntry[] {
   if (selection.composerMode === 'symptom') {
     const labels = new Map(getExperienceDimensions().map((dim) => [dim.id, dim.label ?? dim.id]))
-    return selection.dimensions.map((dim) => ({
-      id: dim.dimensionId,
-      label: labels.get(dim.dimensionId) ?? dim.dimensionId,
-      weight: dim.weight,
-    }))
+    return selection.dimensions
+      .map((dim) => ({
+        id: dim.dimensionId,
+        label: labels.get(dim.dimensionId) ?? dim.dimensionId,
+        weight: clamp01(dim.weight),
+      }))
+      .filter((entry) => entry.weight > 0)
   }
   if (selection.composerMode === 'multimorbid') {
-    return selection.presets.map((preset) => ({
-      id: preset.profileId,
-      label: catalogLabel(catalog, preset.profileId),
-      weight: preset.weight,
-    }))
+    return selection.presets
+      .map((preset) => ({
+        id: preset.profileId,
+        label: catalogLabel(catalog, preset.profileId),
+        weight: clamp01(preset.weight),
+      }))
+      .filter((entry) => entry.weight > 0)
   }
   if (!selection.conditionId || selection.conditionId === 'none') return []
   return [
@@ -56,19 +63,22 @@ function emptyCaption(mode: CaptionSelection['composerMode']): string {
 export interface PlateCaptionProps {
   selection: CaptionSelection
   catalog: CatalogEntry[]
+  profileStatus: PlateCaptionStatus
   id?: string
 }
 
 /**
- * The plate's caption: what the preview is composed of, and what it is not.
- * It reads the real selection, so it stays true when presets load or selections change.
+ * The plate's caption: what the preview is composed of, and what it is not. Pending and failed
+ * profile loads are named explicitly so the selection is never presented as an applied overlay.
  */
-export function PlateCaption({ selection, catalog, id }: PlateCaptionProps) {
+export function PlateCaption({ selection, catalog, profileStatus, id }: PlateCaptionProps) {
   const entries = captionEntries(selection, catalog)
-  return (
-    <figcaption className="ie-caption" id={id}>
-      <p className="ie-gloss">
-        {entries.length === 0
+  const caption =
+    profileStatus === 'loading'
+      ? 'Preparing the selected interpretation…'
+      : profileStatus === 'error'
+        ? 'Clean fallback: no overlay is applied.'
+        : entries.length === 0
           ? emptyCaption(selection.composerMode)
           : entries.map((entry, index) => (
               <span key={entry.id}>
@@ -78,9 +88,18 @@ export function PlateCaption({ selection, catalog, id }: PlateCaptionProps) {
                 )}
                 {index < entries.length - 1 ? ', ' : '.'}
               </span>
-            ))}
-      </p>
-      <p className="ie-caption__note">An interpretation, not a reproduction.</p>
+            ))
+  const note =
+    profileStatus === 'loading'
+      ? 'The preview changes only when this is ready.'
+      : profileStatus === 'error'
+        ? 'The selected interpretation could not be applied.'
+        : 'An interpretation, not a reproduction.'
+
+  return (
+    <figcaption className="ie-caption" id={id}>
+      <p className="ie-gloss">{caption}</p>
+      <p className="ie-caption__note">{note}</p>
     </figcaption>
   )
 }

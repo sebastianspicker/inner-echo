@@ -9,6 +9,7 @@ const lazySources = {
 const forbidden = {
   welcome: ['workspace', 'audio', 'evidence', 'graphics'],
   workspace: ['audio', 'evidence', 'graphics'],
+  audio: ['workspace', 'evidence', 'graphics'],
   evidence: ['workspace', 'audio', 'graphics'],
 }
 
@@ -28,11 +29,11 @@ function inspectClosure(manifest, name, closure) {
   for (const key of closure) {
     const chunk = manifest[key]
     const identity = `${key} ${chunk?.src ?? ''} ${chunk?.file ?? ''} ${chunk?.name ?? ''}`
-    if (
-      /three(?:\.core)?|runtime\/visual\/(?:effects|graph)|runtime\/audio\/(?:audioEngine|fx)/i.test(
-        identity,
-      )
-    ) {
+    const includesVisualRuntime = /three(?:\.core)?|runtime\/visual\/(?:effects|graph)/i.test(
+      identity,
+    )
+    const includesAudioRuntime = /runtime\/audio\/(?:audioEngine|fx)/i.test(identity)
+    if (includesVisualRuntime || (name !== 'audio' && includesAudioRuntime)) {
       failures.push(`${name} static closure contains deferred runtime: ${identity}`)
     }
   }

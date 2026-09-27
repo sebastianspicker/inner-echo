@@ -17,7 +17,6 @@ export {
   closeAudioContext,
 } from './contextManager'
 export { createSynth } from './synth'
-export { createAudioEngine } from './audioEngine'
 export type {
   AudioEngineControl,
   AudioEngineDebugState,

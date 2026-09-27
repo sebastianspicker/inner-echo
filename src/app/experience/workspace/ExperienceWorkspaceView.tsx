@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useLayoutEffect, useRef } from 'react'
 
 import { AudioMicControls } from '../media/AudioMicControls'
 import { CameraHeader } from '../media/CameraHeader'
@@ -258,6 +258,7 @@ function WorkspacePreview({ model }: ModelProps) {
         <PlateCaption
           selection={model.settings}
           catalog={model.catalogLoad.catalog ?? DEFAULT_PICKER_OPTIONS}
+          profileStatus={model.profileLoad.profileLoadStatus}
         />
       </figure>
       {!cameraController.isActive && (
@@ -309,8 +310,21 @@ function WorkspaceChoices({ model }: ModelProps) {
 }
 
 function WorkspacePanel({ model }: ModelProps) {
+  const panelRef = useRef<HTMLElement>(null)
+  const cameraActive = model.cameraController.isActive
+
+  useLayoutEffect(() => {
+    if (cameraActive && panelRef.current) panelRef.current.scrollTop = 0
+  }, [cameraActive])
+
   return (
-    <aside className="ie-panel" aria-label="Controls panel" id="comfort-preview" tabIndex={-1}>
+    <aside
+      ref={panelRef}
+      className="ie-panel"
+      aria-label="Controls panel"
+      id="comfort-preview"
+      tabIndex={-1}
+    >
       <WorkspaceComfort model={model} />
       <WorkspacePreview model={model} />
       <MediaControls model={model} />
