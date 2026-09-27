@@ -1,4 +1,4 @@
-import type { AudioContextStatus, MicStatus, AudioInputMode } from '../../../runtime/audio'
+import type { AudioContextStatus, AudioInputMode, MicStatus } from '../../../runtime/session'
 import { MicrophoneActiveControls } from './MicrophoneActiveControls'
 import { MicrophoneActivationButton } from './MicrophoneActivationButton'
 import { MicrophonePrivacyHint } from './MicrophonePrivacyHint'

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { profileSchema } from '../../src/domain/experience/schema'
 import * as reactiveRuntime from '../../src/runtime/coupling'
-import { createReactiveOptions } from '../../src/app/experience/session/reactivePipelineRuntime'
+import { createReactiveOptions } from '../../src/runtime/session/overlayReactive'
 
 function profileWithReactiveTarget(target?: string) {
   return profileSchema.parse({

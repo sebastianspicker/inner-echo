@@ -1,10 +1,16 @@
 import { profileHasTemporalNodes } from '../../../domain/experience/motionPolicy'
 import type { Profile } from '../../../domain/experience/schema'
+import type { CameraState, OverlayRuntimeState } from '../../../runtime/session'
 import { getActiveVideoNodeIds } from '../workspacePresentation'
 import type { WorkspaceState } from './workspaceState'
 
-function effectsLabel(state: WorkspaceState): string {
-  const { cameraState, overlayState } = state.camera
+export interface WorkspacePresentationCamera {
+  cameraState: CameraState
+  overlayState: OverlayRuntimeState
+}
+
+function effectsLabel(camera: WorkspacePresentationCamera): string {
+  const { cameraState, overlayState } = camera
   if (cameraState !== 'active') return 'Off'
   if (overlayState.effectsActive) return 'Active'
   if (overlayState.rendererMode === 'webgl') return 'Clean preview'
@@ -14,7 +20,11 @@ function effectsLabel(state: WorkspaceState): string {
   return 'Unavailable'
 }
 
-export function deriveWorkspacePresentation(state: WorkspaceState, profile: Profile | null) {
+export function deriveWorkspacePresentation(
+  state: WorkspaceState,
+  profile: Profile | null,
+  camera: WorkspacePresentationCamera,
+) {
   const warnings = profile?.safety?.warnings ?? []
   const showReducedMotionHint =
     state.safety.reducedMotion && profile != null && profileHasTemporalNodes(profile)
@@ -25,7 +35,7 @@ export function deriveWorkspacePresentation(state: WorkspaceState, profile: Prof
     warnings,
     showReducedMotionHint,
     profileDefinesReducedMotionControl,
-    effectsLabel: effectsLabel(state),
+    effectsLabel: effectsLabel(camera),
     activeVideoNodeIds: getActiveVideoNodeIds(profile, state.safety.reducedMotion),
   }
 }

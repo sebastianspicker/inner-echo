@@ -1,7 +1,6 @@
 import { getCameraStateLabel } from '../session/cameraMessages'
 import { getAudioStateLabel } from '../session/audioStatusMessages'
-import type { CameraState } from '../../../runtime/camera'
-import type { AudioContextStatus } from '../../../runtime/audio'
+import type { AudioContextStatus, CameraState } from '../../../runtime/session'
 import type { EvidenceDocPath } from '../../../content/evidence'
 import brandMarkUrl from '../../../../assets/brand/inner-echo-mark.svg'
 

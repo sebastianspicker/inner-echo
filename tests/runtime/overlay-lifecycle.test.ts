@@ -1,9 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import {
-  createReactiveOverlayLifecycle,
-  type ReactiveOverlayModules,
-} from '../../src/app/experience/session/reactivePipelineRuntime'
+import { createReactiveOverlayLifecycle } from '../../src/runtime/session/overlayReactive'
+import type { OverlayModules } from '../../src/runtime/session/types'
 
 function createOverlayLifecycleHarness() {
   const metadataListeners = new Set<() => void>()
@@ -19,10 +17,10 @@ function createOverlayLifecycleHarness() {
     }),
   }
   const startOverlayLoop = vi.fn()
-  let resolveModules: ((modules: ReactiveOverlayModules) => void) | undefined
+  let resolveModules: ((modules: OverlayModules) => void) | undefined
   const loadModules = vi.fn(
     () =>
-      new Promise<ReactiveOverlayModules>((resolve) => {
+      new Promise<OverlayModules>((resolve) => {
         resolveModules = resolve
       }),
   )
@@ -44,10 +42,10 @@ function createOverlayLifecycleHarness() {
         safeModeRef: { current: false },
         diagnosticsActiveRef: { current: false },
       },
-      safeModeRef: { current: false },
-      intensityRef: { current: 0 },
-      controlValuesRef: { current: {} },
-      stressModeRef: { current: false },
+      safeMode: false,
+      intensity: 0,
+      controlValues: {},
+      stressMode: false,
     },
     loadModules,
   )
@@ -57,7 +55,7 @@ function createOverlayLifecycleHarness() {
     loadModules,
     metadataListeners,
     overlayControlRef,
-    resolveModules: (modules: ReactiveOverlayModules) => resolveModules?.(modules),
+    resolveModules: (modules: OverlayModules) => resolveModules?.(modules),
     startOverlayLoop,
   }
 }

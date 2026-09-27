@@ -1,4 +1,4 @@
-import type { AudioContextStatus } from '../../../runtime/audio'
+import type { AudioContextStatus } from '../../../runtime/session'
 
 export function getAudioStateLabel(
   status: AudioContextStatus,

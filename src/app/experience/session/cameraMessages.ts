@@ -1,9 +1,17 @@
 /**
  * User-facing camera status and error messages.
  * Messages identify the failure and give a concrete recovery action.
+ * The runtime session reports CameraIssue facts only; this module maps them to copy.
  */
 
-import type { CameraState } from '../../../runtime/camera'
+import type { CameraIssue, CameraState } from '../../../runtime/session'
+
+export const CAMERA_STREAM_INTERRUPTED_MESSAGE =
+  'The camera connection was briefly interrupted. You can restart it whenever you are ready.'
+export const CAMERA_DEVICE_DISCONNECTED_MESSAGE =
+  'It seems your camera was disconnected. Please reconnect it and start again when you are ready.'
+const CAMERA_PLAYBACK_FAILED_MESSAGE =
+  'The camera could not start playback. Please try clicking anywhere on the page and then restarting the camera.'
 
 const STATE_LABELS: Record<CameraState, string> = {
   idle: 'Ready',
@@ -34,12 +42,21 @@ export function getCameraStateLabel(state: CameraState): string {
 }
 
 /**
- * Map DOMException from getUserMedia to a short, empathetic user-facing message.
+ * Map a getUserMedia error name/message to a short, empathetic user-facing message.
  */
-export function getCameraErrorMessage(error: DOMException): string {
+export function getCameraErrorMessage(error: Pick<DOMException, 'name' | 'message'>): string {
   const knownMessage = CAMERA_ERROR_MESSAGES[error.name]
   if (knownMessage) return knownMessage
   return error.message
     ? `Something unexpected happened with the camera: ${error.message}. You can try again at any time.`
     : 'Something unexpected happened. You are welcome to try again whenever you are ready.'
+}
+
+/** Maps a runtime CameraIssue fact to the user-facing copy shown in the workspace. */
+export function getCameraIssueMessage(issue: CameraIssue | null): string | null {
+  if (!issue) return null
+  if (issue.kind === 'request-failed') return getCameraErrorMessage(issue)
+  if (issue.kind === 'playback-failed') return CAMERA_PLAYBACK_FAILED_MESSAGE
+  if (issue.kind === 'interrupted') return CAMERA_STREAM_INTERRUPTED_MESSAGE
+  return CAMERA_DEVICE_DISCONNECTED_MESSAGE
 }

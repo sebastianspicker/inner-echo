@@ -1,6 +1,4 @@
-import type { AudioContextStatus } from '../../../runtime/audio'
-import type { CameraState } from '../../../runtime/camera'
-import type { OverlayRendererMode } from '../../../runtime/visual/overlay'
+import type { AudioContextStatus, CameraState, OverlayRendererMode } from '../../../runtime/session'
 
 const DEBUG_UI_ENABLED = import.meta.env.DEV && import.meta.env.VITE_INNER_ECHO_DEBUG_UI === 'true'
 

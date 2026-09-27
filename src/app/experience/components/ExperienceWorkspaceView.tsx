@@ -21,7 +21,7 @@ type ModelProps = { model: ExperienceWorkspaceModel }
 function WorkspaceHeader({ model }: ModelProps) {
   return (
     <CameraHeader
-      cameraState={model.state.camera.cameraState}
+      cameraState={model.camera.cameraState}
       audioStatus={model.audio.audioStatus}
       audioEnabled={model.audio.audioEnabled}
       effectsLabel={model.presentation.effectsLabel}
@@ -33,7 +33,7 @@ function WorkspaceHeader({ model }: ModelProps) {
 }
 
 function WorkspaceNotices({ model }: ModelProps) {
-  const { errorMessage, cameraState, overlayState } = model.state.camera
+  const { errorMessage, cameraState, overlayState } = model.camera
   const { profileLoadStatus, profileLoadError, retryProfileLoad } = model.profileLoad
   return (
     <>
@@ -223,11 +223,9 @@ function WorkspaceDebugSection({ model }: ModelProps) {
           getOverlayDiagnostics={model.diagnostics.getOverlayDiagnostics}
           audioStatus={model.audio.audioStatus}
           micStatus={model.audio.micStatus}
-          lastError={
-            model.state.camera.errorMessage ?? model.audio.audioError ?? model.audio.micError
-          }
-          getAudioMetrics={() => model.audio.audioEngineControlRef.current?.getMetrics?.()}
-          getVideoMetrics={() => model.refs.videoMetricsRef.current ?? undefined}
+          lastError={model.camera.errorMessage ?? model.audio.audioError ?? model.audio.micError}
+          getAudioMetrics={model.diagnostics.getAudioMetrics}
+          getVideoMetrics={model.diagnostics.getVideoMetrics}
           getAudioDebugState={model.diagnostics.getAudioDebugState}
           getAppliedClamps={model.diagnostics.getAppliedClamps}
           couplingStrength={model.state.coupling.couplingStrength}
@@ -280,10 +278,10 @@ function WorkspaceLayout({ model }: ModelProps) {
             fallbackCanvasRef={model.refs.fallbackCanvasRef}
             rmsDebugRef={model.refs.rmsDebugRef}
             isActive={model.cameraController.isActive}
-            cameraState={model.state.camera.cameraState}
+            cameraState={model.camera.cameraState}
             audioStatus={model.audio.audioStatus}
-            rendererMode={model.state.camera.overlayState.rendererMode}
-            effectsActive={model.state.camera.overlayState.effectsActive}
+            rendererMode={model.camera.overlayState.rendererMode}
+            effectsActive={model.camera.overlayState.effectsActive}
             debugOverlay={model.state.ui.debugOverlay}
           />
           {!model.cameraController.isActive && (
@@ -343,7 +341,7 @@ export function ExperienceWorkspaceView({ model }: ModelProps) {
     <section className="ie-shell" aria-label="Inner Echo">
       <WorkspaceHeader model={model} />
       <div className="ie-liveRegion" role="status" aria-live="polite" aria-atomic="true">
-        Camera {model.state.camera.cameraState}. Effects {model.presentation.effectsLabel}. Sound{' '}
+        Camera {model.camera.cameraState}. Effects {model.presentation.effectsLabel}. Sound{' '}
         {model.audio.audioStatus}.
       </div>
       <main className="ie-main">

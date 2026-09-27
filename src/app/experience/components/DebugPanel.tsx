@@ -23,7 +23,7 @@ import {
 } from '../session/debugDiagnosticsFormatting'
 import './DebugPanel.css'
 
-export type { AppliedClampSnapshot } from '../session/useOverlayController'
+export type { AppliedClampSnapshot } from '../../../domain/experience/safety'
 
 export interface DebugPanelProps extends DebugDiagnosticsSources {}
 

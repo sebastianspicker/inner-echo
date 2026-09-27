@@ -1,11 +1,12 @@
+import type { AppliedClampSnapshot } from '../../../domain/experience/safety'
 import type {
+  AudioContextStatus,
   AudioEngineDebugState,
   AudioMetrics,
-  AudioContextStatus,
   MicStatus,
-} from '../../../runtime/audio'
-import type { OverlayDiagnostics, VideoMetrics } from '../../../runtime/visual/overlay'
-import type { AppliedClampSnapshot } from './useOverlayController'
+  OverlayDiagnostics,
+  VideoMetrics,
+} from '../../../runtime/session'
 
 export interface DebugDiagnosticsSources {
   getOverlayDiagnostics: () => OverlayDiagnostics | undefined

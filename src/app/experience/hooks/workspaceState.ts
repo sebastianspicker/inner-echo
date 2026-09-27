@@ -6,8 +6,6 @@ import type {
   SelectedDimension,
   SelectedPreset,
 } from '../../../domain/experience/composition/types'
-import type { CameraState } from '../../../runtime/camera'
-import type { OverlayRuntimeState } from '../../../runtime/visual/overlay'
 import { DEFAULT_CONDITION_ID, DEFAULT_INTENSITY } from '../workspacePresentation'
 
 function useCompositionState() {
@@ -60,24 +58,6 @@ function useCouplingState() {
   }
 }
 
-function useCameraState() {
-  const [cameraState, setCameraState] = useState<CameraState>('idle')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [overlayState, setOverlayState] = useState<OverlayRuntimeState>({
-    rendererMode: 'unavailable',
-    effectsActive: false,
-    error: null,
-  })
-  return {
-    cameraState,
-    setCameraState,
-    errorMessage,
-    setErrorMessage,
-    overlayState,
-    setOverlayState,
-  }
-}
-
 function useWorkspaceUiState() {
   const [debugOverlay, setDebugOverlay] = useState(false)
   const [evidenceOpen, setEvidenceOpen] = useState(false)
@@ -99,7 +79,6 @@ export function useWorkspaceState() {
     composition: useCompositionState(),
     safety: useSafetyState(),
     coupling: useCouplingState(),
-    camera: useCameraState(),
     ui: useWorkspaceUiState(),
   }
 }

@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
-import type { AudioEngineDebugState, AudioMetrics } from '../../../runtime/audio'
-import type { OverlayDiagnostics, VideoMetrics } from '../../../runtime/visual/overlay'
-import type { AppliedClampSnapshot } from '../session/useOverlayController'
+import type { AppliedClampSnapshot } from '../../../domain/experience/safety'
+import type {
+  AudioEngineDebugState,
+  AudioMetrics,
+  OverlayDiagnostics,
+  VideoMetrics,
+} from '../../../runtime/session'
 
 export interface DebugDiagnosticsSources {
   getOverlayDiagnostics: () => OverlayDiagnostics | undefined
