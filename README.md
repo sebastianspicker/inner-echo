@@ -23,7 +23,7 @@ Everything runs locally: no server, no account, no upload, no recording.
 | ![Welcome screen](assets/screenshots/welcome.png) | ![Setup screen](assets/screenshots/setup.png) |
 | **Welcome.** What the tool is, what it is not, and what happens to your media. Nothing is requested yet. | **Setup.** Choose experience dimensions or a curated collection, then tune intensity and comfort. |
 | ![Live camera session](assets/screenshots/live.png) | ![Evidence drawer](assets/screenshots/evidence.png) |
-| **Live session.** Effects run over your camera feed. Safe Mode, Reduced Motion, and Stop Everything stay within reach. | **Evidence drawer.** The sources, confidence labels, and stated limits behind each experience and motif. |
+| **Live session.** Effects run over your camera feed, captioned with what they show and what they are not. Safe Mode, Reduced Motion, and Stop Everything stay within reach. | **Evidence drawer.** The sources, confidence labels, and stated limits behind each experience and motif. |
 | ![Device-free demo](assets/screenshots/demo-workspace.png) | ![Mobile setup](assets/screenshots/mobile-setup.png) |
 | **Device-free demo.** The full interface with deterministic mock data — no camera, microphone, audio, storage, or network. | **Mobile.** One scrolling column with the same controls as the desktop layout. |
 
