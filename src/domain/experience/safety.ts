@@ -40,3 +40,37 @@ export function clampIntensity(profile: Profile, intensity: number, safeMode: bo
   const max = Math.min(1, maxByProfile, maxBySafeMode)
   return clamp(i0, 0, max)
 }
+
+export interface AppliedClampSnapshot {
+  intensityInput: number
+  intensityEffective: number
+  safeMode: boolean
+  reducedMotion: boolean
+  safeModeClampKeys: string[]
+  reducedMotionDisabledNodes: string[]
+}
+
+/** Pure summary of the clamps a profile currently applies, for debug display only. */
+export function describeAppliedClamps(
+  profile: Profile | null,
+  intensity: number,
+  safeMode: boolean,
+  reducedMotion: boolean,
+): AppliedClampSnapshot | undefined {
+  if (!profile) return undefined
+  const intensityEffective = clampIntensity(profile, intensity, safeMode)
+  const safeModeClampKeys = Object.keys(profile.safety.safe_mode_clamps ?? {}).sort((a, b) =>
+    a.localeCompare(b),
+  )
+  const reducedMotionDisabledNodes = Array.from(getReducedMotionDisableNodes(profile)).sort(
+    (a, b) => a.localeCompare(b),
+  )
+  return {
+    intensityInput: intensity,
+    intensityEffective,
+    safeMode,
+    reducedMotion,
+    safeModeClampKeys,
+    reducedMotionDisabledNodes,
+  }
+}
