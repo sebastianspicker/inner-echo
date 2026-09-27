@@ -1,132 +1,219 @@
+/* Welcome: a title page. A running head, the title set large with its second line in italic,
+ * and three numbered notes in the outer column, the way a book states its terms. */
+
 .welcome-step {
   display: grid;
   min-height: 100dvh;
-  align-items: center;
-  padding: 64px 6vw;
-  background: var(--bg);
+  grid-template-rows: auto 1fr;
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  padding: var(--s-5) clamp(var(--s-4), 5vw, var(--s-8)) var(--s-8);
 }
-.welcome-step__lead {
-  width: min(100%, 1280px);
-  margin: auto;
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  column-gap: 9%;
-  grid-template-areas: "brand brand" "intro facts" "actions facts" "note facts";
-}
-.welcome-step__brand {
-  grid-area: brand;
+
+.welcome-step__head {
   display: flex;
   align-items: center;
-  gap: 18px;
-  margin-bottom: 64px;
-  color: var(--text);
-  font: 30px var(--font-display);
+  justify-content: space-between;
+  gap: var(--s-5);
+  padding-bottom: var(--s-4);
+  border-bottom: 1px solid var(--rule);
 }
+
+.welcome-step__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+  font-variation-settings: "opsz" 24;
+}
+
 .welcome-step__mark {
-  width: 44px;
-  height: 44px;
+  width: 28px;
+  height: 28px;
+  align-self: center;
 }
-.welcome-step__intro {
-  grid-area: intro;
-}
-.welcome-step h1 {
-  max-width: none;
-  margin: 0 0 32px;
-  color: var(--text);
-  font: 400 clamp(56px, 6.7vw, 96px) / 1.04 var(--font-display);
-  letter-spacing: -0.04em;
-}
-.welcome-step__intro > p {
-  max-width: 42ch;
+
+.welcome-step__running {
   margin: 0;
-  color: var(--muted);
-  font-size: 19px;
-  line-height: 1.65;
+  color: var(--ink-3);
+  font-size: var(--t-14);
 }
-.welcome-step__facts {
-  grid-area: facts;
+
+.welcome-step__lead {
   display: grid;
-  align-content: start;
-  gap: 30px;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+  column-gap: clamp(var(--s-6), 8vw, var(--s-9));
+  align-items: end;
+  align-self: center;
+  padding-block: var(--s-7);
 }
-.welcome-step__facts section + section {
-  border-top: 1px solid var(--border-strong);
-  padding-top: 30px;
+
+.welcome-step h1 {
+  margin: 0 0 var(--s-6);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: clamp(var(--t-48), 8.4vw, 7.5rem);
+  font-weight: 300;
+  font-variation-settings: "opsz" 72;
+  line-height: 0.98;
+  letter-spacing: -0.025em;
 }
-.welcome-step__facts h2 {
-  margin: 0 0 16px;
-  color: var(--text);
-  font: 400 30px / 1.2 var(--font-display);
+
+.welcome-step h1 span,
+.welcome-step h1 em {
+  display: block;
 }
-.welcome-step__facts p {
+
+.welcome-step h1 em {
+  padding-left: 0.62em;
+  font-weight: 300;
+  font-variation-settings: "opsz" 36;
+}
+
+.welcome-step__intro > p {
+  max-width: 34rem;
   margin: 0;
-  color: var(--muted);
-  font-size: 17px;
-  line-height: 1.6;
-}
-.welcome-step__facts .ie-inlineAction {
-  display: inline;
-  color: var(--accent);
-  font-size: inherit;
-  line-height: inherit;
-}
-.welcome-step__actions {
-  grid-area: actions;
-  margin-top: 40px;
-}
-.welcome-step__actions .ie-btn {
-  min-width: 220px;
-  min-height: 54px;
-  font-size: 16px;
-}
-.welcome-step__note {
-  grid-area: note;
-  margin: 16px 0 0;
-  max-width: 46ch;
-  color: var(--faint);
-  font-size: 13px;
+  color: var(--ink-2);
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+  font-variation-settings: "opsz" 18;
   line-height: 1.5;
 }
-@media (max-width: 800px) {
-  .welcome-step {
-    align-items: start;
-    padding: 32px 24px;
-  }
+
+.welcome-step__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3) var(--s-5);
+  margin-top: var(--s-7);
+}
+
+.welcome-step__actions .ie-btn {
+  min-width: 13.5rem;
+  min-height: 52px;
+  font-size: var(--t-18);
+}
+
+.welcome-step__note {
+  max-width: 26ch;
+  margin: 0;
+  color: var(--ink-3);
+  font-size: var(--t-14);
+  line-height: var(--lh-ui);
+}
+
+/* The notes: ringed serif numerals (an echo of the aperture), separated by hairlines. */
+.welcome-step__facts ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: note;
+}
+
+.welcome-step__facts li {
+  position: relative;
+  padding: var(--s-5) 0 var(--s-5) 2.75rem;
+  border-top: 1px solid var(--rule);
+  counter-increment: note;
+}
+
+.welcome-step__facts li:last-child {
+  padding-bottom: 0;
+}
+
+.welcome-step__facts li::before {
+  position: absolute;
+  top: calc(var(--s-5) - 2px);
+  left: 0;
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  content: counter(note);
+  font-family: var(--font-serif);
+  font-size: var(--t-16);
+  font-style: italic;
+  line-height: 1;
+}
+
+.welcome-step__facts h2 {
+  margin: 0 0 var(--s-2);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+  font-weight: 400;
+  font-variation-settings: "opsz" 24;
+  line-height: 1.2;
+}
+
+.welcome-step__facts p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--t-16);
+  line-height: var(--lh-read);
+}
+
+@media (max-width: 960px) {
   .welcome-step__lead {
-    grid-template-columns: 1fr;
-    grid-template-areas: "brand" "intro" "actions" "note" "facts";
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    padding-top: var(--s-7);
   }
-  .welcome-step__brand {
-    margin-bottom: 40px;
-    font-size: 24px;
-  }
-  .welcome-step__mark {
-    width: 32px;
-    height: 32px;
-  }
-  .welcome-step h1 {
-    font-size: clamp(48px, 16vw, 64px);
-  }
-  .welcome-step__intro > p {
-    font-size: 17px;
-  }
-  .welcome-step__actions {
-    margin-top: 28px;
-  }
-  .welcome-step__actions .ie-btn {
-    width: 100%;
-  }
+
   .welcome-step__facts {
-    margin-top: 48px;
-  }
-  .welcome-step__facts h2 {
-    font-size: 26px;
-  }
-  .welcome-step__facts p {
-    font-size: 15px;
+    margin-top: var(--s-8);
   }
 }
 
-.welcome-step h1 span {
-  display: block;
+@media (max-width: 560px) {
+  .welcome-step {
+    padding-top: var(--s-4);
+    padding-bottom: var(--s-7);
+  }
+
+  .welcome-step__head {
+    padding-bottom: var(--s-3);
+  }
+
+  .welcome-step__running {
+    display: none;
+  }
+
+  .welcome-step__lead {
+    padding-top: var(--s-7);
+  }
+
+  .welcome-step h1 {
+    margin-bottom: var(--s-5);
+    font-size: clamp(2.75rem, 15vw, var(--t-64));
+  }
+
+  .welcome-step h1 em {
+    padding-left: 0.4em;
+  }
+
+  .welcome-step__intro > p {
+    font-size: var(--t-18);
+  }
+
+  .welcome-step__actions {
+    margin-top: var(--s-6);
+  }
+
+  .welcome-step__actions .ie-btn {
+    width: 100%;
+  }
+
+  .welcome-step__note {
+    max-width: none;
+  }
+
+  .welcome-step__facts {
+    margin-top: var(--s-7);
+  }
 }
