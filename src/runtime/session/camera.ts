@@ -1,7 +1,7 @@
 /**
  * Camera stream lifecycle: request, attach to the stage video element, and monitor for
  * interruption or device disconnection. Reports CameraState/CameraIssue facts only; the
- * app maps issues to user-facing copy (see src/app/experience/session/cameraMessages.ts).
+ * app maps issues to user-facing copy (see src/app/experience/media/mediaMessages.ts).
  */
 import { logger } from '../../platform/logger'
 import { requestVideoStream as defaultRequestVideoStream, stopVideoStream } from '../camera'
