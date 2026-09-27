@@ -1,4 +1,4 @@
-import { getDefaultControlValues } from '../controls/controlTargets'
+import { getDefaultControlValues } from '../controls'
 import {
   BASELINE_PROFILE,
   createComposeFallbackProfile,
@@ -25,30 +25,6 @@ const CURATED_PROFILE_LOAD_ERROR =
   'The selected experience could not be loaded. A clean fallback is active.'
 const COMPOSED_PROFILE_LOAD_ERROR =
   'The experience could not be composed. A clean fallback is active.'
-
-export function mergeControlValuesWithDefaults(
-  defaults: ControlValues,
-  previous: ControlValues,
-): ControlValues {
-  const next: ControlValues = { ...defaults }
-  for (const [key, fallback] of Object.entries(defaults)) {
-    const previousValue = previous[key]
-    if (typeof previousValue === typeof fallback) next[key] = previousValue
-  }
-  return next
-}
-
-export function mergePersistedControlValues(
-  profile: Profile,
-  reducedMotion: boolean,
-  previous: ControlValues,
-): ControlValues {
-  const defaults = getDefaultControlValues(profile, { reducedMotion })
-  for (const key of ['intensity', 'safeMode', 'audioEnabled'] as const) {
-    if (typeof previous[key] === typeof defaults[key]) defaults[key] = previous[key]
-  }
-  return defaults
-}
 
 export function createCuratedProfileLoadSuccess(
   profile: Profile,

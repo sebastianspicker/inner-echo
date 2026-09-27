@@ -1,6 +1,6 @@
 import type { CatalogEntry, Profile } from '../../domain/experience/schema'
-import { TEMPORAL_NODE_TYPES } from '../../domain/experience/motionPolicy'
-import { getReducedMotionDisableNodes } from '../../domain/experience/safety'
+import { getBuiltVideoStackEntries } from '../../domain/experience/videoStack'
+import { IMPLEMENTED_VIDEO_NODES } from '../../runtime/capabilities'
 import type { SelectedPreset } from '../../domain/experience/composition/types'
 
 export const DEFAULT_PICKER_OPTIONS: CatalogEntry[] = [
@@ -19,13 +19,10 @@ export const DEBUG_UI_ENABLED =
 
 export function getActiveVideoNodeIds(profile: Profile | null, reducedMotion: boolean): string[] {
   if (!profile) return []
-  const disabled = getReducedMotionDisableNodes(profile)
-  return profile.video_stack.reduce<string[]>((active, def) => {
-    const node = String(def.node ?? '').toLowerCase()
-    if (node && !(reducedMotion && (TEMPORAL_NODE_TYPES.has(node) || disabled.has(node))))
-      active.push(node)
-    return active
-  }, [])
+  return getBuiltVideoStackEntries(profile, {
+    reducedMotion,
+    supportedNodeIds: IMPLEMENTED_VIDEO_NODES,
+  }).map((entry) => entry.def.node.toLowerCase())
 }
 
 export function seedPresetStack(previous: SelectedPreset[], conditionId: string): SelectedPreset[] {

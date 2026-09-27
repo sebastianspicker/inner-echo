@@ -10,12 +10,12 @@ import type {
 import { composeEffectiveProfile, type ComposeReport } from '../composeExperience'
 import { logger } from '../../../platform/logger'
 import { useAsyncEffect } from './useAsyncEffect'
+import { mergeControlValuesWithDefaults } from '../controls'
 import {
   createComposedProfileLoadFailure,
   createComposedProfileLoadSuccess,
   createCuratedProfileLoadFailure,
   createCuratedProfileLoadSuccess,
-  mergeControlValuesWithDefaults,
   type ControlValues,
   type ProfileLoadResult,
   type ProfileLoadStatus,

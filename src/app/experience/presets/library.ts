@@ -48,10 +48,6 @@ export function createPresetSnapshot(
   }
 }
 
-export function parsePresetLibrary(serialized: string): PresetSnapshotV2[] {
-  return parsePresetLibraryWithDiagnostics(serialized).snapshots
-}
-
 export function parsePresetLibraryWithDiagnostics(serialized: string): PresetLibraryParseResult {
   try {
     const parsed = JSON.parse(serialized)
