@@ -15,17 +15,12 @@ import type {
 
 export type { MotifDef, DimensionSignalMappingEntry }
 
-{
-  const result = dimensionToSignalMappingFileSchema.safeParse(dimensionToSignalMappingFile)
-  if (!result.success) {
-    logger.warn('[dimensionToSignalMapping] Schema validation issues:', result.error.issues)
-  }
+const parsedMapping = dimensionToSignalMappingFileSchema.safeParse(dimensionToSignalMappingFile)
+if (!parsedMapping.success) {
+  logger.warn('[dimensionToSignalMapping] Schema validation issues:', parsedMapping.error.issues)
 }
 
 export function getDimensionMappingEntry(dimensionId: string): DimensionSignalMappingEntry | null {
-  const m =
-    (dimensionToSignalMappingFile as { mapping: Record<string, DimensionSignalMappingEntry> })
-      .mapping ?? {}
-  const entry = m?.[dimensionId]
-  return entry ?? null
+  if (!parsedMapping.success) return null
+  return parsedMapping.data.mapping[dimensionId] ?? null
 }
