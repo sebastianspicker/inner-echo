@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, extname, relative, resolve, sep } from 'node:path'
+import { demoAllowedLayers } from './layers.mjs'
 
 const root = process.cwd()
 const sourceRoot = resolve(root, 'src')
@@ -50,7 +51,7 @@ const allowedDependencies = {
   runtime: new Set(['runtime', 'domain', 'platform', 'shared']),
   platform: new Set(['platform', 'shared']),
   shared: new Set(['shared']),
-  demo: new Set(['demo', 'shared']),
+  demo: demoAllowedLayers,
   entry: new Set(['app', 'platform', 'shared', 'entry']),
 }
 
