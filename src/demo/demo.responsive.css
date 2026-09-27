@@ -1,106 +1,80 @@
-@media (max-width: 62rem) {
-  .demo-shell {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
-
-  .workspace {
-    grid-template-columns: 1fr;
-  }
-
-  .control-rail {
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
-    border-left: 0;
-    overflow: visible;
-  }
-
-  .stage {
-    min-height: 56vw;
-  }
-
+@media (max-width: 1180px) {
   .status-strip {
     display: none;
   }
 }
 
-@media (max-width: 40rem) {
-  .demo-welcome {
-    place-items: start center;
-    padding: 1.5rem;
+@media (max-width: 960px) {
+  .welcome-content {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: var(--s-7);
+    padding-block: var(--s-7);
   }
 
-  .welcome-content h1 {
-    font-size: 2.15rem;
+  .demo-tour__grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .welcome-actions {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.75rem;
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-6);
   }
 
-  .topbar {
-    min-height: 3.5rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0.65rem 1rem;
+  .stage {
+    position: static;
   }
 
+  .control-rail {
+    padding-top: var(--s-4);
+    padding-left: 0;
+    border-top: 1px solid var(--rule);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .welcome-running,
   .brand-note {
     display: none;
   }
 
+  .welcome-content h1 {
+    font-size: clamp(2.75rem, 15vw, var(--t-64));
+  }
+
+  .welcome-content h1 em {
+    padding-left: 0.4em;
+  }
+
+  .welcome-lede {
+    font-size: var(--t-18);
+  }
+
+  .welcome-actions .button {
+    width: 100%;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    padding-block: var(--s-3);
+  }
+
+  .brand {
+    font-size: var(--t-18);
+  }
+
   .topbar-actions {
     width: 100%;
-    justify-content: space-between;
-    margin-left: 0;
+    justify-content: flex-start;
   }
 
-  .button {
-    min-height: 2.75rem;
-  }
-
-  .stage {
-    padding: 1rem;
+  .button-danger {
+    flex: 1 1 100%;
   }
 
   .stage-frame {
-    max-height: none;
-    min-height: 14rem;
-  }
-
-  .stage-caption {
-    left: 1rem;
-    bottom: 0.75rem;
-    font-size: 0.7rem;
-  }
-
-  .stage-truth {
-    display: none;
-  }
-
-  .feed-readout {
-    top: 0.75rem;
-    font-size: 0.56rem;
-  }
-
-  .control-rail section {
-    padding: 1.25rem 1rem;
-  }
-
-  .rail-footer {
-    padding: 1rem;
-  }
-
-  .profile-row {
-    padding: 0.85rem 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .button,
-  .switch span {
-    transition: none;
+    aspect-ratio: 4 / 3;
   }
 }

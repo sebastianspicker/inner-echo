@@ -1,3 +1,4 @@
+@import "../shared/design/tokens.css";
 @import "./demo.base-welcome.css";
 @import "./demo.layout-controls.css";
 @import "./demo.responsive.css";
