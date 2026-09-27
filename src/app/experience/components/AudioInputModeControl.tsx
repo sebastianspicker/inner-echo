@@ -18,8 +18,8 @@ export function AudioInputModeControl({
   onInputModeChange,
 }: AudioInputModeControlProps) {
   return (
-    <div className="ie-controlInputMode" role="group" aria-label="Audio input">
-      <span className="ie-controlLabel">Input</span>
+    <fieldset className="ie-controlInputMode">
+      <legend className="ie-controlLabel">Input</legend>
       <div className="ie-controlOptions">
         {INPUT_MODES.map((mode) => (
           <label key={mode} className="ie-control ie-control--toggle">
@@ -34,6 +34,6 @@ export function AudioInputModeControl({
           </label>
         ))}
       </div>
-    </div>
+    </fieldset>
   )
 }

@@ -35,10 +35,6 @@ function exists(root: string, p: string) {
   return fs.existsSync(path.join(root, p))
 }
 
-function assert(condition: boolean, message: string) {
-  if (!condition) throw new Error(message)
-}
-
 function verifyRequiredFiles(root: string, errors: string[]) {
   const requiredFiles = [
     'docs/references/README.md',

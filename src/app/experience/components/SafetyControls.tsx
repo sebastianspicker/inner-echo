@@ -26,30 +26,8 @@ export function SafetyControls(props: SafetyControlsProps) {
     >
       <div className="ie-safety__heading">
         <div>
-          <h2 id="safety-controls-title">Comfort</h2>
-          <p>These settings remain available while the camera is active.</p>
+          <h2 id="safety-controls-title">Adjust for comfort</h2>
         </div>
-        {props.showCameraActions !== false && (
-          <div className="ie-safety__actions">
-            <button
-              type="button"
-              className="ie-btn ie-btn--accent"
-              onClick={props.onStart}
-              disabled={!props.canStart || props.isRequesting || props.isActive}
-              aria-busy={props.isRequesting}
-            >
-              {props.isRequesting ? 'Requesting camera…' : 'Start camera'}
-            </button>
-            <button
-              type="button"
-              className="ie-btn ie-btn--danger"
-              onClick={props.onStop}
-              disabled={!props.canStop}
-            >
-              Stop Everything
-            </button>
-          </div>
-        )}
       </div>
       <div className="ie-safety__controls">
         <LabeledSlider
@@ -63,6 +41,7 @@ export function SafetyControls(props: SafetyControlsProps) {
         />
         <ToggleField
           id="core-safe-mode"
+          className="ie-control ie-control--toggle"
           label="Safe Mode"
           description="Limits stronger feedback and effect parameters."
           checked={props.safeMode}
@@ -70,12 +49,41 @@ export function SafetyControls(props: SafetyControlsProps) {
         />
         <ToggleField
           id="core-reduced-motion"
+          className="ie-control ie-control--toggle"
           label="Reduced Motion"
           description="Suppresses motion-heavy and temporal effects."
           checked={props.reducedMotion}
           onChange={props.onReducedMotionChange}
         />
       </div>
+      {props.showCameraActions !== false && (
+        <div className="ie-safety__actions">
+          <button
+            type="button"
+            className="ie-btn ie-btn--accent"
+            onClick={props.onStart}
+            disabled={!props.canStart || props.isRequesting || props.isActive}
+            aria-busy={props.isRequesting}
+          >
+            {props.isRequesting ? 'Requesting camera…' : 'Start camera'}
+          </button>
+          {props.variant === 'setup' && (
+            <span className="ie-safety__actionNote">
+              Requests camera access. Sound and microphone stay off.
+            </span>
+          )}
+          {props.variant !== 'setup' && (
+            <button
+              type="button"
+              className="ie-btn ie-btn--danger"
+              onClick={props.onStop}
+              disabled={!props.canStop}
+            >
+              Stop Everything
+            </button>
+          )}
+        </div>
+      )}
     </section>
   )
 }

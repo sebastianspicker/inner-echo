@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, type KeyboardEvent, type MouseEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type KeyboardEvent,
+  type MouseEvent,
+  type RefObject,
+} from 'react'
 import { listEvidenceDocPaths, type EvidenceDocPath } from '../../../content/evidence'
 import { resolveEvidenceHref } from './evidenceHref'
 import { useEvidenceDocument } from './useEvidenceDocument'
@@ -58,6 +66,143 @@ function syncEvidenceDialog(
   }
 }
 
+function useEvidenceNavItems(): EvidenceDocPath[] {
+  return useMemo(() => {
+    const all = listEvidenceDocPaths()
+    const curated = Object.keys(TOPIC_LABELS) as EvidenceDocPath[]
+    return [
+      ...curated.filter((path) => all.includes(path)),
+      ...all.filter((path) => isIndexLike(path) && !curated.includes(path)),
+    ]
+  }, [])
+}
+
+function useEvidenceArticleActivation(
+  docPath: EvidenceDocPath,
+  onNavigate: (docPath: EvidenceDocPath) => void,
+) {
+  return useCallback(
+    (event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>): void => {
+      if ('key' in event && event.key !== 'Enter' && event.key !== ' ') return
+      const anchor = (event.target as HTMLElement | null)?.closest?.(
+        'a',
+      ) as HTMLAnchorElement | null
+      if (!anchor) return
+      const href = anchor.getAttribute('href') ?? ''
+      const normalized = href.trim().toLowerCase()
+      if (normalized.startsWith('javascript:') || normalized.startsWith('data:')) {
+        event.preventDefault()
+        return
+      }
+      const resolved = resolveEvidenceHref(docPath, href)
+      if (resolved) {
+        event.preventDefault()
+        onNavigate(resolved)
+        return
+      }
+      anchor.setAttribute('target', '_blank')
+      anchor.setAttribute('rel', 'noreferrer noopener')
+    },
+    [docPath, onNavigate],
+  )
+}
+
+function EvidenceNavigation(
+  props: Pick<EvidenceDrawerProps, 'docPath' | 'onNavigate'> & {
+    navItems: EvidenceDocPath[]
+  },
+) {
+  return (
+    <nav className="evidence-nav" aria-label="Evidence topics">
+      <ul className="evidence-navList">
+        {props.navItems.map((path) => (
+          <li key={path}>
+            <button
+              type="button"
+              className={
+                path === props.docPath
+                  ? 'evidence-navLink evidence-navLink--active'
+                  : 'evidence-navLink'
+              }
+              aria-current={path === props.docPath ? 'page' : undefined}
+              onClick={() => props.onNavigate(path)}
+            >
+              {topicLabel(path)}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+function EvidenceSafety(
+  props: Pick<EvidenceDrawerProps, 'safeMode' | 'reducedMotion' | 'mediaActive'>,
+) {
+  return (
+    <aside className="evidence-safety" aria-label="Safety boundaries">
+      <div className="evidence-kicker">Safety boundaries</div>
+      <dl>
+        <div>
+          <dt>Safe Mode</dt>
+          <dd>{props.safeMode === false ? 'Off' : 'On'}</dd>
+        </div>
+        <div>
+          <dt>Reduced Motion</dt>
+          <dd>{props.reducedMotion ? 'On' : 'System'}</dd>
+        </div>
+        <div>
+          <dt>Media processing</dt>
+          <dd>Local</dd>
+        </div>
+        <div>
+          <dt>Recording</dt>
+          <dd>None</dd>
+        </div>
+      </dl>
+      <p>
+        Stop Everything remains available whenever media is{' '}
+        {props.mediaActive ? 'active' : 'started'}.
+      </p>
+    </aside>
+  )
+}
+
+interface EvidenceContentProps {
+  state: ReturnType<typeof useEvidenceDocument>['state']
+  contentRef: RefObject<HTMLElement | null>
+  retry: () => void
+  onActivate: (event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => void
+}
+
+function EvidenceContent({ state, contentRef, retry, onActivate }: EvidenceContentProps) {
+  return (
+    <section className="evidence-content" aria-label="Evidence content">
+      {state.status === 'loading' && (
+        <p className="evidence-loading" role="status">
+          Loading evidence…
+        </p>
+      )}
+      {state.status === 'error' && (
+        <div className="evidence-error" role="alert">
+          <p>{state.message}</p>
+          <button type="button" className="evidence-btn" onClick={retry}>
+            Retry
+          </button>
+        </div>
+      )}
+      {state.status === 'ready' && (
+        <article
+          ref={contentRef}
+          className="evidence-markdown"
+          onClick={onActivate}
+          onKeyDown={onActivate}
+        />
+      )}
+    </section>
+  )
+}
+
 export function EvidenceDrawer(props: EvidenceDrawerProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
@@ -67,41 +212,14 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
     retry,
   } = useEvidenceDocument(props.open, props.docPath)
 
-  const navItems = useMemo(() => {
-    const all = listEvidenceDocPaths()
-    const curated = Object.keys(TOPIC_LABELS) as EvidenceDocPath[]
-    return [
-      ...curated.filter((path) => all.includes(path)),
-      ...all.filter((path) => isIndexLike(path) && !curated.includes(path)),
-    ]
-  }, [])
+  const navItems = useEvidenceNavItems()
 
   useEffect(
     () => syncEvidenceDialog(dialogRef.current, closeButtonRef.current, props.open),
     [props.open],
   )
 
-  const handleArticleActivation = (
-    event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
-  ): void => {
-    if ('key' in event && event.key !== 'Enter' && event.key !== ' ') return
-    const anchor = (event.target as HTMLElement | null)?.closest?.('a') as HTMLAnchorElement | null
-    if (!anchor) return
-    const href = anchor.getAttribute('href') ?? ''
-    const normalized = href.trim().toLowerCase()
-    if (normalized.startsWith('javascript:') || normalized.startsWith('data:')) {
-      event.preventDefault()
-      return
-    }
-    const resolved = resolveEvidenceHref(props.docPath, href)
-    if (resolved) {
-      event.preventDefault()
-      props.onNavigate(resolved)
-      return
-    }
-    anchor.setAttribute('target', '_blank')
-    anchor.setAttribute('rel', 'noreferrer noopener')
-  }
+  const handleArticleActivation = useEvidenceArticleActivation(props.docPath, props.onNavigate)
 
   return (
     <dialog
@@ -143,76 +261,14 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
         </label>
 
         <div className="evidence-body">
-          <nav className="evidence-nav" aria-label="Evidence topics">
-            <ul className="evidence-navList">
-              {navItems.map((path) => (
-                <li key={path}>
-                  <button
-                    type="button"
-                    className={
-                      path === props.docPath
-                        ? 'evidence-navLink evidence-navLink--active'
-                        : 'evidence-navLink'
-                    }
-                    aria-current={path === props.docPath ? 'page' : undefined}
-                    onClick={() => props.onNavigate(path)}
-                  >
-                    {topicLabel(path)}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <section className="evidence-content" aria-label="Evidence content">
-            {state.status === 'loading' && (
-              <p className="evidence-loading" role="status">
-                Loading evidence…
-              </p>
-            )}
-            {state.status === 'error' && (
-              <div className="evidence-error" role="alert">
-                <p>{state.message}</p>
-                <button type="button" className="evidence-btn" onClick={retry}>
-                  Retry
-                </button>
-              </div>
-            )}
-            {state.status === 'ready' && (
-              <article
-                ref={evidenceContentRef}
-                className="evidence-markdown"
-                onClick={handleArticleActivation}
-                onKeyDown={handleArticleActivation}
-              />
-            )}
-          </section>
-
-          <aside className="evidence-safety" aria-label="Safety boundaries">
-            <div className="evidence-kicker">Safety boundaries</div>
-            <dl>
-              <div>
-                <dt>Safe Mode</dt>
-                <dd>{props.safeMode === false ? 'Off' : 'On'}</dd>
-              </div>
-              <div>
-                <dt>Reduced Motion</dt>
-                <dd>{props.reducedMotion ? 'On' : 'System'}</dd>
-              </div>
-              <div>
-                <dt>Media processing</dt>
-                <dd>Local</dd>
-              </div>
-              <div>
-                <dt>Recording</dt>
-                <dd>None</dd>
-              </div>
-            </dl>
-            <p>
-              Stop Everything remains available whenever media is{' '}
-              {props.mediaActive ? 'active' : 'started'}.
-            </p>
-          </aside>
+          <EvidenceNavigation {...props} navItems={navItems} />
+          <EvidenceContent
+            state={state}
+            contentRef={evidenceContentRef}
+            retry={retry}
+            onActivate={handleArticleActivation}
+          />
+          <EvidenceSafety {...props} />
         </div>
         <footer className="evidence-footer">Sanitized Markdown / Local document</footer>
       </div>

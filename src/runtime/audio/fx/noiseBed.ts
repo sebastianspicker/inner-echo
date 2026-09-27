@@ -10,7 +10,7 @@ export interface NoiseBedParams {
   color?: 'white' | 'pink' | 'brown'
 }
 
-// SSOT defaults lean quieter; level is safety-clamped at runtime.
+// Profile defaults lean quieter; runtime safety policy clamps the level.
 const DEFAULT_LEVEL = 0.03
 const MAX_LEVEL = 0.08
 
@@ -61,7 +61,8 @@ export function createNoiseBed(
   params: NoiseBedParams = {},
 ): AudioModule {
   const level = clamp(params.level ?? DEFAULT_LEVEL, 0, MAX_LEVEL)
-  let color = normalizeColor(params.color)
+  const initialColor = normalizeColor(params.color)
+  let color = initialColor
 
   const input = context.createGain()
   input.gain.value = 1
@@ -70,8 +71,9 @@ export function createNoiseBed(
   const noiseGain = context.createGain()
   noiseGain.gain.value = level
 
+  const initialBuffer = createNoiseBuffer(context, initialColor, 3)
   let source = context.createBufferSource()
-  source.buffer = createNoiseBuffer(context, color, 3)
+  source.buffer = initialBuffer
   source.loop = true
   source.connect(noiseGain)
   source.start(0)
@@ -81,7 +83,10 @@ export function createNoiseBed(
 
   let replacePending = false
 
-  function replaceSource(nextColor: 'white' | 'pink' | 'brown'): void {
+  function replaceSource(
+    nextColor: 'white' | 'pink' | 'brown',
+    replacementBuffer?: AudioBuffer,
+  ): void {
     if (replacePending) return
     replacePending = true
     try {
@@ -92,7 +97,7 @@ export function createNoiseBed(
     source.disconnect()
 
     const newSource = context.createBufferSource()
-    newSource.buffer = createNoiseBuffer(context, nextColor, 3)
+    newSource.buffer = replacementBuffer ?? createNoiseBuffer(context, nextColor, 3)
     newSource.loop = true
     newSource.connect(noiseGain)
     newSource.start(0)
@@ -118,6 +123,13 @@ export function createNoiseBed(
           color = nextColor
           replaceSource(nextColor)
         }
+      }
+    },
+    resetParams(): void {
+      noiseGain.gain.setValueAtTime(level, context.currentTime)
+      if (color !== initialColor) {
+        replaceSource(initialColor, initialBuffer)
+        color = initialColor
       }
     },
     dispose(): void {

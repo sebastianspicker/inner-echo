@@ -1,11 +1,15 @@
 import { readdir, readFile, unlink } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { JSDOM } from 'jsdom'
+import { collectChunkClosure } from '../shared/viteManifest.mjs'
+import { inspectRuntimeBoundaries } from './runtime-boundaries.mjs'
+import { gzipSync, brotliCompressSync } from 'node:zlib'
 
 const output = resolve(import.meta.dirname, '../..', 'dist')
 const failures = []
 const manifestPath = resolve(output, 'manifest.json')
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+failures.push(...inspectRuntimeBoundaries(manifest))
 const html = await readFile(resolve(output, 'index.html'), 'utf8')
 const document = new JSDOM(html).window.document
 
@@ -21,19 +25,9 @@ for (const asset of initialAssets) {
   }
 }
 
-function staticClosure(initialKeys) {
-  const seen = new Set()
-  const pending = [...initialKeys]
-  while (pending.length > 0) {
-    const key = pending.pop()
-    if (!key || seen.has(key)) continue
-    seen.add(key)
-    pending.push(...(manifest[key]?.imports ?? []))
-  }
-  return seen
-}
-
-const entryKey = Object.keys(manifest).find((key) => manifest[key]?.isEntry)
+const entryKey = Object.keys(manifest).find(
+  (key) => manifest[key]?.isEntry && manifest[key]?.src === 'index.html',
+)
 const graphKey = Object.keys(manifest).find(
   (key) => manifest[key]?.src === 'src/runtime/visual/graph/index.ts',
 )
@@ -41,7 +35,9 @@ const graphKey = Object.keys(manifest).find(
 if (!entryKey) failures.push('Vite manifest has no application entry')
 if (!graphKey) failures.push('Vite manifest has no lazy visual graph entry')
 
-const entryClosure = entryKey ? staticClosure([entryKey]) : new Set()
+const entryClosure = entryKey
+  ? collectChunkClosure(manifest, [entryKey], { includeDynamicImports: false })
+  : []
 for (const key of entryClosure) {
   const chunk = manifest[key]
   const identity = `${key} ${chunk?.src ?? ''} ${chunk?.file ?? ''} ${chunk?.name ?? ''}`
@@ -51,8 +47,10 @@ for (const key of entryClosure) {
 }
 
 if (graphKey) {
-  const graphClosure = staticClosure([graphKey])
-  const ownsThree = [...graphClosure].some((key) => {
+  const graphClosure = collectChunkClosure(manifest, [graphKey], {
+    includeDynamicImports: false,
+  })
+  const ownsThree = graphClosure.some((key) => {
     const chunk = manifest[key]
     return /three(?:\.core)?/i.test(
       `${key} ${chunk?.src ?? ''} ${chunk?.file ?? ''} ${chunk?.name ?? ''}`,
@@ -83,8 +81,16 @@ if (failures.length > 0) {
   console.error([...new Set(failures)].join('\n'))
   process.exitCode = 1
 } else {
+  const initialChunks = await Promise.all(
+    entryClosure.map((key) => readFile(resolve(output, manifest[key].file))),
+  )
+  const compressed = (compress) =>
+    initialChunks.reduce((total, chunk) => total + compress(chunk).length, 0)
+  console.log(
+    `[bundle:verify] Welcome JS: ${compressed(gzipSync)} gzip bytes; ${compressed(brotliCompressSync)} Brotli bytes.`,
+  )
   await unlink(manifestPath)
   console.log(
-    '[bundle:verify] Three.js remains behind the lazy graph boundary; dev-only diagnostics are absent.',
+    '[bundle:verify] Welcome, workspace, audio, evidence and graphics loading boundaries hold; dev-only diagnostics are absent.',
   )
 }

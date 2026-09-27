@@ -1,11 +1,11 @@
 /**
  * JSON Object Extraction
  *
- * Extracts JSON payloads from unpredictable sources such as mixed prose and tool output.
+ * Extracts JSON payloads from sources that may contain surrounding text.
  *
  * Unlike a plain `JSON.parse()`, this utility can extract a valid JSON object
  * even when it is wrapped in markdown code blocks (e.g., \`\`\`json { ... } \`\`\`) or
- * preceded by conversational text.
+ * preceded by other text.
  */
 
 function stripBom(value: string): string {

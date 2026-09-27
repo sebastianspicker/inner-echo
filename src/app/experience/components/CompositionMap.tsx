@@ -1,7 +1,7 @@
-import {
-  type ComposerMode,
-  type SelectedDimension,
-  type SelectedPreset,
+import type {
+  ComposerMode,
+  SelectedDimension,
+  SelectedPreset,
 } from '../../../domain/experience/composition/types'
 import { getExperienceDimensions } from '../../../content/experience/experienceDimensions'
 

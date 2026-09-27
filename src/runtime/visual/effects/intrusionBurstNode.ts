@@ -1,5 +1,5 @@
 /**
- * SSOT: intrusion_burst: sparse short high-presence fragments.
+ * Sparse, brief high-presence fragments.
  * Params: amount, burst_probability, burst_duration_ms, burst_min_gap_ms, initial_delay_ms, zoom, band_count.
  */
 

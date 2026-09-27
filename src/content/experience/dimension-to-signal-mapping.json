@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "note": "Evidence-informed authoring hints: experience dimension → AV motifs. Metaphorical, non-diagnostic. Values are safe-by-default and should be clamped at runtime.",
+  "note": "Experience dimensions linked to artistic audiovisual choices. Evidence strength describes reported phenomena, not validation of effects, parameter ranges, weights or coupling. Numerical values are conservative design choices, not clinical measurements.",
   "mapping": {
     "hyperarousal": {
       "evidence_strength": "high",
@@ -194,7 +194,7 @@
     "panic_peaks": {
       "evidence_strength": "high",
       "rationale_doc": "docs/references/dimensions/panic_peaks.md",
-      "notes": "Phasic rise/fall alarm waves. Use clamped envelopes and smooth returns to baseline. No flashes, no loud transients.",
+      "notes": "A shallow, slow visual envelope is an artistic choice for changing alarm, not a physiological rhythm. No heartbeat-like sound is included.",
       "safety": {
         "warnings": [
           "Metaphor only: not a diagnostic or clinical simulation.",
@@ -225,8 +225,8 @@
         {
           "node": "pulse",
           "params_hint": {
-            "rate": "0.6..1.6 Hz",
-            "depth": "0.02..0.14 (clamped)",
+            "rate": "0.2..0.4 Hz",
+            "depth": "0.02..0.06",
             "smoothing": "0.80..0.95"
           }
         },
@@ -252,14 +252,6 @@
         }
       ],
       "audio_motifs": [
-        {
-          "node": "pulse_tone",
-          "params_hint": {
-            "rate": "0.8..1.6",
-            "mix": "0.03..0.10",
-            "base_freq": "90..160 Hz"
-          }
-        },
         {
           "node": "lowpass",
           "params_hint": {
@@ -306,7 +298,7 @@
     "intrusion": {
       "evidence_strength": "medium",
       "rationale_doc": "docs/references/dimensions/intrusion.md",
-      "notes": "Unwanted content 'insertion'. Represent as abstract, low-opacity overlays and tiny audio recurrences, never literal content.",
+      "notes": "Unwanted thoughts or memories motivate a restrained abstract texture. This does not replay content or reproduce a flashback.",
       "safety": {
         "warnings": [
           "Metaphor only: not a diagnostic or clinical simulation.",
@@ -337,7 +329,7 @@
         {
           "node": "interference",
           "params_hint": {
-            "amount": "0.06..0.14 (micro-bursts)",
+            "amount": "0.02..0.06",
             "banding": "0.03..0.09",
             "smoothing": "0.85..0.95"
           }
@@ -345,15 +337,15 @@
         {
           "node": "vignette",
           "params_hint": {
-            "amount": "0.08..0.24 (brief pulse)",
+            "amount": "0.06..0.14",
             "softness": "0.70..0.95"
           }
         },
         {
           "node": "grain",
           "params_hint": {
-            "amount": "0.10..0.24",
-            "speed": "0..0.12"
+            "amount": "0.01..0.04",
+            "speed": "0"
           }
         }
       ],
@@ -515,7 +507,7 @@
     "compulsive_loop": {
       "evidence_strength": "high",
       "rationale_doc": "docs/references/dimensions/compulsive_loop.md",
-      "notes": "Repeat-to-relieve loop. Use subtle repetition cues and structure hints without caricature or “quirky” aesthetics.",
+      "notes": "Unwanted recurrence and urges to repeat can take many forms. Image persistence and echo are optional artistic interpretations; grids and ordering are not default cues.",
       "safety": {
         "warnings": [
           "Metaphor only: not a diagnostic or clinical simulation.",
@@ -552,12 +544,6 @@
           }
         },
         {
-          "node": "grid_hint",
-          "params_hint": {
-            "amount": "0.02..0.08 (very subtle)"
-          }
-        },
-        {
           "node": "vignette",
           "params_hint": {
             "amount": "0.06..0.22",
@@ -567,8 +553,8 @@
         {
           "node": "grain",
           "params_hint": {
-            "amount": "0.08..0.22",
-            "speed": "0..0.10"
+            "amount": "0.01..0.04",
+            "speed": "0"
           }
         }
       ],
@@ -932,7 +918,7 @@
     "derealization": {
       "evidence_strength": "medium",
       "rationale_doc": "docs/references/dimensions/derealization.md",
-      "notes": "World feels unreal/behind glass. Use veil + tiny channel separation; avoid heavy glitch aesthetics.",
+      "notes": "Reported distance or unreality motivates a light visual veil as an artistic interpretation. Default motifs avoid chromatic splitting and delayed images.",
       "safety": {
         "warnings": [
           "Metaphor only: not a diagnostic or clinical simulation.",
@@ -967,20 +953,6 @@
           }
         },
         {
-          "node": "chroma_aberration",
-          "params_hint": {
-            "amount": "0.03..0.09 (very low)"
-          }
-        },
-        {
-          "node": "temporal_smear",
-          "params_hint": {
-            "decay": "0.93..0.98",
-            "feedback": "0.03..0.10",
-            "jitter": "0.00..0.05"
-          }
-        },
-        {
           "node": "color_grade",
           "params_hint": {
             "contrast": "-0.10..0.05",
@@ -989,13 +961,6 @@
         }
       ],
       "audio_motifs": [
-        {
-          "node": "flutter",
-          "params_hint": {
-            "rate": "0.35..0.85",
-            "depth": "0.03..0.08"
-          }
-        },
         {
           "node": "lowpass",
           "params_hint": {
@@ -1043,7 +1008,7 @@
     "depersonalization": {
       "evidence_strength": "medium",
       "rationale_doc": "docs/references/dimensions/depersonalization.md",
-      "notes": "Self-distance / reduced agency. Must stay optional and non-impairing; avoid body horror or identity claims.",
+      "notes": "Reported detachment motivates mild static visual softening as an artistic interpretation, without body distortion or pitch wobble.",
       "safety": {
         "warnings": [
           "Metaphor only: not a diagnostic or clinical simulation.",
@@ -1085,12 +1050,6 @@
           }
         },
         {
-          "node": "chroma_aberration",
-          "params_hint": {
-            "amount": "0.02..0.06 (micro)"
-          }
-        },
-        {
           "node": "color_grade",
           "params_hint": {
             "contrast": "-0.06..0.06",
@@ -1111,13 +1070,6 @@
           "params_hint": {
             "cutoff": "2800..7500",
             "q": "0.6..0.9"
-          }
-        },
-        {
-          "node": "flutter",
-          "params_hint": {
-            "rate": "0.25..0.70",
-            "depth": "0.02..0.06"
           }
         },
         {
@@ -1255,7 +1207,7 @@
     "attention_fragmentation": {
       "evidence_strength": "medium",
       "rationale_doc": "docs/references/dimensions/attention_fragmentation.md",
-      "notes": "Unstable focus. Prefer small focus instability and safe modulation, no rapid camera motion.",
+      "notes": "Attention varies with person and context. Default dimension motifs use restrained detail and static texture, without camera shake or rhythmic audio.",
       "safety": {
         "warnings": [
           "Metaphor only: not a diagnostic or clinical simulation.",
@@ -1284,17 +1236,10 @@
       },
       "video_motifs": [
         {
-          "node": "focus_jitter",
-          "params_hint": {
-            "amount": "0.04..0.12",
-            "smoothing": "0.88..0.96 (high)"
-          }
-        },
-        {
           "node": "grain",
           "params_hint": {
-            "amount": "0.08..0.20",
-            "speed": "0..0.10"
+            "amount": "0.01..0.04",
+            "speed": "0"
           }
         },
         {
@@ -1305,13 +1250,6 @@
         }
       ],
       "audio_motifs": [
-        {
-          "node": "tremolo",
-          "params_hint": {
-            "rate": "1..4 Hz",
-            "depth": "0.04..0.12"
-          }
-        },
         {
           "node": "compressor_limiter",
           "params_hint": {

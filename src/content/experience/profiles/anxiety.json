@@ -1,10 +1,10 @@
 {
   "id": "anxiety",
-  "label": "Anxiety (Generalized / Social)",
-  "summary": "A metaphor of heightened tension and scanning attention, expressed as a strong gaze tunnel, edge salience, and minimal texture.",
+  "label": "Anxiety-related tension and worry",
+  "summary": "Gentle focus narrowing, restrained detail and a quiet sound bed offer an artistic interpretation of tension and worry. These experiences vary; anxiety does not have a single visual or auditory form.",
   "framing": {
     "type": "metaphor",
-    "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
+    "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
   },
   "experience_dimensions": [
     {
@@ -21,14 +21,11 @@
     }
   ],
   "safety": {
-    "intensity_default": 0.5,
+    "intensity_default": 0.35,
     "intensity_max": 0.65,
     "warnings": [
-      "May feel uncomfortable for some users. Use Safe Mode or stop at any time.",
-      "If you are motion-sensitive, enable Reduced Motion.",
-      "Audio is optional; keep volume low.",
-      "Avoid flashing lights or rapid flicker; enable Reduced Motion if sensitive.",
-      "Keep volume low; avoid headphones at high volume; you can mute audio at any time."
+      "Start with low intensity and volume; sound is optional.",
+      "Use Reduced Motion for a steadier image. Stop Everything is always available."
     ],
     "safe_mode_clamps": {
       "max_intensity": 0.65,
@@ -100,10 +97,10 @@
       "id": "gaze",
       "node": "gaze_tunnel",
       "params": {
-        "amount": 0.68,
-        "radius": 0.36,
-        "edge_gain": 0.22,
-        "desaturate": 0.18
+        "amount": 0.3,
+        "radius": 0.48,
+        "edge_gain": 0.1,
+        "desaturate": 0.06
       }
     },
     {
@@ -138,7 +135,7 @@
     "enabled": true,
     "input": "synth",
     "master": {
-      "volume": 0.22
+      "volume": 0.18
     },
     "chain": [
       {
@@ -158,8 +155,8 @@
       {
         "node": "tremolo",
         "params": {
-          "rate": 1.1,
-          "depth": 0.07
+          "rate": 0.5,
+          "depth": 0.035
         }
       },
       {
@@ -175,30 +172,7 @@
     ]
   },
   "reactive": {
-    "analyser_to_params": [
-      {
-        "source": "rms",
-        "target": "video.gaze_tunnel.amount",
-        "scale": 0.08,
-        "offset": 0,
-        "smoothing": {
-          "attack": 0.1,
-          "release": 0.3
-        },
-        "clamp": [0.2, 0.82]
-      },
-      {
-        "source": "rms",
-        "target": "video.gaze_tunnel.edge_gain",
-        "scale": 0.07,
-        "offset": 0,
-        "smoothing": {
-          "attack": 0.12,
-          "release": 0.35
-        },
-        "clamp": [0.05, 0.32]
-      }
-    ]
+    "analyser_to_params": []
   },
   "references": {
     "dimensions": [

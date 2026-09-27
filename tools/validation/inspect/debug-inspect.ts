@@ -3,7 +3,6 @@ import path from 'node:path'
 
 import { logWarnings } from '../../shared/cli'
 import { runInspectHarness } from './harness'
-import type { InspectIssue } from './types'
 
 function rel(p: string): string {
   return p.replaceAll(path.sep, '/')

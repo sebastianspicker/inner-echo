@@ -22,7 +22,7 @@ export function AdvancedComposerPanel(props: AdvancedComposerPanelProps) {
           onChange={props.onCouplingStrengthChange}
         />
         <LabeledSlider
-          label="Maximum feedback"
+          label="Reactive response limit"
           min={0}
           max={1}
           value={props.maxFeedback}
@@ -36,8 +36,9 @@ export function AdvancedComposerPanel(props: AdvancedComposerPanelProps) {
           onChange={props.onInteractionAmountChange}
         />
         <p className="composer__hint">
-          These settings shape how selected elements respond to one another. Safe Mode limits remain
-          active.
+          Links changes in picture and sound; microphone input contributes only when enabled. These
+          are artistic responses, not measurements of mental state. Existing comfort limits still
+          apply.
         </p>
       </div>
     </details>

@@ -1,6 +1,18 @@
-import { createCompressor } from './fx'
-import type { AudioInputMode, AudioModule, MicStatus } from './types'
-import { clamp01, smoothStep } from '../../shared/numbers'
+import { createMicGateControl } from './micGateControl'
+import {
+  applyMicrophoneRoutingGain,
+  createMicrophoneGraph,
+  setMicrophoneSensitivity,
+} from './micGraph'
+import { disposeMicrophoneGraph, stopMediaTracks } from './micCleanup'
+import { createMicRequestRace } from './micRequestRace'
+import {
+  createEmptyMicrophoneGraph,
+  type MicLifecycleOptions,
+  type MicrophoneGraph,
+} from './micTypes'
+import { clamp01 } from '../../shared/numbers'
+import type { AudioInputMode } from './types'
 import type { MicMetricNodes } from './audioMetricSampler'
 
 export type MicLifecycleDebugState = {
@@ -10,186 +22,126 @@ export type MicLifecycleDebugState = {
   micGateGain: number | null
 }
 
-type MicLifecycleOptions = {
-  fftSize: number
-  getContext: () => AudioContext | null
-  getMixer: () => GainNode | null
-  isDisposed: () => boolean
-  onStatusChange: (status: MicStatus, error?: string) => void
-  onStopped: () => void
-  sampleMicRms: (analyser: AnalyserNode) => number
-  safeDisconnect: (node: AudioNode | null) => void
+interface MicLifecycleState {
+  graph: MicrophoneGraph
+  sensitivity: number
+  gate: number
 }
 
-const MIC_LIMITER = { threshold: -24, ratio: 8, attack: 0.003, release: 0.1 }
+type MicGateControl = ReturnType<typeof createMicGateControl>
+type MicRequestRace = ReturnType<typeof createMicRequestRace>
 
-/** Owns the optional microphone's permission request, resources, gate, and routing gain. */
+function stopMicrophone(
+  state: MicLifecycleState,
+  options: MicLifecycleOptions,
+  gateControl: MicGateControl,
+  requestRace: MicRequestRace,
+): void {
+  requestRace.invalidate()
+  gateControl.stop()
+  state.graph = disposeMicrophoneGraph(state.graph, options)
+  gateControl.reset()
+  options.onStopped()
+  options.onStatusChange('off')
+}
+
+function activateRequestedMicrophone(
+  state: MicLifecycleState,
+  options: MicLifecycleOptions,
+  gateControl: MicGateControl,
+  stream: MediaStream,
+  applyInputMode: () => void,
+): void {
+  const context = options.getContext()
+  const mixer = options.getMixer()
+  if (!context || !mixer || options.isDisposed()) {
+    stopMediaTracks(stream)
+    if (!options.isDisposed()) options.onStatusChange('error', 'Audio not ready')
+    return
+  }
+  try {
+    state.graph = createMicrophoneGraph(context, mixer, stream, options.fftSize, state.sensitivity)
+    applyInputMode()
+    gateControl.start()
+    options.onStatusChange('on')
+  } catch (error) {
+    state.graph = disposeMicrophoneGraph(state.graph, options)
+    gateControl.reset()
+    if (!options.isDisposed()) {
+      options.onStatusChange('error', error instanceof Error ? error.message : String(error))
+    }
+  }
+}
+
+async function requestMicrophone(
+  state: MicLifecycleState,
+  options: MicLifecycleOptions,
+  gateControl: MicGateControl,
+  requestRace: MicRequestRace,
+  applyInputMode: () => void,
+): Promise<void> {
+  if (options.isDisposed()) return
+  if (state.graph.stream) stopMicrophone(state, options, gateControl, requestRace)
+  const stream = await requestRace.request()
+  if (!stream) return
+  activateRequestedMicrophone(state, options, gateControl, stream, applyInputMode)
+}
+
+function getDebugState(state: MicLifecycleState): MicLifecycleDebugState {
+  const gain = state.graph.gateGain?.gain?.value
+  return {
+    micEnabled: state.graph.stream != null,
+    micSensitivity: state.sensitivity,
+    micGate: state.gate,
+    micGateGain: typeof gain === 'number' && Number.isFinite(gain) ? gain : null,
+  }
+}
+
+/** Owns the optional microphone's request lifecycle while helpers own each resource concern. */
 export function createMicLifecycleController(options: MicLifecycleOptions) {
-  let stream: MediaStream | null = null
-  let source: MediaStreamAudioSourceNode | null = null
-  let preGain: GainNode | null = null
-  let limiter: AudioModule | null = null
-  let routingGain: GainNode | null = null
-  let gateGain: GainNode | null = null
-  let analyser: AnalyserNode | null = null
-  let sensitivity = 0.5
-  let gate = 0.25
-  let gateSmoothed = 1
-  let gateIntervalId: ReturnType<typeof setInterval> | null = null
-  let lastGateTickMs: number | null = null
-  let requestSeq = 0
-
-  const stopGateLoop = () => {
-    if (gateIntervalId) {
-      clearInterval(gateIntervalId)
-      gateIntervalId = null
-    }
-    lastGateTickMs = null
+  const state: MicLifecycleState = {
+    graph: createEmptyMicrophoneGraph(),
+    sensitivity: 0.5,
+    gate: 0.25,
   }
-
-  const applyGateEnvelope = (micRms: number, deltaSec: number) => {
-    if (!gateGain) return
-    const threshold = clamp01(gate) * 0.08
-    const raw = clamp01((micRms - threshold) / 0.02)
-    const target = raw * raw
-    gateSmoothed = smoothStep(gateSmoothed, target, deltaSec, 0.04, 0.18)
-    gateGain.gain.setValueAtTime(clamp01(gateSmoothed), options.getContext()?.currentTime ?? 0)
-  }
-
-  const startGateLoop = () => {
-    if (gateIntervalId) return
-    lastGateTickMs = typeof performance !== 'undefined' ? performance.now() : Date.now()
-    gateIntervalId = setInterval(() => {
-      if (options.isDisposed() || !analyser || !gateGain) return
-      const nowMs = typeof performance !== 'undefined' ? performance.now() : Date.now()
-      const deltaSec =
-        lastGateTickMs != null ? Math.max(0.001, (nowMs - lastGateTickMs) / 1000) : 1 / 30
-      lastGateTickMs = nowMs
-      applyGateEnvelope(options.sampleMicRms(analyser), deltaSec)
-    }, 50)
-  }
-
-  const stopMic = () => {
-    requestSeq++
-    stopGateLoop()
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop())
-      stream = null
-    }
-    options.safeDisconnect(source)
-    source = null
-    options.safeDisconnect(preGain)
-    preGain = null
-    limiter?.dispose()
-    limiter = null
-    options.safeDisconnect(analyser)
-    analyser = null
-    options.safeDisconnect(gateGain)
-    gateGain = null
-    options.safeDisconnect(routingGain)
-    routingGain = null
-    gateSmoothed = 1
-    options.onStopped()
-    options.onStatusChange('off')
-  }
-
-  const applyRoutingGain = (mode: AudioInputMode, now: number) => {
-    const value = mode === 'synth' ? 0 : mode === 'mix' ? 0.6 : 1
-    routingGain?.gain.cancelScheduledValues(now)
-    routingGain?.gain.setValueAtTime(value, now)
-  }
-
-  const requestMic = async (applyInputMode: () => void) => {
-    if (options.isDisposed()) return
-    if (!options.getContext() || !options.getMixer()) {
-      options.onStatusChange('error', 'Audio not ready')
-      return
-    }
-    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-      options.onStatusChange('error', 'Microphone access is not supported in this browser.')
-      return
-    }
-    if (stream) stopMic()
-    const activeRequest = ++requestSeq
-    options.onStatusChange('requesting')
-    let requestedStream: MediaStream | null = null
-    try {
-      requestedStream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      if (options.isDisposed() || activeRequest !== requestSeq) {
-        requestedStream.getTracks().forEach((track) => track.stop())
-        return
-      }
-      const context = options.getContext()
-      const mixer = options.getMixer()
-      if (!context || !mixer) {
-        requestedStream.getTracks().forEach((track) => track.stop())
-        options.onStatusChange('error', 'Audio not ready')
-        return
-      }
-      stream = requestedStream
-      source = context.createMediaStreamSource(requestedStream)
-      preGain = context.createGain()
-      preGain.gain.value = 0.05 + 0.55 * clamp01(sensitivity)
-      limiter = createCompressor(context, MIC_LIMITER)
-      analyser = context.createAnalyser()
-      analyser.fftSize = options.fftSize
-      analyser.smoothingTimeConstant = 0.5
-      gateGain = context.createGain()
-      gateGain.gain.value = 1
-      routingGain = context.createGain()
-      routingGain.gain.value = 0
-
-      source.connect(preGain)
-      preGain.connect(limiter.getInput())
-      limiter.connect(analyser)
-      analyser.connect(gateGain)
-      gateGain.connect(routingGain)
-      routingGain.connect(mixer)
-
-      applyInputMode()
-      startGateLoop()
-      options.onStatusChange('on')
-    } catch (error) {
-      if (requestedStream && requestedStream !== stream) {
-        requestedStream.getTracks().forEach((track) => track.stop())
-      }
-      if (options.isDisposed() || activeRequest !== requestSeq) return
-      const isDenied =
-        error instanceof DOMException &&
-        (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError')
-      options.onStatusChange(
-        isDenied ? 'denied' : 'error',
-        error instanceof Error ? error.message : String(error),
-      )
-    }
-  }
+  const gateControl = createMicGateControl({
+    ...options,
+    getGraph: () => state.graph,
+    getGate: () => state.gate,
+  })
+  const requestRace = createMicRequestRace({
+    canRequest: () => Boolean(options.getContext() && options.getMixer()),
+    isDisposed: options.isDisposed,
+    onStatusChange: options.onStatusChange,
+  })
 
   return {
-    requestMic,
-    stopMic,
-    applyRoutingGain,
-    setSensitivity(value: number) {
-      sensitivity = clamp01(value)
-      if (preGain)
-        preGain.gain.setValueAtTime(
-          0.05 + 0.55 * sensitivity,
-          options.getContext()?.currentTime ?? 0,
-        )
+    requestMic: (applyInputMode: () => void) =>
+      requestMicrophone(state, options, gateControl, requestRace, applyInputMode),
+    stopMic: () => stopMicrophone(state, options, gateControl, requestRace),
+    applyRoutingGain(mode: AudioInputMode, now: number): void {
+      applyMicrophoneRoutingGain(state.graph, mode, now)
     },
-    setGate(value: number) {
-      gate = clamp01(value)
+    setSensitivity(value: number): void {
+      state.sensitivity = clamp01(value)
+      setMicrophoneSensitivity(
+        state.graph,
+        state.sensitivity,
+        options.getContext()?.currentTime ?? 0,
+      )
+    },
+    setGate(value: number): void {
+      state.gate = clamp01(value)
     },
     getMetricNodes(): MicMetricNodes {
-      return { analyser, gateGain, routingGain }
+      return {
+        analyser: state.graph.analyser,
+        gateGain: state.graph.gateGain,
+        routingGain: state.graph.routingGain,
+      }
     },
     getDebugState(): MicLifecycleDebugState {
-      const gain = gateGain?.gain?.value
-      return {
-        micEnabled: stream != null,
-        micSensitivity: sensitivity,
-        micGate: gate,
-        micGateGain: typeof gain === 'number' && Number.isFinite(gain) ? gain : null,
-      }
+      return getDebugState(state)
     },
   }
 }

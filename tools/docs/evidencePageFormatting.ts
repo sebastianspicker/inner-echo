@@ -1,4 +1,4 @@
-import { type MotifClaim, type MotifClaimLabel } from '../contracts/motifs/claims'
+import type { MotifClaim, MotifClaimLabel } from '../contracts/motifs/claims'
 
 export type EvidenceStrength = 'high' | 'medium' | 'low' | 'hypothesis' | string
 
@@ -44,6 +44,10 @@ export function nodeTechnicalSummary(node: string) {
   // Keep this strictly technical (what it does), not psychological claims.
   const map: Record<string, string> = {
     grain: 'Adds fine noise texture (clamped).',
+    gaze_tunnel: 'Softly narrows the visible focus area and adjusts edge detail.',
+    somatic_pulse: 'Applies a shallow visual wave with bounded softening.',
+    salience_competition: 'Smoothly shifts areas of visual emphasis.',
+    glass_veil: 'Adds a light veil, with optional bounded temporal and refraction effects.',
     vignette: 'Darkens edges to narrow the frame (static or gently modulated).',
     edge_sharpen: 'Subtle edge enhancement (non-flickering).',
     chroma_aberration: 'Minor RGB channel offset near edges (very low).',
@@ -86,14 +90,15 @@ export function motifIndexPage(motifs: string[]) {
 
   return `# Motif / node index
 
-This index lists audiovisual motifs (video and audio nodes) and links to their evidence pages.
+This index lists audiovisual motifs (video and audio nodes) with links to their evidence pages.
 
 It is generated from the motifs referenced by
-\`src/content/experience/experience-dimensions.json\`. Review the source data and
-in-repository evidence corpus; do not treat this index as an independent
-research document.
+\`src/content/experience/experience-dimensions.json\`. Read the source data and the in-repository
+evidence corpus; don't treat this index as an independent research document.
 
-> Important: evidence in this project primarily supports experience dimensions and reported phenomena. A specific node is an artistic and engineering implementation of a metaphor and must be interpreted cautiously.
+> A specific node is an artistic, engineering implementation of a metaphor. The evidence in this
+> project mostly supports experience dimensions and reported phenomena, so read node-level claims
+> cautiously.
 
 ## Motifs
 
@@ -123,7 +128,7 @@ function motifDimensionLine(
   claimsByKey: Map<string, MotifClaim>,
 ) {
   const claim = claimsByKey.get(`${dimension.id}|${motif}`)
-  const claimTitle = claimLabelTitle(claim?.label ?? 'mixed')
+  const claimTitle = claimLabelTitle(claim?.label ?? 'artistic')
   const corpusPart = motifDimensionCorpusPart(dimension.id, matrixByDim)
   const claimSourcesPart = motifClaimSourcesPart(claim)
   return `- ${dimension.label} (\`${dimension.id}\`): Evidence (dimension): ${dimension.strength}: Claim: ${claimTitle}: \`${dimension.doc}\`${corpusPart}${claimSourcesPart}`
@@ -181,10 +186,11 @@ function motifScientificSourcesMarkdown(sources: ScientificSource[]) {
 function motifPageIntroduction(motif: string) {
   return `# \`${motif}\`: motif evidence
 
-> Generated reference: this page summarizes the current composer mapping and
-> in-repository corpus. It is not an independent research document.
+> Generated reference: this page summarizes the current composer mapping and the in-repository
+> corpus. It is not an independent research document.
 
-> Non-diagnostic metaphor framing: This page documents how an audiovisual motif is used as a design metaphor. It does not diagnose and does not claim clinical equivalence.
+> Non-diagnostic framing: this page documents how an audiovisual motif is used as a design metaphor.
+> It does not diagnose anything and does not claim clinical equivalence.
 
 ## Technical summary
 
@@ -192,11 +198,11 @@ ${nodeTechnicalSummary(motif)}
 
 ## Evidence and implementation
 
-- Evidence-backed in this project refers to reported phenomena in the evidence corpus. See the dimension pages and matrix.
-- This node is an artistic and engineering implementation used to represent those phenomena metaphorically.
-- The usual claim level is Mixed: the phenomenon is supported, while the motif choice and implementation remain interpretive.
+- In this project, "evidence-backed" means reported phenomena in the evidence corpus. See the dimension pages and the matrix.
+- This node is an artistic and engineering implementation that represents those phenomena metaphorically.
+- The default claim level is Artistic. Phenomenon evidence does not validate this effect or its numerical settings.
 
-## Where this motif is used (traceability)
+## Where this motif is used
 
 ### Used by dimensions
 
@@ -210,19 +216,20 @@ function motifPageConclusion(condList: string, sourcesMd: string) {
 
 ${condList || 'Not currently referenced by any condition preset.'}
 
-## Scientific sources (peer-reviewed; from in-repo corpus)
+## Scientific sources (peer-reviewed, from the in-repo corpus)
 
 These sources come from evidence-corpus sections for the dimensions that currently use this motif.
 
-> Important: these papers support the phenomena described by the dimensions. They do not claim that this specific node is a biomarker or uniquely correct.
+> These papers support the phenomena the dimensions describe. They do not claim that this specific
+> node is a biomarker or uniquely correct.
 
 ${sourcesMd}
 
 ## Safety notes (implementation constraints)
 
 - Keep outputs bounded: no strobe, no harsh audio spikes, no runaway feedback.
-- Respect Safe Mode and Reduced Motion (temporal nodes should be disabled/reduced).
-- Provide “Stop Everything” and keep the motif user-controlled.
+- Respect Safe Mode and Reduced Motion (disable or reduce temporal nodes).
+- Keep “Stop Everything” available and the motif user-controlled.
 
 ## Sources (in-repo)
 
@@ -265,7 +272,7 @@ function dimMotifRow(
 function dimClaimLabel(dim: ExperienceDimensionDef, claim: MotifClaim | undefined) {
   const evidenceStrength = dim.evidence_strength ?? ''
   if (evidenceStrength.toLowerCase() === 'hypothesis') return 'hypothesis'
-  return claim?.label ?? 'mixed'
+  return claim?.label ?? 'artistic'
 }
 
 function dimMotifSources(rationale: string, motif: string, claim: MotifClaim | undefined) {
@@ -297,10 +304,11 @@ function dimPageIntroduction(
 ) {
   return `# ${dim.label}
 
-> Generated reference: this page summarizes the current dimension definition,
-> mapping, and in-repository corpus. It is not an independent research document.
+> Generated reference: this page summarizes the current dimension definition, mapping, and
+> in-repository corpus. It is not an independent research document.
 
-> Non-diagnostic metaphor framing: This page supports design rationale for audiovisual metaphors. It does not diagnose or simulate a disorder.
+> Non-diagnostic framing: this page supports design rationale for audiovisual metaphors. It does not
+> diagnose or simulate a disorder.
 
 ## Summary
 
@@ -310,20 +318,17 @@ function dimPageIntroduction(
 
 ## What the product maps (default motifs)
 
-These are the conservative default-enabled motifs used by the composer when this dimension is selected:
+These are the conservative default-enabled motifs the composer uses when this dimension is selected:
 
 - Video nodes: ${dimensionNodes(video)}
 - Audio nodes: ${dimensionNodes(audio)}
 
-## Motif-by-motif traceability (evidence vs likelihood vs artistic)
+## Motif-by-motif traceability
 
-Each motif below includes:
+Each row gives a short technical summary of the implementation, a claim label (Supported, Mixed,
+Hypothesis, or Artistic), and in-repository sources you can check.
 
-- a short technical summary of what the implementation does
-- a claim label: Supported, Mixed, Hypothesis, or Artistic
-- in-repository sources that readers can verify
-
-| Motif (node) | What the implementation does | Claim label | Likelihood label | Sources |
+| Motif (node) | What the implementation does | Mapping claim | Experience evidence | Sources |
 |---|---|---|---|---|
 `
 }
@@ -336,22 +341,24 @@ function dimPageConclusion(safety: string[], rationale: string) {
 
 ## Evidence links (in-repo)
 
+- [Interpretation boundaries and reviewed sources](../research/experience-interpretation.md)
 - Matrix row: \`docs/references/EVIDENCE_MATRIX.md\`
 - Current mapping: \`docs/references/MAPPING_SUMMARY.md\`
 - Long-form corpus:
   - \`docs/references/research/initial-dimensions.md\`
   - \`docs/references/research/remaining-dimensions.md\`
 
-> Note: this page intentionally avoids introducing new external citations beyond the in-repo corpus. Bibliographies live in the research notes above.
+> This page deliberately adds no new external citations beyond the in-repo corpus. Bibliographies live in the research notes above.
 
-## Safety notes (must remain true in the product)
+## Safety notes (must stay true in the product)
 
 ${safetyNotes}
 
 ## Claim labeling
 
-- Supported: the corpus supports the phenomenon and a conservative mapping is plausible.
-- Mixed: the phenomenon is supported, but the specific motif choice is interpretive.
+- Artistic: the effect and its parameters are design choices, not clinically validated representations.
+- Experience evidence: describes the reported phenomenon only; it does not rate the likelihood that a person sees or hears this effect.
+- Supported or Mixed mapping labels require evidence about the mapping itself; phenomenon evidence alone is insufficient.
 - Hypothesis: evidence gap; keep conservative and off by default.
 
 ## Rationale doc path (self-reference)

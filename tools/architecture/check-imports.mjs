@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { dirname, extname, normalize, relative, resolve, sep } from 'node:path'
+import { dirname, extname, relative, resolve, sep } from 'node:path'
 
 const root = process.cwd()
 const sourceRoot = resolve(root, 'src')
@@ -38,6 +38,7 @@ function sourcePath(path) {
 
 function layer(path) {
   const [, first] = sourcePath(path).split('/')
+  if (first === 'demo') return 'demo'
   if (['app', 'content', 'domain', 'runtime', 'platform', 'shared'].includes(first)) return first
   return 'entry'
 }
@@ -49,6 +50,7 @@ const allowedDependencies = {
   runtime: new Set(['runtime', 'domain', 'platform', 'shared']),
   platform: new Set(['platform', 'shared']),
   shared: new Set(['shared']),
+  demo: new Set(['demo', 'shared']),
   entry: new Set(['app', 'platform', 'shared', 'entry']),
 }
 
@@ -77,6 +79,35 @@ const indices = new Map()
 const lowLinks = new Map()
 const cycles = []
 
+function updateLowLink(file, index) {
+  lowLinks.set(file, Math.min(lowLinks.get(file), index))
+}
+
+function visitDependency(file, dependency) {
+  if (!indices.has(dependency)) {
+    visit(dependency)
+    updateLowLink(file, lowLinks.get(dependency))
+    return
+  }
+  if (onStack.has(dependency)) updateLowLink(file, indices.get(dependency))
+}
+
+function componentFor(file) {
+  const component = []
+  while (stack.length > 0) {
+    const member = stack.pop()
+    onStack.delete(member)
+    component.push(member)
+    if (member === file) break
+  }
+  return component
+}
+
+function isCycle(component) {
+  if (component.length > 1) return true
+  return (graph.get(component[0]) ?? []).includes(component[0])
+}
+
 function visit(file) {
   indices.set(file, nextIndex)
   lowLinks.set(file, nextIndex)
@@ -85,24 +116,12 @@ function visit(file) {
   onStack.add(file)
 
   for (const dependency of graph.get(file) ?? []) {
-    if (!indices.has(dependency)) {
-      visit(dependency)
-      lowLinks.set(file, Math.min(lowLinks.get(file), lowLinks.get(dependency)))
-    } else if (onStack.has(dependency)) {
-      lowLinks.set(file, Math.min(lowLinks.get(file), indices.get(dependency)))
-    }
+    visitDependency(file, dependency)
   }
 
   if (lowLinks.get(file) !== indices.get(file)) return
-  const component = []
-  while (stack.length > 0) {
-    const member = stack.pop()
-    onStack.delete(member)
-    component.push(member)
-    if (member === file) break
-  }
-  const selfCycle = component.length === 1 && (graph.get(component[0]) ?? []).includes(component[0])
-  if (component.length > 1 || selfCycle) cycles.push(component.map(sourcePath).sort())
+  const component = componentFor(file)
+  if (isCycle(component)) cycles.push(component.map(sourcePath).sort())
 }
 
 for (const file of files) if (!indices.has(file)) visit(file)

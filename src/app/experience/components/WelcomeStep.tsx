@@ -28,7 +28,7 @@ export interface WelcomeStepProps {
   onOpenEvidence: (docPath: EvidenceDocPath) => void
 }
 
-export function WelcomeStep({ onContinue }: WelcomeStepProps) {
+export function WelcomeStep({ onContinue, onOpenEvidence }: WelcomeStepProps) {
   const handleContinue = (): void => {
     setWelcomeAcknowledged()
     onContinue()
@@ -37,16 +37,18 @@ export function WelcomeStep({ onContinue }: WelcomeStepProps) {
   return (
     <section className="welcome-step" aria-labelledby="welcome-title">
       <div className="welcome-step__lead">
-        <div className="welcome-step__brand" aria-label="Inner Echo">
+        <div className="welcome-step__brand">
           <img className="welcome-step__mark" src={brandMarkUrl} alt="" aria-hidden="true" />
           <span>Inner Echo</span>
         </div>
         <div className="welcome-step__intro">
-          <p className="welcome-step__context">Reflective media lab</p>
-          <h1 id="welcome-title">Notice what shifts.</h1>
+          <h1 id="welcome-title">
+            <span>Notice</span> <span>what shifts.</span>
+          </h1>
           <p>
-            Explore audiovisual metaphors for attention, sensation, and perception. Not a diagnosis
-            or clinical simulation.
+            Audiovisual metaphors for attention, sensation, and perception, rendered on your own
+            camera feed, in this browser. A way to talk about inner experience. Not a diagnosis or a
+            measurement.
           </p>
         </div>
 
@@ -58,47 +60,44 @@ export function WelcomeStep({ onContinue }: WelcomeStepProps) {
         <p className="welcome-step__note">
           Continuing does not request camera, microphone, or audio access.
         </p>
-      </div>
 
-      <div className="welcome-step__facts" aria-label="Before you continue">
-        <div className="welcome-step__factsLabel">Private by design</div>
-        <section>
-          <span className="welcome-step__factIcon" aria-hidden="true">
-            □
-          </span>
-          <div>
-            <h2>Media stays here</h2>
-            <p>
-              Camera and microphone are processed in this browser and are not recorded or uploaded.
-              Saved setups remain in this browser's local storage.
-            </p>
-          </div>
+        <section className="welcome-step__facts" aria-label="Before you continue">
+          <section>
+            <div>
+              <h2>Media stays here</h2>
+              <p>
+                Camera and microphone are processed in this browser only. Nothing is recorded,
+                uploaded, or sent anywhere.
+              </p>
+            </div>
+          </section>
+          <section>
+            <div>
+              <h2>You stay in control</h2>
+              <p>
+                Camera, sound, and microphone each start only when you ask. Comfort controls remain
+                available, and Stop Everything releases active media.
+              </p>
+            </div>
+          </section>
+          <section>
+            <div>
+              <h2>Experiences, not reproductions</h2>
+              <p>
+                Sources describe experiences. Visual and sound choices are artistic interpretations,
+                not validated reproductions.{' '}
+                <button
+                  type="button"
+                  className="ie-inlineAction"
+                  onClick={() => onOpenEvidence('docs/references/README.md')}
+                  aria-label="Open Method and Evidence"
+                >
+                  Read the evidence notes
+                </button>
+              </p>
+            </div>
+          </section>
         </section>
-        <section>
-          <span className="welcome-step__factIcon" aria-hidden="true">
-            ◇
-          </span>
-          <div>
-            <h2>Permission stays separate</h2>
-            <p>Setup never starts camera, sound, or microphone. Each requires a separate action.</p>
-          </div>
-        </section>
-        <section>
-          <span className="welcome-step__factIcon" aria-hidden="true">
-            ○
-          </span>
-          <div>
-            <h2>Comfort stays close</h2>
-            <p>
-              Safe Mode starts on. Stop Everything remains one action away whenever media is active.
-            </p>
-          </div>
-        </section>
-      </div>
-
-      <div className="welcome-step__localRail" aria-hidden="true">
-        <span />
-        Local / Client only
       </div>
     </section>
   )

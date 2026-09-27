@@ -1,5 +1,5 @@
 /**
- * SSOT: delay: short echo with low feedback (safety-clamped).
+ * Short echo with safety-clamped feedback.
  */
 
 import type { AudioModule } from '../types'
@@ -21,11 +21,12 @@ const DEFAULT_FEEDBACK = 0.06
 const DEFAULT_MIX = 0.03
 
 export function createDelay(context: BaseAudioContext, params: DelayParams = {}): AudioModule {
-  let current: Required<DelayParams> = {
-    time: params.time ?? DEFAULT_TIME,
-    feedback: params.feedback ?? DEFAULT_FEEDBACK,
-    mix: params.mix ?? DEFAULT_MIX,
+  const initial: Required<DelayParams> = {
+    time: clamp(params.time ?? DEFAULT_TIME, 0.05, 0.35),
+    feedback: clamp(params.feedback ?? DEFAULT_FEEDBACK, 0, 0.18),
+    mix: clamp(params.mix ?? DEFAULT_MIX, 0, 0.12),
   }
+  let current = { ...initial }
   const mixNodes = createDryWetMix(context)
 
   const delay = context.createDelay(1.0)
@@ -60,6 +61,10 @@ export function createDelay(context: BaseAudioContext, params: DelayParams = {})
         feedback: p.feedback as number | undefined,
         mix: p.mix as number | undefined,
       })
+    },
+    resetParams(): void {
+      current = { ...initial }
+      set(initial)
     },
     dispose(): void {
       mixNodes.dispose()

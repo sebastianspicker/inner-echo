@@ -12,45 +12,45 @@
     },
     {
       "id": "anxiety",
-      "label": "Anxiety (Generalized / Social)",
-      "description": "Metaphor of heightened baseline tension and increased threat-scanning attention (bounded, user-controlled).",
-      "tags": ["hyperarousal", "hypervigilance", "rumination_loop", "tension"]
+      "label": "Anxiety-related tension and worry",
+      "description": "Gentle focus narrowing, restrained detail and quiet sound texture.",
+      "tags": ["hyperarousal", "hypervigilance", "rumination_loop"]
     },
     {
       "id": "panic",
-      "label": "Panic Disorder",
-      "description": "Metaphor of brief, clamped alarm waves (rise/fall), with strong safety controls.",
-      "tags": ["hyperarousal", "panic_peaks"]
+      "label": "Panic-related alarm",
+      "description": "A shallow, slow visual wave with a steady optional sound bed.",
+      "tags": ["panic_peaks", "hyperarousal"]
     },
     {
       "id": "depression",
-      "label": "Depressive Disorder",
-      "description": "Metaphor of reduced affective contrast and cognitive fog (subtle, non-stereotyped).",
-      "tags": ["cognitive_fog", "emotional_numbing", "time_dilation"]
+      "label": "Depression-related energy and concentration",
+      "description": "Mild tonal softening and a quiet, filtered sound bed.",
+      "tags": ["emotional_numbing", "cognitive_fog", "time_dilation"]
     },
     {
       "id": "trauma_ptsd",
-      "label": "Trauma / PTSD (Hyperarousal + Intrusion)",
-      "description": "Metaphor of heightened readiness + monitoring, with abstract intrusion-like interference (non-graphic, opt-out).",
+      "label": "PTSD-related experiences",
+      "description": "Fine static texture and restrained detail, without automatic intrusion bursts.",
       "tags": ["hyperarousal", "hypervigilance", "intrusion"]
     },
     {
       "id": "ocd",
-      "label": "OCD (Intrusion + Compulsive Loop)",
-      "description": "Metaphor of sticky loops + repeated-checking pressure (non-comedic), with gentle recursion and strong clamps.",
-      "tags": ["compulsive_loop", "intrusion", "rumination_loop"]
+      "label": "OCD-related intrusive thoughts and repetition",
+      "description": "Subtle image persistence and a quiet echo, both adjustable.",
+      "tags": ["intrusion", "compulsive_loop"]
     },
     {
       "id": "dpdr",
-      "label": "Depersonalization / Derealization",
-      "description": "Metaphor of 'behind-glass' distance and subtle time drift (avoid disorientation; user-controlled).",
-      "tags": ["depersonalization", "derealization", "time_dilation"]
+      "label": "Depersonalization / derealization experiences",
+      "description": "A light veil and filtered sound, without delayed or distorted self-images.",
+      "tags": ["derealization", "depersonalization"]
     },
     {
       "id": "adhd",
-      "label": "ADHD (Attention Fragmentation / Overload)",
-      "description": "Metaphor of focus instability and sensory competition (comfort-first, Reduced Motion friendly).",
-      "tags": ["attention_fragmentation", "hyperarousal", "sensory_overload"]
+      "label": "ADHD-related attention experiences",
+      "description": "Gently shifting areas of detail with a steady optional sound bed.",
+      "tags": ["attention_fragmentation"]
     }
   ],
   "references": {

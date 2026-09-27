@@ -41,15 +41,7 @@ export function clampAudioParams(
   settings: ComposerSettings,
   safeModeClamps: Record<string, unknown>,
 ): AudioStackConfig {
-  const maxNoise =
-    typeof safeModeClamps.max_noise_level === 'number' ? safeModeClamps.max_noise_level : 0.08
-  const maxTremoloRate =
-    typeof safeModeClamps.max_tremolo_rate_hz === 'number' ? safeModeClamps.max_tremolo_rate_hz : 4
-  const maxTremoloDepth =
-    typeof safeModeClamps.max_tremolo_depth === 'number' ? safeModeClamps.max_tremolo_depth : 0.15
-  const hardMaxFeedback = clamp01(settings.maxFeedback)
-
-  const limits = { maxNoise, maxTremoloRate, maxTremoloDepth, hardMaxFeedback }
+  const limits = createSafetyLimits(settings, safeModeClamps)
   const chain = (config.chain ?? []).map((node) => clampAudioNode(node, limits))
   return { ...config, chain }
 }
@@ -100,17 +92,8 @@ export function clampVideoParams(
   settings: ComposerSettings,
   safeModeClamps: Record<string, unknown>,
 ): VideoStackNodeDef[] {
-  const maxFeedback =
-    typeof safeModeClamps.max_feedback === 'number' ? safeModeClamps.max_feedback : 0.18
-  const maxJitter = typeof safeModeClamps.max_jitter === 'number' ? safeModeClamps.max_jitter : 0.06
-  const maxPulseDepth =
-    typeof safeModeClamps.max_pulse_depth === 'number' ? safeModeClamps.max_pulse_depth : 0.18
-  const maxChroma = typeof safeModeClamps.max_chroma === 'number' ? safeModeClamps.max_chroma : 0.12
-
-  const hardMaxFeedback = clamp01(settings.maxFeedback)
-  const hard = (x: number, max: number) => clamp(x, 0, max * hardMaxFeedback)
-
-  const clampLimits = { maxFeedback, maxJitter, maxPulseDepth, maxChroma }
+  const clampLimits = createSafetyLimits(settings, safeModeClamps)
+  const hard = (x: number, max: number) => clamp(x, 0, max * clampLimits.hardMaxFeedback)
 
   const clampParam = (node: string, key: string, value: number): number => {
     const hardLimitKey = VIDEO_HARD_CLAMP_PARAMS[node]?.[key]
@@ -131,6 +114,37 @@ export function clampVideoParams(
     }
     return { ...def, node, params }
   })
+}
+
+type SafetyLimits = {
+  hardMaxFeedback: number
+  maxNoise: number
+  maxTremoloRate: number
+  maxTremoloDepth: number
+  maxFeedback: number
+  maxJitter: number
+  maxPulseDepth: number
+  maxChroma: number
+}
+
+function createSafetyLimits(
+  settings: ComposerSettings,
+  safeModeClamps: Record<string, unknown>,
+): SafetyLimits {
+  return {
+    hardMaxFeedback: clamp01(settings.maxFeedback),
+    maxNoise: readSafetyLimit(safeModeClamps, 'max_noise_level', 0.08),
+    maxTremoloRate: readSafetyLimit(safeModeClamps, 'max_tremolo_rate_hz', 4),
+    maxTremoloDepth: readSafetyLimit(safeModeClamps, 'max_tremolo_depth', 0.15),
+    maxFeedback: readSafetyLimit(safeModeClamps, 'max_feedback', 0.18),
+    maxJitter: readSafetyLimit(safeModeClamps, 'max_jitter', 0.06),
+    maxPulseDepth: readSafetyLimit(safeModeClamps, 'max_pulse_depth', 0.18),
+    maxChroma: readSafetyLimit(safeModeClamps, 'max_chroma', 0.12),
+  }
+}
+
+function readSafetyLimit(clamps: Record<string, unknown>, key: string, fallback: number): number {
+  return typeof clamps[key] === 'number' ? clamps[key] : fallback
 }
 
 type DimensionSafetyEntry = {

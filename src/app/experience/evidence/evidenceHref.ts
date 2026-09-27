@@ -4,6 +4,25 @@ function normalizeHref(href: string): string {
   return href.trim().split('#')[0]?.trim() ?? ''
 }
 
+function resolveDocumentPath(normalized: string): EvidenceDocPath {
+  return (normalized.endsWith('.md') ? normalized : `${normalized}.md`) as EvidenceDocPath
+}
+
+function resolveRelativeDocumentPath(
+  current: EvidenceDocPath,
+  normalized: string,
+): EvidenceDocPath | null {
+  const baseDir = current.slice(0, current.lastIndexOf('/') + 1)
+  const baseUrl = `https://evidence.local/${baseDir}`
+  try {
+    const url = new URL(normalized, baseUrl)
+    const path = url.pathname.replace(/^\//, '')
+    return path.startsWith('docs/') && path.endsWith('.md') ? (path as EvidenceDocPath) : null
+  } catch {
+    return null
+  }
+}
+
 export function resolveEvidenceHref(
   current: EvidenceDocPath,
   href: string,
@@ -11,21 +30,9 @@ export function resolveEvidenceHref(
   if (href.trim().startsWith('#')) return current
   const normalized = normalizeHref(href)
   if (!normalized) return null
-  if (normalized.startsWith('docs/')) {
-    return (normalized.endsWith('.md') ? normalized : `${normalized}.md`) as EvidenceDocPath
-  }
+  if (normalized.startsWith('docs/')) return resolveDocumentPath(normalized)
   if (normalized.startsWith('./') || normalized.startsWith('../')) {
-    // Resolve against current doc directory.
-    const baseDir = current.slice(0, current.lastIndexOf('/') + 1)
-    const baseUrl = `https://evidence.local/${baseDir}`
-    try {
-      const u = new URL(normalized, baseUrl)
-      const p = u.pathname.replace(/^\//, '')
-      if (p.startsWith('docs/') && p.endsWith('.md')) return p as EvidenceDocPath
-      return null
-    } catch {
-      return null
-    }
+    return resolveRelativeDocumentPath(current, normalized)
   }
   return null
 }

@@ -1,9 +1,9 @@
 /**
- * SSOT: focus_jitter: gentle, smoothed UV wobble (disabled by Reduced Motion).
+ * Gentle, smoothed UV wobble that Reduced Motion disables.
  * Params: amount, smoothing.
  */
 
-import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
+import { type ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -42,6 +42,14 @@ export class FocusJitterNode implements VideoNode {
       amount = Math.min(amount, clamp(maxJitter, 0, 0.2))
     }
 
+    if (amount === 0) {
+      this.nextSampleIn = 0
+      this.targetX = 0
+      this.targetY = 0
+      this.currentX = 0
+      this.currentY = 0
+    }
+
     this.material.uniforms.u_amount.value = amount
     this.material.uniforms.u_offset.value.set(this.currentX, this.currentY)
     this.material.uniforms.u_smoothing.value = smoothing
@@ -66,7 +74,7 @@ export class FocusJitterNode implements VideoNode {
     }
 
     // Exponential smoothing controlled by smoothing (higher = slower).
-    const tau = clamp((1 - smoothing) * 0.8, 0.02, 0.6)
+    const tau = 0.02 + smoothing * 0.58
     const t = 1 - Math.exp(-delta / tau)
     this.currentX = lerp(this.currentX, this.targetX, t)
     this.currentY = lerp(this.currentY, this.targetY, t)

@@ -1,10 +1,10 @@
 {
   "id": "dpdr",
-  "label": "Depersonalization / Derealization",
-  "summary": "A metaphor of distance and 'behind glass': veiling, delayed self-image, subtle refraction, and temporal detachment.",
+  "label": "Depersonalization / derealization experiences",
+  "summary": "A light veil and a quiet, filtered sound bed offer an artistic interpretation of distance or detachment. These are design choices, not a reproduction of how a person sees, hears or experiences their body.",
   "framing": {
     "type": "metaphor",
-    "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
+    "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
   },
   "experience_dimensions": [
     {
@@ -14,20 +14,14 @@
     {
       "id": "depersonalization",
       "weight": 0.65
-    },
-    {
-      "id": "time_dilation",
-      "weight": 0.45
     }
   ],
   "safety": {
-    "intensity_default": 0.5,
+    "intensity_default": 0.35,
     "intensity_max": 0.58,
     "warnings": [
-      "May feel disorienting for some. Enable Reduced Motion if needed.",
-      "Keep Intensity low; Safe Mode recommended.",
-      "Avoid flashing lights or rapid flicker; enable Reduced Motion if sensitive.",
-      "Keep volume low; avoid headphones at high volume; you can mute audio at any time."
+      "Start with low intensity and volume; sound is optional.",
+      "Use Reduced Motion for a steadier image. Stop Everything is always available."
     ],
     "safe_mode_clamps": {
       "max_intensity": 0.55,
@@ -90,10 +84,10 @@
       "id": "glass",
       "node": "glass_veil",
       "params": {
-        "veil": 0.26,
-        "feedback": 0.12,
-        "refraction": 0.03,
-        "chroma": 0.07
+        "veil": 0.14,
+        "feedback": 0,
+        "refraction": 0,
+        "chroma": 0
       }
     },
     {
@@ -123,25 +117,10 @@
     },
     "chain": [
       {
-        "node": "flutter",
-        "params": {
-          "rate": 0.55,
-          "depth": 0.05
-        }
-      },
-      {
         "node": "lowpass",
         "params": {
           "cutoff": 3600,
           "q": 0.7
-        }
-      },
-      {
-        "node": "delay",
-        "params": {
-          "time": 0.18,
-          "feedback": 0.08,
-          "mix": 0.05
         }
       },
       {
@@ -164,36 +143,12 @@
     ]
   },
   "reactive": {
-    "analyser_to_params": [
-      {
-        "source": "rms",
-        "target": "video.glass_veil.veil",
-        "scale": 0.06,
-        "offset": 0,
-        "smoothing": {
-          "attack": 0.1,
-          "release": 0.35
-        },
-        "clamp": [0.08, 0.34]
-      },
-      {
-        "source": "rms",
-        "target": "video.glass_veil.refraction",
-        "scale": 0.012,
-        "offset": 0,
-        "smoothing": {
-          "attack": 0.12,
-          "release": 0.45
-        },
-        "clamp": [0.005, 0.04]
-      }
-    ]
+    "analyser_to_params": []
   },
   "references": {
     "dimensions": [
       "docs/references/dimensions/derealization.md",
-      "docs/references/dimensions/depersonalization.md",
-      "docs/references/dimensions/time_dilation.md"
+      "docs/references/dimensions/depersonalization.md"
     ]
   }
 }

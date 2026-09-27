@@ -1,5 +1,5 @@
 /**
- * Composer validation script (Step 7-lite).
+ * Validate composed profiles and safety ranges.
  *
  * Node/tsx compatible (no Vite `?raw` / import.meta.glob).
  *
@@ -15,9 +15,9 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
 import { profileSchema, type Profile } from '../../src/domain/experience/schema'
-import {
-  type DimensionSignalMappingEntry,
-  type ExperienceDimensionDef,
+import type {
+  DimensionSignalMappingEntry,
+  ExperienceDimensionDef,
 } from '../../src/domain/experience/composition/types'
 import { parseFirstJsonObject } from '../shared/json/jsonObjectParser'
 import { validateComposerCase, type ComposerSettings } from './support/composition'

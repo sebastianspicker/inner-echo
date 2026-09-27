@@ -6,10 +6,10 @@
  */
 
 import { readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { dirname } from 'node:path'
-import { z, toJSONSchema } from 'zod'
+import { toJSONSchema } from 'zod'
+import type { z } from 'zod'
 import { profileSchema, catalogSchema } from '../../src/domain/experience/schema.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -124,7 +124,7 @@ function generateConditionsCatalogMd(catalog: Catalog, profiles: Profile[]) {
     '',
     DO_NOT_EDIT,
     '',
-    'Summary of all conditions and their profiles (id, label, tags, safety, nodes).',
+    'Every condition with its label, tags, safety intensity maximum, and nodes.',
     '',
     '## Table',
     '',
@@ -168,29 +168,29 @@ function generatePresetSchemaMd(schemaJson: string) {
     '',
     DO_NOT_EDIT,
     '',
-    'This document describes the JSON Schema for experience profile files under `src/content/experience/profiles/<id>.json`.',
+    'This is the JSON Schema for experience profile files under `src/content/experience/profiles/<id>.json`.',
     '',
     '## Required keys',
     '',
-    'The schema requires the following keys:',
+    'Every profile must define these keys:',
     '',
     ...required.map((k) => `- \`${k}\``),
     '',
     '| Key | Meaning |',
     '|-----|--------|',
-    '| `id` | Condition identifier (must match catalog and filename). |',
+    '| `id` | Condition identifier (must match the catalog and filename). |',
     '| `label` | Human-readable name shown in the UI. |',
     '| `summary` | One-paragraph, non-diagnostic description. |',
     '| `framing` | Metaphor framing block (non-diagnostic). |',
-    '| `experience_dimensions` | Dimension references + weights. |',
-    '| `safety` | Safety defaults, clamps, warnings, Reduced Motion policy. |',
+    '| `experience_dimensions` | Dimension references and weights. |',
+    '| `safety` | Safety defaults, clamps, warnings, and Reduced Motion policy. |',
     '| `video_stack` | Ordered array of video node definitions (can be empty). |',
     '',
     'Other important keys: `safety` (intensity_default, intensity_max, warnings), `audio_stack`, `ui.controls`, `reactive.analyser_to_params`.',
     '',
     '## JSON Schema',
     '',
-    'The machine-readable JSON Schema is embedded below and also written to `preset-schema.json`.',
+    'The machine-readable schema is embedded below and also written to `preset-schema.json`.',
     '',
     '```json',
     schemaJson,

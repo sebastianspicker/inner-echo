@@ -19,14 +19,13 @@ export function CameraHeader({
   cameraState,
   audioStatus,
   audioEnabled,
-  effectsLabel,
   canStop,
   onOpenEvidence,
   onStop,
 }: CameraHeaderProps) {
   return (
-    <header className="ie-header" role="banner">
-      <div className="ie-brand" aria-label="Inner Echo">
+    <header className="ie-header">
+      <div className="ie-brand">
         <img className="ie-brandMark" src={brandMarkUrl} alt="" aria-hidden="true" />
         <div className="ie-brandCopy">
           <div className="ie-title">Inner Echo</div>
@@ -35,26 +34,12 @@ export function CameraHeader({
       </div>
 
       <div className="ie-headerRight">
-        <div className="ie-statusRow" role="status" aria-live="polite" aria-label="Runtime status">
-          <span className="ie-pill">
-            <span className="ie-pillKey">Camera</span>
-            <span className={`ie-pillVal${cameraState === 'active' ? ' is-active' : ''}`}>
-              {getCameraStateLabel(cameraState)}
-            </span>
-          </span>
-          <span className="ie-pill">
-            <span className="ie-pillKey">Audio</span>
-            <span className={`ie-pillVal${audioStatus === 'on' ? ' is-active' : ''}`}>
-              {getAudioStateLabel(audioStatus, audioEnabled)}
-            </span>
-          </span>
-          <span className="ie-pill">
-            <span className="ie-pillKey">Effects</span>
-            <span className={`ie-pillVal${effectsLabel === 'Active' ? ' is-active' : ''}`}>
-              {effectsLabel}
-            </span>
-          </span>
-        </div>
+        {canStop && (
+          <div className="ie-headerStatus">
+            Camera {getCameraStateLabel(cameraState).toLowerCase()} · Sound{' '}
+            {getAudioStateLabel(audioStatus, audioEnabled).toLowerCase()}
+          </div>
+        )}
 
         <div className="ie-actions">
           <button
@@ -63,18 +48,19 @@ export function CameraHeader({
             onClick={() => onOpenEvidence('docs/references/README.md')}
             aria-label="Open Method and Evidence"
           >
-            Method &amp; Evidence
+            Evidence
           </button>
-          <button
-            type="button"
-            className="ie-btn ie-btn--danger"
-            onClick={onStop}
-            disabled={!canStop}
-            aria-label="Stop Everything: stop camera, microphone, sound, and effects"
-          >
-            <span className="ie-stopIcon" aria-hidden="true" />
-            Stop Everything
-          </button>
+          {canStop && (
+            <button
+              type="button"
+              className="ie-btn ie-btn--danger"
+              onClick={onStop}
+              aria-label="Stop Everything"
+            >
+              <span className="ie-stopIcon" aria-hidden="true" />
+              Stop Everything
+            </button>
+          )}
         </div>
       </div>
     </header>

@@ -16,5 +16,11 @@ export function createCompressor(
   context: BaseAudioContext,
   params: CompressorParams = {},
 ): AudioModule {
-  return createCompressorModule(context, { ...DEFAULTS, ...params })
+  return createCompressorModule(context, {
+    threshold: params.threshold ?? DEFAULTS.threshold,
+    ratio: params.ratio ?? DEFAULTS.ratio,
+    attack: params.attack ?? DEFAULTS.attack,
+    release: params.release ?? DEFAULTS.release,
+    ceiling: params.ceiling ?? DEFAULTS.ceiling,
+  })
 }

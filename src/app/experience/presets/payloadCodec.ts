@@ -43,23 +43,27 @@ function normalizeWeight(value: number): number {
 }
 
 function normalizePresets(presets: SelectedPreset[]): SelectedPreset[] {
-  return presets
-    .filter((item) => item.profileId)
-    .map((item) => ({
-      profileId: String(item.profileId),
-      weight: normalizeWeight(item.weight),
-    }))
-    .sort((a, b) => a.profileId.localeCompare(b.profileId))
+  return normalizeKeyed(presets, 'profileId')
 }
 
 function normalizeDimensions(dimensions: SelectedDimension[]): SelectedDimension[] {
-  return dimensions
-    .filter((item) => item.dimensionId)
-    .map((item) => ({
-      dimensionId: String(item.dimensionId),
-      weight: normalizeWeight(item.weight),
-    }))
-    .sort((a, b) => a.dimensionId.localeCompare(b.dimensionId))
+  return normalizeKeyed(dimensions, 'dimensionId')
+}
+
+function normalizeKeyed<T extends { weight: number }, K extends keyof T & string>(
+  values: T[],
+  key: K,
+): T[] {
+  return values
+    .filter((item) => Boolean(item[key]))
+    .map(
+      (item) =>
+        ({
+          [key]: String(item[key]),
+          weight: normalizeWeight(item.weight),
+        }) as T,
+    )
+    .sort((a, b) => String(a[key]).localeCompare(String(b[key])))
 }
 
 export function createPresetPayload(input: PresetPayload): PresetPayload {

@@ -1,0 +1,16 @@
+{
+  "minTokens": 50,
+  "minLines": 6,
+  "mode": "strict",
+  "format": ["javascript", "typescript", "tsx", "css"],
+  "crossFormats": ["js-ts"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/reports/**",
+    "**/docs/generated/**"
+  ],
+  "reporters": ["console", "threshold"],
+  "threshold": 0
+}

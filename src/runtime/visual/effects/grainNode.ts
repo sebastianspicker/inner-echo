@@ -2,7 +2,7 @@
  * Grain/noise effect node: single ShaderMaterial with updatable uniforms.
  */
 
-import { ShaderMaterial, type Material, type Texture } from 'three'
+import type { ShaderMaterial, Material, Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import { applyUvParams, clamp, getSafeModeClampNumber, resolveNumberParam } from './paramUtils'
 import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
@@ -46,7 +46,7 @@ export class GrainNode implements VideoNode {
     const speed = clamp(resolveNumberParam(params, 'speed', 0.08), 0, 0.2)
     const scale = clamp(resolveNumberParam(params, 'scale', 1.2), 0.5, 3)
 
-    // SSOT: keep grain conservative (no harsh speckle).
+    // Keep grain conservative to avoid harsh speckle.
     amount = clamp(amount, 0, 0.5)
 
     // Safe Mode can optionally clamp overall intensity further; keep a conservative cap here too.

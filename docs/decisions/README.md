@@ -1,8 +1,8 @@
 # Architecture decisions
 
 These records capture safety and ownership boundaries that are already implemented and tested. They
-are not a feature roadmap. A later change must update the affected record, its linked documentation,
-and the listed verification contract in the same candidate.
+are not a roadmap. If a later change affects one, update the record, its linked docs, and the
+verification contract in the same candidate.
 
 | Record | Decision |
 | --- | --- |

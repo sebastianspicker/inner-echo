@@ -1,0 +1,248 @@
+.ie-app,
+.ie-shell {
+  min-height: 100dvh;
+}
+.ie-shell {
+  background: var(--bg);
+}
+.ie-main {
+  width: min(100%, 1600px);
+  margin: 0 auto;
+  padding: 32px 40px 64px;
+}
+.ie-liveRegion {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.ie-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px 40px;
+  border-bottom: 1px solid var(--border-strong);
+  background: var(--bg);
+}
+.ie-brand,
+.ie-brandCopy,
+.ie-headerRight,
+.ie-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.ie-brandMark {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+}
+.ie-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  white-space: nowrap;
+}
+.ie-subtitle {
+  padding-left: 16px;
+  border-left: 1px solid var(--border-strong);
+  color: var(--faint);
+  font-size: 13px;
+}
+.ie-headerStatus {
+  color: var(--muted);
+  font-size: 13px;
+}
+.ie-actions {
+  gap: 8px;
+}
+.ie-btn {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 550;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+.ie-btn:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: var(--muted);
+}
+.ie-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.ie-btn--accent {
+  background: var(--accent);
+  color: #102821;
+  border-color: var(--accent);
+}
+.ie-btn--accent:hover:not(:disabled) {
+  background: var(--accent-2);
+  color: #102821;
+}
+.ie-btn--danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #301719;
+}
+.ie-btn--danger:hover:not(:disabled) {
+  background: #f4b2b2;
+  color: #301719;
+}
+.ie-stopIcon {
+  width: 9px;
+  height: 9px;
+  background: currentColor;
+}
+.ie-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 390px);
+  align-items: start;
+  gap: 32px;
+}
+.ie-layout--live {
+  grid-template-columns: minmax(0, 1fr) minmax(390px, 0.9fr);
+}
+.ie-choiceColumn {
+  min-width: 0;
+  scroll-margin-top: 96px;
+}
+.ie-workspaceIntro {
+  margin-bottom: 24px;
+}
+.ie-workspaceIntro h1 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: clamp(32px, 3.4vw, 52px);
+  line-height: 1.12;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+.ie-workspaceIntro p {
+  margin: 0;
+  max-width: 65ch;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.55;
+}
+.ie-workspaceNav {
+  display: flex;
+  gap: 24px;
+  margin-top: 18px;
+}
+.ie-workspaceNav a {
+  color: var(--accent);
+  font-size: 14px;
+  text-underline-offset: 5px;
+  padding-block: 6px;
+}
+.ie-previewSection {
+  padding: 24px;
+  border-top: 1px solid var(--border-strong);
+  display: grid;
+  gap: 16px;
+}
+.ie-previewSection h2 {
+  margin: 0;
+  font: 400 25px / 1.2 var(--font-display);
+}
+.ie-previewOptional {
+  font: 14px var(--font-sans);
+  color: var(--muted);
+}
+.ie-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface-control);
+}
+.ie-video,
+.ie-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ie-video {
+  object-fit: cover;
+}
+.ie-canvas {
+  pointer-events: none;
+}
+.ie-canvas[hidden] {
+  display: none;
+}
+.ie-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  text-align: center;
+  color: var(--muted);
+}
+.ie-placeholder p {
+  margin: 0;
+  max-width: 28ch;
+  font-size: 14px;
+}
+.ie-placeholder span {
+  font-size: 12px;
+}
+.ie-placeholder svg {
+  flex-shrink: 0;
+}
+.ie-stageChrome {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.ie-stageTruth {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: #edf2ed;
+  background: #101c1ee6;
+  font-size: 12px;
+}
+.ie-statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.ie-debugChip {
+  position: absolute;
+  bottom: 40px;
+  left: 12px;
+  font: 11px var(--font-mono);
+}

@@ -52,6 +52,112 @@ export interface ExperienceComposerInspectorProps {
   onOpenEvidence: (docPath: EvidenceDocPath) => void
 }
 
+function useFilteredDimensions(dims: ExperienceDimensionDef[], query: string) {
+  return useMemo(() => {
+    const normalized = query.trim().toLowerCase()
+    if (!normalized) return dims
+    return dims.filter((entry) => {
+      const haystack = `${entry.label} ${entry.description ?? ''} ${entry.id}`.toLowerCase()
+      return haystack.includes(normalized)
+    })
+  }, [dims, query])
+}
+
+interface FilterControlProps {
+  value: string
+  placeholder: string
+  label: string
+  resultCount: number
+  onChange: (value: string) => void
+}
+
+function FilterControl(props: FilterControlProps) {
+  return (
+    <label className="composer__filter">
+      <span className="sr-only">Filter</span>
+      <input
+        type="text"
+        value={props.value}
+        placeholder={props.placeholder}
+        onChange={(event) => props.onChange(event.target.value)}
+        aria-label={props.label}
+      />
+      <span className="composer__slider-val">{props.resultCount}</span>
+    </label>
+  )
+}
+
+interface InspectorSelectionProps extends ExperienceComposerInspectorProps {
+  filteredCatalog: CatalogEntry[]
+  filteredDims: ExperienceDimensionDef[]
+  presetIds: Set<string>
+  dimIds: Set<string>
+}
+
+function CuratedSelection(props: InspectorSelectionProps) {
+  const currentConditionBadge = strengthBadge(props.conditionStrength[props.selection.conditionId])
+  if (props.selection.mode !== 'preset') return null
+  return (
+    <div className="composer__section">
+      <CuratedProfilePicker
+        catalog={props.filteredCatalog}
+        value={props.selection.conditionId}
+        onChange={props.selection.onConditionIdChange}
+        aria-label="Curated collection"
+      />
+      <div className="composer__row-meta">
+        {currentConditionBadge && (
+          <span className={currentConditionBadge.className}>{currentConditionBadge.label}</span>
+        )}
+        <EvidenceButton
+          doc={`docs/references/conditions/${props.selection.conditionId}.md`}
+          onOpen={props.onOpenEvidence}
+        />
+      </div>
+    </div>
+  )
+}
+
+function DimensionSelection(props: InspectorSelectionProps) {
+  if (props.selection.mode !== 'symptom') return null
+  return (
+    <>
+      <ExperienceDimensionList
+        dims={props.filteredDims}
+        dimById={props.dimById}
+        dimIds={props.dimIds}
+        dimensions={props.selection.dimensions}
+        onDimensionsChange={props.selection.onDimensionsChange}
+        onOpenEvidence={props.onOpenEvidence}
+      />
+      {props.selection.dimensions.length === 0 && (
+        <p className="composer__empty" role="status">
+          No dimensions selected. Choose one or more to prepare an audiovisual profile.
+        </p>
+      )}
+    </>
+  )
+}
+
+function InspectorSelection(props: InspectorSelectionProps) {
+  return (
+    <>
+      <CuratedSelection {...props} />
+      {props.selection.mode === 'multimorbid' && (
+        <ProfileBlendList
+          catalog={props.filteredCatalog}
+          presetIds={props.presetIds}
+          presets={props.selection.presets}
+          conditionStrength={props.conditionStrength}
+          onPresetsChange={props.selection.onPresetsChange}
+          onOpenEvidence={props.onOpenEvidence}
+        />
+      )}
+      <DimensionSelection {...props} />
+    </>
+  )
+}
+
 export function ExperienceComposerInspector({
   catalog,
   dims,
@@ -69,23 +175,24 @@ export function ExperienceComposerInspector({
     () => filterCatalog(catalog, selection.conditionId, conditionQuery),
     [catalog, conditionQuery, selection.conditionId],
   )
-  const filteredDims = useMemo(() => {
-    const query = dimensionQuery.trim().toLowerCase()
-    if (!query) return dims
-    return dims.filter((entry) => {
-      const haystack = `${entry.label} ${entry.description ?? ''} ${entry.id}`.toLowerCase()
-      return haystack.includes(query)
-    })
-  }, [dims, dimensionQuery])
-  const presetIds = useMemo(
-    () => new Set(selection.presets.map((preset) => preset.profileId)),
-    [selection.presets],
-  )
-  const dimIds = useMemo(
-    () => new Set(selection.dimensions.map((dimension) => dimension.dimensionId)),
-    [selection.dimensions],
-  )
-  const currentConditionBadge = strengthBadge(conditionStrength[selection.conditionId])
+  const filteredDims = useFilteredDimensions(dims, dimensionQuery)
+  const presetIds = new Set(selection.presets.map((preset) => preset.profileId))
+  const dimIds = new Set(selection.dimensions.map((dimension) => dimension.dimensionId))
+  const selectionProps = {
+    catalog,
+    dims,
+    dimById,
+    conditionStrength,
+    selection,
+    controls,
+    presetLibrary,
+    readiness,
+    onOpenEvidence,
+    filteredCatalog,
+    filteredDims,
+    presetIds,
+    dimIds,
+  }
 
   return (
     <>
@@ -97,91 +204,32 @@ export function ExperienceComposerInspector({
       />
 
       <div className="composer__inspector">
-        <div className="composer__inspectorHeader">
-          <div className="composer__title">
-            {selection.mode === 'symptom'
-              ? 'Experience dimensions'
-              : selection.mode === 'preset'
-                ? 'Curated collection'
-                : 'Combined collections'}
-          </div>
-          <p className="composer__hint">Media remains off while you configure this view.</p>
-        </div>
-
         {(selection.mode === 'preset' || selection.mode === 'multimorbid') && (
-          <label className="composer__slider">
-            <span>Filter</span>
-            <input
-              type="text"
-              value={conditionQuery}
-              placeholder="Search experiences"
-              onChange={(event) => setConditionQuery(event.target.value)}
-              aria-label="Experience search"
-            />
-            <span className="composer__slider-val">{filteredCatalog.length}</span>
-          </label>
-        )}
-
-        {selection.mode === 'preset' && (
-          <div className="composer__section">
-            <CuratedProfilePicker
-              catalog={filteredCatalog}
-              value={selection.conditionId}
-              onChange={selection.onConditionIdChange}
-              aria-label="Curated collection"
-            />
-            <div className="composer__row-meta">
-              {currentConditionBadge && (
-                <span className={currentConditionBadge.className}>
-                  {currentConditionBadge.label}
-                </span>
-              )}
-              <EvidenceButton
-                doc={`docs/references/conditions/${selection.conditionId}.md`}
-                onOpen={onOpenEvidence}
-              />
-            </div>
-          </div>
-        )}
-
-        {selection.mode === 'multimorbid' && (
-          <ProfileBlendList
-            catalog={filteredCatalog}
-            presetIds={presetIds}
-            presets={selection.presets}
-            conditionStrength={conditionStrength}
-            onPresetsChange={selection.onPresetsChange}
-            onOpenEvidence={onOpenEvidence}
+          <FilterControl
+            value={conditionQuery}
+            placeholder="Search experiences"
+            label="Experience search"
+            resultCount={filteredCatalog.length}
+            onChange={setConditionQuery}
           />
         )}
 
         {selection.mode === 'symptom' && (
-          <>
-            <label className="composer__slider">
-              <span>Filter</span>
-              <input
-                type="text"
-                value={dimensionQuery}
-                placeholder="Search dimensions"
-                onChange={(event) => setDimensionQuery(event.target.value)}
-                aria-label="Dimension search"
-              />
-              <span className="composer__slider-val">{filteredDims.length}</span>
-            </label>
-            <ExperienceDimensionList
-              dims={filteredDims}
-              dimById={dimById}
-              dimIds={dimIds}
-              dimensions={selection.dimensions}
-              onDimensionsChange={selection.onDimensionsChange}
-              onOpenEvidence={onOpenEvidence}
-            />
-            {selection.dimensions.length === 0 && (
-              <p className="composer__empty" role="status">
-                No dimensions selected. Choose one or more to prepare an audiovisual profile.
-              </p>
-            )}
-          </>
+          <FilterControl
+            value={dimensionQuery}
+            placeholder="Find a dimension"
+            label="Dimension search"
+            resultCount={filteredDims.length}
+            onChange={setDimensionQuery}
+          />
+        )}
+
+        {selection.mode === 'symptom' && filteredDims.length === 0 ? (
+          <p className="composer__empty" role="status">
+            No dimensions match your search. Try a different word.
+          </p>
+        ) : (
+          <InspectorSelection {...selectionProps} />
         )}
 
         <AdvancedComposerPanel {...controls} />

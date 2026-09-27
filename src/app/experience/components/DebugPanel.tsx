@@ -15,6 +15,7 @@ import {
 import { copyTextToClipboard } from '../presets/clipboard'
 import { logger } from '../../../platform/logger'
 import { useDebugDiagnostics } from '../hooks/useDebugDiagnostics'
+import { DebugMetricsGrid } from './DebugMetricsGrid'
 import {
   formatDiagnosticsJson,
   formatDiagnosticsText,
@@ -49,9 +50,6 @@ async function copyDiagnostics(
 export function DebugPanel(props: DebugPanelProps) {
   const {
     getOverlayDiagnostics,
-    audioStatus,
-    micStatus,
-    lastError,
     getAudioMetrics,
     getVideoMetrics,
     getAudioDebugState,
@@ -93,107 +91,14 @@ export function DebugPanel(props: DebugPanelProps) {
   return (
     <section className="debug-panel" aria-label="Debug panel (development only)">
       <div className="debug-panel__title">Debug (dev only)</div>
-      <dl className="debug-panel__grid">
-        <dt>renderer</dt>
-        <dd>{overlay?.rendererMode ?? '-'}</dd>
-        <dt>fps</dt>
-        <dd>{overlay?.fps != null ? overlay.fps.toFixed(1) : '-'}</dd>
-        <dt>frame ms</dt>
-        <dd>{overlay?.frameTimeMs != null ? overlay.frameTimeMs.toFixed(2) : '-'}</dd>
-        <dt>renderScale</dt>
-        <dd>{overlay?.renderScale ?? '-'}</dd>
-        <dt>RTs</dt>
-        <dd>{overlay?.resourceCounts?.renderTargets ?? '-'}</dd>
-        <dt>FBOs</dt>
-        <dd>{overlay?.resourceCounts?.estimatedFramebuffers ?? '-'}</dd>
-        <dt>textures</dt>
-        <dd>{overlay?.resourceCounts?.estimatedTextures ?? '-'}</dd>
-        <dt>audio</dt>
-        <dd>{audioStatus}</dd>
-        <dt>mic</dt>
-        <dd>{micStatus}</dd>
-        <dt>video nodes</dt>
-        <dd>{overlay?.activeVideoNodes?.join(', ') || '-'}</dd>
-        {props.couplingStrength != null && (
-          <>
-            <dt>coupling</dt>
-            <dd>{props.couplingStrength.toFixed(2)}</dd>
-          </>
-        )}
-        {props.maxFeedback != null && (
-          <>
-            <dt>maxFeedback</dt>
-            <dd>{props.maxFeedback.toFixed(2)}</dd>
-          </>
-        )}
-        {audioMetrics && (
-          <>
-            <dt>rms</dt>
-            <dd>{audioMetrics.rms.toFixed(3)}</dd>
-            <dt>centroid</dt>
-            <dd>{audioMetrics.centroid.toFixed(3)}</dd>
-            <dt>flux</dt>
-            <dd>{audioMetrics.flux.toFixed(3)}</dd>
-            {typeof audioMetrics.micRms === 'number' && (
-              <>
-                <dt>micRms</dt>
-                <dd>{audioMetrics.micRms.toFixed(3)}</dd>
-              </>
-            )}
-            {typeof audioMetrics.micCentroid === 'number' && (
-              <>
-                <dt>micCentroid</dt>
-                <dd>{audioMetrics.micCentroid.toFixed(3)}</dd>
-              </>
-            )}
-            {typeof audioMetrics.micFlux === 'number' && (
-              <>
-                <dt>micFlux</dt>
-                <dd>{audioMetrics.micFlux.toFixed(3)}</dd>
-              </>
-            )}
-          </>
-        )}
-        {audioDebug && (
-          <>
-            <dt>audio nodes</dt>
-            <dd>{audioDebug.activeNodes.join(', ') || '-'}</dd>
-            <dt>input mode</dt>
-            <dd>{audioDebug.inputMode}</dd>
-            <dt>gate gain</dt>
-            <dd>{audioDebug.micGateGain != null ? audioDebug.micGateGain.toFixed(3) : '-'}</dd>
-          </>
-        )}
-        {videoMetrics && (
-          <>
-            <dt>motion</dt>
-            <dd>{videoMetrics.motion.toFixed(3)}</dd>
-            <dt>luma</dt>
-            <dd>{videoMetrics.luminance.toFixed(3)}</dd>
-            <dt>edge</dt>
-            <dd>{videoMetrics.edge.toFixed(3)}</dd>
-          </>
-        )}
-        {appliedClamps && (
-          <>
-            <dt>intensity</dt>
-            <dd>
-              {appliedClamps.intensityInput.toFixed(2)} →{' '}
-              {appliedClamps.intensityEffective.toFixed(2)}
-            </dd>
-            <dt>safe mode keys</dt>
-            <dd>{appliedClamps.safeModeClampKeys.join(', ') || '-'}</dd>
-            <dt>rm disabled</dt>
-            <dd>{appliedClamps.reducedMotionDisabledNodes.join(', ') || '-'}</dd>
-          </>
-        )}
-        {lastError && (
-          <>
-            <dt>last error</dt>
-            <dd className="debug-panel__error">{lastError}</dd>
-          </>
-        )}
-      </dl>
+      <DebugMetricsGrid
+        {...props}
+        overlay={overlay}
+        audioMetrics={audioMetrics}
+        videoMetrics={videoMetrics}
+        audioDebug={audioDebug}
+        appliedClamps={appliedClamps}
+      />
       <div className="debug-panel__actions">
         <button
           type="button"

@@ -45,6 +45,7 @@ export interface AudioEngineControl {
   setConditionAudio(audioStack: AudioStackConfig | null | undefined): void
   getRms(): number
   getMetrics(): AudioMetrics
+  resetMetricHistory?(): void
   applyReactiveParams(overrides: Record<string, number>): void
   requestMic(): void
   stopMic(): void
@@ -93,6 +94,7 @@ function createAudioEngineControl({
         state.inputMode,
       )
     },
+    resetMetricHistory: metricSampler.resetMetricHistory,
     applyReactiveParams(overrides) {
       graphSession.applyReactiveParams(overrides)
     },

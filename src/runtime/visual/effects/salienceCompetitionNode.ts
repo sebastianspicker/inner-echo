@@ -1,9 +1,9 @@
 /**
- * SSOT: salience_competition: competing attention anchors and small jumps.
+ * Competing attention anchors with small jumps.
  * Params: amount, marker_strength, shift, jump_rate.
  */
 
-import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
+import { type ShaderMaterial, Vector2, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -48,10 +48,47 @@ void main() {
 }
 `
 
+interface AnchorPair {
+  ax: number
+  ay: number
+  bx: number
+  by: number
+}
+
+const INITIAL_ANCHORS: AnchorPair = { ax: 0.3, ay: 0.35, bx: 0.68, by: 0.62 }
+
+function anchorsForSegment(segment: number): AnchorPair {
+  if (segment === 0) return INITIAL_ANCHORS
+  return {
+    ax: 0.22 + 0.56 * (Math.sin(segment * 12.9898) * 0.5 + 0.5),
+    ay: 0.2 + 0.58 * (Math.sin(segment * 78.233) * 0.5 + 0.5),
+    bx: 0.18 + 0.62 * (Math.sin((segment + 3) * 39.425) * 0.5 + 0.5),
+    by: 0.18 + 0.62 * (Math.sin((segment + 5) * 17.17) * 0.5 + 0.5),
+  }
+}
+
+function interpolate(from: number, to: number, amount: number): number {
+  return from + (to - from) * amount
+}
+
+function easedAnchorPair(phase: number): AnchorPair {
+  const segment = Math.floor(phase)
+  const progress = phase - segment
+  const eased = progress * progress * (3 - 2 * progress)
+  const from = anchorsForSegment(segment)
+  const to = anchorsForSegment(segment + 1)
+  return {
+    ax: interpolate(from.ax, to.ax, eased),
+    ay: interpolate(from.ay, to.ay, eased),
+    bx: interpolate(from.bx, to.bx, eased),
+    by: interpolate(from.by, to.by, eased),
+  }
+}
+
 export class SalienceCompetitionNode implements VideoNode {
   readonly nodeName = 'salience_competition'
   private material: ShaderMaterial | null = null
-  private time = 0
+  private phase = 0
   private jumpRate = 1.2
 
   setParams(params: VideoNodeParams): void {
@@ -84,12 +121,8 @@ export class SalienceCompetitionNode implements VideoNode {
 
   tick(delta: number): void {
     if (!this.material) return
-    this.time += delta
-    const segment = Math.floor(this.time * this.jumpRate)
-    const ax = 0.22 + 0.56 * (Math.sin(segment * 12.9898) * 0.5 + 0.5)
-    const ay = 0.2 + 0.58 * (Math.sin(segment * 78.233) * 0.5 + 0.5)
-    const bx = 0.18 + 0.62 * (Math.sin((segment + 3) * 39.425) * 0.5 + 0.5)
-    const by = 0.18 + 0.62 * (Math.sin((segment + 5) * 17.17) * 0.5 + 0.5)
+    this.phase += Math.max(0, delta) * this.jumpRate
+    const { ax, ay, bx, by } = easedAnchorPair(this.phase)
     this.material.uniforms.u_anchor_a.value.set(ax, ay)
     this.material.uniforms.u_anchor_b.value.set(bx, by)
   }
@@ -100,8 +133,8 @@ export class SalienceCompetitionNode implements VideoNode {
         u_amount: { value: 0 },
         u_marker_strength: { value: 0.5 },
         u_shift: { value: 0.04 },
-        u_anchor_a: { value: new Vector2(0.3, 0.35) },
-        u_anchor_b: { value: new Vector2(0.68, 0.62) },
+        u_anchor_a: { value: new Vector2(INITIAL_ANCHORS.ax, INITIAL_ANCHORS.ay) },
+        u_anchor_b: { value: new Vector2(INITIAL_ANCHORS.bx, INITIAL_ANCHORS.by) },
       })
     } else {
       bindInputTexture(this.material, inputTexture)

@@ -22,17 +22,8 @@ export interface DebugDiagnosticsSources {
   micGate?: number
 }
 
-export function formatDiagnosticsText(
-  sources: DebugDiagnosticsSources,
-  overlay: OverlayDiagnostics | undefined,
-): string {
-  const audioMetrics = sources.getAudioMetrics?.()
-  const videoMetrics = sources.getVideoMetrics?.()
-  const audioDebug = sources.getAudioDebugState?.()
-  const appliedClamps = sources.getAppliedClamps?.()
-  const lines: string[] = [
-    `Inner Echo diagnostics: ${new Date().toISOString()}`,
-    '---',
+function formatOverlayLines(overlay: OverlayDiagnostics | undefined): string[] {
+  return [
     `renderer: ${overlay?.rendererMode ?? 'none'}`,
     `fps: ${overlay?.fps != null ? overlay.fps.toFixed(1) : 'n/a'}`,
     `frameTimeMs: ${overlay?.frameTimeMs != null ? overlay.frameTimeMs.toFixed(2) : 'n/a'}`,
@@ -42,47 +33,77 @@ export function formatDiagnosticsText(
     `resources.estimatedTextures: ${overlay?.resourceCounts?.estimatedTextures ?? 'n/a'}`,
     `resources.estimatedFramebuffers: ${overlay?.resourceCounts?.estimatedFramebuffers ?? 'n/a'}`,
     `video.activeNodes: ${(overlay?.activeVideoNodes ?? []).join(', ') || 'n/a'}`,
+  ]
+}
+
+function formatMetricLines(sources: DebugDiagnosticsSources): string[] {
+  const audio = sources.getAudioMetrics?.()
+  const video = sources.getVideoMetrics?.()
+  return [
+    ...(audio
+      ? [
+          `audio.rms: ${audio.rms.toFixed(3)}`,
+          `audio.centroid: ${audio.centroid.toFixed(3)}`,
+          `audio.flux: ${audio.flux.toFixed(3)}`,
+          ...(typeof audio.micRms === 'number' ? [`mic.rms: ${audio.micRms.toFixed(3)}`] : []),
+          ...(typeof audio.micCentroid === 'number'
+            ? [`mic.centroid: ${audio.micCentroid.toFixed(3)}`]
+            : []),
+          ...(typeof audio.micFlux === 'number' ? [`mic.flux: ${audio.micFlux.toFixed(3)}`] : []),
+        ]
+      : []),
+    ...(video
+      ? [
+          `video.motion: ${video.motion.toFixed(3)}`,
+          `video.luminance: ${video.luminance.toFixed(3)}`,
+          `video.edge: ${video.edge.toFixed(3)}`,
+          `video.instability: ${video.instability.toFixed(3)}`,
+        ]
+      : []),
+  ]
+}
+
+function formatAudioStateLines(sources: DebugDiagnosticsSources): string[] {
+  const debug = sources.getAudioDebugState?.()
+  if (!debug) return []
+  return [
+    `audio.activeNodes: ${debug.activeNodes.join(', ') || 'n/a'}`,
+    `audio.inputMode: ${debug.inputMode}`,
+    `audio.micEnabled: ${debug.micEnabled ? 'yes' : 'no'}`,
+    `audio.micGateGain: ${debug.micGateGain != null ? debug.micGateGain.toFixed(3) : 'n/a'}`,
+  ]
+}
+
+function formatClampStateLines(sources: DebugDiagnosticsSources): string[] {
+  const clamps = sources.getAppliedClamps?.()
+  if (!clamps) return []
+  return [
+    `clamps.intensity: ${clamps.intensityInput.toFixed(3)} -> ${clamps.intensityEffective.toFixed(3)}`,
+    `clamps.safeMode: ${clamps.safeMode ? 'on' : 'off'}`,
+    `clamps.reducedMotion: ${clamps.reducedMotion ? 'on' : 'off'}`,
+    `clamps.safeModeKeys: ${clamps.safeModeClampKeys.join(', ') || 'none'}`,
+    `clamps.reducedMotionDisabledNodes: ${clamps.reducedMotionDisabledNodes.join(', ') || 'none'}`,
+  ]
+}
+
+export function formatDiagnosticsText(
+  sources: DebugDiagnosticsSources,
+  overlay: OverlayDiagnostics | undefined,
+): string {
+  const lines: string[] = [
+    `Inner Echo diagnostics: ${new Date().toISOString()}`,
+    '---',
+    ...formatOverlayLines(overlay),
     `audio: ${sources.audioStatus}`,
     `mic: ${sources.micStatus}`,
     `couplingStrength: ${sources.couplingStrength ?? 'n/a'}`,
     `maxFeedback: ${sources.maxFeedback ?? 'n/a'}`,
   ]
-  if (audioMetrics) {
-    lines.push(`audio.rms: ${audioMetrics.rms.toFixed(3)}`)
-    lines.push(`audio.centroid: ${audioMetrics.centroid.toFixed(3)}`)
-    lines.push(`audio.flux: ${audioMetrics.flux.toFixed(3)}`)
-    if (typeof audioMetrics.micRms === 'number')
-      lines.push(`mic.rms: ${audioMetrics.micRms.toFixed(3)}`)
-    if (typeof audioMetrics.micCentroid === 'number')
-      lines.push(`mic.centroid: ${audioMetrics.micCentroid.toFixed(3)}`)
-    if (typeof audioMetrics.micFlux === 'number')
-      lines.push(`mic.flux: ${audioMetrics.micFlux.toFixed(3)}`)
-  }
-  if (videoMetrics) {
-    lines.push(`video.motion: ${videoMetrics.motion.toFixed(3)}`)
-    lines.push(`video.luminance: ${videoMetrics.luminance.toFixed(3)}`)
-    lines.push(`video.edge: ${videoMetrics.edge.toFixed(3)}`)
-    lines.push(`video.instability: ${videoMetrics.instability.toFixed(3)}`)
-  }
-  if (audioDebug) {
-    lines.push(`audio.activeNodes: ${audioDebug.activeNodes.join(', ') || 'n/a'}`)
-    lines.push(`audio.inputMode: ${audioDebug.inputMode}`)
-    lines.push(`audio.micEnabled: ${audioDebug.micEnabled ? 'yes' : 'no'}`)
-    lines.push(
-      `audio.micGateGain: ${audioDebug.micGateGain != null ? audioDebug.micGateGain.toFixed(3) : 'n/a'}`,
-    )
-  }
-  if (appliedClamps) {
-    lines.push(
-      `clamps.intensity: ${appliedClamps.intensityInput.toFixed(3)} -> ${appliedClamps.intensityEffective.toFixed(3)}`,
-    )
-    lines.push(`clamps.safeMode: ${appliedClamps.safeMode ? 'on' : 'off'}`)
-    lines.push(`clamps.reducedMotion: ${appliedClamps.reducedMotion ? 'on' : 'off'}`)
-    lines.push(`clamps.safeModeKeys: ${appliedClamps.safeModeClampKeys.join(', ') || 'none'}`)
-    lines.push(
-      `clamps.reducedMotionDisabledNodes: ${appliedClamps.reducedMotionDisabledNodes.join(', ') || 'none'}`,
-    )
-  }
+  lines.push(
+    ...formatMetricLines(sources),
+    ...formatAudioStateLines(sources),
+    ...formatClampStateLines(sources),
+  )
   if (sources.lastError) lines.push(`lastError: ${sources.lastError}`)
   return lines.join('\n')
 }

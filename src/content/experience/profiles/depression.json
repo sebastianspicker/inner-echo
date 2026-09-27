@@ -1,10 +1,10 @@
 {
   "id": "depression",
-  "label": "Depressive Disorder",
-  "summary": "A metaphor of dampened affect and reduced clarity: lower contrast/saturation, softened edges, and slower temporal response.",
+  "label": "Depression-related energy and concentration",
+  "summary": "Mild tonal softening and a quiet, filtered sound bed offer an artistic interpretation of reduced energy or concentration. Depression varies between people and does not mean seeing a grey or blurred world.",
   "framing": {
     "type": "metaphor",
-    "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
+    "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
   },
   "experience_dimensions": [
     {
@@ -21,13 +21,11 @@
     }
   ],
   "safety": {
-    "intensity_default": 0.5,
+    "intensity_default": 0.35,
     "intensity_max": 0.7,
     "warnings": [
-      "This is a metaphorical overlay. If it feels heavy, reduce Intensity or stop.",
-      "Audio is optional; consider keeping it off.",
-      "Avoid flashing lights or rapid flicker; enable Reduced Motion if sensitive.",
-      "Keep volume low; avoid headphones at high volume; you can mute audio at any time."
+      "Start with low intensity and volume; sound is optional.",
+      "Use Reduced Motion for a steadier image. Stop Everything is always available."
     ],
     "safe_mode_clamps": {
       "max_intensity": 0.65,
@@ -77,7 +75,7 @@
       {
         "id": "saturation",
         "type": "slider",
-        "label": "Color Muting",
+        "label": "Visual tone",
         "min": -0.6,
         "max": 0,
         "step": 0.01,
@@ -99,9 +97,9 @@
       "id": "grade",
       "node": "color_grade",
       "params": {
-        "contrast": -0.18,
-        "saturation": -0.48,
-        "brightness": -0.04,
+        "contrast": -0.08,
+        "saturation": -0.12,
+        "brightness": 0,
         "temperature": 0,
         "tint": 0
       }
@@ -110,23 +108,14 @@
       "id": "haze",
       "node": "haze",
       "params": {
-        "amount": 0.18
+        "amount": 0.08
       }
     },
     {
       "id": "blur",
       "node": "soft_blur",
       "params": {
-        "amount": 0.18
-      }
-    },
-    {
-      "id": "time",
-      "node": "temporal_smear",
-      "params": {
-        "decay": 0.97,
-        "feedback": 0.16,
-        "jitter": 0
+        "amount": 0.08
       }
     },
     {
@@ -143,7 +132,7 @@
     "enabled": true,
     "input": "synth",
     "master": {
-      "volume": 0.2
+      "volume": 0.18
     },
     "chain": [
       {
@@ -158,13 +147,6 @@
         "params": {
           "level": 0.018,
           "color": "brown"
-        }
-      },
-      {
-        "node": "flutter",
-        "params": {
-          "rate": 0.42,
-          "depth": 0.045
         }
       },
       {
@@ -187,19 +169,7 @@
     ]
   },
   "reactive": {
-    "analyser_to_params": [
-      {
-        "source": "rms",
-        "target": "video.temporal_smear.feedback",
-        "scale": 0.04,
-        "offset": 0,
-        "smoothing": {
-          "attack": 0.18,
-          "release": 0.55
-        },
-        "clamp": [0.08, 0.2]
-      }
-    ]
+    "analyser_to_params": []
   },
   "references": {
     "dimensions": [

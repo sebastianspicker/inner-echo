@@ -1,7 +1,7 @@
 /**
- * Step 6: Missing nodes report.
+ * Report node identifiers referenced by profiles and mappings.
  *
- * Scans SSOT condition sources:
+ * Scans canonical condition sources:
  * - `src/content/experience/profiles/*.json` (video_stack + audio_stack.chain)
  * - `src/content/experience/dimension-to-signal-mapping.json` (video_motifs + audio_motifs)
  *

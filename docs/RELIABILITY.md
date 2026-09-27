@@ -1,54 +1,66 @@
-# Reliability and runtime boundaries
+# Reliability and verification
 
-This document describes implemented fallback behavior and the manual evidence required before a release claim.
+This document splits what the code actually implements from the browser, device, accessibility, and
+live-host evidence that automated checks cannot supply.
 
-## Runtime state requirements
+## Runtime states
 
-The interface must distinguish these states rather than collapse them into a generic active flag:
+The public state contracts are:
 
-- camera idle, requesting, active, denied, interrupted, and failed
-- effects loading, WebGL active, 2D fallback, raw preview, unavailable, and stopped
-- sound off, starting, on, blocked, and failed
-- microphone off, requesting, active, denied, and failed
-- profile catalog loading, loaded, invalid, and failed
+- camera: `idle`, `requesting`, `active`, `denied`, or `error`;
+- sound: `off`, `starting`, `on`, or `error`;
+- microphone: `off`, `requesting`, `on`, `denied`, or `error`;
+- overlay: renderer `webgl`, `2d`, `raw`, or `unavailable`, an `effectsActive` flag, and an optional error;
+- profile: `idle`, `loading`, `ready`, or `error`;
+- catalog: `loading`, `ready`, or `error`.
 
-Stop Everything must remain reachable and return the visible state to idle after releasing active resources.
+Device interruptions and browser audio blocking show up through the applicable error state and
+message, not as separate union members. Visible state must follow a real runtime transition.
+
+Stop Everything invalidates pending camera and audio requests, releases active resources, clears
+media bindings and canvases, and returns the interface to idle. A camera interruption stops the
+camera and overlay but leaves independently activated sound under its own lifecycle.
 
 ## Rendering fallbacks
 
-1. WebGL: the Three.js pipeline reports active only after renderer setup succeeds.
-2. Canvas2D: a valid 2D surface may display camera passthrough without the full effect graph.
-3. Raw preview: the overlay may be hidden while the underlying video remains visible.
-4. Unavailable: if neither effect surface is usable, the interface reports that effects are unavailable and keeps safety controls reachable.
+1. WebGL reports active only after Three.js renderer startup succeeds.
+2. A WebGL startup or fatal runtime failure attempts Canvas2D camera passthrough.
+3. If an effects canvas cannot be used safely, the underlying raw camera can stay visible.
+4. If no valid rendering surface remains, the interface reports `unavailable`.
 
-A fallback must not be labelled as active WebGL effects.
+Fallbacks must never be labelled as active WebGL effects, and safety and stop controls must stay
+usable throughout.
 
-## Known runtime limitations
+## Known limits
 
-| Area | Current behavior and limit |
-|---|---|
-| Low frame rate | The WebGL loop can reduce internal render scale from 1 to 0.75 to 0.5 when measured frame rate remains low. This is a mitigation, not a performance guarantee. |
-| Camera denial | The interface reports denial and waits for another user action. It does not retry continuously. |
-| Microphone denial | The microphone remains off; synthesized audio can continue if enabled. |
-| Blocked `AudioContext` | Sound remains off until a valid user action resumes or creates the context. |
-| WebGL context loss | The effect loop stops and the interface reports a reduced fallback. Reloading may be required to restore WebGL. |
-| Reduced Motion | Profile policies disable or simplify configured motion-sensitive nodes. Coverage depends on profiles and node registration remaining aligned. |
-| Resize | Canvas and WebGL resources resize with the stage. There is no explicit debounce, so rapid resizing can show transient artifacts. |
-| Offline use | No service worker or offline cache is included. |
+| Area | Implemented behavior and limit |
+| --- | --- |
+| Low frame rate | After a sustained low measured frame rate, WebGL can reduce internal render scale from 1 to 0.75 to 0.5. This is a mitigation, not a performance guarantee. |
+| Permission denial | Camera or microphone stays inactive and waits for another user action; there is no automatic retry loop. |
+| Audio startup | Sound stays off or enters error until a valid user action creates or resumes the context. |
+| WebGL failure | A runtime failure attempts Canvas2D passthrough; a full WebGL restart may need another camera start or a page reload. |
+| Reduced Motion | Profile policy filters or simplifies registered motion-sensitive nodes; alignment depends on profile and registry validation. |
+| Resize | Canvases follow the stage without an explicit debounce, so a rapid resize can show transient artifacts. |
+| Offline use | There is no service worker or offline cache. |
 
-## Deterministic verification
+## Deterministic checks
 
-Run the complete local gate with:
+Run the complete local gate from the repository root:
 
 ```bash
-npm run check
+npm run verify
 ```
 
-It runs the production build, lint, compact core-contract tests, condition and composer validation, evidence verification, and contract checks.
+This runs type checking and the production build, runtime-bundle and notice checks,
+generated-document freshness and Markdown links, Biome, architecture enforcement, Vitest, condition
+and composer validation, evidence validation, contract probes, and the debug inspection command.
 
-For an alpha candidate, use `npm run release:alpha:local` so the dependency audit runs before `check`.
+`npm run verify:source` runs the reusable non-build source gate; the complete local gate is still
+`npm run verify`. Main-push CI builds one Pages candidate and runs all source and artifact checks,
+then Pages validates and deploys that same artifact without rebuilding it.
 
-Prepare the GitHub Pages upload artifact separately with:
+For an alpha candidate, start from the checked-in lockfile and include the dependency audit with
+`npm run release:alpha:checklist`. Prepare and inspect a local Pages artifact separately:
 
 ```bash
 npm run pages:build
@@ -56,26 +68,40 @@ npm run pages:verify
 npm run notices:verify
 ```
 
-This verifies the `/inner-echo/` base path, live entry assets, Pages CSP fallback, absence of source maps and local paths, and distributed notices. It does not prove the public host served the artifact or supplied any response header.
+Artifact checks cover the configured base path, both HTML entries, the Pages meta CSP, the complete
+static and dynamic device-free demo JavaScript closure, asset containment, notices, and the absence
+of source maps and local paths. They do not prove that a public host served the artifact or supplied
+any response header.
 
-## Manual verification
+## Manual evidence
 
-Deterministic local checks do not replace these checks:
+Before you make a browser, accessibility, or release-readiness claim, record these checks against the
+exact candidate artifact:
 
-1. Real Safari camera, microphone, audio, and stop flow.
-2. One physical mobile browser with camera permission.
-3. Keyboard-only welcome, setup, evidence, safety, and stop flow.
-4. VoiceOver with Safari, plus NVDA with Chrome or Firefox when available.
+1. Real Safari camera, microphone, sound, and Stop Everything flow.
+2. One physical mobile browser with camera permission at a narrow viewport.
+3. Keyboard-only welcome, setup, media, evidence, safety, and stop flow.
+4. VoiceOver with Safari, plus NVDA with Chrome or Firefox when a Windows environment is available.
 5. WebGL-disabled fallback and context-loss behavior.
-6. Permission denial and later recovery for camera and microphone.
-7. Actual deployment CSP, response headers, shared-origin behavior, and same-origin requests. GitHub Pages cannot supply the complete intended header policy.
+6. Camera and microphone denial, interruption, and later manual recovery.
+7. Actual deployed CSP and response headers, shared-origin behavior, base-path assets, and
+   same-origin application requests.
 
-Record the browser, version, operating system, device class, input hardware, and observed result. Do not include device identifiers, raw media, or personal information.
+Record browser and operating-system versions, device class, input hardware, and the observed result.
+Do not include device identifiers, raw media, preset contents, or personal information.
 
-## Debug diagnostics
+## Diagnostics boundary
 
-Development builds can expose runtime diagnostics behind `import.meta.env.DEV`. The panel reports renderer, frame, audio, microphone, and profile state for local debugging. Production builds must not expose that interface or log sensitive runtime details.
+Development builds expose renderer, frame, audio, microphone, and profile diagnostics only when both
+`import.meta.env.DEV` and `VITE_INNER_ECHO_DEBUG_UI=true` are set. For example:
 
-## Release boundary
+```bash
+VITE_INNER_ECHO_DEBUG_UI=true npm run dev
+```
 
-Do not claim browser, device, accessibility, or production readiness from a subset of this matrix. List skipped engines and manual gaps in the release notes.
+Production builds must exclude the debug interface, deliberate stress load, and non-error diagnostic
+logging; the environment flag alone cannot enable them in production. See
+[decisions/0003-production-diagnostics-boundary.md](decisions/0003-production-diagnostics-boundary.md).
+
+List skipped engines and manual gaps in release notes. A passing local subset is not evidence for
+unrun browsers, devices, assistive technology, or deployed headers.

@@ -11,17 +11,7 @@ export function upsertPreset(
   weight: number,
   enabled: boolean,
 ): SelectedPreset[] {
-  const next = list.slice()
-  const idx = next.findIndex((p) => p.profileId === profileId)
-  if (!enabled) {
-    if (idx >= 0) next.splice(idx, 1)
-    return next
-  }
-  const item: SelectedPreset = { profileId, weight: clamp01(weight) }
-  if (idx >= 0) next[idx] = item
-  else next.push(item)
-  next.sort((a, b) => a.profileId.localeCompare(b.profileId))
-  return next
+  return upsertKeyed(list, profileId, weight, enabled, 'profileId')
 }
 
 export function upsertDimension(
@@ -30,16 +20,26 @@ export function upsertDimension(
   weight: number,
   enabled: boolean,
 ): SelectedDimension[] {
+  return upsertKeyed(list, dimensionId, weight, enabled, 'dimensionId')
+}
+
+function upsertKeyed<T extends { weight: number }, K extends keyof T & string>(
+  list: T[],
+  id: string,
+  weight: number,
+  enabled: boolean,
+  key: K,
+): T[] {
   const next = list.slice()
-  const idx = next.findIndex((d) => d.dimensionId === dimensionId)
+  const idx = next.findIndex((item) => String(item[key]) === id)
   if (!enabled) {
     if (idx >= 0) next.splice(idx, 1)
     return next
   }
-  const item: SelectedDimension = { dimensionId, weight: clamp01(weight) }
+  const item = { [key]: id, weight: clamp01(weight) } as T
   if (idx >= 0) next[idx] = item
   else next.push(item)
-  next.sort((a, b) => a.dimensionId.localeCompare(b.dimensionId))
+  next.sort((a, b) => String(a[key]).localeCompare(String(b[key])))
   return next
 }
 
@@ -47,14 +47,23 @@ export function strengthBadge(strength?: string): { label: string; className: st
   if (!strength) return null
   const s = String(strength).toLowerCase()
   if (s === 'high')
-    return { label: 'Evidence: high', className: 'composer__badge composer__badge--high' }
+    return {
+      label: 'Experience evidence: high',
+      className: 'composer__badge composer__badge--high',
+    }
   if (s === 'medium')
-    return { label: 'Evidence: medium', className: 'composer__badge composer__badge--medium' }
+    return {
+      label: 'Experience evidence: medium',
+      className: 'composer__badge composer__badge--medium',
+    }
   if (s === 'low')
-    return { label: 'Evidence: low', className: 'composer__badge composer__badge--low' }
+    return { label: 'Experience evidence: low', className: 'composer__badge composer__badge--low' }
   if (s === 'hypothesis')
-    return { label: 'Hypothesis (evidence gap)', className: 'composer__badge composer__badge--hyp' }
-  return { label: `Evidence: ${strength}`, className: 'composer__badge' }
+    return {
+      label: 'Experience hypothesis (evidence gap)',
+      className: 'composer__badge composer__badge--hyp',
+    }
+  return { label: `Experience evidence: ${strength}`, className: 'composer__badge' }
 }
 
 export function EvidenceButton({

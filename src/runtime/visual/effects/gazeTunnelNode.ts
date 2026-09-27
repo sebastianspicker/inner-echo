@@ -1,9 +1,9 @@
 /**
- * SSOT: gaze_tunnel: narrowed central attention with peripheral damping.
+ * Narrows central attention with peripheral damping.
  * Params: amount, radius, edge_gain, desaturate.
  */
 
-import { ShaderMaterial, type Material, type Texture } from 'three'
+import type { ShaderMaterial, Material, Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,

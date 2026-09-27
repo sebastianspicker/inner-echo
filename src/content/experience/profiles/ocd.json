@@ -1,16 +1,12 @@
 {
   "id": "ocd",
-  "label": "OCD (Intrusion + Compulsive Loop)",
-  "summary": "A metaphor of sticky loops and repeated checking pressure: loop persistence, grid alignment, and restrained repetitive cues.",
+  "label": "OCD-related intrusive thoughts and repetition",
+  "summary": "Subtle image persistence and a quiet echo offer an artistic interpretation of unwanted recurrence. OCD can involve varied intrusive thoughts and mental or physical compulsions; this collection does not equate it with tidiness or order.",
   "framing": {
     "type": "metaphor",
-    "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
+    "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
   },
   "experience_dimensions": [
-    {
-      "id": "rumination_loop",
-      "weight": 0.75
-    },
     {
       "id": "intrusion",
       "weight": 0.55
@@ -21,13 +17,11 @@
     }
   ],
   "safety": {
-    "intensity_default": 0.5,
+    "intensity_default": 0.35,
     "intensity_max": 0.66,
     "warnings": [
-      "Loops are subtle, but may feel 'sticky' or uncomfortable.",
-      "Use Safe Mode; disable Audio if repetitive cues feel unpleasant.",
-      "Avoid flashing lights or rapid flicker; enable Reduced Motion if sensitive.",
-      "Keep volume low; avoid headphones at high volume; you can mute audio at any time."
+      "Start with low intensity and volume; sound is optional.",
+      "Use Reduced Motion for a steadier image. Stop Everything is always available."
     ],
     "safe_mode_clamps": {
       "max_intensity": 0.65,
@@ -77,9 +71,9 @@
       {
         "id": "loop_strength",
         "type": "slider",
-        "label": "Loop Strength",
-        "min": 0.05,
-        "max": 0.25,
+        "label": "Image persistence",
+        "min": 0,
+        "max": 0.18,
         "step": 0.01,
         "target": "video.feedback_loop.feedback"
       }
@@ -91,15 +85,8 @@
       "node": "feedback_loop",
       "params": {
         "decay": 0.96,
-        "feedback": 0.22,
-        "jitter": 0.02
-      }
-    },
-    {
-      "id": "grid",
-      "node": "grid_hint",
-      "params": {
-        "amount": 0.1
+        "feedback": 0.12,
+        "jitter": 0
       }
     },
     {
@@ -122,8 +109,8 @@
         "node": "delay",
         "params": {
           "time": 0.16,
-          "feedback": 0.12,
-          "mix": 0.07
+          "feedback": 0.06,
+          "mix": 0.035
         }
       },
       {
@@ -131,13 +118,6 @@
         "params": {
           "cutoff": 4200,
           "q": 0.7
-        }
-      },
-      {
-        "node": "tremolo",
-        "params": {
-          "rate": 0.7,
-          "depth": 0.08
         }
       },
       {
@@ -153,23 +133,10 @@
     ]
   },
   "reactive": {
-    "analyser_to_params": [
-      {
-        "source": "rms",
-        "target": "video.feedback_loop.feedback",
-        "scale": 0.1,
-        "offset": 0.08,
-        "smoothing": {
-          "attack": 0.12,
-          "release": 0.35
-        },
-        "clamp": [0.06, 0.22]
-      }
-    ]
+    "analyser_to_params": []
   },
   "references": {
     "dimensions": [
-      "docs/references/dimensions/rumination_loop.md",
       "docs/references/dimensions/intrusion.md",
       "docs/references/dimensions/compulsive_loop.md"
     ]

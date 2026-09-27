@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pagesContentSecurityPolicy } from './pages-config.mjs'
 
@@ -20,8 +20,21 @@ async function injectPagesCsp(path) {
   )
 }
 
+async function listHtmlFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true })
+  const nested = await Promise.all(
+    entries.map(async (entry) => {
+      const path = resolve(directory, entry.name)
+      if (entry.isDirectory()) return listHtmlFiles(path)
+      return entry.name.endsWith('.html') ? [path] : []
+    }),
+  )
+  return nested.flat()
+}
+
 await writeFile(resolve(output, '.nojekyll'), '')
 
-await injectPagesCsp(resolve(output, 'index.html'))
+const htmlFiles = await listHtmlFiles(output)
+await Promise.all(htmlFiles.map(injectPagesCsp))
 
-console.log('Pages artifact assembled with the live app at the root.')
+console.log(`Pages artifact assembled with CSP fallbacks in ${htmlFiles.length} HTML entries.`)

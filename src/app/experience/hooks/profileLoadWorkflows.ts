@@ -1,11 +1,11 @@
 import type { Dispatch, SetStateAction } from 'react'
 import { loadProfile } from '../../../content/experience/loader'
 import type { Profile } from '../../../domain/experience/schema'
-import {
-  type ComposerMode,
-  type ComposerSettings,
-  type SelectedDimension,
-  type SelectedPreset,
+import type {
+  ComposerMode,
+  ComposerSettings,
+  SelectedDimension,
+  SelectedPreset,
 } from '../../../domain/experience/composition/types'
 import { composeEffectiveProfile, type ComposeReport } from '../composeExperience'
 import { logger } from '../../../platform/logger'

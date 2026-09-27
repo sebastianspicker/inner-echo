@@ -90,4 +90,24 @@ describe('experience domain contracts', () => {
     expect(result.profile.video_stack.map((node) => node.node)).toEqual(['grain'])
     expect(result.report.missingNodes.video).toEqual(['unsupported_motif'])
   })
+
+  it('keeps composed stack ordering deterministic while applying feedback safety clamps', async () => {
+    const result = await composeEffectiveProfileCore(
+      [{ profileId: profile.id, weight: 1 }],
+      [],
+      compositionSettings,
+      {
+        loadPresetProfile: async () => profile,
+        getDimensionMappingEntry: () => null,
+        getExperienceDimensions: () => [],
+      },
+      {
+        supportedVideoNodeIds: new Set(['grain', 'temporal_smear']),
+        supportedAudioNodeIds: new Set(),
+      },
+    )
+
+    expect(result.profile.video_stack.map((node) => node.node)).toEqual(['grain', 'temporal_smear'])
+    expect(result.profile.video_stack[1]?.params.feedback).toBeCloseTo(0.09)
+  })
 })

@@ -19,7 +19,7 @@ export interface VideoNodeParams {
   intensity: number
   /** When true, intensity and other risky parameters are clamped. */
   safeMode: boolean
-  /** SSOT safety clamps (global + safe-mode). */
+  /** Global and Safe Mode clamps from the profile contract. */
   safetyContext?: {
     global: Record<string, unknown>
     safeMode: Record<string, unknown>

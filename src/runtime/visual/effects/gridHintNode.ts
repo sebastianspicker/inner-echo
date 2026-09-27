@@ -1,9 +1,9 @@
 /**
- * SSOT: grid_hint: very subtle structure hint (static overlay).
+ * Very subtle static structure overlay.
  * Param: amount.
  */
 
-import { ShaderMaterial, type Material, type Texture } from 'three'
+import type { ShaderMaterial, Material, Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import { applyUvParams, clamp, resolveNumberParam } from './paramUtils'
 import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'

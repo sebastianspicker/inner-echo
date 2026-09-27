@@ -29,7 +29,7 @@ function createCameraRuntimeContext(video: HTMLVideoElement | null): CameraRunti
   }
 }
 
-describe('application session contracts', () => {
+describe('camera session cleanup', () => {
   it('releases active camera, overlay, and audio resources during session cleanup', () => {
     const stopped = { track: 0, overlay: 0, audio: 0 }
     const track = {
@@ -77,7 +77,9 @@ describe('application session contracts', () => {
     expect(context.cameraRequestSeqRef.current).toBe(5)
     expect(context.audioRequestSeqRef.current).toBe(9)
   })
+})
 
+describe('camera request sequencing', () => {
   it('disposes a late camera stream after its request becomes stale', async () => {
     let resolveRequest: ((result: { ok: true; stream: MediaStream }) => void) | undefined
     const requestVideoStream = vi.fn(
@@ -102,7 +104,6 @@ describe('application session contracts', () => {
     expect(context.streamRef.current).toBeNull()
     expect(context.setCameraState).not.toHaveBeenCalledWith('active')
   })
-
   it('never reports active when camera permission or video playback fails', async () => {
     const deniedContext = createCameraRuntimeContext(null)
     await startCameraRuntime(deniedContext, vi.fn(), {
@@ -134,7 +135,9 @@ describe('application session contracts', () => {
     expect(track.stop).toHaveBeenCalledOnce()
     expect(video.srcObject).toBeNull()
   })
+})
 
+describe('diagnostic formatting', () => {
   it('formats diagnostics with explicit runtime and safety fields', () => {
     const overlay = {
       rendererMode: 'webgl' as const,

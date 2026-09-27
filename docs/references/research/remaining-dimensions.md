@@ -2,33 +2,52 @@
 
 ## Executive summary
 
-This report extends the project’s non-diagnostic design rationale by linking each
-remaining experience dimension to (a) peer-reviewed evidence on
-phenomenology/perception and (b) bounded, safety-first audiovisual (AV) metaphor
-hypotheses. The intent is to explain why these motifs are plausible metaphors
-without implying that the AV output depicts any clinical condition or substitutes
+This report extends the project's non-diagnostic design rationale. Each remaining experience
+dimension is linked to peer-reviewed evidence on phenomenology and perception, and to bounded,
+safety-first audiovisual (AV) metaphor hypotheses. The point is to explain why these motifs are
+plausible metaphors, without implying that the AV output depicts a clinical condition or substitutes
 for care.
 
-Across dimensions, the empirical patterns used for design include: (1) involuntary intrusions can be cue-triggered, vivid, and present-oriented (“nowness”), and can be modeled or altered in controlled paradigms and diary studies; (2) rumination or repetitive negative thinking is characterized by repetitiveness, intrusiveness, and difficulty disengaging, and relates to symptom maintenance across disorders, with measurable cognitive or neural correlates; (3) emotional numbing or anhedonia is complex and often selective, with growing reward-processing evidence but meaningful heterogeneity and counterevidence. For dissociation-related dimensions (derealization or depersonalization), a restrained mapping uses altered salience, affective coloring, and distance rather than dramatic distortions, consistent with systematic reviews and scale-based phenomenology.
+Several empirical patterns guide the design across dimensions:
 
-Safety is treated as a first-class requirement: avoid flicker/strobing, harsh
-audio transients, and nausea-inducing motion; provide hard clamps, “Reduced
-Motion,” quick stop/mute, and conservative defaults aligned with
-`src/content/experience/experience-dimensions.json`.
+1. Involuntary intrusions can be cue-triggered, vivid, and present-oriented ("nowness"), and can be
+   modeled or altered in controlled paradigms and diary studies.
+2. Rumination, or repetitive negative thinking, is repetitive, intrusive, and hard to disengage from.
+   It relates to symptom maintenance across disorders, with measurable cognitive or neural correlates.
+3. Emotional numbing and anhedonia are complex and often selective: reward-processing evidence is
+   growing, but heterogeneity and counterevidence matter.
+4. For dissociation-related dimensions (derealization and depersonalization), a restrained mapping
+   uses altered salience, affective coloring, and distance rather than dramatic distortions, in line
+   with systematic reviews and scale-based phenomenology.
+
+Safety is a first-class requirement. Avoid flicker and strobing, harsh audio transients, and
+nausea-inducing motion. Provide hard clamps, "Reduced Motion," a quick stop and mute, and conservative
+defaults aligned with `src/content/experience/experience-dimensions.json`.
 
 ## Search strategy and databases used
 
-Searches prioritized peer-reviewed reviews/meta-analyses/guidelines plus primary studies explicitly describing subjective experience and perceptual/cognitive correlates. Sources were located via targeted queries across major academic/publisher platforms (e.g., PubMed/Europe PMC, ScienceDirect/Elsevier journal pages, Cambridge Core, Frontiers, PLOS, JAMA Network, SAGE). Film-paradigm, EMA/diary, psychometrics, and neurocognitive reviews were favored when they directly constrained metaphor design (e.g., loop-like perseveration; salience/“distance”; time judgment distortions). Example cornerstone retrievals include the trauma-film paradigm reviews, attentional-control meta-analysis, depersonalisation/derealisation systematic reviews, and transdiagnostic sensory-processing meta-analysis.
+Searches prioritized peer-reviewed reviews, meta-analyses, and guidelines, plus primary studies that
+explicitly describe subjective experience and perceptual or cognitive correlates. Sources came from
+targeted queries across major academic and publisher platforms (PubMed/Europe PMC, ScienceDirect and
+Elsevier journal pages, Cambridge Core, Frontiers, PLOS, JAMA Network, SAGE). Film-paradigm, EMA and
+diary, psychometrics, and neurocognitive reviews were favored when they directly constrained metaphor
+design (loop-like perseveration, salience and "distance," time-judgment distortions). Cornerstone
+retrievals include the trauma-film paradigm reviews, the attentional-control meta-analysis,
+depersonalisation and derealisation systematic reviews, and the transdiagnostic sensory-processing
+meta-analysis.
 
 Selection criteria per dimension:
-- 6–10 peer-reviewed sources, including ≥2 reviews/meta-analyses/guidelines and ≥2 primary empirical studies whenever feasible.
-- Prefer recent (≈2016–2026) plus seminal psychometrics/phenomenology when needed (e.g., foundational scales).
-- Exclude low-quality/popular press; if a key detail could not be verified, it was omitted rather than guessed.
+
+- 6–10 peer-reviewed sources, including at least 2 reviews, meta-analyses, or guidelines and at least
+  2 primary empirical studies whenever feasible.
+- Prefer recent work (roughly 2016–2026), plus seminal psychometrics or phenomenology when needed
+  (foundational scales, for example).
+- Exclude low-quality and popular-press material. If a key detail could not be verified, it was left
+  out rather than guessed.
 
 ## Remaining experience dimensions
 
-The following sections preserve the full research rationale for each remaining
-dimension.
+The sections below keep the full research rationale for each remaining dimension.
 
 ### docs/references/dimensions/intrusion.md
 
@@ -662,7 +681,7 @@ Metaphor should emphasize crowding and loss of filtering, not violence or chaos.
 ### Safety clamps & Reduced Motion
 - Follow repo safety note: never default to harsh intensity; provide quick calming toggles.
 - Reduced Motion: keep “overload” represented via static layering, not motion.
-- Provide instant “Calm Mode” (lowpass + remove extra layers).
+- Provide an immediate return path through Stop Everything and the separate sound controls.
 
 ## Motif consistency check
 Recommended
@@ -855,81 +874,3 @@ constraint-heavy design inferences were checked through publisher and PubMed
 pages for intrusion, rumination, emotional numbing, cognitive fog, time
 dilation, dissociation dimensions, sensory overload, attention fragmentation,
 and compulsive loop.
-
-## Methodology and safety reference
-
-```markdown
-# References & Evidence Methodology (inner-echo)
-
-## What this folder is for
-This directory documents evidence-backed, non-diagnostic design rationales for mapping *experience dimensions* (see `src/content/experience/experience-dimensions.json`) to audiovisual metaphor hypotheses used in `inner-echo`.
-
-This project:
-- is NOT diagnostic
-- is NOT a clinical simulation
-- is NOT medical advice
-- is a metaphorical design hypothesis informed by phenomenology, cognitive science, and clinical literature.
-
-## Methodology (research librarian + HCI/AV framing)
-For each dimension, we:
-1) Quote the repo’s definition and safety notes exactly as written in `experience-dimensions.json`.
-2) Collect 6–10 peer-reviewed sources, prioritizing:
- - ≥2 reviews/meta-analyses/guidelines
- - ≥2 primary empirical studies
- - plus seminal psychometrics/phenomenology where needed (e.g., scale development)
-3) Extract findings that constrain *subjective experience and perception* (e.g., salience shifts, attentional control, dissociation phenomenology, time-judgment distortions).
-4) Translate evidence into modest, testable AV metaphors:
- - language: “suggests / consistent with / may align with”
- - avoid: “this is what X looks like”
-5) Add safety ethics to every mapping:
- - avoid flicker/strobe, harsh audio, nausea-inducing motion
- - clamp intensity and temporal feedback
- - provide “Reduced Motion,” mute/stop, and “Calm Mode”
-
-## Evidence quality & uncertainty
-- “High / Medium / Low” evidence ratings are about *how strongly the literature supports the phenomenological/perceptual correlate*, not about any diagnosis.
-- When evidence is heterogeneous or correlational, we state limitations and include a counterpoint.
-
-## Safety & accessibility commitments
-Default settings must be conservative:
-- No strobing patterns.
-- No sudden loud transients (use limiter).
-- No forced disorientation.
-- Clear opt-outs: Reduced Motion, Mute, Stop, Calm preset.
-- Avoid stigmatizing language or moral framing (e.g., “numbness” is not “failure”).
-
-## File layout
-- `docs/references/dimensions/<dimension_id>.md`: per-dimension evidence + mapping hypothesis + safety.
-- `docs/references/EVIDENCE_MATRIX.md`: consolidated quick reference matrix for implementation decisions.
-
-## Citation format
-Bibliographies use APA with DOI/PMID when available and include stable links (DOI resolver, PubMed, publisher pages).
-```
-
-## docs/references/EVIDENCE_MATRIX.md update
-
-```markdown
-# Evidence Matrix (inner-echo)
-
-| Dimension | Key phenomena (non-diagnostic) | Proposed AV motifs (video / audio) | Core citations (3–5) | Evidence strength (why) | Safety notes / triggers |
-|---|---|---|---|---|---|
-| intrusion | Involuntary “push-in” thoughts/images; cue-triggered; vividness/“nowness” in some contexts | Video: subtle interference micro-burst, low grain burst, micro-vignette (optional). Audio: tiny delay tick, brief noise swell, limiter | Brewin et al., 2010; James et al., 2016; Kleim et al., 2013; Kuijpers et al., 2022 | Medium: robust intrusion literature + lab/EMA methods; AV mapping remains inferential | Avoid strobe/glitch cuts; no loud hits; clamp duration/opacity; Reduced Motion = static overlay + audio-only cue |
-| rumination_loop | Sticky repetitive thought; difficulty disengaging; low novelty return | Video: low-feedback loop drift, mild grain. Audio: low-mix delay, very low tremolo, limiter | Nolen-Hoeksema et al., 2008; Ehring et al., 2011; Zhou et al., 2020; Treynor et al., 2003 | High: strong reviews + psychometrics + meta-analyses; clear “loop” mechanics | Avoid hypnotic flashing or strong rhythmic entrainment; easy stop/calm |
-| emotional_numbing | Reduced emotional intensity; reduced reward/interest; flattened affective contrast | Video: low saturation/contrast grade, low soft blur. Audio: gentle lowpass, very low brown noise bed, compressor/limiter | Litz, 1992; Nawijn et al., 2021; Stevens et al., 2014; Frontiers reward review, 2021 | Medium: growing reward-processing evidence but heterogeneous; must avoid “global shutdown” claims | Keep gentle; avoid bleak extremes; provide “Return Color” toggle; avoid stigma |
-| cognitive_fog | Slowed thinking; reduced clarity; reduced sustained mental effort | Video: soft blur/haze, low contrast, slow easing. Audio: lowpass, low noise bed, limiter | Denno et al., 2025 (TINS); Jacob et al., 2019; Topiwala et al., 2021; Vasterling & Arditte Hall, 2018 | Medium: strong transdiagnostic discussion but construct ambiguity; subjective/objective mismatch | Avoid disorientation/warp; Reduced Motion by default; “Clarity toggle” |
-| time_dilation | Time feels slowed/fast/uneven; pacing instability | Video: very low temporal smear/transition jitter (clamped). Audio: flutter/wow low depth, short delay, limiter | Lake et al., 2016; Cui et al., 2023; Sarigiannidis et al., 2020; Bar-Haim et al., 2010 | Medium: robust timing literature but direction varies; avoid literal slow-mo claims | Reduced Motion; cap temporal feedback; avoid stutter edits |
-| derealization | World feels distant/unreal/behind glass; reduced affective salience | Video: low haze, tiny chroma aberration, very low temporal smear. Audio: lowpass, slow flutter, mild reverb | Merritt Millman et al., 2024; Sierra & Berrios, 2000; Horn et al., 2020; Dalenberg et al., 2023 | Medium: good reviews/phenomenology; mechanisms heterogeneous | Avoid intense warping; keep subtle + user-controlled; Reduced Motion disables smear |
-| depersonalization | Detachment from self/body; reduced sense of agency; observer stance | Video: optional micro-latency (clamped), subtle UI layer separation, gentle vignette. Audio: mild reverb/lowpass, minimal detune, limiter | Sierra & Berrios, 2000; Merritt Millman et al., 2024; Horn et al., 2020; BMC Psychiatry 2024 | Medium: strong phenomenology/scales; limited mechanistic specificity | Avoid body distortions; avoid disorienting spatial audio; user control essential |
-| sensory_overload | Too much input; reduced filtering; background becomes foreground | Video: controlled layer density increase, mild grain, optional tiny edge sharpen. Audio: very low broadband noise bed, strong limiter, quick calm | van den Boogert et al., 2022; Micoulaud-Franchi et al., 2015; Kotz et al., 2023 | Medium: transdiagnostic meta-analysis + empirical gating links; AV mapping must avoid harm | Never default to harsh intensity; provide instant Calm Mode; avoid loud noise |
-| attention_fragmentation | Unstable focus; frequent attentional shifts; reduced goal-directed control (esp. under anxiety/stress) | Video: high-smoothing focus jitter, low grain. Audio: very low tremolo, limiter | Shi et al., 2019; Ólafsson et al., 2011; Zhao et al., 2020; Fan et al., 2002 | Medium: meta-analytic + task frameworks; subjective experience mapping is inferential | Avoid nausea-inducing motion; Reduced Motion disables jitter |
-| compulsive_loop | Urge-driven repetition/checking; difficulty stopping; “need to complete” | Video: low feedback loop + high decay, tiny grid hint. Audio: very low short delay, lowpass, limiter | WFSBP 2023; Gillan et al., 2016; Gillan & Robbins, 2014; Gillan et al., 2011 | High: strong guideline + mechanistic + empirical task evidence | Do not portray as comedic; make loops controllable; easy stop; avoid escalating feedback |
-```
-
-## Notes on motif consistency and safer defaults across dimensions
-
-Across files, the motifs most likely to drift from evidence-aligned metaphor into “stylish effect” are high-intensity glitching, strong chroma distortions, strong temporal smear/feedback, and loud broadband noise. These are disproportionately risky (photosensitivity, migraine, startle, nausea) and also tend to imply “this is what it looks like,” which this project explicitly avoids. Systematic reviews and task paradigms can justify subtle distance/salience/loop metaphors (e.g., low-feedback recursion for compulsive repetition; clamped haze/chroma drift for derealization; low saturation/lowpass for numbing) but do not justify dramatic extremes as default experiences.
-
-For implementation, prioritize:
-- Hard clamps + conservative defaults (opacity, feedback, motion, gain).
-- Immediate opt-outs: Reduced Motion, Mute, Stop, Calm Mode.
-- User control over intensity and the ability to return to neutral instantly.

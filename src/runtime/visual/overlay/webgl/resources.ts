@@ -10,7 +10,7 @@ export interface TemporalPingPongState {
 }
 
 export function disposeChainRenderTargets(chainRTs: WebGLRenderTarget[]): void {
-  chainRTs.forEach((rt) => rt.dispose())
+  for (const renderTarget of chainRTs) renderTarget.dispose()
 }
 
 export function disposeTemporalPairs(temporalPairs: TemporalPingPongState[]): void {

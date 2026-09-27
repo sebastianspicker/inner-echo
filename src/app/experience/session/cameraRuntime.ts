@@ -4,7 +4,7 @@ import {
   type AudioContextStatus,
   type AudioEngineControl,
   type MicStatus,
-} from '../../../runtime/audio'
+} from '../../../runtime/audio/control'
 import type { OverlayControl } from '../../../runtime/visual/overlay'
 import {
   requestVideoStream,
