@@ -1,6 +1,20 @@
 import type { Profile, VideoStackNodeDef } from './schema'
 import { getReducedMotionDisableNodes } from './safety'
-import { TEMPORAL_NODE_TYPES } from './motionPolicy'
+
+/**
+ * Temporal/strobe-heavy node types that Reduced Motion always disables.
+ * Re-exported (unchanged import path) from `motionPolicy.ts` for existing consumers.
+ */
+export const TEMPORAL_NODE_TYPES = new Set<string>([
+  'temporal_smear',
+  'feedback_loop',
+  'pulse',
+  'focus_jitter',
+  'somatic_pulse',
+  'intrusion_burst',
+  'salience_competition',
+  'glass_veil',
+])
 
 export interface BuildVideoNodesOptions {
   /** When true, temporal/strobe-heavy nodes (e.g. temporal_smear) are skipped. */

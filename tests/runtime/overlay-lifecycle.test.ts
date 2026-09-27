@@ -42,6 +42,7 @@ function createOverlayLifecycleHarness() {
         couplingStrengthRef: { current: 0 },
         maxFeedbackRef: { current: 0 },
         safeModeRef: { current: false },
+        diagnosticsActiveRef: { current: false },
       },
       safeModeRef: { current: false },
       intensityRef: { current: 0 },

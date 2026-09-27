@@ -235,18 +235,15 @@ export const profileSchema = z
   .passthrough()
 
 export type UIControl = z.infer<typeof uiControlSchema>
-export type AudioStackNodeDef = z.infer<typeof audioStackNodeSchema>
 export type AudioStackConfig = z.infer<typeof audioStackSchema>
-export type AnalyserToParamDef = z.infer<typeof analyserToParamSchema>
-export type ReactiveConfig = z.infer<typeof reactiveSchema>
 
 export type CatalogEntry = z.infer<typeof catalogEntrySchema>
 export type Catalog = z.infer<typeof catalogSchema>
 export type VideoStackNodeDef = z.infer<typeof videoStackNodeSchema>
 export type Profile = z.infer<typeof profileSchema>
 
-export type ExperienceDimensionDefZ = z.infer<typeof experienceDimensionDefSchema>
+export type ExperienceDimensionDef = z.infer<typeof experienceDimensionDefSchema>
 export type ExperienceDimensionsFile = z.infer<typeof experienceDimensionsFileSchema>
-export type MotifDefZ = z.infer<typeof motifDefSchema>
-export type DimensionSignalMappingEntryZ = z.infer<typeof dimensionSignalMappingEntrySchema>
+export type MotifDef = z.infer<typeof motifDefSchema>
+export type DimensionSignalMappingEntry = z.infer<typeof dimensionSignalMappingEntrySchema>
 export type DimensionToSignalMappingFile = z.infer<typeof dimensionToSignalMappingFileSchema>

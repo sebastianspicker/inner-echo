@@ -1,4 +1,4 @@
-import { TEMPORAL_NODE_TYPES } from '../../../src/domain/experience/motionPolicy'
+import { TEMPORAL_NODE_TYPES } from '../../../src/domain/experience/videoStack'
 import { clampIntensity } from '../../../src/domain/experience/safety'
 import { IMPLEMENTED_VIDEO_NODES } from '../../../src/runtime/capabilities'
 import { buildVideoNodes } from '../../../src/runtime/visual/graph'

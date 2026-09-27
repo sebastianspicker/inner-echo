@@ -22,8 +22,14 @@ const catalog = [
 ]
 
 const dimensions = new Map<string, ExperienceDimensionDef>([
-  ['high-dimension', { id: 'high-dimension', label: 'High', evidence_strength: 'high' }],
-  ['low-dimension', { id: 'low-dimension', label: 'Low', evidence_strength: 'low' }],
+  [
+    'high-dimension',
+    { id: 'high-dimension', label: 'High', description: '', evidence_strength: 'high' },
+  ],
+  [
+    'low-dimension',
+    { id: 'low-dimension', label: 'Low', description: '', evidence_strength: 'low' },
+  ],
 ])
 
 let root: Root | null = null

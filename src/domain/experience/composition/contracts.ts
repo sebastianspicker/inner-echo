@@ -1,5 +1,5 @@
 import type { Profile } from '../schema'
-import type { ComposerSettings, DimensionSignalMappingEntry, ExperienceDimensionDef } from './types'
+import type { DimensionSignalMappingEntry, ExperienceDimensionDef } from './types'
 
 export type MissingNodesReport = {
   video: string[]
@@ -34,9 +34,4 @@ export type ComposeSources = {
   loadPresetProfile: (profileId: string) => Promise<Profile | null>
   getDimensionMappingEntry: (dimensionId: string) => DimensionSignalMappingEntry | null
   getExperienceDimensions: () => ExperienceDimensionDef[]
-}
-
-export type ComposeRequest = {
-  settings: ComposerSettings
-  capabilities: CompositionCapabilities
 }

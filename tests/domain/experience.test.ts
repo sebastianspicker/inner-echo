@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { composeEffectiveProfileCore } from '../../src/domain/experience/composition/composeCore'
 import type { ComposerSettings } from '../../src/domain/experience/composition/types'
 import { clampIntensity } from '../../src/domain/experience/safety'
-import { profileSchema } from '../../src/domain/experience/schema'
+import { profileSchema, type Profile } from '../../src/domain/experience/schema'
 import { buildVideoNodes } from '../../src/runtime/visual/graph/graphBuilder'
 import { IMPLEMENTED_VIDEO_NODES } from '../../src/runtime/capabilities'
 import { mergeParams } from '../../src/domain/experience/composition/composeBlend'
@@ -37,6 +37,54 @@ const compositionSettings: ComposerSettings = {
   maxFeedback: 0.5,
   interactionAmount: 0,
   debugOverlay: false,
+}
+
+function delayProfile(safeModeClamps: Record<string, unknown>): Profile {
+  return profileSchema.parse({
+    id: 'audio-delay-test',
+    label: 'Audio delay test',
+    summary: 'Fixture exercising the delay feedback safety clamp.',
+    framing: { type: 'metaphor' },
+    experience_dimensions: [],
+    video_stack: [],
+    audio_stack: { chain: [{ node: 'delay', params: { feedback: 0.9 } }] },
+    safety: {
+      intensity_default: 0.5,
+      intensity_max: 0.8,
+      warnings: [],
+      safe_mode_clamps: safeModeClamps,
+    },
+  })
+}
+
+function composeSinglePreset(
+  presetProfile: Profile,
+  capabilities: {
+    supportedVideoNodeIds: ReadonlySet<string>
+    supportedAudioNodeIds: ReadonlySet<string>
+  },
+) {
+  return composeEffectiveProfileCore(
+    [{ profileId: presetProfile.id, weight: 1 }],
+    [],
+    compositionSettings,
+    {
+      loadPresetProfile: async () => presetProfile,
+      getDimensionMappingEntry: () => null,
+      getExperienceDimensions: () => [],
+    },
+    capabilities,
+  )
+}
+
+async function composedDelayFeedback(safeModeClamps: Record<string, unknown>): Promise<number> {
+  const result = await composeSinglePreset(delayProfile(safeModeClamps), {
+    supportedVideoNodeIds: new Set(),
+    supportedAudioNodeIds: new Set(['delay']),
+  })
+  const feedback = result.profile.audio_stack?.chain?.[0]?.params.feedback
+  if (typeof feedback !== 'number') throw new Error('expected a numeric delay feedback param')
+  return feedback
 }
 
 describe('experience domain contracts', () => {
@@ -92,22 +140,22 @@ describe('experience domain contracts', () => {
   })
 
   it('keeps composed stack ordering deterministic while applying feedback safety clamps', async () => {
-    const result = await composeEffectiveProfileCore(
-      [{ profileId: profile.id, weight: 1 }],
-      [],
-      compositionSettings,
-      {
-        loadPresetProfile: async () => profile,
-        getDimensionMappingEntry: () => null,
-        getExperienceDimensions: () => [],
-      },
-      {
-        supportedVideoNodeIds: new Set(['grain', 'temporal_smear']),
-        supportedAudioNodeIds: new Set(),
-      },
-    )
+    const result = await composeSinglePreset(profile, {
+      supportedVideoNodeIds: new Set(['grain', 'temporal_smear']),
+      supportedAudioNodeIds: new Set(),
+    })
 
     expect(result.profile.video_stack.map((node) => node.node)).toEqual(['grain', 'temporal_smear'])
-    expect(result.profile.video_stack[1]?.params.feedback).toBeCloseTo(0.09)
+    expect(result.profile.video_stack[1]?.params?.feedback).toBeCloseTo(0.09)
+  })
+
+  it('clamps delay feedback to the profile safe-mode max_feedback override, like video feedback', async () => {
+    const feedback = await composedDelayFeedback({ max_feedback: 0.12 })
+    expect(feedback).toBeCloseTo(0.12 * compositionSettings.maxFeedback)
+  })
+
+  it('clamps delay feedback to the global default max_feedback when no override is set', async () => {
+    const feedback = await composedDelayFeedback({})
+    expect(feedback).toBeCloseTo(0.18 * compositionSettings.maxFeedback)
   })
 })

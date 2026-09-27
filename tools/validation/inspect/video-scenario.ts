@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import { getDefaultControlValues } from '../../../src/app/experience/controls/controlTargets'
+import { getDefaultControlValues } from '../../../src/domain/experience/controls'
 import { clampIntensity, getSafetyContext } from '../../../src/domain/experience/safety'
 import { IMPLEMENTED_VIDEO_NODES } from '../../../src/runtime/capabilities'
 import { buildVideoNodes } from '../../../src/runtime/visual/graph'
@@ -51,7 +51,10 @@ function createVideoScenarioResources(
     activeNodes: nodes.map((node) => toNodeName(node)),
     input: new THREE.Texture(),
     previous: new THREE.Texture(),
-    controlValues: getDefaultControlValues(loaded.profile, { reducedMotion }),
+    controlValues: getDefaultControlValues(loaded.profile, {
+      reducedMotion,
+      supportedNodeIds: IMPLEMENTED_VIDEO_NODES,
+    }),
     safetyContext: getSafetyContext(loaded.profile),
   }
 }

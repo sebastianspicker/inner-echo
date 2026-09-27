@@ -11,7 +11,8 @@ import {
   useCuratedProfileLoad,
   type ProfileLoadStateSetters,
 } from './profileLoadWorkflows'
-import { mergePersistedControlValues, type ProfileLoadStatus } from './profileLoadResults'
+import { mergePersistedControlValues } from '../controls'
+import type { ProfileLoadStatus } from './profileLoadResults'
 
 export interface UseProfileLoadParams {
   conditionId: string

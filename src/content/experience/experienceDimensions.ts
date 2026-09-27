@@ -15,14 +15,16 @@ import type {
 
 export type { EvidenceStrength, ExperienceDimensionDef }
 
-{
-  const result = experienceDimensionsFileSchema.safeParse(experienceDimensionsFile)
-  if (!result.success) {
-    logger.warn('[experienceDimensions] Schema validation issues:', result.error.issues)
-  }
+const parsedExperienceDimensions =
+  experienceDimensionsFileSchema.safeParse(experienceDimensionsFile)
+if (!parsedExperienceDimensions.success) {
+  logger.warn(
+    '[experienceDimensions] Schema validation issues:',
+    parsedExperienceDimensions.error.issues,
+  )
 }
 
 export function getExperienceDimensions(): ExperienceDimensionDef[] {
-  const dims = experienceDimensionsFile?.dimensions ?? []
-  return Array.isArray(dims) ? dims.slice() : []
+  if (!parsedExperienceDimensions.success) return []
+  return parsedExperienceDimensions.data.dimensions.slice()
 }

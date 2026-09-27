@@ -1,8 +1,7 @@
 import type { Profile } from '../../../domain/experience/schema'
-import type { ResolvedControl } from '../controls/controlTargets'
+import { resolveProfileControls, type ResolvedControl } from '../controls'
 import { LabeledSlider } from './controls/LabeledSlider'
 import { ToggleField } from './controls/ToggleField'
-import { resolveProfileControls } from '../session/effectControlResolution'
 
 const DEBUG_UI_ENABLED = import.meta.env.DEV && import.meta.env.VITE_INNER_ECHO_DEBUG_UI === 'true'
 
