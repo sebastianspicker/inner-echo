@@ -17,6 +17,11 @@
   scrollbar-color: var(--rule-strong) transparent;
 }
 
+.ie-layout--live > .ie-panel {
+  padding-left: 0;
+  border-left: 0;
+}
+
 .ie-panel > * {
   padding-block: var(--s-5);
 }

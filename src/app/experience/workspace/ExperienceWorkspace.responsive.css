@@ -12,10 +12,13 @@
     display: none;
   }
 
-  .ie-layout,
-  .ie-layout--live {
+  .ie-layout {
     grid-template-columns: minmax(0, 1fr) minmax(300px, 22rem);
     gap: var(--s-6);
+  }
+
+  .ie-layout--live {
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
   }
 }
 
@@ -37,7 +40,21 @@
     padding-top: var(--s-4);
     padding-left: 0;
     overflow: visible;
-    border-top: 1px solid var(--ink);
+    border-top: 1px solid var(--rule);
+    border-left: 0;
+  }
+
+  .ie-layout--live > .ie-panel {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .ie-layout--live > .ie-choiceColumn {
+    margin-top: var(--s-5);
+    padding-top: var(--s-5);
+    padding-left: 0;
+    border-top: 1px solid var(--rule);
     border-left: 0;
   }
 

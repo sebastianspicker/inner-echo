@@ -278,43 +278,62 @@ function WorkspacePreview({ model }: ModelProps) {
   )
 }
 
+function WorkspaceChoices({ model }: ModelProps) {
+  return (
+    <div className="ie-choiceColumn" id="experience-choices" tabIndex={-1}>
+      <div className="ie-workspaceIntro">
+        <h1>Choose what the mirror shows.</h1>
+        <p>
+          Pick experience dimensions or a curated collection and set your comfort limits. The camera
+          starts only when you ask; sound is separate.
+        </p>
+        <nav className="ie-workspaceNav" aria-label="Workspace sections">
+          <a href="#experience-choices">Pattern</a>
+          <a href="#comfort-preview">Comfort &amp; preview</a>
+        </nav>
+      </div>
+      <ExperienceFraming
+        profile={model.profileLoad.profile}
+        isLoading={model.profileLoad.isProfileLoading}
+      />
+      <h2 className="ie-sectionHead">
+        <span className="ie-sectionNo" aria-hidden="true">
+          1
+        </span>
+        Pattern
+      </h2>
+      <ComposerControls model={model} />
+      <ComposerReport model={model} />
+    </div>
+  )
+}
+
+function WorkspacePanel({ model }: ModelProps) {
+  return (
+    <aside className="ie-panel" aria-label="Controls panel" id="comfort-preview" tabIndex={-1}>
+      <WorkspaceComfort model={model} />
+      <WorkspacePreview model={model} />
+      <MediaControls model={model} />
+      <WorkspaceDebugSection model={model} />
+    </aside>
+  )
+}
+
+/**
+ * Setup reads choices first; live leads with the mirror. The order changes in the DOM, not just
+ * visually, so focus order matches what is on screen. The children are keyed so React moves the
+ * choice column and never remounts the panel that holds the video and canvases.
+ */
 function WorkspaceLayout({ model }: ModelProps) {
+  const live = model.cameraController.isActive
+  const choices = <WorkspaceChoices key="choices" model={model} />
+  const panel = <WorkspacePanel key="panel" model={model} />
   return (
     <section
-      className={`ie-layout ie-layout--${model.cameraController.isActive ? 'live' : 'setup'}`}
+      className={`ie-layout ie-layout--${live ? 'live' : 'setup'}`}
       aria-label="Experience workspace"
     >
-      <div className="ie-choiceColumn" id="experience-choices" tabIndex={-1}>
-        <div className="ie-workspaceIntro">
-          <h1>Choose what the mirror shows.</h1>
-          <p>
-            Pick experience dimensions or a curated collection and set your comfort limits. The
-            camera starts only when you ask; sound is separate.
-          </p>
-          <nav className="ie-workspaceNav" aria-label="Workspace sections">
-            <a href="#experience-choices">Pattern</a>
-            <a href="#comfort-preview">Comfort &amp; preview</a>
-          </nav>
-        </div>
-        <ExperienceFraming
-          profile={model.profileLoad.profile}
-          isLoading={model.profileLoad.isProfileLoading}
-        />
-        <h2 className="ie-sectionHead">
-          <span className="ie-sectionNo" aria-hidden="true">
-            1
-          </span>
-          Pattern
-        </h2>
-        <ComposerControls model={model} />
-        <ComposerReport model={model} />
-      </div>
-      <aside className="ie-panel" aria-label="Controls panel" id="comfort-preview" tabIndex={-1}>
-        <WorkspaceComfort model={model} />
-        <WorkspacePreview model={model} />
-        <MediaControls model={model} />
-        <WorkspaceDebugSection model={model} />
-      </aside>
+      {live ? [panel, choices] : [choices, panel]}
     </section>
   )
 }

@@ -114,8 +114,9 @@
   gap: clamp(var(--s-6), 5vw, var(--s-8));
 }
 
+/* Live: the mirror column leads and takes the width; the choices move to the outer column. */
 .ie-layout--live {
-  grid-template-columns: minmax(300px, 0.72fr) minmax(0, 1.28fr);
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.7fr);
 }
 
 .ie-choiceColumn {
@@ -162,6 +163,15 @@
   font-weight: 600;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.25em;
+}
+
+.ie-layout--live > .ie-choiceColumn {
+  padding-left: clamp(var(--s-5), 3vw, var(--s-7));
+  border-left: 1px solid var(--rule);
+}
+
+.ie-layout--live .ie-workspaceIntro h1 {
+  font-size: var(--t-36);
 }
 
 /* Section heads carry a ringed serif numeral, a small echo of the aperture mark:

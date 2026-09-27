@@ -63,8 +63,10 @@ describe('passive startup', () => {
 describe('camera start', () => {
   it('requests video only and reaches the active camera state', async () => {
     handle = await mountWorkspace()
+    const video = handle.container.querySelector('video')
     await startCamera(handle.container)
 
+    expect(handle.container.querySelector('video')).toBe(video)
     expect(mediaDevices.getUserMedia).toHaveBeenCalledOnce()
     expect(mediaDevices.getUserMedia).toHaveBeenCalledWith({ video: true, audio: false })
     expect(audioContexts.constructedCount()).toBe(0)

@@ -404,21 +404,30 @@
   }
 }
 
+/* Narrow columns (live outer column, phones): three equal cells whose labels may take two lines. */
 .ie-layout--live .composer__mode {
-  gap: 0 var(--s-4);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 var(--s-3);
 }
 
 .ie-layout--live .composer__mode .composer__toggle {
+  padding-block: var(--s-2);
   font-size: var(--t-14);
+  line-height: 1.25;
 }
 
 @media (max-width: 560px) {
   .composer__mode {
-    gap: 0 var(--s-4);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 var(--s-3);
   }
 
   .composer__mode .composer__toggle {
+    padding-block: var(--s-2);
     font-size: var(--t-14);
+    line-height: 1.25;
   }
 
   .composer__row {
