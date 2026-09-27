@@ -4,22 +4,21 @@
 // (docs/ARCHITECTURE.md "Preserve ... the #preset= grammar and legacy preset migration").
 import { act, createElement } from 'react'
 import type { Root } from 'react-dom/client'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import {
+  decodePresetFromHash,
+  encodePresetToHash,
+  migrateLegacyPresetPayload,
+} from '../../src/app/experience/presets/format'
 import {
   LEGACY_PRESET_STORAGE_KEY,
   PRESET_LIBRARY_STORAGE_KEY,
-  migrateLegacyPresetPayload,
-} from '../../src/app/experience/presets/library'
-import type { ApplyPresetPayloadCallbacks } from '../../src/app/experience/presets/payloadCodec'
+} from '../../src/app/experience/presets/storage'
 import { usePresetLibrary } from '../../src/app/experience/presets/usePresetLibrary'
 import {
   LEGACY_WELCOME_ACKNOWLEDGEMENT_KEY,
   WELCOME_ACKNOWLEDGEMENT_KEY,
-} from '../../src/app/experience/components/WelcomeStep'
-import {
-  decodePresetFromHash,
-  encodePresetToHash,
-} from '../../src/app/experience/presets/presetShare'
+} from '../../src/app/welcome/WelcomeStep'
 import { disposeTestRoot, enableReactActEnvironment, renderTestRoot } from './reactDomHarness'
 
 enableReactActEnvironment()
@@ -30,27 +29,6 @@ afterEach(async () => {
   root = null
   localStorage.clear()
 })
-
-const PAYLOAD_CALLBACK_KEYS = [
-  'onModeChange',
-  'onConditionIdChange',
-  'onPresetsChange',
-  'onDimensionsChange',
-  'onIntensityChange',
-  'onSafeModeChange',
-  'onReducedMotionChange',
-  'onAudioEnabledChange',
-  'onCouplingStrengthChange',
-  'onMaxFeedbackChange',
-  'onInteractionAmountChange',
-] as const
-
-/** Builds a no-op ApplyPresetPayloadCallbacks: only localStorage writes matter here. */
-function createNoopPayloadCallbacks(): ApplyPresetPayloadCallbacks {
-  const noop = () => {}
-  const entries = PAYLOAD_CALLBACK_KEYS.map((key) => [key, noop])
-  return Object.fromEntries(entries) as ApplyPresetPayloadCallbacks
-}
 
 describe('storage key literals', () => {
   it('pins the exported preset and welcome storage key literals', () => {
@@ -64,10 +42,10 @@ describe('storage key literals', () => {
     const migrated = migrateLegacyPresetPayload({ conditionId: 'none' })
     if (!migrated) throw new Error('expected a valid default preset payload')
     const currentPayload = migrated
-    const payloadCallbacks = createNoopPayloadCallbacks()
+    const onApply = vi.fn()
     let library: ReturnType<typeof usePresetLibrary> | undefined
     function Probe() {
-      library = usePresetLibrary({ currentPayload, payloadCallbacks })
+      library = usePresetLibrary({ currentPayload, onApply })
       return null
     }
     const rendered = await renderTestRoot(createElement(Probe))

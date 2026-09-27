@@ -9,7 +9,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { BASELINE_PROFILE } from '../../src/domain/experience/fallbackProfile'
 import type { Profile } from '../../src/domain/experience/schema'
 import type { ComposerSettings } from '../../src/domain/experience/composition/types'
-import { composeEffectiveProfile } from '../../src/app/experience/composeExperience'
+import { composeEffectiveProfile } from '../../src/app/experience/profile/composeExperience'
 import {
   createOverlayManager,
   loadOverlayModules,

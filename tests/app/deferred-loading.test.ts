@@ -23,7 +23,7 @@ import {
   WELCOME_ACKNOWLEDGEMENT_KEY,
   getWelcomeAcknowledged,
   setWelcomeAcknowledged,
-} from '../../src/app/experience/components/WelcomeStep'
+} from '../../src/app/welcome/WelcomeStep'
 
 let root: Root | null = null
 

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   formatDiagnosticsJson,
   formatDiagnosticsText,
-} from '../../src/app/experience/session/debugDiagnosticsFormatting'
+} from '../../src/app/experience/debug/diagnosticsFormatting'
 
 describe('diagnostic formatting', () => {
   it('formats diagnostics with explicit runtime and safety fields', () => {

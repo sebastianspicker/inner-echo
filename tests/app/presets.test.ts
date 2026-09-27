@@ -1,12 +1,29 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-import { migrateLegacyPresetPayload } from '../../src/app/experience/presets/library'
-import type { PresetPayload } from '../../src/app/experience/presets/payloadCodec'
 import {
   decodePresetFromHash,
   encodePresetToHash,
-} from '../../src/app/experience/presets/presetShare'
-import { applyPassivePresetConfiguration } from '../../src/app/experience/presets/usePresetLibrary'
+  migrateLegacyPresetPayload,
+  type PresetPayload,
+} from '../../src/app/experience/presets/format'
+import {
+  settingsFromPayload,
+  type ExperienceSettings,
+} from '../../src/app/experience/workspace/settings'
+
+const baselineSettings: ExperienceSettings = {
+  composerMode: 'preset',
+  conditionId: 'none',
+  presets: [],
+  dimensions: [],
+  intensity: 0.5,
+  safeMode: true,
+  reducedMotion: false,
+  stressMode: false,
+  couplingStrength: 0,
+  maxFeedback: 0.35,
+  interactionAmount: 0.15,
+}
 
 const payload: PresetPayload = {
   mode: 'symptom',
@@ -57,25 +74,16 @@ describe('preset application contracts', () => {
     expect(migrated?.presets).toEqual([{ profileId: 'calm', weight: 1 }])
   })
 
-  it('applies stored configuration passively with audio forced off', () => {
-    const callbacks = {
-      onModeChange: vi.fn(),
-      onConditionIdChange: vi.fn(),
-      onPresetsChange: vi.fn(),
-      onDimensionsChange: vi.fn(),
-      onIntensityChange: vi.fn(),
-      onSafeModeChange: vi.fn(),
-      onReducedMotionChange: vi.fn(),
-      onAudioEnabledChange: vi.fn(),
-      onCouplingStrengthChange: vi.fn(),
-      onMaxFeedbackChange: vi.fn(),
-      onInteractionAmountChange: vi.fn(),
-    }
+  it('applies a stored payload onto settings in one call', () => {
+    // Forcing sound off for a passive application is the session's job, composed by the
+    // caller alongside settings.apply; see workspace-workflows.test.ts "loading a saved
+    // preset while sound is on stops sound".
+    const next = settingsFromPayload(payload, baselineSettings)
 
-    applyPassivePresetConfiguration(payload, callbacks)
-
-    expect(callbacks.onAudioEnabledChange).toHaveBeenCalledExactlyOnceWith(false)
-    expect(callbacks.onModeChange).toHaveBeenCalledExactlyOnceWith(payload.mode)
-    expect(callbacks.onConditionIdChange).toHaveBeenCalledExactlyOnceWith(payload.conditionId)
+    expect(next.composerMode).toBe(payload.mode)
+    expect(next.conditionId).toBe(payload.conditionId)
+    expect(next.presets).toEqual(payload.presets)
+    expect(next.dimensions).toEqual(payload.dimensions)
+    expect(next.intensity).toBe(payload.intensity)
   })
 })

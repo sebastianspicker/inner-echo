@@ -9,7 +9,7 @@ import { pageRecovery } from '../../src/app/ErrorBoundary'
 import {
   AudioMicControls,
   type AudioMicControlsProps,
-} from '../../src/app/experience/components/AudioMicControls'
+} from '../../src/app/experience/media/AudioMicControls'
 
 let root: Root | null = null
 
