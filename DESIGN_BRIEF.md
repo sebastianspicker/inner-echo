@@ -260,3 +260,75 @@ Exceptions to the anti-pattern list, justified: pill buttons are round for a rea
 derive from the aperture's arcs and separate "press" from "read", which stays rectilinear); the one
 large radius is the mirror, and nothing else is a rounded card; there are no shadows except the
 thumb and numeral rings, which are drawn as outlines.
+
+---
+
+## Outcome
+
+**Concept.** Inner Echo is a mirror with a caption. The camera is the one arched, dark object on a
+pale mist page; everything around it is quiet printed matter that says what the image shows, what
+it is not, and how strong the evidence behind it is.
+
+### Key decisions
+
+| Decision | Why |
+| --- | --- |
+| Mist ground (`#E8ECE6`) and night mist, following the system theme | Avoids both the category's dark "simulator" look and wellness pastel; the night theme covers dim rooms and low-confidence assumption A2 |
+| Newsreader for voice and numerals, Inclusive Sans for controls, no mono web font | Type carries the character; serif numerals read as a book, not an instrument |
+| Verdigris as the only accent, vermilion only for Stop Everything and errors | One annotation colour; the stop path can't be confused with anything else |
+| Arched mirror + italic caption under the stage | The product's ethic ("an interpretation, not a reproduction") becomes the visual signature, and it reads the real selection |
+| Evidence as a tally plus one word | Keeps grades legible at a glance without colour-only coding; full labels stay for assistive tech |
+| Live mode leads with the mirror at every width | On phones the mirror used to sit below the whole pattern list |
+| One design system in `src/shared/design/` for app and demo | The demo now looks like the product it demonstrates, and the zero-threshold duplication gate stays at zero |
+
+### Functional changes (all minimal)
+
+- **Live-mode DOM order.** The controls panel renders before the choice column while the camera is
+  active, so focus order matches the new visual order. Children are keyed so React moves the choice
+  column and never remounts the panel that owns the `<video>` and canvases; a workflow test pins
+  that the `<video>` element survives.
+- **`CompositionMap` removed.** It shipped hidden (`display: none`); `PlateCaption` replaces its
+  intent visibly.
+- **`strengthBadge` gains a `grade` field.** The label is unchanged; the new `EvidenceGrade`
+  component renders the tally and word.
+- **Copy.** Workspace title and lede, the comfort heading and lede, the welcome lede and third
+  commitment, the composed-profile summary, the filter count ("13 listed"), the demo readouts
+  (sentence case), and the HTML titles and descriptions. Every string the tests query is unchanged.
+- **Assets.** Self-hosted OFL fonts with licence texts in `public/third-party-licenses/` and a
+  "Bundled fonts" section in the notices; the brand mark and favicon recoloured (same geometry);
+  README screenshots regenerated.
+
+### Assumptions to revisit
+
+- **A1 (facilitator is primary, medium).** If explorers dominate, the design still holds: nothing
+  depends on a second person, and the copy addresses "you".
+- **A2/A3 (daylight rooms; light is more trustworthy, low/medium).** Both themes ship and follow the
+  OS; if dark proves preferred, only the default changes, not the system.
+- **A8 (mobile is secondary, low).** Mobile got its own decisions (stop bar, mirror-first live,
+  three-cell tabs), so a mobile-heavy audience is served.
+- **A9 (distinct from Otherlight, high).** Judge side by side; the shared ground is only "serif plus
+  calm", which the category allows.
+
+### Verification
+
+- `npm run verify` exits 0 under Node 22.23.3 (203 tests, contracts, docs, architecture,
+  zero duplication). The shell's default Node 26 fails the jsdom suites because Node 25+ ships its
+  own `localStorage` global; this predates the redesign.
+- `INNER_ECHO_PAGES_BASE_PATH=/inner-echo/ npm run pages:build && npm run pages:verify` exits 0;
+  under the production CSP meta tag both font families load and no CSP violation is logged.
+- Rendered review with Playwright at 390, 820 and 1440 px, light and dark, covering welcome, setup,
+  curated, dimensions selected, live, sound on, camera denied, evidence (overview and matrix), and
+  the demo (welcome, setup, running): 78 captures, no console errors.
+
+### Unresolved and next steps
+
+1. No in-app theme switch; the theme follows the OS. A facilitator presenting on a projector may
+   want one. Add it as a stored per-viewer preference with a new storage key and a migration note.
+2. Newsreader roman and italic are about 115 KB each even with trimmed axes. Subsetting to the
+   characters the UI and corpus use, or preloading only the roman, would cut first-paint cost.
+3. Manual screen-reader and real-device passes (iOS Safari, Android Chrome, Windows high contrast)
+   are still owed; PRODUCT.md already says conformance is not claimed.
+4. The live screenshots use a synthetic camera clip, not a person, on purpose. Real-camera
+   screenshots with consent would show the product more truthfully.
+5. On phones, the setup intro (title, lede, profile summary, caveats) is long before the list; a
+   collapsed "About this interpretation" could shorten it if users skim.
