@@ -1,48 +1,11 @@
-* {
+@import "./shared/design/tokens.css";
+
+/* Base ---------------------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-}
-
-:root {
-  color-scheme: dark;
-
-  --bg: #101c1e;
-  --surface-1: #172629;
-  --surface-2: #1d2e31;
-  --surface-3: #273a3d;
-  --surface-raised: #1d2e31;
-  --surface-control: #122124;
-  --surface-control-hover: #203337;
-  --text: #edf2ed;
-  --muted: #b6c4bf;
-  --faint: #9faeaa;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --accent: #aed9c8;
-  --accent-2: #c5e9db;
-  --accent-glow: rgba(125, 216, 200, 0.14);
-  --danger: #e89292;
-  --warn: #e2cd8a;
-  --r-sm: 3px;
-  --r-md: 8px;
-  --r-lg: 12px;
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 16px;
-  --sp-5: 24px;
-  --sp-6: 32px;
-  --sp-7: 48px;
-  --sp-8: 64px;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-  --font-display: Georgia, "Times New Roman", serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --ease-gentle: cubic-bezier(0.22, 0.61, 0.2, 1);
-  --ease-out-soft: cubic-bezier(0.22, 0.61, 0.2, 1);
-  --duration-fast: 120ms;
-  --duration-normal: 160ms;
-  --duration-slow: 200ms;
-  --shadow-1: none;
-  --shadow-2: none;
 }
 
 html,
@@ -53,38 +16,292 @@ body,
   margin: 0;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.5;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--t-16);
+  line-height: var(--lh-ui);
+  font-kerning: normal;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {
-  background: var(--accent-glow);
+  background: var(--selection);
+  color: var(--ink);
 }
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
+  color: inherit;
 }
 
 button {
   -webkit-tap-highlight-color: transparent;
 }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: var(--r-sm);
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
 
+p {
+  text-wrap: pretty;
+}
+
+fieldset {
+  min-width: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-control);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Buttons --------------------------------------------------------------------------------------
+ * Round, after the aperture mark. Secondary is an outline; primary is the verdigris the brand has
+ * always used; danger is vermilion and belongs to Stop Everything alone. */
+
+.ie-btn {
+  display: inline-flex;
+  min-height: var(--target);
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  padding: 10px 22px;
+  border: 1px solid var(--rule-control);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: var(--t-16);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  transition:
+    background-color var(--d-fast) var(--ease),
+    border-color var(--d-fast) var(--ease),
+    color var(--d-fast) var(--ease);
+}
+
+.ie-btn:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--paper-recessed);
+}
+
+.ie-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.ie-btn:disabled {
+  border-style: dashed;
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+
+.ie-btn[aria-busy="true"] {
+  cursor: progress;
+}
+
+.ie-btn--accent {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.ie-btn--accent:hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+  color: var(--accent-ink);
+}
+
+.ie-btn--accent:disabled {
+  border-color: var(--rule-control);
+  background: transparent;
+}
+
+.ie-btn--danger {
+  border-color: var(--stop);
+  background: var(--stop);
+  color: var(--stop-ink);
+}
+
+.ie-btn--danger:hover:not(:disabled) {
+  border-color: var(--stop-hover);
+  background: var(--stop-hover);
+  color: var(--stop-ink);
+}
+
+.ie-stopIcon {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+/* A text action inside running copy. */
+.ie-inlineAction {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+.ie-inlineAction:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Form controls ---------------------------------------------------------------------------- */
+
+input[type="text"],
+select {
+  min-height: var(--target);
+  padding: 0 var(--s-3);
+  border: 1px solid var(--rule-control);
+  border-radius: var(--radius-control);
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: var(--t-16);
+}
+
+select {
+  cursor: pointer;
+}
+
+input[type="text"]::placeholder {
+  color: var(--ink-3);
+  opacity: 1;
+}
+
+input[type="text"]:hover,
+select:hover {
+  border-color: var(--ink-2);
+}
+
+/* Square check, used for choosing dimensions and collections. */
+input[type="checkbox"] {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  flex: 0 0 auto;
+  appearance: none;
+  border: 1.5px solid var(--rule-control);
+  border-radius: var(--radius-check);
+  background: var(--sheet);
+  cursor: pointer;
+  transition:
+    background-color var(--d-fast) var(--ease),
+    border-color var(--d-fast) var(--ease);
+}
+
+input[type="checkbox"]::after {
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  width: 5px;
+  height: 10px;
+  border-right: 2px solid var(--accent-ink);
+  border-bottom: 2px solid var(--accent-ink);
+  content: "";
+  opacity: 0;
+  transform: rotate(45deg);
+}
+
+input[type="checkbox"]:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+input[type="checkbox"]:checked::after {
+  opacity: 1;
+}
+
+input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Switch: a checkbox inside a toggle control reads as on/off, not as a choice. */
+.ie-control--toggle input[type="checkbox"],
+.composer__toggle input[type="checkbox"] {
+  width: 40px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--paper-recessed);
+}
+
+.ie-control--toggle input[type="checkbox"]::after,
+.composer__toggle input[type="checkbox"]::after {
+  top: 3px;
+  left: 3px;
+  width: 15px;
+  height: 15px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink-3);
+  opacity: 1;
+  transform: none;
+  transition:
+    transform var(--d-fast) var(--ease),
+    background-color var(--d-fast) var(--ease);
+}
+
+.ie-control--toggle input[type="checkbox"]:checked,
+.composer__toggle input[type="checkbox"]:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.ie-control--toggle input[type="checkbox"]:checked::after,
+.composer__toggle input[type="checkbox"]:checked::after {
+  background: var(--accent-ink);
+  transform: translateX(16px);
+}
+
+/* Radio used as an option pill (audio input mode). */
+input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex: 0 0 auto;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* Range: a hairline with a solid ink bead. */
 input[type="range"] {
   width: 100%;
-  height: 18px;
+  height: 28px;
   margin: 0;
   appearance: none;
   background: transparent;
@@ -92,81 +309,105 @@ input[type="range"] {
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 4px;
-  background: var(--border-strong);
+  height: 2px;
+  background: var(--rule-control);
 }
 
 input[type="range"]::-webkit-slider-thumb {
   width: 18px;
   height: 18px;
-  margin-top: -7px;
+  margin-top: -8px;
   appearance: none;
-  border: 0;
+  border: 3px solid var(--paper);
   border-radius: 50%;
-  background: var(--text);
-  transition:
-    background var(--duration-normal) var(--ease-gentle),
-    transform var(--duration-normal) var(--ease-gentle);
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
+  transition: transform var(--d-fast) var(--ease);
 }
 
-input[type="range"]::-webkit-slider-thumb:hover {
-  background: var(--accent);
-  transform: scale(1.2);
+input[type="range"]:hover::-webkit-slider-thumb {
+  transform: scale(1.12);
 }
 
 input[type="range"]::-moz-range-track {
-  height: 4px;
-  border-radius: 4px;
-  background: var(--border-strong);
+  height: 2px;
+  background: var(--rule-control);
 }
 
 input[type="range"]::-moz-range-progress {
   height: 2px;
-  background: var(--accent);
+  background: var(--ink);
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border: 0;
+  width: 12px;
+  height: 12px;
+  border: 3px solid var(--paper);
   border-radius: 50%;
-  background: var(--text);
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
 }
 
-@keyframes ie-breathe {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 0.95;
-  }
+input[type="range"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
-@keyframes ie-fadeIn {
+/* Disclosure: a ruled line with a typeset plus/minus instead of a chevron. */
+.ie-summary,
+.composer__advanced > summary {
+  display: flex;
+  min-height: var(--target);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: var(--t-16);
+  font-weight: 600;
+  list-style: none;
+}
+
+.ie-summary::-webkit-details-marker,
+.composer__advanced > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ie-summary::after,
+.composer__advanced > summary::after {
+  flex: 0 0 auto;
+  width: 1.5ch;
+  color: var(--ink-3);
+  content: "+" / "";
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+  font-weight: 300;
+  line-height: 1;
+  text-align: center;
+}
+
+details[open] > .ie-summary::after,
+.composer__advanced[open] > summary::after {
+  content: "\2212" / "";
+}
+
+.ie-summary:hover::after,
+.composer__advanced > summary:hover::after {
+  color: var(--ink);
+}
+
+/* Motion -------------------------------------------------------------------------------------- */
+
+@keyframes ie-reveal {
   from {
     opacity: 0;
-    transform: translateY(4px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
-@keyframes ie-scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes ie-backdropIn {
+@keyframes ie-expose {
   from {
     opacity: 0;
   }
@@ -188,19 +429,4 @@ input[type="range"]::-moz-range-thumb {
     /* biome-ignore lint/complexity/noImportantStyles: accessibility override */
     scroll-behavior: auto !important;
   }
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
-fieldset {
-  min-width: 0;
 }
