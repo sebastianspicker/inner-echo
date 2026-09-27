@@ -300,7 +300,7 @@ describe('WebGL reactive sampling demand', () => {
       getAudioMetrics: () => ({ rms: 1, centroid: 1, flux: 1 }),
       getOverrides: () => ({
         video: {},
-        audio: active ? { 'audio.0.depth': 0.1 } : {},
+        audio: (active ? { 'audio.0.depth': 0.1 } : {}) as Record<string, number>,
       }),
       applyAudioOverrides,
     }

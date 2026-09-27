@@ -25,7 +25,7 @@ Run the narrowest relevant test while you work, then the broader gate appropriat
 
 | Command | Scope |
 |---|---|
-| `npm run typecheck` | Browser, pure-domain, build-config, and repository-tool TypeScript projects. |
+| `npm run typecheck` | Browser, pure-domain, build-config, repository-tool, and test TypeScript projects. |
 | `npm run lint` | Biome checks for source, tests, tools, and Vite configuration. Warnings fail. |
 | `npm run quality:duplication` | Strict TS, TSX, JavaScript, and CSS clone detection with zero tolerance. |
 | `npm run quality:check` | Lint plus 400-line code/500-line CSS file limits, a 60-line function limit, complexity 12, and zero duplication at 6 lines/50 tokens. |

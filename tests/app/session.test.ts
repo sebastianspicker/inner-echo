@@ -8,7 +8,10 @@ import {
   releaseCameraRuntime,
   startCameraRuntime,
   type CameraRuntimeContext,
+  type CameraRuntimeRefs,
 } from '../../src/app/experience/session/cameraRuntime'
+import type { OverlayControl } from '../../src/runtime/visual/overlay/contracts'
+import type { AudioEngineControl } from '../../src/runtime/audio/audioEngine'
 
 function createCameraRuntimeContext(video: HTMLVideoElement | null): CameraRuntimeContext {
   return {
@@ -43,7 +46,7 @@ describe('camera session cleanup', () => {
       getVideoTracks: () => [track],
     } as unknown as MediaStream
     const video = { srcObject: stream } as unknown as HTMLVideoElement
-    const context = {
+    const context: CameraRuntimeRefs = {
       streamRef: { current: stream },
       videoRef: { current: video },
       canvasRef: { current: null },
@@ -53,14 +56,14 @@ describe('camera session cleanup', () => {
           stop: () => {
             stopped.overlay += 1
           },
-        },
+        } as unknown as OverlayControl,
       },
       audioEngineControlRef: {
         current: {
           stop: () => {
             stopped.audio += 1
           },
-        },
+        } as unknown as AudioEngineControl,
       },
       cameraRequestSeqRef: { current: 4 },
       audioRequestSeqRef: { current: 8 },
