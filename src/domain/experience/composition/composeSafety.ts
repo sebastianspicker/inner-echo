@@ -6,6 +6,7 @@
 import type { Profile, VideoStackNodeDef, AudioStackConfig } from '../schema'
 import { clamp01, type ComposerSettings } from './types'
 import { clamp } from '../../../shared/numbers'
+import { GLOBAL_SAFETY_CLAMPS } from '../safetyLimits'
 import {
   mergeSafeModeClamps,
   mergeWarnings,
@@ -52,6 +53,7 @@ function clampAudioNode(
     maxNoise: number
     maxTremoloRate: number
     maxTremoloDepth: number
+    maxFeedback: number
     hardMaxFeedback: number
   },
 ) {
@@ -68,6 +70,7 @@ function clampAudioNodeValues(
     maxNoise: number
     maxTremoloRate: number
     maxTremoloDepth: number
+    maxFeedback: number
     hardMaxFeedback: number
   },
 ): void {
@@ -75,7 +78,7 @@ function clampAudioNodeValues(
     params.level = clamp(params.level, 0, limits.maxNoise)
   if (node === 'tremolo') clampTremoloParams(params, limits)
   if (node === 'delay' && typeof params.feedback === 'number')
-    params.feedback = clamp(params.feedback, 0, 0.18 * limits.hardMaxFeedback)
+    params.feedback = clamp(params.feedback, 0, limits.maxFeedback * limits.hardMaxFeedback)
 }
 
 function clampTremoloParams(
@@ -133,13 +136,29 @@ function createSafetyLimits(
 ): SafetyLimits {
   return {
     hardMaxFeedback: clamp01(settings.maxFeedback),
-    maxNoise: readSafetyLimit(safeModeClamps, 'max_noise_level', 0.08),
-    maxTremoloRate: readSafetyLimit(safeModeClamps, 'max_tremolo_rate_hz', 4),
-    maxTremoloDepth: readSafetyLimit(safeModeClamps, 'max_tremolo_depth', 0.15),
-    maxFeedback: readSafetyLimit(safeModeClamps, 'max_feedback', 0.18),
-    maxJitter: readSafetyLimit(safeModeClamps, 'max_jitter', 0.06),
-    maxPulseDepth: readSafetyLimit(safeModeClamps, 'max_pulse_depth', 0.18),
-    maxChroma: readSafetyLimit(safeModeClamps, 'max_chroma', 0.12),
+    maxNoise: readSafetyLimit(
+      safeModeClamps,
+      'max_noise_level',
+      GLOBAL_SAFETY_CLAMPS.max_noise_level,
+    ),
+    maxTremoloRate: readSafetyLimit(
+      safeModeClamps,
+      'max_tremolo_rate_hz',
+      GLOBAL_SAFETY_CLAMPS.max_tremolo_rate_hz,
+    ),
+    maxTremoloDepth: readSafetyLimit(
+      safeModeClamps,
+      'max_tremolo_depth',
+      GLOBAL_SAFETY_CLAMPS.max_tremolo_depth,
+    ),
+    maxFeedback: readSafetyLimit(safeModeClamps, 'max_feedback', GLOBAL_SAFETY_CLAMPS.max_feedback),
+    maxJitter: readSafetyLimit(safeModeClamps, 'max_jitter', GLOBAL_SAFETY_CLAMPS.max_jitter),
+    maxPulseDepth: readSafetyLimit(
+      safeModeClamps,
+      'max_pulse_depth',
+      GLOBAL_SAFETY_CLAMPS.max_pulse_depth,
+    ),
+    maxChroma: readSafetyLimit(safeModeClamps, 'max_chroma', GLOBAL_SAFETY_CLAMPS.max_chroma),
   }
 }
 
