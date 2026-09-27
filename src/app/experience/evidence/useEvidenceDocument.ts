@@ -5,7 +5,7 @@ import {
   type EvidenceDocPath,
 } from '../../../content/evidence'
 import { logger } from '../../../platform/logger'
-import { useAsyncEffect, type AsyncEffectContext } from '../hooks/useAsyncEffect'
+import { useAsyncEffect, type AsyncEffectContext } from '../profile/useAsyncEffect'
 
 export type EvidenceDocumentState =
   | { status: 'loading' }

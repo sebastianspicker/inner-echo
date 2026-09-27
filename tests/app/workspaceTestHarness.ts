@@ -45,11 +45,29 @@ export function getSelect(root: ParentNode, id: string): HTMLSelectElement {
 
 /** Finds a checkbox by the visible text of its wrapping <label> (dimension/condition rows). */
 export function getCheckboxByLabel(root: ParentNode, labelSubstring: string): HTMLInputElement {
+  return getInputByLabel(root, labelSubstring, 'checkbox')
+}
+
+/** Finds a radio/checkbox by the visible text of its wrapping <label> (e.g. mode choosers). */
+export function getInputByLabel(
+  root: ParentNode,
+  labelSubstring: string,
+  type: 'checkbox' | 'radio' = 'radio',
+): HTMLInputElement {
   const labels = Array.from(root.querySelectorAll('label'))
   const label = labels.find((element) => element.textContent?.includes(labelSubstring))
-  const checkbox = label?.querySelector<HTMLInputElement>('input[type="checkbox"]')
-  if (!checkbox) throw new Error(`No checkbox found for label containing "${labelSubstring}"`)
-  return checkbox
+  const input = label?.querySelector<HTMLInputElement>(`input[type="${type}"]`)
+  if (!input) throw new Error(`No ${type} found for label containing "${labelSubstring}"`)
+  return input
+}
+
+/** Sets a <select>'s value like a real user pick, bypassing React's value-tracking shim. */
+export function selectOption(select: HTMLSelectElement, value: string): void {
+  const setValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set
+  act(() => {
+    setValue?.call(select, value)
+    select.dispatchEvent(new Event('change', { bubbles: true }))
+  })
 }
 
 /** Advance several microtask turns inside act() so chained promises settle and flush. */
@@ -96,8 +114,8 @@ export async function unmountWorkspace(handle: WorkspaceHandle | null): Promise<
   await disposeTestRoot(handle?.root ?? null)
 }
 
-export function click(button: HTMLButtonElement): void {
-  act(() => button.click())
+export function click(element: HTMLElement): void {
+  act(() => element.click())
 }
 
 function textIncludes(container: HTMLElement, needle: string): boolean {

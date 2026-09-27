@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const publicRootFiles = ['README.md', 'CONTRIBUTING.md', 'SECURITY.md']
+const publicRootFiles = ['README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'PRODUCT.md', 'AGENTS.md']
 const publicDirectories = ['.github', 'docs', 'src/content/experience']
 
 function markdownFiles(directory) {
@@ -26,6 +26,19 @@ function normalizeTarget(rawTarget) {
   return target
 }
 
+// Backticked repository paths such as `src/runtime/session/` must exist too, so prose cannot
+// keep pointing at moved or deleted code. Globs and placeholders are skipped.
+const repoPathSpan = /`((?:src|tools|tests|docs|public|demo|assets)\/[^`\s]*)`/gu
+
+function isConcreteRepoPath(target) {
+  return !/[*{}<>$]/u.test(target)
+}
+
+// Superseded decision records keep their historical Governs paths.
+function isSupersededRecord(text) {
+  return /^- Status: superseded/mu.test(text)
+}
+
 function isExternal(target) {
   return /^(?:[a-z][a-z0-9+.-]*:|#|\/\/)/iu.test(target)
 }
@@ -34,7 +47,7 @@ const missing = []
 let checked = 0
 
 const maintainedFiles = [
-  ...publicRootFiles.map((filePath) => path.join(root, filePath)),
+  ...publicRootFiles.map((filePath) => path.join(root, filePath)).filter((f) => fs.existsSync(f)),
   ...publicDirectories.flatMap((directory) => markdownFiles(path.join(root, directory))),
 ]
 
@@ -53,6 +66,15 @@ for (const filePath of maintainedFiles) {
     const resolved = path.resolve(path.dirname(filePath), decodeURIComponent(withoutFragment))
     if (!fs.existsSync(resolved)) {
       missing.push(`${path.relative(root, filePath)} -> ${target}`)
+    }
+  }
+  if (isSupersededRecord(text)) continue
+  for (const match of text.matchAll(repoPathSpan)) {
+    const target = match[1]
+    if (!isConcreteRepoPath(target)) continue
+    checked += 1
+    if (!fs.existsSync(path.join(root, target))) {
+      missing.push(`${path.relative(root, filePath)} -> \`${target}\``)
     }
   }
 }

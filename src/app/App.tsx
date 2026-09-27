@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from 'react'
-import { WelcomeEntry } from './WelcomeEntry'
-import { getWelcomeAcknowledged } from './experience/components/WelcomeStep'
-import './experience/components/ExperienceWorkspace.css'
+import { WelcomeEntry } from './welcome/WelcomeEntry'
+import { getWelcomeAcknowledged } from './welcome/WelcomeStep'
+import './experience/workspace/ExperienceWorkspace.css'
 
 const ExperienceWorkspace = lazy(() =>
   import('./experience/ExperienceWorkspace').then((module) => ({

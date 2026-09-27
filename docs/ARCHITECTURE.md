@@ -28,10 +28,12 @@ never fetches citations in the background.
 | Path | Responsibility |
 | --- | --- |
 | `index.html` → `src/main.tsx` | Live application bootstrap and error boundary. |
-| `src/app/experience/` | React composition root, visible state, user actions, preset workflows, and lifecycle orchestration. |
-| `src/domain/experience/` | Pure schemas, safety and motion policy, parameter addressing, stack resolution, and composition. |
+| `src/app/welcome/` | Welcome step and pre-workspace evidence access. |
+| `src/app/experience/` | React composition root: visible settings, user actions, presets, and binding to the media session (see [app map](#app-layer-map)). |
+| `src/domain/experience/` | Pure schemas, safety and motion policy, parameter addressing and control resolution, stack resolution, and composition. |
 | `src/content/experience/` | Bundled catalog, profiles, dimensions, mappings, and validating adapters. |
 | `src/content/evidence/` | Bundled Markdown lookup, parsing, and sanitization. |
+| `src/runtime/session/` | The media session: the single owner of the camera stream, audio engine, microphone, and overlay lifecycle ([ADR-0004](decisions/0004-media-session-ownership.md)). |
 | `src/runtime/camera/` | Video-only camera acquisition and track cleanup. |
 | `src/runtime/audio/` | `AudioContext`, synth, optional microphone, effects, analysis, and disposal. |
 | `src/runtime/visual/` | Video-node factories, WebGL rendering, Canvas2D fallback, metrics, and GPU cleanup. |
@@ -78,9 +80,11 @@ globals by accident.
 
 1. Content adapters load bundled catalog, dimension, mapping, or profile JSON.
 2. Zod schemas reject invalid data and normalize supported optional values.
-3. `useProfileLoad` selects a curated profile or composes one from dimensions or weighted collections.
+3. `app/experience/profile/useProfileLoad.ts` selects a curated profile or composes one from dimensions
+   or weighted collections.
 4. Domain policy applies interaction, global bounds, Safe Mode, and Reduced Motion.
-5. After camera metadata is available, the app lazily loads graph, coupling, and overlay constructors.
+5. The app passes the profile and live settings to the media session. After camera metadata is
+   available, the session lazily loads graph, coupling, and overlay constructors.
 6. `runtime/visual/graph` creates executable video nodes from declarative `video_stack` entries.
 7. The audio engine applies the desired audio stack when sound has been activated.
 
@@ -113,8 +117,8 @@ flowchart LR
 Camera, sound, and microphone activate separately. A microphone request is only possible once the
 audio graph exists. Importing a preset updates the desired configuration with audio forced off.
 
-The WebGL frame loop reads current control refs and samples metrics only when something live needs
-them. Video readback runs for active coupling or development diagnostics; audio features run for
+The WebGL frame loop reads the session's current live settings and samples metrics only when
+something live needs them. Video readback runs for active coupling or development diagnostics; audio features run for
 coupling or applicable legacy RMS mappings. The development RMS meter has its own activation gate.
 Changing those controls takes effect without restarting the overlay. Withdrawing audio overrides or
 stopping the overlay restores each affected audio module's original parameters, including defaults
@@ -131,7 +135,10 @@ true peak or acoustic volume at the listener's device.
 
 ## State and lifecycle ownership
 
-React owns visible state and consent actions. The public state contracts are:
+React owns the user's choices: composition, comfort settings, presets, evidence, and debug toggles.
+The media session in `src/runtime/session/` owns every long-lived browser resource and publishes an
+immutable snapshot that React reads with `useSyncExternalStore`. User actions call session methods
+directly, so direct-activation rules hold inside the click. The public state contracts are:
 
 - camera: `idle`, `requesting`, `active`, `denied`, or `error`;
 - sound: `off`, `starting`, `on`, or `error`;
@@ -143,8 +150,8 @@ Interruptions and browser blocks surface through the applicable error state and 
 separate public union members. Visible state follows real runtime transitions; clicking a control
 never optimistically claims capability.
 
-Long-lived browser resources live inside runtime controls and focused session hooks, and
-request-sequence guards discard stale async results. Stop Everything invalidates pending camera and
+The session is created once per workspace. Its browser services are injected, so tests replace
+them without mocking module paths. Request-sequence guards discard stale async results. Stop Everything invalidates pending camera and
 audio work, then stops the overlay, audio graph, microphone tracks, camera tracks, video bindings,
 and canvases before returning the UI to idle. A camera interruption tears down the camera and
 overlay but does not silently stop independently activated audio.
@@ -164,8 +171,7 @@ development-only diagnostics out of production chunks.
 
 When a profile changes, the overlay lifecycle compares a canonical identity of video definitions,
 audio-chain definitions, reactive mappings, safety policy, and Reduced Motion. Equivalent profiles
-keep the graph and coupling state while live control refs and parameter synchronization apply the
-current values. Camera restart and explicit profile retry remain restart triggers. Renderer sizing
+keep the graph and coupling state while the session applies the current live values. Camera restart and explicit profile retry remain restart triggers. Renderer sizing
 tracks container size and capped DPR independently from internal render-target scale.
 
 Vite emits `index.html` and `demo/index.html` without source maps and includes the public notice
@@ -173,10 +179,25 @@ files. The Pages assembler applies the configured base path, adds `.nojekyll`, a
 document-level CSP fallback before load-bearing elements in every HTML entry. See
 [RELEASING.md](RELEASING.md) and [../SECURITY.md](../SECURITY.md).
 
+## App layer map
+
+| Path under `src/app/experience/` | Responsibility |
+| --- | --- |
+| `ExperienceWorkspace.tsx` | Lazy workspace entry; its path is a checked bundle boundary. |
+| `workspace/` | Workspace model, view shell, settings object, session binding, and shared labels. |
+| `media/` | Camera, comfort, sound, and microphone controls, plus media status copy. |
+| `composer/` | Composition UI, selection helpers, framing, and composition report. |
+| `profile/` | Catalog and profile loading and composition, badge strengths, and control-resolution wrapper. |
+| `presets/` | Persisted preset format and `#preset=` grammar, storage and migration, and the library hook and panel. |
+| `evidence/` | Sanitized lazy evidence drawer. |
+| `debug/` | Development-only diagnostics panel and formatting. |
+| `ui/` | Shared form primitives. |
+
 ## Extension points and invariants
 
 - Add pure experience policy to `domain`, bundled definitions to `content`, device or constructor
-  behavior to `runtime`, and workflow composition to `app`.
+  behavior to `runtime`, and workflow composition to `app`. The app reaches media only through
+  `src/runtime/session/`, and it never holds streams, audio contexts, or request counters.
 - Keep runtime subsystem imports behind narrow `index.ts` or graph facades.
 - Treat schemas, profiles, mappings, graph builders, registries, safety policy, and generated
   references as one contract.

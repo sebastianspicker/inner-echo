@@ -12,7 +12,7 @@ import {
   endVideoTrack,
   installFakeMediaDevices,
 } from './fakeBrowserMedia'
-import { encodePresetToHash } from '../../src/app/experience/presets/presetShare'
+import { encodePresetToHash } from '../../src/app/experience/presets/format'
 import {
   click,
   enableMicrophone,
@@ -21,8 +21,11 @@ import {
   getButton,
   getCheckboxByLabel,
   getInput,
+  getInputByLabel,
+  getSelect,
   mountWorkspace,
   queryButton,
+  selectOption,
   startCamera,
   stopEverything,
   unmountWorkspace,
@@ -216,6 +219,60 @@ describe('shared preset hash', () => {
     await flushAsync()
 
     expect(getInput(handle.container, 'core-intensity').value).toBe('0.5')
+  })
+})
+
+describe('curated condition intensity', () => {
+  // Regression for the defect where a preset payload's own intensity was overwritten by
+  // the curated profile's intensity_default once the profile finished loading.
+  it('keeps a preset-mode shared hash intensity after the curated profile loads', async () => {
+    window.location.hash = encodePresetToHash({
+      mode: 'preset',
+      conditionId: 'anxiety',
+      presets: [],
+      dimensions: [],
+      intensity: 0.81,
+      safeMode: true,
+      reducedMotion: false,
+      audioEnabled: false,
+      couplingStrength: 0,
+      maxFeedback: 0.35,
+      interactionAmount: 0.15,
+    })
+
+    handle = await mountWorkspace()
+    await flushAsync()
+
+    expect(getInput(handle.container, 'core-intensity').value).toBe('0.81')
+  })
+
+  // anxiety.json's safety.intensity_default (src/content/experience/profiles/anxiety.json).
+  const ANXIETY_INTENSITY_DEFAULT = '0.35'
+
+  it('resets intensity to the newly selected curated profile default', async () => {
+    handle = await mountWorkspace()
+    const { container } = handle
+    click(getInputByLabel(container, 'Curated collections'))
+    await flushAsync()
+
+    selectOption(getSelect(container, 'condition-picker'), 'anxiety')
+
+    await waitFor(() => getInput(container, 'core-intensity').value === ANXIETY_INTENSITY_DEFAULT)
+  })
+})
+
+describe('preset load forces sound off', () => {
+  // Importing a preset updates the desired configuration with audio forced off
+  // (docs/ARCHITECTURE.md "Media and coupling flow").
+  it('loading a saved preset while sound is on stops sound', async () => {
+    handle = await mountWorkspace()
+    await enableSound(handle.container)
+    click(getButton(handle.container, 'Save new'))
+    click(getButton(handle.container, 'Load'))
+    await flushAsync()
+
+    expect(handle.container.textContent).toContain('Audio: off')
+    expect(getCloseMock(audioContexts.instances[0])).toHaveBeenCalled()
   })
 })
 

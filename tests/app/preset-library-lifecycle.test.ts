@@ -6,8 +6,8 @@ import { afterEach, expect, it, vi } from 'vitest'
 import {
   createPresetSnapshot,
   migrateLegacyPresetPayload,
-  PRESET_LIBRARY_STORAGE_KEY,
-} from '../../src/app/experience/presets/library'
+} from '../../src/app/experience/presets/format'
+import { PRESET_LIBRARY_STORAGE_KEY } from '../../src/app/experience/presets/storage'
 import { usePresetLibrary } from '../../src/app/experience/presets/usePresetLibrary'
 import { disposeTestRoot, enableReactActEnvironment, renderTestRoot } from './reactDomHarness'
 
@@ -33,25 +33,12 @@ it.each([
     : []
   if (saved) localStorage.setItem(PRESET_LIBRARY_STORAGE_KEY, JSON.stringify(snapshots))
   const getItem = vi.spyOn(Storage.prototype, 'getItem')
-  const callback = vi.fn()
-  const payloadCallbacks = {
-    onModeChange: callback,
-    onConditionIdChange: callback,
-    onPresetsChange: callback,
-    onDimensionsChange: callback,
-    onIntensityChange: callback,
-    onSafeModeChange: callback,
-    onReducedMotionChange: callback,
-    onAudioEnabledChange: callback,
-    onCouplingStrengthChange: callback,
-    onMaxFeedbackChange: callback,
-    onInteractionAmountChange: callback,
-  }
+  const onApply = vi.fn()
   let library: ReturnType<typeof usePresetLibrary> | undefined
   let renders = 0
   function Probe() {
     if (++renders > 15) throw new Error('Preset library did not settle')
-    library = usePresetLibrary({ currentPayload, payloadCallbacks })
+    library = usePresetLibrary({ currentPayload, onApply })
     return createElement('output', null, library.presetName)
   }
 
@@ -63,5 +50,5 @@ it.each([
 
   expect(rendered.container.textContent).toBe('An unsaved edit')
   expect(getItem.mock.calls.filter(([key]) => key === PRESET_LIBRARY_STORAGE_KEY)).toHaveLength(1)
-  expect(callback).not.toHaveBeenCalled()
+  expect(onApply).not.toHaveBeenCalled()
 })

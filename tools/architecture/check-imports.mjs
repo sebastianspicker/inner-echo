@@ -55,6 +55,16 @@ const allowedDependencies = {
   entry: new Set(['app', 'platform', 'shared', 'entry']),
 }
 
+// The app reaches runtime code only through these entry points: the media session facade and
+// the constructor-free node capability metadata (ADR-0004).
+const appRuntimeEntries = new Set(['src/runtime/session/index.ts', 'src/runtime/capabilities.ts'])
+
+function violatesRuntimeFacade(fromLayer, toLayer, imported) {
+  return (
+    fromLayer === 'app' && toLayer === 'runtime' && !appRuntimeEntries.has(sourcePath(imported))
+  )
+}
+
 const files = collectSourceFiles(sourceRoot)
 const graph = new Map(files.map((file) => [file, []]))
 const violations = []
@@ -69,6 +79,10 @@ for (const file of files) {
     const toLayer = layer(imported)
     if (!allowedDependencies[fromLayer].has(toLayer)) {
       violations.push(`${sourcePath(file)} (${fromLayer}) -> ${sourcePath(imported)} (${toLayer})`)
+    } else if (violatesRuntimeFacade(fromLayer, toLayer, imported)) {
+      violations.push(
+        `${sourcePath(file)} (app) -> ${sourcePath(imported)} (runtime facade bypass)`,
+      )
     }
   }
 }

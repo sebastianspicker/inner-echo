@@ -13,7 +13,7 @@ import {
   loadProfileBadgeStrengths,
   selectProfileBadgeIds,
   useProfileBadgeStrengths,
-} from '../../src/app/experience/hooks/useProfileBadgeStrengths'
+} from '../../src/app/experience/profile/useProfileBadgeStrengths'
 import type { ExperienceDimensionDef } from '../../src/domain/experience/composition/types'
 
 const catalog = [

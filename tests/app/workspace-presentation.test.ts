@@ -3,7 +3,7 @@
 import { act, createElement, createRef } from 'react'
 import type { Root } from 'react-dom/client'
 import { afterEach, expect, it } from 'vitest'
-import { CameraStage, type CameraStageProps } from '../../src/app/experience/components/CameraStage'
+import { CameraStage, type CameraStageProps } from '../../src/app/experience/media/CameraStage'
 import { disposeTestRoot, enableReactActEnvironment, renderTestRoot } from './reactDomHarness'
 
 let root: Root | null = null

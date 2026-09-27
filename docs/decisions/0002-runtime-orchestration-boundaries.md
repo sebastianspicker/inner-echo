@@ -1,6 +1,6 @@
 # ADR-0002: Runtime orchestration boundaries
 
-- Status: accepted
+- Status: superseded by [ADR-0004](0004-media-session-ownership.md) on 2026-09-27
 - Date: 2026-08-09
 - Governs: `src/app/experience/ExperienceWorkspace.tsx`, `src/app/experience/hooks/` and `src/app/experience/session/`,
   `src/content/experience/`, `src/domain/experience/composition/`, `src/runtime/audio/`,

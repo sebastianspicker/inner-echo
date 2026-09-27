@@ -1,8 +1,8 @@
-import { ExperienceWorkspaceView } from './components/ExperienceWorkspaceView'
-import { useExperienceWorkspaceModel } from './hooks/useExperienceWorkspaceModel'
+import { ExperienceWorkspaceView } from './workspace/ExperienceWorkspaceView'
+import { useExperienceWorkspace } from './workspace/useExperienceWorkspace'
 
 export function ExperienceWorkspace() {
-  const model = useExperienceWorkspaceModel()
+  const model = useExperienceWorkspace()
 
   return <ExperienceWorkspaceView model={model} />
 }

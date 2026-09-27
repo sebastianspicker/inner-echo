@@ -1,8 +1,8 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { ExperienceFraming } from '../../src/app/experience/components/ExperienceFraming'
-import { strengthBadge } from '../../src/app/experience/session/composerUtils'
+import { ExperienceFraming } from '../../src/app/experience/composer/ExperienceFraming'
+import { strengthBadge } from '../../src/app/experience/composer/selection'
 
 describe('experience framing', () => {
   it('shows the loaded description and distinguishes experience evidence from effect validation', () => {
