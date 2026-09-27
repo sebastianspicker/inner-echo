@@ -1,10 +1,18 @@
+/**
+ * Parameter addressing: resolves a profile's `ui.controls` entries to pipeline param
+ * keys ("intensity", "safeMode", "reducedMotion", "audioEnabled", "<builtIndex>.<param>",
+ * "audio.<chainIndex>.<param>") and derives default control values from profile data.
+ *
+ * `options.supportedNodeIds` is required here (no runtime-importing default): callers
+ * own which node ids the active runtime supports.
+ */
+import type { Profile, UIControl } from './schema'
+import { parseScopedTarget } from './parameterTarget'
 import {
   getBuiltNodeIndex,
+  getProfileEntryForBuiltIndex,
   type BuildVideoNodesOptions,
-} from '../../../domain/experience/videoStack'
-import type { Profile, UIControl } from '../../../domain/experience/schema'
-import { parseScopedTarget } from '../../../domain/experience/parameterTarget'
-import { resolveVideoStackOptions } from './controlDefaultBuilder'
+} from './videoStack'
 
 export interface ResolvedControl {
   control: UIControl
@@ -24,6 +32,8 @@ const GLOBAL_CONTROLS: Record<string, GlobalControl> = {
   reduced_motion: { paramKey: 'reducedMotion', kind: 'reducedMotion', defaultValue: false },
   audio_enabled: { paramKey: 'audioEnabled', kind: 'audioEnabled', defaultValue: false },
 }
+
+const GLOBAL_CONTROL_KINDS = new Set(['intensity', 'safeMode', 'reducedMotion', 'audioEnabled'])
 
 function numericOrControlDefault(
   params: Record<string, unknown> | undefined,
@@ -63,12 +73,12 @@ function resolveVideoControl(
   control: UIControl,
   profile: Profile,
   target: string,
-  options?: Partial<BuildVideoNodesOptions>,
+  options: BuildVideoNodesOptions,
 ): ResolvedControl | null {
   const parsed = parseScopedTarget(target, 'video')
   if (!parsed) return null
   const { nodeId, param } = parsed
-  const nodeIndex = getBuiltNodeIndex(profile, nodeId, resolveVideoStackOptions(options))
+  const nodeIndex = getBuiltNodeIndex(profile, nodeId, options)
   if (nodeIndex === -1) return null
   const entry = profile.video_stack.find((node) => {
     const nodeName = (node.node ?? '').toLowerCase()
@@ -113,7 +123,7 @@ function resolveAudioControl(
 export function resolveControl(
   control: UIControl,
   profile: Profile,
-  options?: Partial<BuildVideoNodesOptions>,
+  options: BuildVideoNodesOptions,
 ): ResolvedControl | null {
   const target = (control.target ?? control.id ?? '').toLowerCase()
   return (
@@ -121,4 +131,90 @@ export function resolveControl(
     resolveVideoControl(control, profile, target, options) ??
     resolveAudioControl(control, profile, target)
   )
+}
+
+/** Resolve node-scoped controls only (excludes global intensity/safeMode/etc). */
+export function resolveProfileControls(
+  profile: Profile,
+  options: BuildVideoNodesOptions,
+): ResolvedControl[] {
+  const controls: ResolvedControl[] = []
+  for (const control of profile.ui?.controls ?? []) {
+    const resolved = resolveControl(control, profile, options)
+    if (resolved && !GLOBAL_CONTROL_KINDS.has(resolved.kind)) controls.push(resolved)
+  }
+  return controls
+}
+
+function defaultGlobalControls(profile: Profile): Record<string, number | boolean> {
+  const safety = profile.safety
+  return {
+    intensity: typeof safety?.intensity_default === 'number' ? safety.intensity_default : 0.5,
+    safeMode: false,
+    reducedMotion: false,
+    audioEnabled: false,
+  }
+}
+
+function addBuiltNodeDefaults(
+  out: Record<string, number | boolean>,
+  profile: Profile,
+  options: BuildVideoNodesOptions,
+): void {
+  for (let builtIndex = 0; ; builtIndex++) {
+    const entry = getProfileEntryForBuiltIndex(profile, builtIndex, options)
+    if (!entry) return
+    for (const [param, value] of Object.entries(entry.params ?? {})) {
+      if (typeof value === 'number' || typeof value === 'boolean')
+        out[`${builtIndex}.${param}`] = value
+    }
+  }
+}
+
+function applyControlDefaults(
+  out: Record<string, number | boolean>,
+  profile: Profile,
+  options: BuildVideoNodesOptions,
+): void {
+  for (const control of profile.ui?.controls ?? []) {
+    const resolved = resolveControl(control, profile, options)
+    if (resolved) out[resolved.paramKey] = resolved.defaultValue
+  }
+}
+
+/** Build initial control values from profile (intensity, safeMode, node params). */
+export function getDefaultControlValues(
+  profile: Profile,
+  options: BuildVideoNodesOptions,
+): Record<string, number | boolean> {
+  const out = defaultGlobalControls(profile)
+  addBuiltNodeDefaults(out, profile, options)
+  applyControlDefaults(out, profile, options)
+  return out
+}
+
+/** Merge previous control values into a fresh default set, keeping matching-type overrides. */
+export function mergeControlValuesWithDefaults(
+  defaults: Record<string, number | boolean>,
+  previous: Record<string, number | boolean>,
+): Record<string, number | boolean> {
+  const next: Record<string, number | boolean> = { ...defaults }
+  for (const [key, fallback] of Object.entries(defaults)) {
+    const previousValue = previous[key]
+    if (typeof previousValue === typeof fallback) next[key] = previousValue
+  }
+  return next
+}
+
+/** Recompute profile defaults, keeping the user's persisted global control overrides. */
+export function mergePersistedControlValues(
+  profile: Profile,
+  options: BuildVideoNodesOptions,
+  previous: Record<string, number | boolean>,
+): Record<string, number | boolean> {
+  const defaults = getDefaultControlValues(profile, options)
+  for (const key of ['intensity', 'safeMode', 'audioEnabled'] as const) {
+    if (typeof previous[key] === typeof defaults[key]) defaults[key] = previous[key]
+  }
+  return defaults
 }
