@@ -88,41 +88,24 @@ export function parsePresetLibraryWithDiagnostics(serialized: string): PresetLib
   }
 }
 
-export function migrateLegacyPresetPayload(raw: unknown): PresetPayload | null {
-  const legacySchema = z
-    .object({
-      mode: z.enum(['preset', 'multimorbid', 'symptom']).optional(),
-      conditionId: z.string().optional(),
-      presets: z
-        .array(
-          z.object({
-            profileId: z.string(),
-            weight: z.number(),
-          }),
-        )
-        .optional(),
-      dimensions: z
-        .array(
-          z.object({
-            dimensionId: z.string(),
-            weight: z.number(),
-          }),
-        )
-        .optional(),
-      intensity: z.number().optional(),
-      safeMode: z.boolean().optional(),
-      reducedMotion: z.boolean().optional(),
-      audioEnabled: z.boolean().optional(),
-      couplingStrength: z.number().optional(),
-      maxFeedback: z.number().optional(),
-      interactionAmount: z.number().optional(),
-    })
-    .passthrough()
+const legacyPresetSchema = z
+  .object({
+    mode: z.enum(['preset', 'multimorbid', 'symptom']).optional(),
+    conditionId: z.string().optional(),
+    presets: z.array(z.object({ profileId: z.string(), weight: z.number() })).optional(),
+    dimensions: z.array(z.object({ dimensionId: z.string(), weight: z.number() })).optional(),
+    intensity: z.number().optional(),
+    safeMode: z.boolean().optional(),
+    reducedMotion: z.boolean().optional(),
+    audioEnabled: z.boolean().optional(),
+    couplingStrength: z.number().optional(),
+    maxFeedback: z.number().optional(),
+    interactionAmount: z.number().optional(),
+  })
+  .passthrough()
 
-  const parsed = legacySchema.safeParse(raw)
-  if (!parsed.success) return null
-  const value = parsed.data
-  const payload = createPresetPayload({
+function createMigratedPresetPayload(value: z.infer<typeof legacyPresetSchema>): PresetPayload {
+  return createPresetPayload({
     mode: value.mode ?? 'preset',
     conditionId: value.conditionId ?? 'none',
     presets: value.presets ?? [],
@@ -131,10 +114,16 @@ export function migrateLegacyPresetPayload(raw: unknown): PresetPayload | null {
     safeMode: value.safeMode ?? true,
     reducedMotion: value.reducedMotion ?? false,
     audioEnabled: value.audioEnabled ?? false,
-    couplingStrength: value.couplingStrength ?? 0.5,
+    couplingStrength: value.couplingStrength ?? 0,
     maxFeedback: value.maxFeedback ?? 0.35,
     interactionAmount: value.interactionAmount ?? 0.15,
   })
+}
+
+export function migrateLegacyPresetPayload(raw: unknown): PresetPayload | null {
+  const parsed = legacyPresetSchema.safeParse(raw)
+  if (!parsed.success) return null
+  const payload = createMigratedPresetPayload(parsed.data)
   const validated = presetPayloadSchema.safeParse(payload)
   return validated.success ? validated.data : null
 }

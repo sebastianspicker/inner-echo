@@ -23,6 +23,10 @@ const payload: PresetPayload = {
 }
 
 describe('preset application contracts', () => {
+  it('keeps unspecified legacy coupling off and preserves an explicit saved value', () => {
+    expect(migrateLegacyPresetPayload({})?.couplingStrength).toBe(0)
+    expect(migrateLegacyPresetPayload({ couplingStrength: 0.3 })?.couplingStrength).toBe(0.3)
+  })
   it('round-trips a bounded hash payload and rejects oversized input', () => {
     expect(decodePresetFromHash(encodePresetToHash(payload))).toEqual({ ok: true, payload })
     expect(decodePresetFromHash(`#preset=${'x'.repeat(8192)}`)).toEqual({

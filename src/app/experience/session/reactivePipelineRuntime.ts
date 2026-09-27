@@ -1,5 +1,5 @@
 import type { Profile } from '../../../domain/experience/schema'
-import type { AudioEngineControl } from '../../../runtime/audio'
+import type { AudioEngineControl, AudioMetrics } from '../../../runtime/audio'
 import type {
   OverlayControl,
   OverlayRuntimeState,
@@ -9,8 +9,12 @@ import type {
 import { BASELINE_PROFILE } from '../../../domain/experience/fallbackProfile'
 import { clampIntensity, getSafetyContext } from '../../../domain/experience/safety'
 import { IMPLEMENTED_VIDEO_NODES } from '../../../runtime/capabilities'
+import { clamp01 } from '../../../shared/numbers'
 
 export type ReactiveRuntime = typeof import('../../../runtime/coupling')
+
+const EMPTY_AUDIO_METRICS: AudioMetrics = { rms: 0, centroid: 0, flux: 0 }
+const EMPTY_VIDEO_METRICS: VideoMetrics = { motion: 0, luminance: 0, edge: 0, instability: 0 }
 
 type MutableRef<T> = { current: T }
 
@@ -20,6 +24,7 @@ export interface ReactivePipelineRefs {
   couplingStrengthRef: MutableRef<number>
   maxFeedbackRef: MutableRef<number>
   safeModeRef: MutableRef<boolean>
+  diagnosticsActiveRef: MutableRef<boolean>
 }
 
 export interface ReactiveOverlayElements {
@@ -87,7 +92,9 @@ export function createOverridesGetter(
   profile: Profile,
   reducedMotion: boolean,
   refs: ReactivePipelineRefs,
-): ReactiveLoopOptions['getOverrides'] {
+): ReactiveLoopOptions['getOverrides'] & {
+  onInactive(baseControlValues: Record<string, number | boolean>): void
+} {
   const driver = reactiveRuntime.createReactiveDriver(profile, { reducedMotion })
   const couplingEngine = reactiveRuntime.createCouplingEngine(profile, {
     couplingStrength: refs.couplingStrengthRef.current,
@@ -102,7 +109,20 @@ export function createOverridesGetter(
   const outVideo: Record<string, number> = {}
   const outAudio: Record<string, number> = {}
 
-  return (delta, audio, video, baseControlValues) => {
+  const syncCouplingSettings = () => {
+    couplingEngine.setSettings({
+      couplingStrength: refs.couplingStrengthRef.current,
+      maxFeedback: refs.maxFeedbackRef.current,
+      safeMode: refs.safeModeRef.current,
+      reducedMotion,
+    })
+  }
+  const getOverrides: ReactiveLoopOptions['getOverrides'] = (
+    delta,
+    audio,
+    video,
+    baseControlValues,
+  ) => {
     const reactiveRms = Math.max(audio.rms, audio.micRms ?? 0)
     const videoReactive = driver.getVideoOverrides(delta, reactiveRms)
     const audioReactive = driver.getAudioOverrides(delta, reactiveRms)
@@ -110,12 +130,7 @@ export function createOverridesGetter(
     clearRecord(baseAfterReactive)
     copyRecord(baseAfterReactive, baseControlValues)
     mergeNumberRecord(baseAfterReactive as Record<string, number>, videoReactive)
-    couplingEngine.setSettings({
-      couplingStrength: refs.couplingStrengthRef.current,
-      maxFeedback: refs.maxFeedbackRef.current,
-      safeMode: refs.safeModeRef.current,
-      reducedMotion,
-    })
+    syncCouplingSettings()
     const coupled = couplingEngine.step(delta, audio, video, baseAfterReactive)
 
     clearRecord(outVideo)
@@ -126,6 +141,13 @@ export function createOverridesGetter(
     mergeNumberRecord(outAudio, coupled.audio)
     return { video: outVideo, audio: outAudio }
   }
+  return Object.assign(getOverrides, {
+    onInactive(baseControlValues: Record<string, number | boolean>): void {
+      syncCouplingSettings()
+      couplingEngine.step(0, EMPTY_AUDIO_METRICS, EMPTY_VIDEO_METRICS, baseControlValues)
+      refs.audioEngineControlRef.current?.resetMetricHistory?.()
+    },
+  })
 }
 
 export function createReactiveOptions(
@@ -134,7 +156,21 @@ export function createReactiveOptions(
   reducedMotion: boolean,
   refs: ReactivePipelineRefs,
 ): ReactiveLoopOptions {
+  const hasApplicableReactivity =
+    profile.reactive?.analyser_to_params?.some(
+      (mapping) =>
+        mapping.source === 'rms' &&
+        reactiveRuntime.resolveAnalyserTarget(mapping.target, profile, { reducedMotion }) !== null,
+    ) ?? false
+  const couplingIsActive = () =>
+    clamp01(refs.couplingStrengthRef.current) * clamp01(refs.maxFeedbackRef.current) > 0
+  const diagnosticsAreActive = () => import.meta.env.DEV && refs.diagnosticsActiveRef.current
+  const getOverrides = createOverridesGetter(reactiveRuntime, profile, reducedMotion, refs)
+
   return {
+    needsVideoMetrics: () => couplingIsActive() || diagnosticsAreActive(),
+    needsAudioMetrics: () => couplingIsActive() || hasApplicableReactivity,
+    needsOverrides: () => couplingIsActive() || hasApplicableReactivity,
     getAudioMetrics: () =>
       refs.audioEngineControlRef.current?.getMetrics?.() ?? { rms: 0, centroid: 0, flux: 0 },
     applyAudioOverrides: (overrides) => {
@@ -143,7 +179,8 @@ export function createReactiveOptions(
     onVideoMetrics: (metrics) => {
       refs.videoMetricsRef.current = metrics
     },
-    getOverrides: createOverridesGetter(reactiveRuntime, profile, reducedMotion, refs),
+    onInactive: getOverrides.onInactive,
+    getOverrides,
   }
 }
 

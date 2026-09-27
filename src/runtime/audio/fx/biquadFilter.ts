@@ -19,10 +19,12 @@ export function createBiquadFilterModule(
   params: BiquadFilterParams,
   config: BiquadFilterConfig,
 ): AudioModule {
+  const initialCutoff = clamp(params.cutoff ?? config.defaultCutoff, ...config.cutoffRange)
+  const initialQ = clamp(params.q ?? config.defaultQ, ...config.qRange)
   const filter = context.createBiquadFilter()
   filter.type = config.type
-  filter.frequency.value = clamp(params.cutoff ?? config.defaultCutoff, ...config.cutoffRange)
-  filter.Q.value = clamp(params.q ?? config.defaultQ, ...config.qRange)
+  filter.frequency.value = initialCutoff
+  filter.Q.value = initialQ
 
   const input = context.createGain()
   input.gain.value = 1
@@ -44,6 +46,10 @@ export function createBiquadFilterModule(
       if (typeof q === 'number') {
         filter.Q.setValueAtTime(clamp(q, ...config.qRange), context.currentTime)
       }
+    },
+    resetParams(): void {
+      filter.frequency.setValueAtTime(initialCutoff, context.currentTime)
+      filter.Q.setValueAtTime(initialQ, context.currentTime)
     },
     dispose(): void {
       input.disconnect()

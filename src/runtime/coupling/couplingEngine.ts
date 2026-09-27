@@ -8,7 +8,7 @@
 import type { Profile } from '../../domain/experience/schema'
 import type { AudioMetrics } from '../audio'
 import type { VideoMetrics } from '../visual/overlay'
-import { clamp01 } from '../../shared/numbers'
+import { clamp, clamp01 } from '../../shared/numbers'
 import { getBaseNumeric } from './baseNumeric'
 import { getProfileVideoBase } from './profileVideoBase'
 import { evaluateCouplingMappings } from './couplingEvaluation'
@@ -73,15 +73,23 @@ export function createCouplingEngine(
     step(deltaSec, audio, video, baseControlValues) {
       const safetyDamping = safeMode ? 0.6 : 1
       const strength = couplingStrength * maxFeedback * safetyDamping
-      return evaluateCouplingMappings(mappings, deltaSec, audio, video, strength, (mapping) =>
+      const resolveBase = (mapping: CouplingMapping) =>
         mapping.kind === 'audio'
           ? (mapping.base0 ?? 0)
           : getBaseNumeric(
               baseControlValues,
               mapping.key,
               getProfileVideoBase(profile, mapping.key, reducedMotion),
-            ),
-      )
+            )
+
+      if (strength === 0) {
+        for (const mapping of mappings) {
+          mapping.smoothed = clamp(resolveBase(mapping), mapping.clampMin, mapping.clampMax)
+        }
+        return { video: {}, audio: {} }
+      }
+
+      return evaluateCouplingMappings(mappings, deltaSec, audio, video, strength, resolveBase)
     },
   }
 }

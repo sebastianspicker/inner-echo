@@ -1,5 +1,7 @@
 import type { AudioStackConfig } from '../../domain/experience/schema'
 import { clamp01 } from '../../shared/numbers'
+import { canonicalJson } from '../../shared/canonicalJson'
+import { createOutputGuard } from './outputGuard'
 import { isKnownAudioNodeType, rampGain } from './audioGraphBuilder'
 import { configureOutputRouting } from './outputRouting'
 import { getAudioContextTime, getAudioStackTargetVolume } from './audioStackValues'
@@ -18,6 +20,7 @@ type AudioGraphSessionOptions = {
 /** Owns one engine instance's retained stack, nodes, switching, and disposal. */
 class AudioGraphSession {
   private masterGain: GainNode | null = null
+  private outputGuard: WaveShaperNode | null = null
   private analyserNode: AnalyserNode | null = null
   private mixer: GainNode | null = null
   private synthGain: GainNode | null = null
@@ -26,12 +29,15 @@ class AudioGraphSession {
   private activeChainNodes: string[] = []
   private switchTimeoutId: ReturnType<typeof setTimeout> | null = null
   private desiredAudioStack: AudioStackConfig | null | undefined
+  private desiredAudioKey: string | undefined
+  private overriddenKeys = new Set<string>()
 
   constructor(
     initialAudioStack: AudioStackConfig | null | undefined,
     private readonly options: AudioGraphSessionOptions,
   ) {
     this.desiredAudioStack = initialAudioStack
+    this.desiredAudioKey = canonicalJson(initialAudioStack)
   }
 
   initialize(): boolean {
@@ -39,7 +45,9 @@ class AudioGraphSession {
     if (!context) return false
     this.masterGain = context.createGain()
     this.masterGain.gain.value = this.desiredAudioStack?.master?.volume ?? 0.22
-    this.masterGain.connect(context.destination)
+    this.outputGuard = createOutputGuard(context)
+    this.masterGain.connect(this.outputGuard)
+    this.outputGuard.connect(context.destination)
     this.mixer = context.createGain()
     this.mixer.gain.value = 1
     this.synthGain = context.createGain()
@@ -50,6 +58,9 @@ class AudioGraphSession {
 
   setConditionAudio(audioStack: AudioStackConfig | null | undefined) {
     if (this.options.isDisposed()) return
+    const key = canonicalJson(audioStack)
+    if (key === this.desiredAudioKey) return
+    this.desiredAudioKey = key
     this.desiredAudioStack = audioStack
     if (!this.options.getContext() || !this.masterGain) return
     this.cancelScheduledSwitch()
@@ -64,7 +75,7 @@ class AudioGraphSession {
 
   setMasterVolume(value: number) {
     this.masterGain?.gain.setValueAtTime(
-      clamp01(value),
+      Number.isFinite(value) ? clamp01(value) : 0,
       this.options.getContext()?.currentTime ?? 0,
     )
   }
@@ -76,12 +87,14 @@ class AudioGraphSession {
 
   applyReactiveParams(overrides: Record<string, number>) {
     if (!overrides || !this.chain.length) return
+    this.restoreWithdrawnOverrides(overrides)
     for (const [key, value] of Object.entries(overrides)) {
       const parts = key.split('.')
       if (!key.startsWith('audio.') || parts.length < 3) continue
       const module = this.chain[Number(parts[1])]
       if (!module || !Number.isFinite(value)) continue
       module.setParams({ [parts.slice(2).join('.')]: value })
+      this.overriddenKeys.add(key)
     }
   }
 
@@ -119,9 +132,13 @@ class AudioGraphSession {
     this.synthGain = null
     this.options.safeDisconnect(this.masterGain)
     this.masterGain = null
+    this.options.safeDisconnect(this.outputGuard)
+    this.outputGuard = null
+    this.overriddenKeys.clear()
   }
 
   private resetRouting() {
+    this.overriddenKeys.clear()
     this.options.safeDisconnect(this.synthGain)
     this.options.safeDisconnect(this.mixer)
     this.options.safeDisconnect(this.analyserNode)
@@ -129,6 +146,17 @@ class AudioGraphSession {
     this.chain = []
     this.synthModule?.dispose()
     this.synthModule = null
+  }
+
+  private restoreWithdrawnOverrides(overrides: Record<string, number>) {
+    // A record replaces the previous modulation, including values from old
+    // presets whose base parameters were supplied by module defaults.
+    const withdrawnModules = new Set<number>()
+    for (const key of this.overriddenKeys) {
+      if (!Number.isFinite(overrides[key])) withdrawnModules.add(Number(key.split('.')[1]))
+    }
+    for (const index of withdrawnModules) this.chain[index]?.resetParams?.()
+    this.overriddenKeys.clear()
   }
 
   private buildAndConnect(audioStack: AudioStackConfig | null | undefined) {

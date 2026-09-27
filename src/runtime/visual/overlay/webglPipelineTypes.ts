@@ -5,7 +5,7 @@ export interface VideoPipelineParams {
   /** Keyed by control id or "nodeIndex.param" (e.g. "0.amount", "1.feedback"). */
   controlValues?: Record<string, number | boolean>
   /**
-   * SSOT safety context (global clamps + profile safe-mode clamps).
+   * Global clamps and profile Safe Mode clamps.
    * Shape is intentionally minimal to avoid importing condition-layer types into engine.
    */
   safetyContext?: {

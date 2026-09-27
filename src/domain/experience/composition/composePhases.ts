@@ -4,19 +4,7 @@
  */
 
 import type { AudioStackConfig, Profile, VideoStackNodeDef } from '../schema'
-import {
-  AUDIO_ORDER_GROUP,
-  deduplicateStackIds,
-  makeIdForNode,
-  mergeNumericWeighted,
-  mergeParams,
-  motifsToAudioDefs,
-  motifsToVideoDefs,
-  normalizeNodeType,
-  sortStackKeys,
-  type SourceId,
-  VIDEO_ORDER_GROUP,
-} from './composeBlend'
+import { normalizeNodeType } from './composeBlend'
 import { getInteractionGain } from './interactionMatrix'
 import {
   clamp01,
@@ -25,69 +13,71 @@ import {
   type SelectedPreset,
 } from './types'
 import type { ComposeReport, ComposeSources, CompositionCapabilities } from './contracts'
-
-type LoadedProfile = { preset: SelectedPreset; profile: Profile }
-
-type StackContrib = {
-  w: number
-  params: Record<string, unknown>
-  source: SourceId
-  index: number
-  node: string
-  id: string
-}
+import {
+  collectAudioContributions,
+  collectVideoContributions,
+  type LoadedProfile,
+} from './stackContributions'
+import { finalizeAudioStack, finalizeVideoStack } from './stackFinalization'
 
 export function cleanSelectedPresets(presets: SelectedPreset[]): SelectedPreset[] {
-  return (Array.isArray(presets) ? presets : [])
-    .filter((preset) => preset && typeof preset === 'object' && 'profileId' in preset)
-    .map((preset) => ({
-      profileId: String(preset.profileId ?? '').trim(),
-      weight: clamp01(typeof preset.weight === 'number' ? preset.weight : 0),
-    }))
-    .filter((preset) => preset.profileId && preset.profileId !== 'undefined' && preset.weight > 0)
-    .sort((a, b) => a.profileId.localeCompare(b.profileId))
+  return cleanWeightedSelections(
+    presets,
+    (preset) => preset.profileId,
+    (profileId, weight) => ({ profileId, weight }),
+  )
 }
 
 export function cleanSelectedDimensions(dimensions: SelectedDimension[]): SelectedDimension[] {
-  return (Array.isArray(dimensions) ? dimensions : [])
-    .filter((dimension) => dimension && typeof dimension === 'object' && 'dimensionId' in dimension)
-    .map((dimension) => ({
-      dimensionId: String(dimension.dimensionId ?? '').trim(),
-      weight: clamp01(typeof dimension.weight === 'number' ? dimension.weight : 0),
-    }))
-    .filter(
-      (dimension) =>
-        dimension.dimensionId && dimension.dimensionId !== 'undefined' && dimension.weight > 0,
-    )
-    .sort((a, b) => a.dimensionId.localeCompare(b.dimensionId))
+  return cleanWeightedSelections(
+    dimensions,
+    (dimension) => dimension.dimensionId,
+    (dimensionId, weight) => ({ dimensionId, weight }),
+  )
+}
+
+function cleanWeightedSelections<T extends { weight: number }>(
+  selections: T[],
+  getId: (selection: T) => unknown,
+  create: (id: string, weight: number) => T,
+): T[] {
+  return (Array.isArray(selections) ? selections : [])
+    .filter((selection) => selection && typeof selection === 'object')
+    .map((selection) => {
+      const id = String(getId(selection) ?? '').trim()
+      const weight = clamp01(typeof selection.weight === 'number' ? selection.weight : 0)
+      return create(id, weight)
+    })
+    .filter((selection) => {
+      const id = String(getId(selection) ?? '')
+      return id && id !== 'undefined' && selection.weight > 0
+    })
+    .sort((left, right) => String(getId(left)).localeCompare(String(getId(right))))
 }
 
 export function deriveEffectiveDimensionWeights(
   dimensions: SelectedDimension[],
   settings: ComposerSettings,
 ): Map<string, number> {
+  if (dimensions.length < 2 || clamp01(settings.interactionAmount) === 0) {
+    return new Map(dimensions.map((dimension) => [dimension.dimensionId, dimension.weight]))
+  }
   const effectiveWeights = new Map<string, number>()
-  if (dimensions.length >= 2 && clamp01(settings.interactionAmount) > 0) {
-    for (const dimension of dimensions) {
-      let sumGain = 0
-      for (const otherDimension of dimensions) {
-        if (dimension.dimensionId === otherDimension.dimensionId) continue
-        sumGain += getInteractionGain(
+  for (const dimension of dimensions) {
+    const sumGain = dimensions.reduce((sum, otherDimension) => {
+      if (dimension.dimensionId === otherDimension.dimensionId) return sum
+      return (
+        sum +
+        getInteractionGain(
           dimension.dimensionId,
           otherDimension.dimensionId,
           settings.interactionAmount,
         )
-      }
-      // Bounded: boost small weights a bit, but never exceed 1.
-      // Intentional: with 3+ co-selected dimensions sumGain may exceed 1,
-      // but clamp01 caps the effective weight so interaction effects never
-      // amplify beyond full strength: preventing runaway amplification.
-      effectiveWeights.set(dimension.dimensionId, clamp01(dimension.weight * (1 + sumGain)))
-    }
-  } else {
-    for (const dimension of dimensions) {
-      effectiveWeights.set(dimension.dimensionId, dimension.weight)
-    }
+      )
+    }, 0)
+    // With 3+ co-selected dimensions the sum may exceed 1, but the clamp
+    // prevents interaction effects from amplifying beyond full strength.
+    effectiveWeights.set(dimension.dimensionId, clamp01(dimension.weight * (1 + sumGain)))
   }
   return effectiveWeights
 }
@@ -159,81 +149,14 @@ export function composeVideoStack(
   report: ComposeReport,
   supportedVideoNodeIds: ReadonlySet<string>,
 ): VideoStackNodeDef[] {
-  const videoByKey = new Map<
-    string,
-    { node: string; id: string; contribs: StackContrib[]; minIndex: number }
-  >()
-
-  for (const { preset, profile } of loadedProfiles) {
-    for (let index = 0; index < (profile.video_stack ?? []).length; index++) {
-      const definition = profile.video_stack[index]
-      const node = normalizeNodeType(definition.node)
-      const id = makeIdForNode(definition)
-      const key = id || node
-      const params = definition.params ?? {}
-      const entry = videoByKey.get(key) ?? { node, id: key, contribs: [], minIndex: index }
-      entry.node = node
-      entry.minIndex = Math.min(entry.minIndex, index)
-      entry.contribs.push({
-        w: preset.weight,
-        params,
-        source: `preset:${preset.profileId}`,
-        index,
-        node,
-        id: key,
-      })
-      videoByKey.set(key, entry)
-    }
-  }
-
-  for (const dimension of dimensions) {
-    const entry = sources.getDimensionMappingEntry(dimension.dimensionId)
-    const strength = clamp01(effectiveWeights.get(dimension.dimensionId) ?? dimension.weight)
-    const definitions = motifsToVideoDefs(entry?.video_motifs ?? [], strength)
-    for (let index = 0; index < definitions.length; index++) {
-      const definition = definitions[index]
-      const node = normalizeNodeType(definition.node)
-      if (!supportedVideoNodeIds.has(node)) {
-        report.missingNodes.video.push(node)
-        continue
-      }
-      const key = makeIdForNode(definition) || node
-      const videoEntry = videoByKey.get(key) ?? {
-        node,
-        id: key,
-        contribs: [],
-        minIndex: 1000 + index,
-      }
-      videoEntry.minIndex = Math.min(videoEntry.minIndex, 1000 + index)
-      videoEntry.contribs.push({
-        w: strength,
-        params: definition.params ?? {},
-        source: `dim:${dimension.dimensionId}`,
-        index: 1000 + index,
-        node,
-        id: key,
-      })
-      videoByKey.set(key, videoEntry)
-    }
-  }
-
-  const videoItems = Array.from(videoByKey.entries()).map(([key, value]) => ({
-    key,
-    node: value.node,
-    id: value.id,
-    minIndex: value.minIndex,
-    minOrderGroup: VIDEO_ORDER_GROUP[value.node] ?? 1000,
-    params: mergeParams(
-      value.contribs.map((contribution) => ({
-        w: contribution.w,
-        params: contribution.params,
-        source: contribution.source,
-      })),
-    ),
-  }))
-  sortStackKeys(videoItems)
-  return deduplicateStackIds(
-    videoItems.map((item) => ({ id: item.id, node: item.node, params: item.params })),
+  return finalizeVideoStack(
+    collectVideoContributions(loadedProfiles, {
+      dimensions,
+      effectiveWeights,
+      sources,
+      report,
+      supportedNodeIds: supportedVideoNodeIds,
+    }),
   )
 }
 
@@ -246,95 +169,16 @@ export function composeAudioStack(
   report: ComposeReport,
   supportedAudioNodeIds: ReadonlySet<string>,
 ): AudioStackConfig {
-  const audioByKey = new Map<
-    string,
-    {
-      node: string
-      contribs: Array<{
-        w: number
-        params: Record<string, unknown>
-        source: SourceId
-        index: number
-      }>
-      minIndex: number
-    }
-  >()
-  const audioMasterVols: Array<{ w: number; v: number }> = []
-  let anyAudioDeclared = false
-
-  for (const { preset, profile } of loadedProfiles) {
-    const audio = profile.audio_stack
-    if (audio?.enabled) anyAudioDeclared = true
-    const volume = audio?.master?.volume
-    if (typeof volume === 'number') audioMasterVols.push({ w: preset.weight, v: volume })
-    const chain = audio?.chain ?? []
-    for (let index = 0; index < chain.length; index++) {
-      const definition = chain[index] as {
-        id?: string
-        node: string
-        params?: Record<string, unknown>
-      }
-      const node = normalizeNodeType(definition.node)
-      const id = (definition.id ?? definition.node ?? '').toString()
-      const key = id || node
-      const params = definition.params ?? {}
-      const entry = audioByKey.get(key) ?? { node, contribs: [], minIndex: index }
-      entry.node = node
-      entry.minIndex = Math.min(entry.minIndex, index)
-      entry.contribs.push({
-        w: preset.weight,
-        params,
-        source: `preset:${preset.profileId}`,
-        index,
-      })
-      audioByKey.set(key, entry)
-    }
-  }
-
-  for (const dimension of dimensions) {
-    const entry = sources.getDimensionMappingEntry(dimension.dimensionId)
-    const strength = clamp01(effectiveWeights.get(dimension.dimensionId) ?? dimension.weight)
-    const definitions = motifsToAudioDefs(entry?.audio_motifs ?? [], strength)
-    if (definitions.length) anyAudioDeclared = true
-    for (let index = 0; index < definitions.length; index++) {
-      const definition = definitions[index]
-      const node = normalizeNodeType(definition.node)
-      if (!supportedAudioNodeIds.has(node)) {
-        report.missingNodes.audio.push(node)
-        continue
-      }
-      const audioEntry = audioByKey.get(node) ?? { node, contribs: [], minIndex: 1000 + index }
-      audioEntry.minIndex = Math.min(audioEntry.minIndex, 1000 + index)
-      audioEntry.contribs.push({
-        w: strength,
-        params: definition.params,
-        source: `dim:${dimension.dimensionId}`,
-        index: 1000 + index,
-      })
-      audioByKey.set(node, audioEntry)
-    }
-  }
-
-  const audioItems = Array.from(audioByKey.entries()).map(([key, value]) => ({
-    key,
-    node: value.node,
-    minIndex: value.minIndex,
-    minOrderGroup: AUDIO_ORDER_GROUP[value.node] ?? 1000,
-    params: mergeParams(value.contribs),
-  }))
-  sortStackKeys(audioItems)
-
-  const chain = deduplicateStackIds(
-    audioItems.map((item) => ({ id: item.node, node: item.node, params: item.params })),
+  return finalizeAudioStack(
+    collectAudioContributions(loadedProfiles, {
+      dimensions,
+      effectiveWeights,
+      sources,
+      report,
+      supportedNodeIds: supportedAudioNodeIds,
+    }),
+    settings,
   )
-  const enabled = settings.audioEnabled && anyAudioDeclared
-  const baseMaster = enabled ? mergeNumericWeighted(audioMasterVols) : 0
-  return {
-    enabled,
-    input: 'synth',
-    master: { volume: clamp01(baseMaster || 0.2) },
-    chain,
-  }
 }
 
 export function composeReactiveMappings(loadedProfiles: LoadedProfile[]): Profile['reactive'] {

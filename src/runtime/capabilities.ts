@@ -59,7 +59,7 @@ function immutableNodeIdSet(ids: Iterable<string>): ReadonlySet<string> {
       callback: (value: string, value2: string, set: ReadonlySet<string>) => void,
       thisArg?: unknown,
     ) => {
-      values.forEach((value) => callback.call(thisArg, value, value, view))
+      for (const value of values) callback.call(thisArg, value, value, view)
     },
   })
   return view

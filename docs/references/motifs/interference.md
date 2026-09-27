@@ -1,9 +1,10 @@
 # `interference`: motif evidence
 
-> Generated reference: this page summarizes the current composer mapping and
-> in-repository corpus. It is not an independent research document.
+> Generated reference: this page summarizes the current composer mapping and the in-repository
+> corpus. It is not an independent research document.
 
-> Non-diagnostic metaphor framing: This page documents how an audiovisual motif is used as a design metaphor. It does not diagnose and does not claim clinical equivalence.
+> Non-diagnostic framing: this page documents how an audiovisual motif is used as a design metaphor.
+> It does not diagnose anything and does not claim clinical equivalence.
 
 ## Technical summary
 
@@ -11,36 +12,35 @@ Adds gentle distortion artifacts (clamped; no strobe).
 
 ## Evidence and implementation
 
-- Evidence-backed in this project refers to reported phenomena in the evidence corpus. See the dimension pages and matrix.
-- This node is an artistic and engineering implementation used to represent those phenomena metaphorically.
-- The usual claim level is Mixed: the phenomenon is supported, while the motif choice and implementation remain interpretive.
+- In this project, "evidence-backed" means reported phenomena in the evidence corpus. See the dimension pages and the matrix.
+- This node is an artistic and engineering implementation that represents those phenomena metaphorically.
+- The default claim level is Artistic. Phenomenon evidence does not validate this effect or its numerical settings.
 
-## Where this motif is used (traceability)
+## Where this motif is used
 
 ### Used by dimensions
 
-- Intrusion (`intrusion`): Evidence (dimension): Medium: Claim: Mixed: `docs/references/dimensions/intrusion.md`: corpus: `docs/references/research/remaining-dimensions.md`
-- Sensory Overload (`sensory_overload`): Evidence (dimension): Medium: Claim: Mixed: `docs/references/dimensions/sensory_overload.md`: corpus: `docs/references/research/remaining-dimensions.md`
+- Intrusion (`intrusion`): Evidence (dimension): Medium: Claim: Artistic: `docs/references/dimensions/intrusion.md`: corpus: `docs/references/research/remaining-dimensions.md`
+- Sensory Overload (`sensory_overload`): Evidence (dimension): Medium: Claim: Artistic: `docs/references/dimensions/sensory_overload.md`: corpus: `docs/references/research/remaining-dimensions.md`
 
 ### Used by condition presets
 
-- ADHD (Attention Fragmentation / Overload) (`adhd`): `docs/references/conditions/adhd.md`
-- OCD (Intrusion + Compulsive Loop) (`ocd`): `docs/references/conditions/ocd.md`
-- Trauma / PTSD (Hyperarousal + Intrusion) (`trauma_ptsd`): `docs/references/conditions/trauma_ptsd.md`
+Not currently referenced by any condition preset.
 
-## Scientific sources (peer-reviewed; from in-repo corpus)
+## Scientific sources (peer-reviewed, from the in-repo corpus)
 
 These sources come from evidence-corpus sections for the dimensions that currently use this motif.
 
-> Important: these papers support the phenomena described by the dimensions. They do not claim that this specific node is a biomarker or uniquely correct.
+> These papers support the phenomena the dimensions describe. They do not claim that this specific
+> node is a biomarker or uniquely correct.
 
 No DOI sources were extracted for the dimensions currently using this motif.
 
 ## Safety notes (implementation constraints)
 
 - Keep outputs bounded: no strobe, no harsh audio spikes, no runaway feedback.
-- Respect Safe Mode and Reduced Motion (temporal nodes should be disabled/reduced).
-- Provide “Stop Everything” and keep the motif user-controlled.
+- Respect Safe Mode and Reduced Motion (disable or reduce temporal nodes).
+- Keep “Stop Everything” available and the motif user-controlled.
 
 ## Sources (in-repo)
 

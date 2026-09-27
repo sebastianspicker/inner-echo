@@ -8,33 +8,89 @@ export type MicMetricNodes = {
   routingGain: GainNode | null
 }
 
+interface SpectrumHistory {
+  previous: F32 | null
+  scratchTime: F32
+  scratchDb: F32
+}
+
+type OptionalMicMetrics = Pick<
+  AudioMetrics,
+  'micRms' | 'micCentroid' | 'micFlux' | 'micLow' | 'micMid' | 'micHigh'
+>
+
+function createSpectrumHistory(fftSize: number): SpectrumHistory {
+  return {
+    previous: null,
+    scratchTime: new Float32Array(fftSize),
+    scratchDb: new Float32Array(fftSize),
+  }
+}
+
+function sampleAnalyser(analyser: AnalyserNode, history: SpectrumHistory) {
+  const rms = computeRms(analyser, history.scratchTime)
+  history.scratchTime = rms.scratch
+  const spectral = computeSpectralFeatures(analyser, history.previous, history.scratchDb)
+  history.scratchDb = spectral.scratchDb
+  history.previous = spectral.nextPrev
+  return { rms: rms.rms, ...spectral }
+}
+
+function sampleMicMetrics(
+  micNodes: MicMetricNodes,
+  inputMode: AudioInputMode,
+  history: SpectrumHistory,
+): OptionalMicMetrics {
+  const { analyser, gateGain, routingGain } = micNodes
+  if (!analyser || !gateGain || !routingGain) {
+    history.previous = null
+    return {}
+  }
+  const routing = inputMode === 'synth' ? 0 : clamp01(routingGain.gain.value)
+  const effectiveGain = routing * clamp01(gateGain.gain.value)
+  if (effectiveGain <= 0) {
+    history.previous = null
+    return {}
+  }
+  const hasSpectralHistory = history.previous?.length === analyser.frequencyBinCount
+  const sample = sampleAnalyser(analyser, history)
+  return {
+    micRms: sample.rms * effectiveGain,
+    micCentroid: sample.centroid * effectiveGain,
+    micFlux: (hasSpectralHistory ? sample.flux : 0) * effectiveGain,
+    micLow: sample.low * effectiveGain,
+    micMid: sample.mid * effectiveGain,
+    micHigh: sample.high * effectiveGain,
+  }
+}
+
 /** Keeps analyser buffers and spectral history private to one audio-engine instance. */
 export function createAudioMetricSampler(fftSize: number) {
-  let prevMainSpectrumMag: F32 | null = null
-  let scratchMainTime: F32 = new Float32Array(fftSize)
-  let scratchMainDb: F32 = new Float32Array(fftSize)
+  const mainHistory = createSpectrumHistory(fftSize)
+  const micHistory = createSpectrumHistory(fftSize)
   let lastMainRms = 0
-  let prevMicSpectrumMag: F32 | null = null
-  let scratchMicTime: F32 = new Float32Array(fftSize)
-  let scratchMicDb: F32 = new Float32Array(fftSize)
 
   const sampleMicRms = (analyser: AnalyserNode) => {
-    const sample = computeRms(analyser, scratchMicTime)
-    scratchMicTime = sample.scratch
+    const sample = computeRms(analyser, micHistory.scratchTime)
+    micHistory.scratchTime = sample.scratch
     return sample.rms
   }
 
   return {
     getRms(analyser: AnalyserNode | null): number {
       if (!analyser) return 0
-      const sample = computeRms(analyser, scratchMainTime)
-      scratchMainTime = sample.scratch
+      const sample = computeRms(analyser, mainHistory.scratchTime)
+      mainHistory.scratchTime = sample.scratch
       lastMainRms = sample.rms
       return lastMainRms
     },
     sampleMicRms,
     resetMicHistory() {
-      prevMicSpectrumMag = null
+      micHistory.previous = null
+    },
+    resetMetricHistory() {
+      mainHistory.previous = null
+      micHistory.previous = null
     },
     getMetrics(
       analyser: AnalyserNode | null,
@@ -43,53 +99,18 @@ export function createAudioMetricSampler(fftSize: number) {
     ): AudioMetrics {
       if (!analyser) return { rms: 0, centroid: 0, flux: 0 }
 
-      const mainRms = computeRms(analyser, scratchMainTime)
-      scratchMainTime = mainRms.scratch
-      lastMainRms = mainRms.rms
-      const main = computeSpectralFeatures(analyser, prevMainSpectrumMag, scratchMainDb)
-      scratchMainDb = main.scratchDb
-      prevMainSpectrumMag = main.nextPrev
-
-      let micRms: number | undefined
-      let micCentroid: number | undefined
-      let micFlux: number | undefined
-      let micLow: number | undefined
-      let micMid: number | undefined
-      let micHigh: number | undefined
-      const { analyser: micAnalyser, gateGain, routingGain } = micNodes
-
-      if (micAnalyser && gateGain && routingGain) {
-        const routing = inputMode === 'synth' ? 0 : clamp01(routingGain.gain.value)
-        const gate = clamp01(gateGain.gain.value)
-        const effectiveMicGain = routing * gate
-        const micR = computeRms(micAnalyser, scratchMicTime)
-        scratchMicTime = micR.scratch
-        const mic = computeSpectralFeatures(micAnalyser, prevMicSpectrumMag, scratchMicDb)
-        scratchMicDb = mic.scratchDb
-        prevMicSpectrumMag = mic.nextPrev
-        if (effectiveMicGain > 0) {
-          micRms = micR.rms * effectiveMicGain
-          micCentroid = mic.centroid * effectiveMicGain
-          micFlux = mic.flux * effectiveMicGain
-          micLow = mic.low * effectiveMicGain
-          micMid = mic.mid * effectiveMicGain
-          micHigh = mic.high * effectiveMicGain
-        }
-      }
+      const hasSpectralHistory = mainHistory.previous?.length === analyser.frequencyBinCount
+      const main = sampleAnalyser(analyser, mainHistory)
+      lastMainRms = main.rms
 
       return {
         rms: lastMainRms,
         centroid: main.centroid,
-        flux: main.flux,
+        flux: hasSpectralHistory ? main.flux : 0,
         low: main.low,
         mid: main.mid,
         high: main.high,
-        micRms,
-        micCentroid,
-        micFlux,
-        micLow,
-        micMid,
-        micHigh,
+        ...sampleMicMetrics(micNodes, inputMode, micHistory),
       }
     },
   }

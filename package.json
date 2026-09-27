@@ -14,8 +14,10 @@
     "typecheck": "tsc -p tsconfig.domain.json --noEmit && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.tools.json --noEmit",
     "build": "npm run typecheck && vite build",
     "bundle:verify": "node tools/release/verify-runtime-chunks.mjs",
-    "lint": "biome check --error-on-warnings src/ tests/ tools/",
-    "lint:biome": "biome check src/ tests/ tools/",
+    "lint": "biome check --error-on-warnings src/ tests/ tools/ vite.config.ts",
+    "lint:biome": "biome check src/ tests/ tools/ vite.config.ts",
+    "quality:duplication": "jscpd src tests tools vite.config.ts --config .jscpd.json --exit-code 1",
+    "quality:check": "npm run lint && npm run quality:duplication",
     "architecture:check": "node tools/architecture/check-imports.mjs",
     "test": "vitest run",
     "audit:dependencies": "npm audit --audit-level=moderate",
@@ -32,14 +34,15 @@
     "references:summary": "tsx tools/docs/mapping-summary.ts",
     "debug:inspect": "tsx tools/validation/inspect/debug-inspect.ts",
     "verify:contracts": "tsx tools/contracts/verify-contracts.ts",
-    "verify": "npm run build && npm run bundle:verify && npm run notices:verify && npm run docs:verify && npm run docs:links && npm run lint && npm run architecture:check && npm test && npm run conditions:validate && npm run composer:validate && npm run evidence:verify && npm run verify:contracts && npm run debug:inspect",
+    "verify": "npm run build && npm run bundle:verify && npm run notices:verify && npm run verify:source",
     "check": "npm run verify",
     "clean:local": "rm -rf dist reports tsconfig.tsbuildinfo",
     "pages:build": "node tools/deployment/build-pages.mjs",
     "pages:preview": "node tools/deployment/preview-pages.mjs",
     "pages:verify": "node tools/deployment/verify-pages-build.mjs && npm run bundle:verify",
     "release:alpha:local": "npm run audit:dependencies && npm run check",
-    "release:alpha:checklist": "npm run clean:local && npm ci --ignore-scripts && npm rebuild esbuild && npm run release:alpha:local"
+    "release:alpha:checklist": "npm run clean:local && npm ci --ignore-scripts && npm rebuild esbuild && npm run release:alpha:local",
+    "verify:source": "npm run docs:verify && npm run docs:links && npm run quality:check && npm run architecture:check && npm test && npm run conditions:validate && npm run composer:validate && npm run evidence:verify && npm run verify:contracts && npm run debug:inspect"
   },
   "dependencies": {
     "dompurify": "^3.4.13",
@@ -56,10 +59,11 @@
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.183.1",
     "@vitejs/plugin-react": "^6.0.1",
+    "jscpd": "5.1.2",
     "jsdom": "^29.0.1",
     "tsx": "^4.22.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.5",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.11"
   }
 }

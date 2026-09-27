@@ -1,9 +1,9 @@
 /**
- * SSOT: color_grade: gentle contrast/saturation/brightness/color-balance adjustments.
+ * Gentle contrast, saturation, brightness, and color-balance adjustments.
  * Safety: clamp contrast and chroma; never strobe.
  */
 
-import { ShaderMaterial, type Material, type Texture } from 'three'
+import type { ShaderMaterial, Material, Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,
@@ -64,7 +64,7 @@ export class ColorGradeNode implements VideoNode {
     if (!this.material) return
     const intensity = clamp(params.intensity ?? 0, 0, 1)
 
-    // SSOT params: small, user-controlled grade and color-balance adjustments.
+    // Keep profile-controlled grade and color-balance adjustments conservative.
     let contrast = resolveNumberParam(params, 'contrast', 0) * intensity
     let saturation = resolveNumberParam(params, 'saturation', 0) * intensity
     let brightness = resolveNumberParam(params, 'brightness', 0) * intensity
@@ -78,7 +78,7 @@ export class ColorGradeNode implements VideoNode {
       contrast = clamp(contrast, -Math.abs(safeMaxContrast), Math.abs(safeMaxContrast))
     }
 
-    // These do not have explicit SSOT clamp keys; keep conservative.
+    // These do not have explicit profile clamp keys; keep conservative.
     saturation = clamp(saturation, -0.7, 0.25)
     brightness = clamp(brightness, -0.12, 0.12)
     temperature = clamp(temperature, -1, 1)

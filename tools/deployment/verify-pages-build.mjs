@@ -1,6 +1,11 @@
 import { access, readdir, readFile } from 'node:fs/promises'
 import { relative, resolve, sep } from 'node:path'
 import { JSDOM } from 'jsdom'
+import {
+  collectChunkClosure,
+  findForbiddenCapabilitiesInChunkClosure,
+  findForbiddenDemoFrameworks,
+} from './demo-artifact-policy.mjs'
 import { getPagesBasePath, pagesContentSecurityPolicy } from './pages-config.mjs'
 
 const root = resolve(import.meta.dirname, '../..')
@@ -72,22 +77,81 @@ async function verifyAssetReferences(document, documentPath, documentUrl) {
   await Promise.all(artifactPaths.map(requirePath))
 }
 
-for (const path of ['index.html', '.nojekyll', 'THIRD_PARTY_NOTICES.txt', 'third-party-licenses']) {
+for (const path of [
+  'index.html',
+  'demo/index.html',
+  'manifest.json',
+  '.nojekyll',
+  'THIRD_PARTY_NOTICES.txt',
+  'third-party-licenses',
+]) {
   await requirePath(path)
-}
-
-const rootHtml = await readFile(resolve(output, 'index.html'), 'utf8')
-const rootDocument = new JSDOM(rootHtml).window.document
-
-verifyCsp(rootDocument, 'index.html')
-await verifyAssetReferences(rootDocument, 'index.html', `https://pages.invalid${basePath}`)
-
-if (!rootDocument.querySelector('script[type="module"]')) {
-  failures.push('index.html: missing the live application module')
 }
 
 const files = await listFiles(output)
 const relativeFiles = files.map((path) => relative(output, path).split(sep).join('/'))
+const htmlPaths = relativeFiles.filter((path) => path.endsWith('.html'))
+
+await Promise.all(
+  htmlPaths.map(async (path) => {
+    const html = await readFile(resolve(output, path), 'utf8')
+    const document = new JSDOM(html).window.document
+    const documentPath = path === 'index.html' ? '' : path
+
+    verifyCsp(document, path)
+    await verifyAssetReferences(document, path, `https://pages.invalid${basePath}${documentPath}`)
+
+    if (!document.querySelector('script[type="module"]')) {
+      failures.push(`${path}: missing an application module`)
+    }
+    if (path === 'demo/index.html' && document.querySelector('video, audio')) {
+      failures.push(`${path}: mock demo must not contain live media elements`)
+    }
+  }),
+)
+
+const manifest = JSON.parse(await readFile(resolve(output, 'manifest.json'), 'utf8'))
+const applicationEntry = Object.keys(manifest).find(
+  (key) => manifest[key]?.isEntry && manifest[key]?.src === 'index.html',
+)
+const demoEntry = Object.keys(manifest).find(
+  (key) => manifest[key]?.isEntry && manifest[key]?.src === 'demo/index.html',
+)
+
+if (!applicationEntry) failures.push('manifest.json: missing the live application entry')
+if (!demoEntry) failures.push('manifest.json: missing the mock demo entry')
+
+if (demoEntry) {
+  const demoClosure = collectChunkClosure(manifest, [demoEntry])
+  for (const key of demoClosure) {
+    const chunk = manifest[key]
+    const identity = `${key} ${chunk?.src ?? ''} ${chunk?.file ?? ''}`
+    if (/src\/(?:app|content|domain|runtime)\//.test(identity) || /(?:^|\/)main-/.test(identity)) {
+      failures.push(`mock demo bundle reaches a production application chunk: ${identity}`)
+    }
+  }
+
+  const demoSources = await Promise.all(
+    demoClosure.map(async (key) => {
+      const path = manifest[key]?.file
+      if (typeof path !== 'string' || !path.endsWith('.js')) return [key, '']
+      return [key, await readFile(resolve(output, path), 'utf8')]
+    }),
+  )
+  const demoSourcesByChunk = new Map(demoSources)
+  const demoSource = [...demoSourcesByChunk.values()].join('\n')
+  for (const forbiddenFramework of findForbiddenDemoFrameworks(demoSource)) {
+    failures.push(`mock demo static bundle contains forbidden ${forbiddenFramework}`)
+  }
+  for (const forbiddenCapability of findForbiddenCapabilitiesInChunkClosure(
+    manifest,
+    [demoEntry],
+    demoSourcesByChunk,
+  )) {
+    failures.push(`mock demo static bundle contains forbidden ${forbiddenCapability} capability`)
+  }
+}
+
 const hiddenFiles = relativeFiles.filter((path) =>
   path.split('/').some((part) => part.startsWith('.')),
 )
@@ -117,6 +181,6 @@ if (failures.length > 0) {
   process.exitCode = 1
 } else {
   console.log(
-    `Pages artifact verification passed for ${basePath}: live assets stay under the base path, the CSP fallback is present, and no source maps or local paths are published.`,
+    `Pages artifact verification passed for ${basePath}: live and mock-demo assets stay under the base path, each HTML entry has the CSP fallback, the demo bundle is device-free, and no source maps or local paths are published.`,
   )
 }

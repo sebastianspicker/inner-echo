@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import type { Profile } from '../../../domain/experience/schema'
-import {
-  type ComposerMode,
-  type SelectedDimension,
-  type SelectedPreset,
+import type {
+  ComposerMode,
+  SelectedDimension,
+  SelectedPreset,
 } from '../../../domain/experience/composition/types'
 import type { ComposeReport } from '../composeExperience'
 import {
@@ -38,6 +38,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
   profileLoadStatus: ProfileLoadStatus
   profileLoadError: string | null
   retryProfileLoad(): void
+  retryToken: number
 } {
   const {
     conditionId,
@@ -84,9 +85,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
 
   useEffect(() => {
     if (!profile) return
-    setControlValues((prev) => {
-      return mergePersistedControlValues(profile, reducedMotion, prev)
-    })
+    setControlValues((prev) => mergePersistedControlValues(profile, reducedMotion, prev))
   }, [profile, reducedMotion])
 
   useComposedProfileLoad({
@@ -112,5 +111,6 @@ export function useProfileLoad(params: UseProfileLoadParams): {
     profileLoadStatus,
     profileLoadError,
     retryProfileLoad,
+    retryToken,
   }
 }

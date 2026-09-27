@@ -1,7 +1,3 @@
-// ============================================================================
-// Shared Type Definitions (consolidated from multiple files)
-// ============================================================================
-
 /**
  * Motif definition - maps to a video or audio node with optional parameter hints.
  * Used in dimension-to-signal mapping to describe which effects implement a dimension.
@@ -51,10 +47,6 @@ export type DimensionSignalMappingEntry = {
   audio_motifs?: MotifDef[]
   avoid?: Record<string, unknown>
 }
-
-// ============================================================================
-// Composer Types
-// ============================================================================
 
 export type ComposerMode = 'preset' | 'multimorbid' | 'symptom'
 

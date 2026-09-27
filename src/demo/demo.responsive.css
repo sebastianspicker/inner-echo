@@ -1,0 +1,106 @@
+@media (max-width: 62rem) {
+  .demo-shell {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .control-rail {
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    border-left: 0;
+    overflow: visible;
+  }
+
+  .stage {
+    min-height: 56vw;
+  }
+
+  .status-strip {
+    display: none;
+  }
+}
+
+@media (max-width: 40rem) {
+  .demo-welcome {
+    place-items: start center;
+    padding: 1.5rem;
+  }
+
+  .welcome-content h1 {
+    font-size: 2.15rem;
+  }
+
+  .welcome-actions {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .topbar {
+    min-height: 3.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem;
+  }
+
+  .brand-note {
+    display: none;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
+  .button {
+    min-height: 2.75rem;
+  }
+
+  .stage {
+    padding: 1rem;
+  }
+
+  .stage-frame {
+    max-height: none;
+    min-height: 14rem;
+  }
+
+  .stage-caption {
+    left: 1rem;
+    bottom: 0.75rem;
+    font-size: 0.7rem;
+  }
+
+  .stage-truth {
+    display: none;
+  }
+
+  .feed-readout {
+    top: 0.75rem;
+    font-size: 0.56rem;
+  }
+
+  .control-rail section {
+    padding: 1.25rem 1rem;
+  }
+
+  .rail-footer {
+    padding: 1rem;
+  }
+
+  .profile-row {
+    padding: 0.85rem 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .switch span {
+    transition: none;
+  }
+}

@@ -14,7 +14,7 @@ export interface TremoloParams {
 
 const DEFAULT_RATE = 3
 const DEFAULT_DEPTH = 0.15
-// SSOT safety clamps
+// Conservative runtime limits for modulation depth and rate.
 const MAX_RATE_HZ = 4
 const MAX_DEPTH = 0.15
 
@@ -26,7 +26,10 @@ export function createTremolo(context: BaseAudioContext, params: TremoloParams =
   input.gain.value = 1
 
   const modGain = context.createGain()
-  modGain.gain.value = 1
+  // AudioParam inputs sum with the intrinsic value. Keep the intrinsic term at
+  // zero so the constant source below defines the complete unity-or-lower
+  // tremolo envelope.
+  modGain.gain.value = 0
 
   const lfo = context.createOscillator()
   lfo.type = 'sine'
@@ -63,6 +66,11 @@ export function createTremolo(context: BaseAudioContext, params: TremoloParams =
         depthGain.gain.setValueAtTime(-0.5 * depthClamped, context.currentTime)
         offset.offset.setValueAtTime(1 - 0.5 * depthClamped, context.currentTime)
       }
+    },
+    resetParams(): void {
+      lfo.frequency.setValueAtTime(rate, context.currentTime)
+      depthGain.gain.setValueAtTime(-0.5 * depth, context.currentTime)
+      offset.offset.setValueAtTime(1 - 0.5 * depth, context.currentTime)
     },
     dispose(): void {
       try {

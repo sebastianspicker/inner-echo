@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   gate:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -56,12 +56,13 @@ jobs:
         id: pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
 
-  build:
+  prepare:
     needs: configure
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     permissions:
       contents: read
+      actions: read
     env:
       INNER_ECHO_PAGES_BASE_PATH: ${{ needs.configure.outputs.base_path }}
     steps:
@@ -75,25 +76,33 @@ jobs:
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 22
-          cache: npm
 
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
+      - name: Download verified site from the triggering CI attempt
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: pages-candidate-site-${{ github.event.workflow_run.run_attempt }}
+          path: dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
 
-      - name: Rebuild approved native tooling
-        run: npm rebuild esbuild
+      - name: Download candidate identity from the triggering CI attempt
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: pages-candidate-metadata-${{ github.event.workflow_run.run_attempt }}
+          path: reports/pages-handoff
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
 
-      - name: Audit dependencies
-        run: npm run audit:dependencies
-
-      - name: Run application gate
-        run: npm run verify
-
-      - name: Build Pages artifact
-        run: npm run pages:build
-
-      - name: Verify Pages artifact
-        run: npm run pages:verify && npm run notices:verify
+      - name: Validate handoff and recheck current main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_SHA: ${{ github.event.workflow_run.head_sha }}
+          CI_RUN_ID: ${{ github.event.workflow_run.id }}
+          CI_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+        run: |
+          CURRENT_MAIN_SHA="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+          export CURRENT_MAIN_SHA
+          node tools/deployment/validate-pages-handoff.mjs
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
@@ -102,16 +111,28 @@ jobs:
           include-hidden-files: true
 
   deploy:
-    needs: [configure, build]
+    needs: [configure, prepare]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     permissions:
+      contents: read
       pages: write
       id-token: write
     steps:
+      - name: Recheck freshness after environment approval
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          current_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+          if [[ "$current_sha" != "$CANDIDATE_SHA" ]]; then
+            echo "::error::Main advanced while this candidate awaited deployment. Run CI for current main."
+            exit 1
+          fi
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

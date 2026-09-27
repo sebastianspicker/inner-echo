@@ -5,6 +5,7 @@ import { MicrophonePrivacyHint } from './MicrophonePrivacyHint'
 import { MicrophoneStatus } from './MicrophoneStatus'
 import { getAudioStateLabel } from '../session/audioStatusMessages'
 import { LabeledSlider } from './controls/LabeledSlider'
+import { pageRecovery } from '../../ErrorBoundary'
 
 export interface AudioMicControlsProps {
   audioStatus: AudioContextStatus
@@ -28,6 +29,8 @@ export interface AudioMicControlsProps {
 }
 
 function AudioSection(props: AudioMicControlsProps) {
+  const canActivate = props.audioStatus === 'off' || props.audioStatus === 'error'
+  const activationLabel = props.audioStatus === 'error' ? 'Retry audio' : 'Enable audio'
   return (
     <>
       <div className="ie-controlStatus" role="status" aria-live="polite">
@@ -38,14 +41,19 @@ function AudioSection(props: AudioMicControlsProps) {
           {props.audioError}
         </p>
       )}
-      {props.audioStatus === 'off' && (
+      {props.audioStatus === 'error' && (
+        <button type="button" className="ie-btn" onClick={pageRecovery.reload}>
+          Reload page
+        </button>
+      )}
+      {canActivate && (
         <button
           type="button"
           className="ie-btn ie-btn--accent"
           onClick={props.onEnableAudio}
-          aria-label="Enable audio"
+          aria-label={activationLabel}
         >
-          Enable audio
+          {activationLabel}
         </button>
       )}
       {props.audioStatus === 'on' && (
@@ -73,12 +81,13 @@ function MicrophoneSection(props: AudioMicControlsProps) {
   const canEnable = props.micStatus !== 'on' && props.micStatus !== 'requesting'
 
   return (
-    <div className="ie-controlSubgroup" role="group" aria-label="Microphone (optional)">
+    <fieldset className="ie-controlSubgroup">
+      <legend className="sr-only">Microphone (optional)</legend>
       <MicrophonePrivacyHint />
       <MicrophoneStatus status={props.micStatus} error={props.micError} />
       <MicrophoneActivationButton canEnable={canEnable} onEnableMic={props.onEnableMic} />
       {props.micStatus === 'on' && <MicrophoneActiveControls {...props} />}
-    </div>
+    </fieldset>
   )
 }
 
@@ -88,12 +97,13 @@ export function AudioMicControls(props: AudioMicControlsProps) {
       className="ie-panelSection ie-panelSection--audio"
       open={props.defaultOpen || undefined}
     >
-      <summary className="ie-summary">Audio & microphone</summary>
+      <summary className="ie-summary">Sound & microphone</summary>
       <div className="ie-panelBody">
-        <div className="ie-controlGroup" role="group" aria-label="Audio">
+        <fieldset className="ie-controlGroup">
+          <legend className="sr-only">Audio</legend>
           <AudioSection {...props} />
           <MicrophoneSection {...props} />
-        </div>
+        </fieldset>
       </div>
     </details>
   )

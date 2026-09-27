@@ -7,11 +7,13 @@ interface RuntimeRailProps {
   effectsActive: boolean
 }
 
+const TRACE_SEGMENTS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+
 function ActivityTrace({ active }: { active: boolean }) {
   return (
     <span className={`runtime-rail__trace${active ? ' is-active' : ''}`}>
-      {Array.from({ length: 11 }, (_, index) => (
-        <i key={index} />
+      {TRACE_SEGMENTS.map((segment) => (
+        <i key={segment} />
       ))}
     </span>
   )

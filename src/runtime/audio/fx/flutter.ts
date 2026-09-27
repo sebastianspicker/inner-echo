@@ -1,5 +1,5 @@
 /**
- * SSOT: flutter: subtle time instability via modulated micro-delay (safety-clamped).
+ * Subtle time instability using a safety-clamped modulated micro-delay.
  *
  * Params:
  * - rate (Hz)
@@ -19,10 +19,11 @@ const DEFAULT_RATE = 0.55
 const DEFAULT_DEPTH = 0.05
 
 export function createFlutter(context: BaseAudioContext, params: FlutterParams = {}): AudioModule {
-  let current: Required<FlutterParams> = {
-    rate: params.rate ?? DEFAULT_RATE,
-    depth: params.depth ?? DEFAULT_DEPTH,
+  const initial: Required<FlutterParams> = {
+    rate: clamp(params.rate ?? DEFAULT_RATE, 0.1, 1.2),
+    depth: clamp(params.depth ?? DEFAULT_DEPTH, 0, 0.12),
   }
+  let current = { ...initial }
   const input = context.createGain()
   input.gain.value = 1
 
@@ -30,7 +31,9 @@ export function createFlutter(context: BaseAudioContext, params: FlutterParams =
   out.gain.value = 1
 
   const delay = context.createDelay(0.05)
-  delay.delayTime.value = 0.008
+  // AudioParam inputs sum with the intrinsic value. The constant source below
+  // owns the delay's center point, so there must be no second built-in offset.
+  delay.delayTime.value = 0
 
   const lfo = context.createOscillator()
   lfo.type = 'sine'
@@ -39,8 +42,7 @@ export function createFlutter(context: BaseAudioContext, params: FlutterParams =
   depthGain.gain.value = 0.0003
 
   // The constant source provides a fixed DC offset for the delay line center point.
-  // Unlike tremolo, flutter intentionally keeps a fixed modulation depth: the LFO
-  // amplitude is set at construction and only the rate changes at runtime via setParams.
+  // The LFO amplitude remains adjustable through depth at runtime.
   const offset = context.createConstantSource()
   offset.offset.value = 0.008
 
@@ -72,6 +74,10 @@ export function createFlutter(context: BaseAudioContext, params: FlutterParams =
     output: out,
     setParams(p: Record<string, unknown>): void {
       set({ rate: p.rate as number | undefined, depth: p.depth as number | undefined })
+    },
+    resetParams(): void {
+      current = { ...initial }
+      set(initial)
     },
     dispose(): void {
       try {

@@ -2,7 +2,7 @@
  * Vignette effect: darkens edges in a single pass, with optional softness.
  */
 
-import { ShaderMaterial, type Material, type Texture } from 'three'
+import type { ShaderMaterial, Material, Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import { applyUvParams, clamp, getSafeModeClampNumber, resolveNumberParam } from './paramUtils'
 import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
@@ -36,7 +36,7 @@ export class VignetteNode implements VideoNode {
     let amount = resolveNumberParam(params, 'amount', 0) * intensity
     const softness = resolveNumberParam(params, 'softness', 0.75)
 
-    // SSOT: vignette amount is capped for comfort.
+    // Cap the vignette amount for comfort.
     amount = clamp(amount, 0, 0.6)
     if (params.safeMode) {
       const maxIntensity = getSafeModeClampNumber(params, 'max_intensity', 1)

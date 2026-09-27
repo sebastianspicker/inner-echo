@@ -1,16 +1,8 @@
 /**
- * SSOT: edge_sharpen: subtle unsharp mask (single pass).
+ * Subtle single-pass unsharp mask.
  */
 
-import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
-import type { VideoNode, VideoNodeParams } from './VideoNode'
-import { applyUvParams, clamp, resolveNumberParam } from './paramUtils'
-import {
-  bindInputTexture,
-  createEffectMaterial,
-  disposeEffectMaterial,
-  updateTexelSize,
-} from './shaderMaterial'
+import { SinglePassTexelNode } from './singlePassTexelNode'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -40,34 +32,8 @@ void main() {
 }
 `
 
-export class EdgeSharpenNode implements VideoNode {
+export class EdgeSharpenNode extends SinglePassTexelNode {
   readonly nodeName = 'edge_sharpen'
-  private material: ShaderMaterial | null = null
-
-  setParams(params: VideoNodeParams): void {
-    if (!this.material) return
-    const intensity = clamp(params.intensity ?? 0, 0, 1)
-    let amount = resolveNumberParam(params, 'amount', 0) * intensity
-    amount = clamp(amount, 0, 0.2)
-    this.material.uniforms.u_amount.value = amount
-    // Compute texel size from the input texture dimensions, fallback to a conservative default.
-    updateTexelSize(this.material, this.material.uniforms.u_map.value as Texture)
-    applyUvParams(this.material, params)
-  }
-
-  getMaterial(inputTexture: Texture): Material {
-    if (!this.material) {
-      this.material = createEffectMaterial(inputTexture, FRAG, {
-        u_amount: { value: 0 },
-        u_texelSize: { value: new Vector2(1 / 400, 1 / 400) },
-      })
-    } else {
-      bindInputTexture(this.material, inputTexture)
-    }
-    return this.material
-  }
-
-  dispose(): void {
-    this.material = disposeEffectMaterial(this.material)
-  }
+  protected readonly fragment = FRAG
+  protected readonly maxAmount = 0.2
 }

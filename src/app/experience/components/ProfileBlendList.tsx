@@ -21,8 +21,8 @@ export function ProfileBlendList({
   onOpenEvidence,
 }: ProfileBlendListProps) {
   return (
-    <div className="composer__section" role="group" aria-label="Combined curated collections">
-      <div className="composer__title">Selected collections</div>
+    <fieldset className="composer__section">
+      <legend className="composer__title">Selected collections</legend>
       <p className="composer__hint">
         Combine curated collections and adjust their relative contribution. Safe Mode limits the
         resulting profile.
@@ -40,7 +40,7 @@ export function ProfileBlendList({
           />
         ))}
       </div>
-    </div>
+    </fieldset>
   )
 }
 

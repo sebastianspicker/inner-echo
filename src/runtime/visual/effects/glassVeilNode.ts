@@ -1,9 +1,9 @@
 /**
- * SSOT: glass_veil: veiled/detached temporal self-image.
+ * Veiled temporal self-image.
  * Params: veil, feedback, refraction, chroma.
  */
 
-import { ShaderMaterial, type Material, type Texture } from 'three'
+import type { ShaderMaterial, Material, Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import {
   applyUvParams,

@@ -4,6 +4,8 @@ import { LabeledSlider } from './controls/LabeledSlider'
 import { ToggleField } from './controls/ToggleField'
 import { resolveProfileControls } from '../session/effectControlResolution'
 
+const DEBUG_UI_ENABLED = import.meta.env.DEV && import.meta.env.VITE_INNER_ECHO_DEBUG_UI === 'true'
+
 export interface EffectControlsProps {
   profile: Profile | null
   intensity: number
@@ -72,9 +74,10 @@ export function EffectControls(props: EffectControlsProps) {
     <details className="ie-panelSection ie-panelSection--effects">
       <summary className="ie-summary">Controls</summary>
       <div className="ie-panelBody">
-        <div className="ie-controlGroup" role="group" aria-label="Effect controls">
+        <fieldset className="ie-controlGroup">
+          <legend className="sr-only">Effect controls</legend>
           <ProfileEffectControls {...props} />
-          {import.meta.env.DEV && (
+          {DEBUG_UI_ENABLED && (
             <ToggleField
               className="ie-control ie-control--toggle"
               label="Stress Mode (test FPS guard)"
@@ -82,12 +85,12 @@ export function EffectControls(props: EffectControlsProps) {
               onChange={props.onStressModeChange}
             />
           )}
-          {import.meta.env.DEV && (
+          {DEBUG_UI_ENABLED && (
             <p id="stress-mode-desc" className="ie-controlHint">
               Simulates load to trigger resolution scale-down when FPS &lt; 30.
             </p>
           )}
-        </div>
+        </fieldset>
       </div>
     </details>
   )

@@ -44,7 +44,7 @@ let lastNotifiedStatus: AudioContextStatus | null = null
 function notify(status: AudioContextStatus, error?: string): void {
   if (status === lastNotifiedStatus && status === 'off') return
   lastNotifiedStatus = status
-  listeners.forEach((fn) => fn(status, error))
+  for (const listener of listeners) listener(status, error)
 }
 
 /**

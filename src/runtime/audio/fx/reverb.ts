@@ -1,5 +1,5 @@
 /**
- * SSOT: reverb: small-room convolver with generated impulse (no external assets).
+ * Small-room convolver with a generated impulse and no external assets.
  */
 
 import type { AudioModule } from '../types'
@@ -35,10 +35,11 @@ function makeImpulse(context: BaseAudioContext, decaySeconds: number): AudioBuff
 }
 
 export function createReverb(context: BaseAudioContext, params: ReverbParams = {}): AudioModule {
-  let current: Required<ReverbParams> = {
-    mix: params.mix ?? DEFAULT_MIX,
-    decay: params.decay ?? DEFAULT_DECAY,
+  const initial: Required<ReverbParams> = {
+    mix: clamp(params.mix ?? DEFAULT_MIX, 0, 0.12),
+    decay: clamp(params.decay ?? DEFAULT_DECAY, 0.6, 2.8),
   }
+  let current = { ...initial }
   const mixNodes = createDryWetMix(context)
 
   const convolver = context.createConvolver()
@@ -77,6 +78,10 @@ export function createReverb(context: BaseAudioContext, params: ReverbParams = {
         mix: p.mix as number | undefined,
         decay: p.decay as number | undefined,
       })
+    },
+    resetParams(): void {
+      current = { ...initial }
+      set(initial)
     },
     dispose(): void {
       mixNodes.dispose()

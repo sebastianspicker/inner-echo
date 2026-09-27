@@ -1,19 +1,13 @@
 /**
- * SSOT: pulse: smooth, low-frequency envelope (no strobe).
+ * Smooth, low-frequency pulse without strobing.
  * Params: depth, rate, smoothing.
  */
 
-import { ShaderMaterial, type Material, type Texture } from 'three'
+import type { ShaderMaterial, Material, Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
-import {
-  applyUvParams,
-  clamp,
-  getGlobalClampNumber,
-  getSafeModeClampNumber,
-  resolveNumberParam,
-} from './paramUtils'
-import { advancePulsePhase, smoothPulseValue } from './pulseOscillator'
-import { bindInputTexture, createEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
+import { applyUvParams } from './paramUtils'
+import { getPulseMaterial, PulseEnvelope, resolvePulseParameters } from './pulseEffectSupport'
+import { disposeEffectMaterial } from './shaderMaterial'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -39,64 +33,37 @@ void main() {
 export class PulseNode implements VideoNode {
   readonly nodeName = 'pulse'
   private material: ShaderMaterial | null = null
-  private phase = 0
-  private smoothed = 0.5
+  private readonly envelope = new PulseEnvelope()
   private rateHz = 1
   private smoothing = 0.9
 
   setParams(params: VideoNodeParams): void {
     if (!this.material) return
-    const intensity = clamp(params.intensity ?? 0, 0, 1)
-
-    let depth = resolveNumberParam(params, 'depth', 0) * intensity
-    let rate = resolveNumberParam(params, 'rate', 1.0)
-    const smoothing = clamp(resolveNumberParam(params, 'smoothing', 0.9), 0, 0.999)
-
-    const globalMaxPulseDepth = getGlobalClampNumber(params, 'max_pulse_depth', 0.18)
-    depth = clamp(depth, 0, clamp(globalMaxPulseDepth, 0, 1))
-    const globalMaxHz = getGlobalClampNumber(params, 'max_flash_hz', 3)
-    rate = clamp(rate, 0.05, clamp(globalMaxHz, 0.1, 10))
-
-    if (params.safeMode) {
-      const maxPulse = getSafeModeClampNumber(params, 'max_pulse_depth', globalMaxPulseDepth)
-      depth = Math.min(depth, clamp(maxPulse, 0, 1))
-      const maxHz = getSafeModeClampNumber(params, 'max_flash_hz', globalMaxHz)
-      rate = Math.min(rate, clamp(maxHz, 0.1, 10))
-    }
-
-    this.material.uniforms.u_depth.value = depth
-    this.material.uniforms.u_pulse.value = this.smoothed
+    const resolved = resolvePulseParameters(params, 0.9)
+    this.material.uniforms.u_depth.value = resolved.depth
+    this.material.uniforms.u_pulse.value = this.envelope.current()
 
     applyUvParams(this.material, params)
 
-    this.rateHz = rate
-    this.smoothing = smoothing
+    this.rateHz = resolved.rate
+    this.smoothing = resolved.smoothing
   }
 
   tick(delta: number): void {
     if (!this.material) return
-    this.phase = advancePulsePhase(this.phase, delta, this.rateHz)
-    this.smoothed = smoothPulseValue(
-      this.phase,
-      this.smoothed,
+    this.material.uniforms.u_pulse.value = this.envelope.advance(
       delta,
+      this.rateHz,
       this.smoothing,
-      0.6,
-      0.02,
-      0.6,
+      { tauScale: 0.6, minTau: 0.02, maxTau: 0.6 },
     )
-    this.material.uniforms.u_pulse.value = this.smoothed
   }
 
   getMaterial(inputTexture: Texture): Material {
-    if (!this.material) {
-      this.material = createEffectMaterial(inputTexture, FRAG, {
-        u_depth: { value: 0 },
-        u_pulse: { value: 0.5 },
-      })
-    } else {
-      bindInputTexture(this.material, inputTexture)
-    }
+    this.material = getPulseMaterial(this.material, inputTexture, FRAG, {
+      u_depth: { value: 0 },
+      u_pulse: { value: 0.5 },
+    })
     return this.material
   }
 

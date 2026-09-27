@@ -1,10 +1,10 @@
 {
   "id": "panic",
-  "label": "Panic Disorder",
-  "summary": "A metaphor of sudden alarm waves: an explicit rhythmic tunnel/blur pulse with low, heartbeat-like audio cues and strict caps.",
+  "label": "Panic-related alarm",
+  "summary": "A shallow, slow visual wave and a steady optional sound bed offer an artistic interpretation of changing alarm. The rhythm is a design choice, not a heartbeat or a reproduction of a panic attack.",
   "framing": {
     "type": "metaphor",
-    "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
+    "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
   },
   "experience_dimensions": [
     {
@@ -17,14 +17,11 @@
     }
   ],
   "safety": {
-    "intensity_default": 0.5,
+    "intensity_default": 0.35,
     "intensity_max": 0.6,
     "warnings": [
-      "Designed to be subtle, but may still feel activating for some users.",
-      "Keep Intensity low and enable Safe Mode if needed.",
-      "Audio is optional; keep volume low.",
-      "Avoid flashing lights or rapid flicker; enable Reduced Motion if sensitive.",
-      "Keep volume low; avoid headphones at high volume; you can mute audio at any time."
+      "Start with low intensity and volume; sound is optional.",
+      "Use Reduced Motion for a steadier image. Stop Everything is always available."
     ],
     "safe_mode_clamps": {
       "max_intensity": 0.62,
@@ -81,18 +78,18 @@
       {
         "id": "pulse_depth",
         "type": "slider",
-        "label": "Wave Depth",
+        "label": "Visual wave depth",
         "min": 0,
-        "max": 0.18,
+        "max": 0.12,
         "step": 0.01,
         "target": "video.somatic_pulse.depth"
       },
       {
         "id": "pulse_rate",
         "type": "slider",
-        "label": "Wave Rate",
-        "min": 0.6,
-        "max": 1.8,
+        "label": "Visual wave speed",
+        "min": 0.2,
+        "max": 0.6,
         "step": 0.01,
         "target": "video.somatic_pulse.rate"
       }
@@ -103,11 +100,11 @@
       "id": "body_wave",
       "node": "somatic_pulse",
       "params": {
-        "depth": 0.16,
-        "rate": 1.25,
-        "smoothing": 0.82,
-        "tunnel": 0.5,
-        "blur": 0.24
+        "depth": 0.06,
+        "rate": 0.3,
+        "smoothing": 0.92,
+        "tunnel": 0.15,
+        "blur": 0.06
       }
     },
     {
@@ -126,7 +123,7 @@
     "enabled": true,
     "input": "synth",
     "master": {
-      "volume": 0.2
+      "volume": 0.18
     },
     "chain": [
       {
@@ -134,14 +131,6 @@
         "params": {
           "level": 0.012,
           "color": "pink"
-        }
-      },
-      {
-        "node": "pulse_tone",
-        "params": {
-          "rate": 1.25,
-          "mix": 0.11,
-          "base_freq": 105
         }
       },
       {
@@ -171,63 +160,7 @@
     ]
   },
   "reactive": {
-    "analyser_to_params": [
-      {
-        "source": "rms",
-        "target": "video.somatic_pulse.depth",
-        "scale": 0.08,
-        "offset": 0,
-        "smoothing": {
-          "attack": 0.08,
-          "release": 0.28
-        },
-        "clamp": [0.04, 0.16]
-      },
-      {
-        "source": "rms",
-        "target": "video.somatic_pulse.tunnel",
-        "scale": 0.12,
-        "offset": 0,
-        "smoothing": {
-          "attack": 0.1,
-          "release": 0.35
-        },
-        "clamp": [0.18, 0.62]
-      },
-      {
-        "source": "rms",
-        "target": "video.somatic_pulse.blur",
-        "scale": 0.08,
-        "offset": 0,
-        "smoothing": {
-          "attack": 0.1,
-          "release": 0.4
-        },
-        "clamp": [0.04, 0.28]
-      },
-      {
-        "source": "rms",
-        "target": "audio.lowpass.cutoff",
-        "scale": -2500,
-        "offset": 7000,
-        "smoothing": {
-          "attack": 0.1,
-          "release": 0.35
-        },
-        "clamp": [4500, 7000]
-      },
-      {
-        "source": "rms",
-        "target": "audio.pulse_tone.mix",
-        "scale": 0.04,
-        "offset": 0.08,
-        "smoothing": {
-          "attack": 0.08,
-          "release": 0.25
-        },
-        "clamp": [0.06, 0.12]
-      }
-    ]
+    "analyser_to_params": []
   },
   "references": {
     "dimensions": [

@@ -1,0 +1,113 @@
+@media (min-width: 901px) {
+  .ie-workspaceNav {
+    display: none;
+  }
+}
+@media (max-width: 1100px) {
+  .ie-headerStatus {
+    display: none;
+  }
+  .ie-main {
+    padding: 28px 24px 48px;
+  }
+  .ie-layout,
+  .ie-layout--live {
+    gap: 24px;
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+  .ie-header {
+    padding-inline: 24px;
+  }
+}
+@media (max-width: 900px) {
+  .ie-layout,
+  .ie-layout--live {
+    grid-template-columns: 1fr;
+  }
+  .ie-panel {
+    position: static;
+  }
+  .ie-main {
+    padding: 24px 20px 48px;
+  }
+  .ie-header {
+    padding: 10px 20px;
+    min-height: 68px;
+    gap: 12px;
+  }
+  .ie-subtitle {
+    display: none;
+  }
+  .ie-workspaceIntro h1 {
+    font-size: 38px;
+  }
+  .ie-workspaceIntro p {
+    font-size: 15px;
+  }
+  .ie-stage {
+    max-height: 420px;
+  }
+}
+@media (max-width: 560px) {
+  .ie-main {
+    padding-inline: 16px;
+  }
+  .ie-header {
+    padding-inline: 16px;
+    flex-wrap: wrap;
+  }
+  .ie-brand {
+    gap: 8px;
+  }
+  .ie-brandMark {
+    width: 24px;
+    height: 24px;
+  }
+  .ie-title {
+    font-size: 21px;
+  }
+  .ie-headerRight {
+    margin-left: auto;
+    gap: 8px;
+  }
+  .ie-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .ie-actions .ie-btn {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .ie-header:has(.ie-btn--danger) .ie-brand {
+    display: none;
+  }
+  .ie-header:has(.ie-btn--danger) .ie-headerRight {
+    width: 100%;
+  }
+  .ie-header:has(.ie-btn--danger) .ie-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .ie-panelSection,
+  .ie-safety,
+  .ie-previewSection {
+    padding: 20px;
+  }
+  .ie-choiceColumn > .ie-panelSection {
+    padding-inline: 0;
+  }
+  .ie-workspaceIntro h1 {
+    font-size: 34px;
+  }
+  .ie-control--range,
+  .composer__slider {
+    grid-template-columns: 1fr auto;
+  }
+  .ie-control--range input[type="range"],
+  .composer__slider input[type="range"],
+  .composer__slider input[type="text"],
+  .composer__slider select {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

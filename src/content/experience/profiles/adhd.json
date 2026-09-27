@@ -1,34 +1,23 @@
 {
   "id": "adhd",
-  "label": "ADHD (Attention Fragmentation / Overload)",
-  "summary": "A metaphor of attention shifting and signal competition: moving salience anchors, small attention jumps, and detail gain.",
+  "label": "ADHD-related attention experiences",
+  "summary": "Gently shifting areas of detail and a steady optional sound bed offer an artistic interpretation of competing attention. Attention and sensory experiences vary; this is one adjustable interpretation, not a depiction of everyone with ADHD.",
   "framing": {
     "type": "metaphor",
-    "disclaimer": "This is a metaphorical overlay for understanding and reflection. It does not diagnose or replicate clinical reality."
+    "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
   },
   "experience_dimensions": [
     {
       "id": "attention_fragmentation",
       "weight": 0.85
-    },
-    {
-      "id": "sensory_overload",
-      "weight": 0.55
-    },
-    {
-      "id": "hyperarousal",
-      "weight": 0.35
     }
   ],
   "safety": {
-    "intensity_default": 0.5,
+    "intensity_default": 0.35,
     "intensity_max": 0.65,
     "warnings": [
-      "If you feel overstimulated, reduce Intensity and enable Safe Mode.",
-      "Reduced Motion is recommended for motion sensitivity.",
-      "Audio is optional; keep volume low.",
-      "Avoid flashing lights or rapid flicker; enable Reduced Motion if sensitive.",
-      "Keep volume low; avoid headphones at high volume; you can mute audio at any time."
+      "Start with low intensity and volume; sound is optional.",
+      "Use Reduced Motion for a steadier image. Stop Everything is always available."
     ],
     "safe_mode_clamps": {
       "max_intensity": 0.65,
@@ -106,18 +95,10 @@
       "id": "salience",
       "node": "salience_competition",
       "params": {
-        "amount": 0.28,
-        "marker_strength": 0.62,
-        "shift": 0.055,
-        "jump_rate": 1.7
-      }
-    },
-    {
-      "id": "focus",
-      "node": "focus_jitter",
-      "params": {
-        "amount": 0.055,
-        "smoothing": 0.78
+        "amount": 0.16,
+        "marker_strength": 0.35,
+        "shift": 0,
+        "jump_rate": 0.35
       }
     },
     {
@@ -143,16 +124,9 @@
     "enabled": true,
     "input": "synth",
     "master": {
-      "volume": 0.2
+      "volume": 0.18
     },
     "chain": [
-      {
-        "node": "tremolo",
-        "params": {
-          "rate": 2.6,
-          "depth": 0.08
-        }
-      },
       {
         "node": "highpass",
         "params": {
@@ -187,36 +161,9 @@
     ]
   },
   "reactive": {
-    "analyser_to_params": [
-      {
-        "source": "rms",
-        "target": "video.salience_competition.amount",
-        "scale": 0.08,
-        "offset": 0,
-        "smoothing": {
-          "attack": 0.06,
-          "release": 0.18
-        },
-        "clamp": [0.08, 0.3]
-      },
-      {
-        "source": "rms",
-        "target": "video.salience_competition.shift",
-        "scale": 0.018,
-        "offset": 0,
-        "smoothing": {
-          "attack": 0.06,
-          "release": 0.2
-        },
-        "clamp": [0.015, 0.08]
-      }
-    ]
+    "analyser_to_params": []
   },
   "references": {
-    "dimensions": [
-      "docs/references/dimensions/attention_fragmentation.md",
-      "docs/references/dimensions/sensory_overload.md",
-      "docs/references/dimensions/hyperarousal.md"
-    ]
+    "dimensions": ["docs/references/dimensions/attention_fragmentation.md"]
   }
 }

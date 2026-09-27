@@ -23,10 +23,6 @@ import { dimensionMappingValues } from './dimensionMappingValues'
 
 const ROOT = process.cwd()
 
-function uniq(xs: string[]) {
-  return Array.from(new Set(xs.filter(Boolean)))
-}
-
 function mdEscape(s: string) {
   return s.replace(/\|/g, '\\|')
 }
@@ -86,17 +82,17 @@ function main() {
   rows.push('# Dimension, motif, and evidence mapping')
   rows.push('')
   rows.push(
-    'This file enumerates the evidence-linked dimension→motif mappings used by the composer.',
+    'The dimension→motif mappings the composer uses, with the evidence links behind each one.',
   )
   rows.push('')
   rows.push(
     '- Non-diagnostic framing: motifs are metaphorical design choices, not clinical simulations.',
   )
   rows.push(
-    '- Evidence-bounded: each dimension points to in-repo rationale docs under `docs/references/dimensions/`.',
+    '- Evidence-bounded: every dimension points to an in-repo rationale doc under `docs/references/dimensions/`.',
   )
   rows.push(
-    '- Experimental: anything marked `hypothesis` should be treated as an evidence gap and kept conservative and off by default.',
+    '- Experimental: anything marked `hypothesis` is an evidence gap. Keep it conservative and off by default.',
   )
   rows.push('')
   rows.push('See also: `docs/references/EVIDENCE_MATRIX.md`.')

@@ -1,4 +1,4 @@
-import { ShaderMaterial, type Material, type Texture } from 'three'
+import type { ShaderMaterial, Material, Texture } from 'three'
 import type { FastRandom } from './random'
 import { BurstEnvelopeState } from './burstEnvelope'
 import type { VideoNodeParams } from './VideoNode'

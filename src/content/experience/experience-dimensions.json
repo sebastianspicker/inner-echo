@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "note": "These are experience dimensions used to build metaphorical AV overlays. They are not diagnostic criteria. Evidence strength & rationale docs were added based on the deep research reports (2026-02-15).",
+  "note": "These experience dimensions support metaphorical audiovisual overlays. They are not diagnostic criteria.",
   "dimensions": [
     {
       "id": "hyperarousal",
@@ -44,7 +44,7 @@
       "rationale_doc": "docs/references/dimensions/panic_peaks.md",
       "motif_summary": {
         "video_nodes": ["pulse", "vignette", "soft_blur", "grain"],
-        "audio_nodes": ["pulse_tone", "lowpass", "compressor_limiter", "reverb"]
+        "audio_nodes": ["lowpass", "compressor_limiter", "reverb"]
       }
     },
     {
@@ -127,14 +127,14 @@
       "label": "Derealization",
       "description": "The world feels unreal, distant, 'behind glass'.",
       "safety": [
-        "Use mild ghosting/chroma drift; avoid intense warping.",
+        "Prefer a mild veil; avoid body distortion and delayed self-images.",
         "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
       ],
       "evidence_strength": "medium",
       "rationale_doc": "docs/references/dimensions/derealization.md",
       "motif_summary": {
-        "video_nodes": ["haze", "chroma_aberration", "temporal_smear", "color_grade"],
-        "audio_nodes": ["flutter", "lowpass", "reverb", "compressor_limiter"]
+        "video_nodes": ["haze", "color_grade"],
+        "audio_nodes": ["lowpass", "reverb", "compressor_limiter"]
       }
     },
     {
@@ -148,8 +148,8 @@
       "evidence_strength": "medium",
       "rationale_doc": "docs/references/dimensions/depersonalization.md",
       "motif_summary": {
-        "video_nodes": ["vignette", "soft_blur", "chroma_aberration", "color_grade"],
-        "audio_nodes": ["reverb", "lowpass", "flutter", "compressor_limiter"]
+        "video_nodes": ["vignette", "soft_blur", "color_grade"],
+        "audio_nodes": ["reverb", "lowpass", "compressor_limiter"]
       }
     },
     {
@@ -172,14 +172,14 @@
       "label": "Attention Fragmentation",
       "description": "Attention jumps between stimuli; difficulty stabilizing focus.",
       "safety": [
-        "Use gentle jitter; avoid nausea-inducing motion.",
+        "Prefer restrained detail; avoid camera shake and insistent rhythms.",
         "Hard limits: no flicker/strobe; no sudden loud transients; keep effects user-controlled; provide Reduced Motion and Safe Mode."
       ],
       "evidence_strength": "medium",
       "rationale_doc": "docs/references/dimensions/attention_fragmentation.md",
       "motif_summary": {
-        "video_nodes": ["focus_jitter", "grain", "edge_sharpen"],
-        "audio_nodes": ["tremolo", "compressor_limiter", "highpass"]
+        "video_nodes": ["grain", "edge_sharpen"],
+        "audio_nodes": ["compressor_limiter", "highpass"]
       }
     },
     {
@@ -193,7 +193,7 @@
       "evidence_strength": "high",
       "rationale_doc": "docs/references/dimensions/compulsive_loop.md",
       "motif_summary": {
-        "video_nodes": ["feedback_loop", "grid_hint", "vignette", "grain"],
+        "video_nodes": ["feedback_loop", "vignette", "grain"],
         "audio_nodes": ["delay", "lowpass", "compressor_limiter"]
       }
     }

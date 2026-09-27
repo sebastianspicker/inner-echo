@@ -127,7 +127,7 @@ export const reducedMotionPolicySchema = z
   })
   .passthrough()
 
-/** SSOT: Safety block (warnings shown in UI; clamps and reduced motion policy are enforced at runtime). */
+/** Safety block whose warnings, clamps, and reduced-motion policy are enforced at runtime. */
 export const profileSafetySchema = z
   .object({
     intensity_default: z.number(),

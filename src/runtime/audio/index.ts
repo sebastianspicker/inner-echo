@@ -22,6 +22,7 @@ export type {
   AudioEngineControl,
   AudioEngineDebugState,
 } from './audioEngine'
+export { loadAudioEngine, type AudioEngineFactory } from './loadAudioEngine'
 export { buildAudioChain, connectAudioChain, rampGain } from './audioGraphBuilder'
 export {
   createLowpass,

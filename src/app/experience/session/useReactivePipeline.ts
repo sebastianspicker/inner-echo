@@ -1,4 +1,5 @@
-import { useEffect, type MutableRefObject } from 'react'
+import { useEffect, useMemo, useRef, type MutableRefObject } from 'react'
+import { overlayConfigurationKey } from './overlayConfiguration'
 import type { Profile } from '../../../domain/experience/schema'
 import type { CameraState } from '../../../runtime/camera'
 import type {
@@ -19,6 +20,8 @@ export interface UseReactivePipelineParams {
   cameraState: CameraState
   reducedMotion: boolean
   profile: Profile | null
+  retryToken?: number
+  diagnosticsActive?: boolean
   videoRef: MutableRefObject<HTMLVideoElement | null>
   canvasRef: MutableRefObject<HTMLCanvasElement | null>
   fallbackCanvasRef: MutableRefObject<HTMLCanvasElement | null>
@@ -45,6 +48,8 @@ export function useReactivePipeline({
   cameraState,
   reducedMotion,
   profile,
+  retryToken = 0,
+  diagnosticsActive = false,
   videoRef,
   canvasRef,
   fallbackCanvasRef,
@@ -60,7 +65,13 @@ export function useReactivePipeline({
   stressModeRef,
   onOverlayStateChange,
 }: UseReactivePipelineParams): void {
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Refs are used as mutable containers read each animation frame. Adding them as deps would re-create the WebGL pipeline on every slider change.
+  const diagnosticsActiveRef = useRef(diagnosticsActive)
+  diagnosticsActiveRef.current = diagnosticsActive
+  const configurationKey = useMemo(
+    () => overlayConfigurationKey(profile, reducedMotion),
+    [profile, reducedMotion],
+  )
+  // biome-ignore lint/correctness/useExhaustiveDependencies: The key covers captured profile definitions and Reduced Motion. Live controls use refs; explicit retry must restart even an equivalent configuration.
   useEffect(() => {
     if (cameraState !== 'active') {
       stopReactiveOverlay(overlayControlRef)
@@ -85,6 +96,7 @@ export function useReactivePipeline({
       couplingStrengthRef,
       maxFeedbackRef,
       safeModeRef,
+      diagnosticsActiveRef,
     }
     const lifecycle = createReactiveOverlayLifecycle({
       ...elements,
@@ -100,5 +112,5 @@ export function useReactivePipeline({
     })
     lifecycle.start()
     return lifecycle.dispose
-  }, [cameraState, reducedMotion, profile])
+  }, [cameraState, configurationKey, retryToken])
 }

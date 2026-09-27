@@ -129,12 +129,8 @@ export function ExperienceDimensionList({
   onOpenEvidence,
 }: ExperienceDimensionListProps) {
   return (
-    <div className="composer__section" role="group" aria-label="Experience dimensions">
-      <div className="composer__title">Experience dimensions</div>
-      <p className="composer__hint">
-        Select patterns to combine into one bounded audiovisual profile. Each evidence link explains
-        the metaphor, its source basis, and its limits.
-      </p>
+    <fieldset className="composer__section">
+      <legend className="sr-only">Experience dimensions</legend>
       <div className="composer__list">
         <ExperienceDimensionRows
           dims={dims}
@@ -145,8 +141,10 @@ export function ExperienceDimensionList({
         />
       </div>
       {dimensions.length > 0 && (
-        <div className="composer__summary" aria-label="Selected dimensions summary">
-          <div className="composer__title">Selected</div>
+        <section className="composer__summary" aria-labelledby="selected-dimensions-title">
+          <h3 id="selected-dimensions-title" className="composer__title">
+            Selected
+          </h3>
           <ul>
             {dimensions.map((d) => (
               <li key={d.dimensionId}>
@@ -162,8 +160,8 @@ export function ExperienceDimensionList({
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       )}
-    </div>
+    </fieldset>
   )
 }

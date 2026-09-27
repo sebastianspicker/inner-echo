@@ -45,6 +45,8 @@ export interface AudioModule {
   getInput(): AudioNode
   /** Update parameters (e.g. cutoff, rate, depth). Params are node-specific. */
   setParams(params: Record<string, unknown>): void
+  /** Restore the parameters resolved when this module was constructed. */
+  resetParams?(): void
   /** Disconnect and release resources. */
   dispose(): void
 }

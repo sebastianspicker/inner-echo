@@ -1,5 +1,5 @@
 /**
- * SSOT: pulse_tone: a very quiet pulsing tone mixed into the chain (safety-first).
+ * A very quiet, safety-limited pulsing tone mixed into the chain.
  *
  * Params:
  * - rate (Hz)
@@ -21,15 +21,20 @@ const DEFAULT_RATE = 1.0
 const DEFAULT_MIX = 0.06
 const DEFAULT_FREQ = 120
 
+function resolveInitialParams(params: PulseToneParams): Required<PulseToneParams> {
+  return {
+    rate: clamp(params.rate ?? DEFAULT_RATE, 0.2, 3),
+    mix: clamp(params.mix ?? DEFAULT_MIX, 0, 0.12),
+    base_freq: clamp(params.base_freq ?? DEFAULT_FREQ, 60, 220),
+  }
+}
+
 export function createPulseTone(
   context: BaseAudioContext,
   params: PulseToneParams = {},
 ): AudioModule {
-  let current: Required<PulseToneParams> = {
-    rate: params.rate ?? DEFAULT_RATE,
-    mix: params.mix ?? DEFAULT_MIX,
-    base_freq: params.base_freq ?? DEFAULT_FREQ,
-  }
+  const initial = resolveInitialParams(params)
+  let current = { ...initial }
   const input = context.createGain()
   input.gain.value = 1
 
@@ -69,7 +74,7 @@ export function createPulseTone(
     }
     const rate = clamp(current.rate, 0.2, 3)
     const baseFreq = clamp(current.base_freq, 60, 220)
-    // mix is intentionally capped (SSOT uses <= 0.10).
+    // Profiles cap this mix at 0.10.
     const mix = clamp(current.mix, 0, 0.12)
 
     osc.frequency.setValueAtTime(baseFreq, context.currentTime)
@@ -91,6 +96,10 @@ export function createPulseTone(
         mix: p.mix as number | undefined,
         base_freq: p.base_freq as number | undefined,
       })
+    },
+    resetParams(): void {
+      current = { ...initial }
+      set(initial)
     },
     dispose(): void {
       try {

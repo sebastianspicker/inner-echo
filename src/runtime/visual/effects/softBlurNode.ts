@@ -1,17 +1,9 @@
 /**
- * SSOT: soft_blur: subtle blur (single-pass, low cost).
+ * Subtle single-pass blur.
  * Note: We intentionally keep the kernel small to avoid performance issues.
  */
 
-import { ShaderMaterial, Vector2, type Material, type Texture } from 'three'
-import type { VideoNode, VideoNodeParams } from './VideoNode'
-import { applyUvParams, clamp, resolveNumberParam } from './paramUtils'
-import {
-  bindInputTexture,
-  createEffectMaterial,
-  disposeEffectMaterial,
-  updateTexelSize,
-} from './shaderMaterial'
+import { SinglePassTexelNode } from './singlePassTexelNode'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -42,35 +34,8 @@ void main() {
 }
 `
 
-export class SoftBlurNode implements VideoNode {
+export class SoftBlurNode extends SinglePassTexelNode {
   readonly nodeName = 'soft_blur'
-  private material: ShaderMaterial | null = null
-
-  setParams(params: VideoNodeParams): void {
-    if (!this.material) return
-    const intensity = clamp(params.intensity ?? 0, 0, 1)
-    let amount = resolveNumberParam(params, 'amount', 0) * intensity
-    // SSOT: keep blur in a comfortable range.
-    amount = clamp(amount, 0, 0.35)
-    this.material.uniforms.u_amount.value = amount
-    // Update texel size from texture dimensions for aspect-correct blur
-    updateTexelSize(this.material, this.material.uniforms.u_map.value as Texture)
-    applyUvParams(this.material, params)
-  }
-
-  getMaterial(inputTexture: Texture): Material {
-    if (!this.material) {
-      this.material = createEffectMaterial(inputTexture, FRAG, {
-        u_amount: { value: 0 },
-        u_texelSize: { value: new Vector2(1 / 400, 1 / 400) },
-      })
-    } else {
-      bindInputTexture(this.material, inputTexture)
-    }
-    return this.material
-  }
-
-  dispose(): void {
-    this.material = disposeEffectMaterial(this.material)
-  }
+  protected readonly fragment = FRAG
+  protected readonly maxAmount = 0.35
 }

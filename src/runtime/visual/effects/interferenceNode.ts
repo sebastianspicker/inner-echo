@@ -1,5 +1,5 @@
 /**
- * SSOT: interference: abstract, non-strobing interference / banding with optional micro-bursts.
+ * Abstract, non-strobing interference bands with optional micro-bursts.
  *
  * Params:
  * - amount
