@@ -13,6 +13,7 @@ import {
   parseEvidenceMatrix,
 } from './evidencePageParsing'
 import { writeEvidencePages } from './evidencePageWriting'
+import { writeMappingSummary } from './mapping-summary'
 
 function main() {
   const root = process.cwd()
@@ -29,6 +30,7 @@ function main() {
   console.log(
     `[evidence-pages-gen] Wrote ${dimensions.length} dimension page(s), ${profiles.length} condition page(s), ${motifCount} motif page(s).`,
   )
+  writeMappingSummary(root)
 }
 
 main()

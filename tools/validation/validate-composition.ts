@@ -10,7 +10,6 @@
  * - no missing nodes/presets are reported for chosen test cases
  */
 
-import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
@@ -19,7 +18,7 @@ import type {
   DimensionSignalMappingEntry,
   ExperienceDimensionDef,
 } from '../../src/domain/experience/composition/types'
-import { parseFirstJsonObject } from '../shared/json/jsonObjectParser'
+import { loadRepoJson } from '../docs/repoJson'
 import { validateComposerCase, type ComposerSettings } from './support/composition'
 
 type Failures = { count: number }
@@ -27,13 +26,9 @@ type Failures = { count: number }
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '../..')
 
-function loadText(pathFromRoot: string): string {
-  return readFileSync(join(ROOT, pathFromRoot), 'utf-8')
-}
-
 async function loadPresetProfile(profileId: string): Promise<Profile | null> {
   try {
-    const raw = JSON.parse(loadText(`src/content/experience/profiles/${profileId}.json`))
+    const raw = loadRepoJson<unknown>(ROOT, `src/content/experience/profiles/${profileId}.json`)
     const parsed = profileSchema.safeParse(raw)
     return parsed.success ? (parsed.data as Profile) : null
   } catch {
@@ -41,22 +36,12 @@ async function loadPresetProfile(profileId: string): Promise<Profile | null> {
   }
 }
 
-const dimensionMappingFile = parseFirstJsonObject<{
+const dimensionMappingFile = loadRepoJson<{
   mapping: Record<string, DimensionSignalMappingEntry>
-}>(loadText('src/content/experience/dimension-to-signal-mapping.json'), {
-  predicate(value) {
-    const mapping = (value as { mapping?: unknown }).mapping
-    return mapping != null && typeof mapping === 'object' && !Array.isArray(mapping)
-  },
-})
-const experienceDimsFile = parseFirstJsonObject<{
+}>(ROOT, 'src/content/experience/dimension-to-signal-mapping.json')
+const experienceDimsFile = loadRepoJson<{
   dimensions: ExperienceDimensionDef[]
-}>(loadText('src/content/experience/experience-dimensions.json'), {
-  predicate(value) {
-    const dimensions = (value as { dimensions?: unknown }).dimensions
-    return Array.isArray(dimensions)
-  },
-})
+}>(ROOT, 'src/content/experience/experience-dimensions.json')
 
 function getDimensionMappingEntry(dimensionId: string): DimensionSignalMappingEntry | null {
   return dimensionMappingFile.mapping?.[dimensionId] ?? null

@@ -12,7 +12,8 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { parseFirstJsonObject } from '../shared/json/jsonObjectParser'
+import { checkMappingSummary } from './mapping-summary'
+import { loadRepoJson } from './repoJson'
 
 type ExperienceDimensionDef = {
   id: string
@@ -24,11 +25,6 @@ type DimensionToSignalMappingFile = { mapping: Record<string, { rationale_doc?: 
 type Profile = { id: string }
 type MotifClaimsFile = {
   claims?: Array<{ dimensionId?: string; motif?: string; label?: string; sources?: string[] }>
-}
-
-function readJsonFirstObject<T>(filePath: string) {
-  const text = fs.readFileSync(filePath, 'utf-8')
-  return parseFirstJsonObject(text) as T
 }
 
 function exists(root: string, p: string) {
@@ -51,8 +47,9 @@ function verifyRequiredFiles(root: string, errors: string[]) {
 
 function verifyDimensions(root: string, errors: string[]) {
   const dimensions =
-    readJsonFirstObject<ExperienceDimensionsFile>(
-      path.join(root, 'src/content/experience/experience-dimensions.json'),
+    loadRepoJson<ExperienceDimensionsFile>(
+      root,
+      'src/content/experience/experience-dimensions.json',
     ).dimensions ?? []
   const motifs = new Set<string>()
   for (const dimension of dimensions) {
@@ -80,8 +77,9 @@ function addDimensionMotifs(dimension: ExperienceDimensionDef, motifs: Set<strin
 
 function verifyMappingDocuments(root: string, errors: string[]) {
   const mapping =
-    readJsonFirstObject<DimensionToSignalMappingFile>(
-      path.join(root, 'src/content/experience/dimension-to-signal-mapping.json'),
+    loadRepoJson<DimensionToSignalMappingFile>(
+      root,
+      'src/content/experience/dimension-to-signal-mapping.json',
     ).mapping ?? {}
   for (const [dimensionId, entry] of Object.entries(mapping)) {
     if (entry?.rationale_doc && !exists(root, entry.rationale_doc)) {
@@ -121,7 +119,7 @@ function verifyProfilePages(root: string, errors: string[]) {
   for (const file of fs
     .readdirSync(profilesDir)
     .filter((candidate) => candidate.endsWith('.json'))) {
-    const profile = readJsonFirstObject<Profile>(path.join(profilesDir, file))
+    const profile = loadRepoJson<Profile>(root, `src/content/experience/profiles/${file}`)
     const doc = `docs/references/conditions/${profile.id}.md`
     if (!exists(root, doc))
       errors.push(`Condition "${profile.id}" missing evidence summary page: ${doc}`)
@@ -135,6 +133,14 @@ function verifyMotifPages(root: string, motifs: Set<string>, errors: string[]) {
   }
 }
 
+function verifyMappingSummary(root: string, errors: string[]) {
+  try {
+    checkMappingSummary(root)
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error))
+  }
+}
+
 function main() {
   const root = process.cwd()
   const errors: string[] = []
@@ -144,6 +150,7 @@ function main() {
   verifyMotifClaims(root, errors)
   verifyProfilePages(root, errors)
   verifyMotifPages(root, motifs, errors)
+  verifyMappingSummary(root, errors)
 
   if (errors.length) {
     console.error('[evidence-verify] FAIL')
