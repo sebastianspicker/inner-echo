@@ -1,4 +1,4 @@
-import type { AudioInputMode } from '../../../runtime/audio'
+import type { AudioInputMode } from '../../../runtime/session'
 import { AudioInputModeControl } from './AudioInputModeControl'
 import { LabeledSlider } from '../ui/LabeledSlider'
 

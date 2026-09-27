@@ -1,4 +1,4 @@
-import type { AudioInputMode } from '../../../runtime/audio'
+import type { AudioInputMode } from '../../../runtime/session'
 
 const INPUT_MODES = ['synth', 'mic', 'mix'] as const
 

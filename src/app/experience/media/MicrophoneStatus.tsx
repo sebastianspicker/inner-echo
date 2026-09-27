@@ -1,4 +1,4 @@
-import type { MicStatus } from '../../../runtime/audio'
+import type { MicStatus } from '../../../runtime/session'
 
 interface MicrophoneStatusProps {
   status: MicStatus

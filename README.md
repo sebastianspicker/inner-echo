@@ -76,10 +76,11 @@ shared  <-  domain/experience  <-  content + runtime  <-  app/experience
 demo    ->  demo + shared only
 ```
 
-`src/domain/experience/` holds pure schemas, safety policy, and composition; it never touches the
-browser. `src/content/` turns bundled JSON and Markdown into validated values. `src/runtime/` owns
-the camera, Web Audio, rendering, and coupling. `src/app/` composes the workflow. The demo stays
-isolated from all of it.
+`src/domain/experience/` holds pure schemas, safety policy, parameter addressing, and composition;
+it never touches the browser. `src/content/` turns bundled JSON and Markdown into validated values.
+`src/runtime/` owns the camera, Web Audio, rendering, and coupling, all driven by one media session
+(`src/runtime/session/`) that the app subscribes to. `src/app/` composes the workflow. The demo
+stays isolated from all of it.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full picture.
 
@@ -108,7 +109,7 @@ Run everything from the repository root.
 | `npm test` | Run the Vitest contract suite. |
 | `npm run build` | Type-check and build both static entries into `dist/`. |
 | `npm run verify` | Run the complete repository gate. |
-| `npm run typecheck` | Check all four TypeScript projects. |
+| `npm run typecheck` | Check the browser, domain, build-config, tools, and tests TypeScript projects. |
 | `npm run lint` | Run Biome; warnings fail. |
 | `npm run quality:check` | Lint plus file-size, function-length, complexity, and duplication limits. |
 | `npm run architecture:check` | Reject forbidden imports and import cycles. |
@@ -122,10 +123,10 @@ The full command matrix, generated-file workflow, and release procedure live in
 
 | Path | What lives there |
 | --- | --- |
-| `src/app/` | React composition, visible state, and user workflows. |
+| `src/app/` | React composition, visible settings, presets, and user workflows, organized by feature. |
 | `src/domain/experience/` | Browser-independent schemas, safety policy, and composition. |
 | `src/content/` | Bundled profile, mapping, and evidence adapters. |
-| `src/runtime/` | Camera, Web Audio, visual rendering, and reactive coupling. |
+| `src/runtime/` | Camera, Web Audio, visual rendering, reactive coupling, and the media session that owns them. |
 | `src/demo/`, `demo/` | The device-free mock: a dependency-free controller and semantic HTML. |
 | `tools/` | Build-time validators, doc generators, release checks, and Pages assembly. |
 | `tests/` | Vitest tests organized by architectural boundary. |

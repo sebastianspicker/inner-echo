@@ -29,7 +29,7 @@ Run the narrowest relevant test while you work, then the broader gate appropriat
 | `npm run lint` | Biome checks for source, tests, tools, and Vite configuration. Warnings fail. |
 | `npm run quality:duplication` | Strict TS, TSX, JavaScript, and CSS clone detection with zero tolerance. |
 | `npm run quality:check` | Lint plus 400-line code/500-line CSS file limits, a 60-line function limit, complexity 12, and zero duplication at 6 lines/50 tokens. |
-| `npm run architecture:check` | Source dependency direction and cycle enforcement. |
+| `npm run architecture:check` | Source dependency direction, cycle enforcement, and the app's single runtime entry (`src/runtime/session/`). |
 | `npm test` | Compact Vitest core-contract tests. |
 | `npm run build` | TypeScript build and Vite production build. |
 | `npm run bundle:verify` | Lazy Three.js boundary and production diagnostic exclusion. |
@@ -39,7 +39,7 @@ Run the narrowest relevant test while you work, then the broader gate appropriat
 | `npm run verify:contracts` | Profile references and runtime node contracts. |
 | `npm run conditions:validate` | Condition profiles and mapping data. |
 | `npm run composer:validate` | Composer output and safety ranges. |
-| `npm run evidence:verify` | Evidence pages and links. |
+| `npm run evidence:verify` | Evidence pages, links, and `MAPPING_SUMMARY.md` freshness. |
 | `npm run verify` | Complete quality, build, architecture, test, documentation, contract, data, and inspect gate. |
 | `npm run check` | Alias for `verify`. |
 | `npm run audit:dependencies` | Moderate-threshold npm advisory check. |
@@ -51,7 +51,8 @@ The full clean-install, artifact, and manual-evidence sequence is in
 ## Derived files
 
 - Run `npm run docs:gen` after changing catalog or schema inputs that affect `docs/generated/`.
-- Run `npm run evidence:gen` when source mappings, research notes, or evidence-page templates change.
+- Run `npm run evidence:gen` when source mappings, research notes, or evidence-page templates change; it also
+  regenerates `docs/references/MAPPING_SUMMARY.md`.
 
 Don't hand-edit derived catalog, schema, dimension, motif, or condition pages. Update the source and
 run the matching command.
