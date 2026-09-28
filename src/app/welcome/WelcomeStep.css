@@ -1,0 +1,17 @@
+/* The welcome uses the shared title page (src/shared/design/components.css). This file only keeps
+ * the quiet loading state that App shows while the workspace chunk loads. */
+
+.welcome-step__note {
+  margin: 0;
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-size: var(--t-18);
+  font-style: italic;
+}
+
+main.welcome-step {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: var(--s-6);
+}

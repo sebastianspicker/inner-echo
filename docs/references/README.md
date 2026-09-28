@@ -1,15 +1,17 @@
 # Evidence method
 
-This directory documents the sources, rationale, and limits behind Inner Echo's experience dimensions and audiovisual motifs. It does not establish diagnostic, clinical, or therapeutic validity.
+This directory collects the sources, rationale, and limits behind Inner Echo's experience dimensions
+and audiovisual motifs. It does not establish diagnostic, clinical, or therapeutic validity.
 
-The individual `dimensions/`, `motifs/`, and `conditions/` pages are generated
-references. They summarize the current composer data and the in-repository
-corpus; the research notes, evidence matrix, and mapping summary remain the
-sources to review when evaluating a claim.
+The `dimensions/`, `motifs/`, and `conditions/` pages are generated references: they summarize the
+current composer data and the in-repository corpus. When you want to judge a claim, the research
+notes, evidence matrix, and mapping summary are the sources to read.
 
 ## Non-diagnostic disclaimer
 
-The evidence corpus supports discussion of reported experience dimensions. Mapping those dimensions to a video or audio motif remains a design decision. A strong source for a phenomenon does not make an overlay an accurate representation of a diagnosis or an individual.
+The evidence corpus supports discussion of reported experience dimensions. Mapping those dimensions
+to a video or audio motif is still a design decision. A strong source for a phenomenon does not make
+an overlay an accurate representation of a diagnosis or an individual.
 
 The application uses these in-repository sources:
 
@@ -17,8 +19,8 @@ The application uses these in-repository sources:
 - `EVIDENCE_MATRIX.md` for dimension-level source and confidence summaries
 - `dimensions/` for individual dimension pages
 - `motifs/` for audiovisual motif pages
-- `conditions/` for profile summaries assembled from dimensions
-- `MAPPING_SUMMARY.md` for mappings used by the current composer data
+- `conditions/` for profile summaries and the actual bundled video and audio stacks
+- `MAPPING_SUMMARY.md` for the mappings used by the current composer data
 
 ## Evidence labels
 
@@ -33,12 +35,16 @@ Motif relationships use these labels:
 
 | Label | Meaning |
 |---|---|
-| Supported | The corpus contains an explicit rationale for the motif relationship. |
-| Mixed | The phenomenon is supported, but the motif choice is partly interpretive. |
+| Supported | Requires direct evidence for the mapping itself, beyond evidence for the experience. No current default mapping is validated this way. |
+| Mixed | Requires mapping-specific evidence with explicit limitations. Evidence for the phenomenon alone is insufficient. |
 | Hypothesis | The motif relationship is not clearly supported. |
 | Artistic | The motif is an artistic design choice without a source-backed relationship claim. |
 
-These labels communicate the state of this repository's source review. They are not certainty scores.
+Unlisted motif relationships default to Artistic. Experience evidence labels are never likelihood
+scores for seeing or hearing an effect. See
+[interpretation boundaries and reviewed sources](research/experience-interpretation.md).
+
+These labels describe the state of this repository's source review. They are not certainty scores.
 
 ## Authoring requirements
 

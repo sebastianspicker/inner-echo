@@ -1,8 +1,9 @@
+// The design system loads first so feature stylesheets can refine it.
+import './index.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ErrorBoundary } from './ui/ErrorBoundary'
+import { ErrorBoundary } from './app/ErrorBoundary'
 import App from './app/App'
-import './index.css'
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {

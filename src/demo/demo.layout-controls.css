@@ -1,0 +1,274 @@
+/* Demo workspace: status strip, the mirror with its simulated feed, and a ruled control rail. */
+
+.demo-shell {
+  min-height: 100dvh;
+}
+
+.brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--s-3);
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+  white-space: nowrap;
+}
+
+.brand img {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+  color: var(--ink-2);
+  font-size: var(--t-14);
+}
+
+.status-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.status-label {
+  color: var(--ink-3);
+}
+
+.status-value.is-on {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border: 1px solid var(--rule-control);
+  border-radius: 50%;
+}
+
+.status-dot.is-on {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+
+.workspace {
+  display: grid;
+  width: min(100%, 1440px);
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 25rem);
+  align-items: start;
+  gap: clamp(var(--s-6), 5vw, var(--s-8));
+  margin: 0 auto;
+  padding: var(--s-6) clamp(var(--s-4), 4vw, var(--s-7)) var(--s-9);
+}
+
+/* The mirror, with a simulated feed instead of a camera. */
+
+.stage {
+  position: sticky;
+  top: 96px;
+  display: grid;
+  gap: var(--s-4);
+}
+
+.stage-figure {
+  display: grid;
+  gap: var(--s-3);
+  margin: 0;
+}
+
+.stage-frame {
+  display: grid;
+  place-items: center;
+}
+
+/* The simulated feed: two soft pools of light standing in for a camera image. */
+.stage.is-active .stage-frame {
+  background:
+    radial-gradient(ellipse at 32% 40%, rgb(196 154 98 / 0.55), transparent 55%),
+    radial-gradient(ellipse at 70% 55%, rgb(111 143 134 / 0.6), transparent 60%), var(--plate);
+}
+
+.stage-mark {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  text-align: center;
+}
+
+.stage-glyph {
+  color: #86c9bd;
+  opacity: 0.85;
+}
+
+.stage-mark span {
+  max-width: 22ch;
+  font-size: var(--t-22);
+}
+
+.feed-readout {
+  top: 18%;
+}
+
+.stage-truth {
+  bottom: var(--s-3);
+}
+
+.ie-mirrorChip .status-dot {
+  border-color: var(--plate-ink-2);
+}
+
+.stage-truth .status-dot.is-on,
+.stage.is-active .feed-readout .status-dot {
+  border-color: #86c9bd;
+  background: #86c9bd;
+}
+
+.feedback {
+  margin: 0;
+  padding: var(--s-3) var(--s-4);
+  border-left: 3px solid var(--accent);
+  background: var(--accent-wash);
+  color: var(--ink);
+  font-size: var(--t-14);
+}
+
+/* The rail */
+
+.control-rail {
+  display: flex;
+  flex-direction: column;
+  padding-left: clamp(var(--s-5), 3vw, var(--s-7));
+  border-left: 1px solid var(--rule);
+}
+
+.control-rail > section,
+.rail-footer {
+  display: grid;
+  gap: var(--s-3);
+  padding-block: 20px;
+}
+
+.control-rail > * + * {
+  border-top: 1px solid var(--rule);
+}
+
+.control-rail > section:first-child {
+  padding-top: 0;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+}
+
+.section-heading > span {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.profile-list {
+  display: grid;
+  border-top: 1px solid var(--rule);
+}
+
+.profile-row {
+  display: grid;
+  gap: 2px;
+  padding: var(--s-3) var(--s-3) var(--s-3) var(--s-4);
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-left: 2px solid transparent;
+  background: transparent;
+  text-align: left;
+}
+
+.profile-row:hover {
+  background: var(--paper-recessed);
+}
+
+.profile-row[aria-pressed="true"] {
+  border-left-color: var(--accent);
+  background: var(--sheet);
+}
+
+.profile-name {
+  font-family: var(--font-serif);
+  font-size: var(--t-18);
+  line-height: 1.3;
+}
+
+.profile-row[aria-pressed="true"] .profile-name {
+  color: var(--accent);
+}
+
+.profile-row small {
+  color: var(--ink-2);
+  font-size: var(--t-14);
+}
+
+.range-control {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.range-control > span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.range-control output {
+  color: var(--ink-2);
+  font-family: var(--font-serif);
+  font-size: var(--t-18);
+  font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 400;
+}
+
+.switch-control {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.switch-control strong {
+  display: block;
+  font-weight: 600;
+}
+
+.switch-control small {
+  display: block;
+  color: var(--ink-3);
+  font-size: var(--t-14);
+}
+
+.evidence-note {
+  padding-left: var(--s-4);
+  border-left: 3px solid var(--accent);
+}
+
+.rail-footer .ie-btn {
+  width: 100%;
+  min-height: 52px;
+  font-size: var(--t-18);
+}

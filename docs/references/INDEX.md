@@ -2,10 +2,10 @@
 
 Use this index to navigate the evidence documents bundled with the application.
 
-- Evidence & Method: [`README.md`](./README.md)
+- Evidence and method: [`README.md`](./README.md)
 - Evidence matrix: [`EVIDENCE_MATRIX.md`](./EVIDENCE_MATRIX.md)
 - Motif (node) index: [`motifs/INDEX.md`](./motifs/INDEX.md)
-- Contributions & limits: [`CONTRIBUTIONS_AND_LIMITS.md`](./CONTRIBUTIONS_AND_LIMITS.md)
+- Contributions and limits: [`CONTRIBUTIONS_AND_LIMITS.md`](./CONTRIBUTIONS_AND_LIMITS.md)
 - Mapping summary: [`MAPPING_SUMMARY.md`](./MAPPING_SUMMARY.md)
 - Research notes and bibliographies: [`research/`](./research/)
 
@@ -27,7 +27,7 @@ Use this index to navigate the evidence documents bundled with the application.
 
 ## Conditions (evidence summaries)
 
-Condition summaries are assembled from their constituent dimensions:
+Each condition summary is assembled from its constituent dimensions:
 
 - [None / neutral baseline](./conditions/none.md)
 - [Anxiety](./conditions/anxiety.md)

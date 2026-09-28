@@ -1,0 +1,65 @@
+/* Demo-only pieces of the welcome. The title page itself is the shared one
+ * (src/shared/design/components.css), so the demo and the live app open identically. */
+
+body [hidden] {
+  display: none;
+}
+
+.text-button {
+  min-height: 32px;
+  font-size: var(--t-14);
+  font-weight: 600;
+}
+
+/* Tour of the live app */
+
+.demo-tour {
+  padding-top: var(--s-6);
+  border-top: 1px solid var(--rule);
+}
+
+.demo-tour h2 {
+  margin: 0 0 var(--s-2);
+  font-family: var(--font-serif);
+  font-size: var(--t-36);
+  font-weight: 300;
+  line-height: var(--lh-title);
+}
+
+.demo-tour__lede {
+  max-width: var(--measure);
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.demo-tour__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-6) var(--s-5);
+  margin: var(--s-6) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.demo-tour__grid img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--s-2);
+}
+
+.demo-tour__grid p {
+  margin: var(--s-3) 0 0;
+  color: var(--ink-2);
+  font-size: var(--t-14);
+  line-height: var(--lh-read);
+}
+
+.demo-tour__grid strong {
+  color: var(--ink);
+}
+
+.demo-tour__link {
+  margin: var(--s-6) 0 0;
+}

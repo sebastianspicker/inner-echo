@@ -1,0 +1,138 @@
+/*
+ * Inner Echo design tokens — "Plates & Captions" (see DESIGN_BRIEF.md).
+ * Shared by the live app (src/index.css) and the device-free demo (src/demo/demo.css).
+ * Fonts are self-hosted (CSP font-src falls back to 'self'); both families are SIL OFL 1.1.
+ */
+
+@font-face {
+  font-family: "Newsreader";
+  font-style: normal;
+  font-weight: 300 500;
+  font-display: swap;
+  src: url("./fonts/newsreader-roman-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Newsreader";
+  font-style: italic;
+  font-weight: 300 450;
+  font-display: swap;
+  src: url("./fonts/newsreader-italic-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inclusive Sans";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("./fonts/inclusive-sans-latin.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: light dark;
+
+  /* Type families: the serif carries the voice and every numeral (tabular, lining); Inclusive Sans
+   * carries the controls. Code falls back to the system monospace; no mono web font ships. */
+  --font-serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-ui: "Inclusive Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type scale (px). */
+  --t-12: 0.75rem;
+  --t-13: 0.8125rem;
+  --t-14: 0.875rem;
+  --t-16: 1rem;
+  --t-18: 1.125rem;
+  --t-22: 1.375rem;
+  --t-28: 1.75rem;
+  --t-36: 2.25rem;
+  --t-48: 3rem;
+  --t-64: 4rem;
+  --t-88: 5.5rem;
+  --lh-tight: 1.05;
+  --lh-title: 1.15;
+  --lh-ui: 1.45;
+  --lh-read: 1.6;
+  --measure: 62ch;
+
+  /* Spacing: a 4px base that doubles through the larger steps. */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+
+  /* Colour roles — mist (light): the pale green-grey of breath on glass. */
+  --paper: #e8ece6;
+  --paper-recessed: #dce2da;
+  --sheet: #f4f6f1;
+  --ink: #172120;
+  --ink-2: #43504c;
+  --ink-3: #5a6662;
+  --rule: #c9d1c9;
+  --rule-strong: #99a59e;
+  --rule-control: #717e78;
+  --accent: #1d5b54;
+  --accent-hover: #164a44;
+  --accent-ink: #f4f6f1;
+  --accent-wash: #d2e2db;
+  --stop: #a8321f;
+  --stop-hover: #8e2817;
+  --stop-ink: #fff8f4;
+  --stop-wash: #f2ddd5;
+  --caution: #775200;
+  --caution-wash: #ede3c9;
+  --plate: #0f1312;
+  --plate-ink: #e4eae6;
+  --plate-ink-2: #b3bdb8;
+  --backdrop: rgb(15 20 19 / 0.55);
+  --selection: #c3dcd4;
+
+  /* Shape: structure is ruled, not boxed. Anything you press is round, after the aperture's arcs;
+   * the mirror is the one arched object. */
+  --radius-pill: 999px;
+  --radius-control: 8px;
+  --radius-check: 4px;
+  --radius-sheet: 14px;
+  --hairline: 1px;
+
+  /* Motion: small, slow, and only on opacity/transform. */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --d-fast: 140ms;
+  --d-base: 220ms;
+  --d-expose: 420ms;
+
+  --target: 44px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Night: the same mist after dark; the accent returns to the brand's original mint. */
+    --paper: #111514;
+    --paper-recessed: #1a201e;
+    --sheet: #161b19;
+    --ink: #e4eae6;
+    --ink-2: #b3bdb8;
+    --ink-3: #909b96;
+    --rule: #2a3230;
+    --rule-strong: #4a5551;
+    --rule-control: #6f7b76;
+    --accent: #86c9bd;
+    --accent-hover: #a3d8ce;
+    --accent-ink: #0d2320;
+    --accent-wash: #1b2c28;
+    --stop: #f08a73;
+    --stop-hover: #f5a795;
+    --stop-ink: #2a0d07;
+    --stop-wash: #3a1f18;
+    --caution: #d9b35e;
+    --caution-wash: #2d2817;
+    --plate: #090b0b;
+    --backdrop: rgb(4 6 6 / 0.72);
+    --selection: #28433d;
+  }
+}

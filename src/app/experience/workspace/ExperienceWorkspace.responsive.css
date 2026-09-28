@@ -1,0 +1,123 @@
+/* Tablet keeps two columns with a narrower panel; below 900px the page becomes one reading column
+ * with its own order and a stop bar that never scrolls away. */
+
+@media (min-width: 901px) {
+  .ie-workspaceNav {
+    display: none;
+  }
+}
+
+@media (max-width: 1180px) {
+  .ie-headerStatus {
+    display: none;
+  }
+
+  .ie-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 22rem);
+    gap: var(--s-6);
+  }
+
+  .ie-layout--live {
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .ie-main {
+    padding-top: var(--s-5);
+  }
+
+  .ie-layout,
+  .ie-layout--live {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .ie-panel {
+    position: static;
+    max-height: none;
+    margin-top: var(--s-7);
+    padding-top: var(--s-4);
+    padding-left: 0;
+    overflow: visible;
+    border-top: 1px solid var(--rule);
+    border-left: 0;
+  }
+
+  .ie-layout--live > .ie-panel {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .ie-layout--live > .ie-choiceColumn {
+    margin-top: var(--s-5);
+    padding-top: var(--s-5);
+    padding-left: 0;
+    border-top: 1px solid var(--rule);
+    border-left: 0;
+  }
+
+  .ie-subtitle {
+    display: none;
+  }
+
+  .ie-stage {
+    max-height: 60vh;
+  }
+}
+
+@media (max-width: 560px) {
+  .ie-header {
+    min-height: 56px;
+    gap: var(--s-3);
+  }
+
+  .ie-brandMark {
+    width: 22px;
+    height: 22px;
+  }
+
+  .ie-title {
+    font-size: var(--t-18);
+  }
+
+  .ie-headerRight {
+    margin-left: auto;
+  }
+
+  .ie-actions .ie-btn {
+    padding-inline: var(--s-3);
+    font-size: var(--t-14);
+  }
+
+  /* While media runs, the header becomes a stop bar: Evidence and Stop split the width. */
+  .ie-header:has(.ie-btn--danger) .ie-brandCopy {
+    display: none;
+  }
+
+  .ie-header:has(.ie-btn--danger) .ie-headerRight,
+  .ie-header:has(.ie-btn--danger) .ie-actions {
+    flex: 1;
+  }
+
+  .ie-header:has(.ie-btn--danger) .ie-actions .ie-btn--danger {
+    flex: 1;
+  }
+
+  .ie-workspaceIntro h1 {
+    font-size: var(--t-36);
+  }
+
+  .ie-workspaceIntro p {
+    font-size: var(--t-16);
+  }
+
+  .ie-sectionHead {
+    font-size: var(--t-22);
+  }
+
+  .ie-stage {
+    aspect-ratio: 4 / 3;
+  }
+}

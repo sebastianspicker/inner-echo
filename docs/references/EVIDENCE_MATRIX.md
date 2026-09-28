@@ -1,46 +1,62 @@
-# Evidence Matrix
+# Evidence matrix
 
-This page is a condensed, navigable summary of the evidence corpus under `docs/references/`.
+This page summarizes the maintained research notes and the current audiovisual motif rationale. It
+does not establish diagnostic, clinical, therapeutic, or simulation validity.
 
-Non-diagnostic framing: Everything here is a metaphor design rationale, not a clinical model.
-
-Source of truth: the evidence corpus in this repo:
+The research sources are:
 
 - `docs/references/research/initial-dimensions.md`
 - `docs/references/research/remaining-dimensions.md`
 
+## Dimension matrix
+
+| Dimension | Supported phenomena, non-diagnostic | Video motif choices | Audio motif choices | Research source | Strength |
+| --- | --- | --- | --- | --- | --- |
+| hyperarousal | Tonic elevated alertness; physiological tension; readiness to react | grain, edge_sharpen, vignette | compressor_limiter, highpass, noise_bed | `docs/references/research/initial-dimensions.md` | High |
+| hypervigilance | Scanning/monitoring; narrowed attention; sensitivity to cues; threat-related attentional bias | vignette, edge_sharpen, grain | noise_bed, highpass, compressor_limiter | `docs/references/research/initial-dimensions.md` | Medium |
+| panic_peaks | Sudden waves of fear/bodily alarm; rise, crest, and release; interoceptive salience | pulse, vignette, soft_blur, grain | lowpass, compressor_limiter, reverb | `docs/references/research/initial-dimensions.md` | High |
+| intrusion | Involuntary “push-in” thoughts/images; cue-triggered; vividness/“nowness” | interference, vignette, grain | delay, noise_bed, compressor_limiter | `docs/references/research/remaining-dimensions.md` | Medium |
+| rumination_loop | Sticky repetitive thought; difficulty disengaging; low novelty return | feedback_loop, grain, vignette | delay, tremolo, lowpass, compressor_limiter | `docs/references/research/remaining-dimensions.md` | High |
+| emotional_numbing | Reduced emotional intensity; dampened reward/interest; reduced emotional responsiveness | color_grade, soft_blur, vignette | lowpass, noise_bed, reverb, compressor_limiter | `docs/references/research/remaining-dimensions.md` | Medium |
+| cognitive_fog | Slowed thinking; reduced clarity; difficulty sustaining mental effort | haze, soft_blur, color_grade | lowpass, noise_bed, reverb, compressor_limiter | `docs/references/research/remaining-dimensions.md` | Medium |
+| time_dilation | Time feels slowed/fast/uneven; pacing instability | temporal_smear, pulse, grain | flutter, delay, compressor_limiter | `docs/references/research/remaining-dimensions.md` | Medium |
+| derealization | World feels distant/unreal/“behind glass”; reduced affective salience | haze, color_grade | lowpass, reverb, compressor_limiter | `docs/references/research/remaining-dimensions.md` | Medium |
+| depersonalization | Detachment from self/body; reduced agency; observer stance | vignette, soft_blur, color_grade | reverb, lowpass, compressor_limiter | `docs/references/research/remaining-dimensions.md` | Medium |
+| sensory_overload | Too much input; difficulty filtering; background becomes foreground | grain, interference, edge_sharpen, vignette | noise_bed, compressor_limiter, lowpass | `docs/references/research/remaining-dimensions.md` | Medium |
+| attention_fragmentation | Unstable focus; attentional shifts; reduced goal-directed control (anxiety/stress) | grain, edge_sharpen | compressor_limiter, highpass | `docs/references/research/remaining-dimensions.md` | Medium |
+| compulsive_loop | Urge-driven repetition/checking; difficulty stopping; “need to complete” | feedback_loop, vignette, grain | delay, lowpass, compressor_limiter | `docs/references/research/remaining-dimensions.md` | High |
+
+Evidence strength describes support in this repository's source review for the reported phenomenon.
+Visual and audio motifs are artistic or engineering choices; support for the phenomenon does not
+validate them. Motif-level labels are maintained in the generated motif pages and `MOTIF_CLAIMS.json`.
+
+See [experience interpretation and reviewed sources](research/experience-interpretation.md) for the
+limits of each curated collection. The motif names below describe the current dimension mapping, which
+can differ from the curated profiles.
+
+## Safety constraints
+
+- Avoid flicker, strobe, sudden loud transients, jump scares, rapid zoom or shake, harsh feedback,
+  body distortion, and stigmatizing loop portrayals.
+- Keep Stop Everything, Safe Mode, Reduced Motion, global intensity, and separate sound and microphone
+  controls available.
+- Bound intensity, temporal feedback, coupling, and audio output through profile, composition, and
+  engine policy.
+- Reduced Motion policy disables or simplifies registered motion-sensitive nodes; static overlays and
+  user-controlled intensity are the preferred substitutes.
+
 ---
 
-## Matrix: Dimension → Phenomena → AV motifs → Citations
+## Evidence limits
 
-| Dimension | Supported phenomena (non-diagnostic) | Video motif choices | Audio motif choices | Evidence corpus link | Evidence strength |
-|-----------|--------------------------------------|------------------------|-------------------------|---------------------|-------------------|
-| hyperarousal | Tonic elevated alertness; physiological tension; readiness to react; reduced dynamic headroom | grain (low, static), edge_sharpen (subtle), vignette (static, soft) | compressor_limiter, highpass (mild presence), noise_bed (low) | `docs/references/research/initial-dimensions.md` | High |
-| hypervigilance | Scanning/monitoring; narrowed attention; sensitivity to cues; threat-related attentional bias | vignette (static), edge_sharpen (non-flickering), grain (low) | noise_bed (quiet), highpass (mild), compressor_limiter | `docs/references/research/initial-dimensions.md` | Medium |
-| panic_peaks | Sudden waves of fear/bodily alarm; rise, crest, and release; interoceptive salience | pulse (clamped, slow envelope), vignette (enveloped), soft_blur (enveloped), grain | pulse_tone (soft), lowpass (sweep), compressor_limiter, reverb (gentle) | `docs/references/research/initial-dimensions.md` | High |
-| intrusion | Involuntary “push-in” thoughts/images; cue-triggered; vividness/“nowness” | interference (micro-bursts, clamped), vignette (brief pulse), grain (micro-burst) | delay (short, low mix), noise_bed (brief swell), compressor_limiter | `docs/references/research/remaining-dimensions.md` | Medium |
-| rumination_loop | Sticky repetitive thought; difficulty disengaging; low novelty return | feedback_loop (low feedback), grain, vignette (gentle) | delay (low feedback), tremolo (very low depth), lowpass, compressor_limiter | `docs/references/research/remaining-dimensions.md` | High |
-| emotional_numbing | Reduced emotional intensity; dampened reward/interest; flattened affective contrast | color_grade (low sat/contrast), soft_blur, vignette | lowpass, noise_bed (very low), reverb, compressor_limiter | `docs/references/research/remaining-dimensions.md` | Medium |
-| cognitive_fog | Slowed thinking; reduced clarity; difficulty sustaining mental effort | haze, soft_blur, color_grade (low contrast) | lowpass, noise_bed, reverb, compressor_limiter | `docs/references/research/remaining-dimensions.md` | Medium |
-| time_dilation | Time feels slowed/fast/uneven; pacing instability | temporal_smear (very low, clamped), pulse (slow), grain | flutter (low depth), delay (short, low mix), compressor_limiter | `docs/references/research/remaining-dimensions.md` | Medium |
-| derealization | World feels distant/unreal/“behind glass”; reduced affective salience | haze, chroma_aberration (very low), temporal_smear (very low), color_grade | flutter, lowpass, reverb (gentle), compressor_limiter | `docs/references/research/remaining-dimensions.md` | Medium |
-| depersonalization | Detachment from self/body; reduced agency; observer stance | vignette, soft_blur, chroma_aberration (micro), color_grade | reverb, lowpass, flutter, compressor_limiter | `docs/references/research/remaining-dimensions.md` | Medium |
-| sensory_overload | Too much input; difficulty filtering; background becomes foreground | grain, interference (non-strobing), edge_sharpen (optional), vignette | noise_bed (user-mutable), compressor_limiter, lowpass | `docs/references/research/remaining-dimensions.md` | Medium |
-| attention_fragmentation | Unstable focus; attentional shifts; reduced goal-directed control (anxiety/stress) | focus_jitter (high smoothing), grain, edge_sharpen | tremolo (low depth), compressor_limiter, highpass | `docs/references/research/remaining-dimensions.md` | Medium |
-| compulsive_loop | Urge-driven repetition/checking; difficulty stopping; “need to complete” | feedback_loop (low feedback, high decay), grid_hint (very subtle), vignette, grain | delay (short, low mix), lowpass, compressor_limiter | `docs/references/research/remaining-dimensions.md` | High |
+- Group-level literature does not predict an individual's experience.
+- Evidence for a phenomenon does not validate a particular audiovisual mapping.
+- The current data models derealization and depersonalization as separate experience dimensions and
+  uses the `dpdr` curated profile; there is no standalone `dissociation` dimension or curated profile.
+- The corpus does not support claims about what a condition looks or sounds like, biomarker
+  equivalence, diagnosis, treatment, or mental-state inference.
+- Sensory safety depends on the implemented repository clamps and manual evaluation; the research notes
+  are not a substitute for current accessibility standards or real-device testing.
 
----
-
-## Safety (from Scientific/)
-
-- Avoid: flicker/strobe, sudden loud transients, jump-scares, rapid zooms/camera shake, harsh feedback, body distortion, comedic loop portrayal.
-- Provide: Stop Everything, Safe Mode, Reduced Motion, Calm Mode / instant return to neutral; cap intensity and temporal feedback.
-- Reduced Motion alternatives: disable temporal_smear, feedback_loop, pulse, focus_jitter; prefer static overlay + intensity slider.
-
----
-
-## Evidence gaps (Scientific/ silent)
-
-- Unsupported: No dimension named “dissociation” in Scientific/; condition “Dissociation” is mapped to derealization + depersonalization + time_dilation (same as DPDR) for consistency.
-- Unsupported claims: Any statement about “what a disorder looks like,” biomarker equivalence, or diagnostic validity is explicitly not supported; Scientific/ frames all mappings as metaphorical hypotheses.
-- Gaps: Specific flash-frequency thresholds (WCAG “three flashes or below”) and photosensitivity consensus numbers are referenced in Scientific/ but not restated as exact constants; implementation should follow WCAG and repo safety clamps.
+See [README.md](README.md) for label definitions, [MAPPING_SUMMARY.md](MAPPING_SUMMARY.md) for the
+executable mapping summary, and [../SAFETY.md](../SAFETY.md) for the maintained safety contract.

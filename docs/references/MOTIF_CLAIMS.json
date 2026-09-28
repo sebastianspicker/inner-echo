@@ -1,12 +1,12 @@
 {
   "version": "0.1.0",
-  "note": "Curated claim labels for specific dimension × motif pairs. This file exists to make it explicit what is evidence-backed (phenomenon-level), what is mixed/interpretive, and what is purely artistic/engineering implementation. Sources must point to in-repo evidence corpus pages only.",
+  "note": "Explicit overrides for dimension and motif claims. Unlisted audiovisual mappings default to artistic: phenomenon evidence does not validate an effect, parameter value or audiovisual coupling. Sources point to in-repo evidence pages.",
   "claims": [
     {
       "dimensionId": "compulsive_loop",
       "motif": "grid_hint",
       "label": "artistic",
-      "why": "A subtle grid overlay is an artistic UI metaphor for checking/ordering/structure. The evidence corpus supports the phenomenon, but not this specific visual primitive.",
+      "why": "A grid is an artistic overlay, not a marker of OCD. It is excluded from the default compulsive-loop dimension and OCD collection to avoid equating compulsions with ordering.",
       "sources": [
         "docs/references/CONTRIBUTIONS_AND_LIMITS.md"
       ]
@@ -31,4 +31,3 @@
     }
   ]
 }
-

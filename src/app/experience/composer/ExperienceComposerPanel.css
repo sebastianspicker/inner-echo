@@ -1,0 +1,398 @@
+/* The pattern list is set like a book index: a serif entry, its gloss, and a citation grade. */
+
+.composer,
+.composer__workspace,
+.composer__inspector,
+.composer__section,
+.composer__list,
+.composer__advanced-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.composer {
+  gap: var(--s-4);
+}
+
+.composer__workspace,
+.composer__inspector {
+  gap: var(--s-5);
+}
+
+.composer__section {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  gap: var(--s-3);
+}
+
+.composer__list {
+  gap: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.composer__advanced-body {
+  gap: var(--s-4);
+  padding: var(--s-2) 0 var(--s-5);
+  animation: ie-reveal var(--d-base) var(--ease) both;
+}
+
+.composer__hint {
+  max-width: var(--measure);
+  line-height: var(--lh-read);
+}
+
+.composer__title {
+  margin: 0;
+  padding: 0;
+  color: var(--ink-2);
+  font-size: var(--t-14);
+  font-weight: 700;
+}
+
+/* Mode: three typeset tabs on a rule. */
+
+.composer__mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s-5);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.composer__mode .composer__toggle {
+  position: relative;
+  display: flex;
+  min-height: var(--target);
+  align-items: center;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  font-size: var(--t-16);
+  font-weight: 600;
+  transition:
+    color var(--d-fast) var(--ease),
+    border-color var(--d-fast) var(--ease);
+}
+
+.composer__modeInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.composer__mode .composer__toggle:hover {
+  color: var(--ink);
+}
+
+.composer__mode .composer__toggle:has(input:checked) {
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+}
+
+.composer__mode .composer__toggle:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Search. */
+
+.composer__filter {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+.composer__filter input {
+  width: 100%;
+  min-width: 0;
+  max-width: 28rem;
+}
+
+.composer__filterCount {
+  flex: 0 0 auto;
+  color: var(--ink-3);
+  font-size: var(--t-14);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rows. */
+
+.composer__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-2);
+  padding: var(--s-4) 0 var(--s-4) var(--s-4);
+  border-bottom: 1px solid var(--rule);
+  border-left: 2px solid transparent;
+  transition:
+    background-color var(--d-fast) var(--ease),
+    border-color var(--d-fast) var(--ease);
+}
+
+.composer__row:hover {
+  background: var(--paper-recessed);
+}
+
+.composer__row:has(.composer__row-main input:checked) {
+  border-left-color: var(--accent);
+  background: var(--sheet);
+}
+
+.composer__row-main {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: var(--s-1) var(--s-4);
+  align-items: start;
+  cursor: pointer;
+}
+
+.composer__row-main input[type="checkbox"] {
+  margin-top: 6px;
+}
+
+.composer__row-title {
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+  font-variation-settings: "opsz" 24;
+  line-height: 1.25;
+}
+
+.composer__row-main:has(input:checked) .composer__row-title {
+  color: var(--accent);
+}
+
+.composer__row-sub {
+  grid-column: 2;
+  max-width: 52ch;
+  color: var(--ink-2);
+  font-size: var(--t-16);
+  line-height: var(--lh-ui);
+}
+
+.composer__row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-1) var(--s-4);
+  padding-left: calc(20px + var(--s-4));
+}
+
+.composer__section > .composer__row-meta {
+  padding-left: 0;
+}
+
+.composer__row .composer__slider {
+  max-width: 28rem;
+  margin: var(--s-2) 0 0 calc(20px + var(--s-4));
+}
+
+/* Evidence grade: a three-step tally set before the words, never colour alone. */
+
+.composer__badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  color: var(--ink-3);
+  font-size: var(--t-13);
+}
+
+.composer__badge::before {
+  color: var(--accent);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+}
+
+.composer__badge--high::before {
+  content: "●●●" / "";
+}
+
+.composer__badge--medium::before {
+  content: "●●○" / "";
+}
+
+.composer__badge--low::before {
+  content: "●○○" / "";
+}
+
+.composer__badge--hyp::before {
+  content: "○○○" / "";
+}
+
+.composer__evidenceBtn {
+  min-height: 24px;
+  font-size: var(--t-14);
+  font-weight: 600;
+}
+
+.composer__empty {
+  margin: 0;
+  padding: var(--s-6) 0;
+  color: var(--ink-3);
+}
+
+.composer__summary {
+  padding-top: var(--s-2);
+  color: var(--ink-2);
+  font-size: var(--t-14);
+}
+
+.composer__summary ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-5);
+  margin: var(--s-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.composer__summary strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Disclosures in the composer. */
+
+.composer__advanced {
+  border-top: 1px solid var(--rule);
+}
+
+.composer__advanced + .composer__advanced {
+  margin-top: calc(-1 * var(--s-5));
+}
+
+.composer__quick-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.composer__readiness {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--rule);
+}
+
+.composer__readiness > div {
+  display: grid;
+}
+
+.composer__readiness span {
+  color: var(--ink-3);
+  font-size: var(--t-14);
+}
+
+/* Framing above the list: the loaded description, then the standing caveat. */
+
+.ie-experienceFraming {
+  display: grid;
+  gap: var(--s-2);
+  max-width: var(--measure);
+  margin: 0;
+}
+
+.ie-experienceFraming > .ie-gloss {
+  margin: 0;
+  color: var(--ink);
+}
+
+.ie-experienceFraming .composer__advanced {
+  border-top: 0;
+}
+
+.ie-experienceFraming .composer__advanced > summary {
+  justify-content: flex-start;
+  min-height: 40px;
+  color: var(--accent);
+  font-size: var(--t-14);
+}
+
+.ie-experienceFraming .composer__advanced > summary::after {
+  color: var(--accent);
+}
+
+.ie-experienceFraming .composer__advanced > .composer__hint {
+  padding-bottom: var(--s-2);
+}
+
+/* Wide screens: title, gloss, and grade in three columns, like an index with notes. */
+
+@media (min-width: 1200px) {
+  .ie-layout--setup .composer__row {
+    grid-template-columns: minmax(0, 1fr) 7.5rem;
+    column-gap: var(--s-5);
+  }
+
+  .ie-layout--setup .composer__row-main {
+    grid-template-columns: 20px minmax(9rem, 0.75fr) minmax(0, 1.25fr);
+  }
+
+  .ie-layout--setup .composer__row-sub {
+    grid-column: 3;
+    padding-top: 4px;
+  }
+
+  .ie-layout--setup .composer__row-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-1);
+    padding: 6px 0 0;
+  }
+
+  .ie-layout--setup .composer__section > .composer__row-meta {
+    padding-left: 0;
+  }
+
+  .composer__row .composer__slider {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Narrow columns (live outer column, phones): three equal cells whose labels may take two lines. */
+.ie-layout--live .composer__mode {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 var(--s-3);
+}
+
+.ie-layout--live .composer__mode .composer__toggle {
+  padding-block: var(--s-2);
+  font-size: var(--t-14);
+  line-height: 1.25;
+}
+
+@media (max-width: 560px) {
+  .composer__mode {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 var(--s-3);
+  }
+
+  .composer__mode .composer__toggle {
+    padding-block: var(--s-2);
+    font-size: var(--t-14);
+    line-height: 1.25;
+  }
+
+  .composer__row {
+    padding-left: var(--s-3);
+  }
+
+  .composer__row-title {
+    font-size: var(--t-22);
+  }
+
+  .composer__row-sub {
+    font-size: var(--t-14);
+  }
+}

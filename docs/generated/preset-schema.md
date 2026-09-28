@@ -1,12 +1,12 @@
 # Preset profile JSON Schema
 
-<!-- Source: scripts/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen. -->
+<!-- Source: tools/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen. -->
 
-This document describes the JSON Schema for condition profile files under `src/conditions/profiles/<id>.json`.
+This is the JSON Schema for experience profile files under `src/content/experience/profiles/<id>.json`.
 
 ## Required keys
 
-The schema requires the following keys:
+Every profile must define these keys:
 
 - `id`
 - `label`
@@ -18,19 +18,19 @@ The schema requires the following keys:
 
 | Key | Meaning |
 |-----|--------|
-| `id` | Condition identifier (must match catalog and filename). |
+| `id` | Condition identifier (must match the catalog and filename). |
 | `label` | Human-readable name shown in the UI. |
 | `summary` | One-paragraph, non-diagnostic description. |
 | `framing` | Metaphor framing block (non-diagnostic). |
-| `experience_dimensions` | Dimension references + weights. |
-| `safety` | Safety defaults, clamps, warnings, Reduced Motion policy. |
+| `experience_dimensions` | Dimension references and weights. |
+| `safety` | Safety defaults, clamps, warnings, and Reduced Motion policy. |
 | `video_stack` | Ordered array of video node definitions (can be empty). |
 
 Other important keys: `safety` (intensity_default, intensity_max, warnings), `audio_stack`, `ui.controls`, `reactive.analyser_to_params`.
 
 ## JSON Schema
 
-The machine-readable JSON Schema is embedded below and also written to `preset-schema.json`.
+The machine-readable schema is embedded below and also written to `preset-schema.json`.
 
 ```json
 {
@@ -377,6 +377,6 @@ The machine-readable JSON Schema is embedded below and also written to `preset-s
     "safety"
   ],
   "additionalProperties": {},
-  "$comment": "Source: scripts/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen."
+  "$comment": "Source: tools/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen."
 }
 ```
