@@ -186,7 +186,7 @@ function EvidenceContent({ state, contentRef, retry, onActivate }: EvidenceConte
       {state.status === 'error' && (
         <div className="evidence-error" role="alert">
           <p>{state.message}</p>
-          <button type="button" className="evidence-btn" onClick={retry}>
+          <button type="button" className="ie-btn" onClick={retry}>
             Retry
           </button>
         </div>
@@ -236,12 +236,7 @@ export function EvidenceDrawer(props: EvidenceDrawerProps) {
           <h2 id="evidence-title" className="evidence-title">
             Method &amp; Evidence
           </h2>
-          <button
-            ref={closeButtonRef}
-            type="button"
-            className="evidence-btn"
-            onClick={props.onClose}
-          >
+          <button ref={closeButtonRef} type="button" className="ie-btn" onClick={props.onClose}>
             Close
           </button>
         </header>

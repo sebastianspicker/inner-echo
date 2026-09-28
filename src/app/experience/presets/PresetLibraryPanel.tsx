@@ -61,22 +61,41 @@ export function PresetLibraryPanel(props: PresetLibraryPanelProps) {
         )}
 
         <div className="composer__quick-buttons">
-          <button type="button" onClick={props.onSave}>
+          <button type="button" className="ie-btn ie-btn--small" onClick={props.onSave}>
             Save new
           </button>
-          <button type="button" onClick={props.onUpdate} disabled={!props.hasSelection}>
+          <button
+            type="button"
+            className="ie-btn ie-btn--small"
+            onClick={props.onUpdate}
+            disabled={!props.hasSelection}
+          >
             Update
           </button>
-          <button type="button" onClick={props.onLoad} disabled={!props.hasSelection}>
+          <button
+            type="button"
+            className="ie-btn ie-btn--small"
+            onClick={props.onLoad}
+            disabled={!props.hasSelection}
+          >
             Load
           </button>
-          <button type="button" onClick={props.onDelete} disabled={!props.hasSelection}>
+          <button
+            type="button"
+            className="ie-btn ie-btn--small"
+            onClick={props.onDelete}
+            disabled={!props.hasSelection}
+          >
             Delete
           </button>
-          <button type="button" onClick={props.onCopyConfiguration}>
+          <button
+            type="button"
+            className="ie-btn ie-btn--small"
+            onClick={props.onCopyConfiguration}
+          >
             Copy configuration
           </button>
-          <button type="button" onClick={props.onCopyShareLink}>
+          <button type="button" className="ie-btn ie-btn--small" onClick={props.onCopyShareLink}>
             Copy share link
           </button>
         </div>

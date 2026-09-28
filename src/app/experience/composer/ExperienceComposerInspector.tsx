@@ -8,12 +8,12 @@ import type {
 } from '../../../domain/experience/composition/types'
 import type { EvidenceDocPath } from '../../../content/evidence'
 import { AdvancedComposerPanel } from './AdvancedComposerPanel'
-import { CompositionMap } from './CompositionMap'
 import { CuratedProfilePicker } from './CuratedProfilePicker'
 import { ProfileBlendList } from './ProfileBlendList'
 import { PresetLibraryPanel, type PresetLibraryPanelProps } from '../presets/PresetLibraryPanel'
 import { ExperienceDimensionList } from './ExperienceDimensionList'
 import { EvidenceButton } from './EvidenceButton'
+import { EvidenceGrade } from './EvidenceGrade'
 import { filterCatalog, strengthBadge } from './selection'
 
 export interface ExperienceComposerInspectorSelection {
@@ -82,7 +82,7 @@ function FilterControl(props: FilterControlProps) {
         onChange={(event) => props.onChange(event.target.value)}
         aria-label={props.label}
       />
-      <span className="composer__slider-val">{props.resultCount}</span>
+      <span className="composer__filterCount">{props.resultCount} listed</span>
     </label>
   )
 }
@@ -106,9 +106,7 @@ function CuratedSelection(props: InspectorSelectionProps) {
         aria-label="Curated collection"
       />
       <div className="composer__row-meta">
-        {currentConditionBadge && (
-          <span className={currentConditionBadge.className}>{currentConditionBadge.label}</span>
-        )}
+        <EvidenceGrade badge={currentConditionBadge} />
         <EvidenceButton
           doc={`docs/references/conditions/${props.selection.conditionId}.md`}
           onOpen={props.onOpenEvidence}
@@ -131,7 +129,7 @@ function DimensionSelection(props: InspectorSelectionProps) {
         onOpenEvidence={props.onOpenEvidence}
       />
       {props.selection.dimensions.length === 0 && (
-        <p className="composer__empty" role="status">
+        <p className="composer__empty ie-gloss" role="status">
           No dimensions selected. Choose one or more to prepare an audiovisual profile.
         </p>
       )}
@@ -195,64 +193,55 @@ export function ExperienceComposerInspector({
   }
 
   return (
-    <>
-      <CompositionMap
-        mode={selection.mode}
-        conditionId={selection.conditionId}
-        dimensions={selection.dimensions}
-        presets={selection.presets}
-      />
+    <div className="composer__inspector">
+      {(selection.mode === 'preset' || selection.mode === 'multimorbid') && (
+        <FilterControl
+          value={conditionQuery}
+          placeholder="Search experiences"
+          label="Experience search"
+          resultCount={filteredCatalog.length}
+          onChange={setConditionQuery}
+        />
+      )}
 
-      <div className="composer__inspector">
-        {(selection.mode === 'preset' || selection.mode === 'multimorbid') && (
-          <FilterControl
-            value={conditionQuery}
-            placeholder="Search experiences"
-            label="Experience search"
-            resultCount={filteredCatalog.length}
-            onChange={setConditionQuery}
-          />
-        )}
+      {selection.mode === 'symptom' && (
+        <FilterControl
+          value={dimensionQuery}
+          placeholder="Find a dimension"
+          label="Dimension search"
+          resultCount={filteredDims.length}
+          onChange={setDimensionQuery}
+        />
+      )}
 
-        {selection.mode === 'symptom' && (
-          <FilterControl
-            value={dimensionQuery}
-            placeholder="Find a dimension"
-            label="Dimension search"
-            resultCount={filteredDims.length}
-            onChange={setDimensionQuery}
-          />
-        )}
+      {selection.mode === 'symptom' && filteredDims.length === 0 ? (
+        <p className="composer__empty ie-gloss" role="status">
+          No dimensions match your search. Try a different word.
+        </p>
+      ) : (
+        <InspectorSelection {...selectionProps} />
+      )}
 
-        {selection.mode === 'symptom' && filteredDims.length === 0 ? (
-          <p className="composer__empty" role="status">
-            No dimensions match your search. Try a different word.
-          </p>
-        ) : (
-          <InspectorSelection {...selectionProps} />
-        )}
+      <AdvancedComposerPanel {...controls} />
+      <PresetLibraryPanel {...presetLibrary} />
 
-        <AdvancedComposerPanel {...controls} />
-        <PresetLibraryPanel {...presetLibrary} />
-
-        {readiness.onStartCamera && (
-          <div className="composer__readiness">
-            <div>
-              <strong>Ready to preview</strong>
-              <span>Camera, sound, and microphone remain off.</span>
-            </div>
-            <button
-              type="button"
-              className="ie-btn ie-btn--accent"
-              onClick={readiness.onStartCamera}
-              disabled={readiness.cameraRequesting}
-              aria-busy={readiness.cameraRequesting}
-            >
-              {readiness.cameraRequesting ? 'Requesting camera…' : 'Start camera'}
-            </button>
+      {readiness.onStartCamera && (
+        <div className="composer__readiness">
+          <div>
+            <strong>Ready to preview</strong>
+            <span>Camera, sound, and microphone remain off.</span>
           </div>
-        )}
-      </div>
-    </>
+          <button
+            type="button"
+            className="ie-btn ie-btn--accent"
+            onClick={readiness.onStartCamera}
+            disabled={readiness.cameraRequesting}
+            aria-busy={readiness.cameraRequesting}
+          >
+            {readiness.cameraRequesting ? 'Requesting camera…' : 'Start camera'}
+          </button>
+        </div>
+      )}
+    </div>
   )
 }

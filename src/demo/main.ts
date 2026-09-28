@@ -100,12 +100,12 @@ function renderStage(active: boolean, profile: Profile) {
   stage.classList.toggle('is-active', active)
   setReadout(
     '[data-feed-readout]',
-    active ? ' SIMULATED FEED · 1280×720' : ' DEMO PREVIEW · NO DEVICE ACCESS',
+    active ? ' Simulated feed · 1280×720' : ' Demo preview · no device access',
   )
   getRequiredElement<HTMLElement>('[data-stage-profile]').textContent = active
     ? profile.name
     : 'Ready to simulate'
-  setReadout('[data-stage-truth]', active ? ' SIMULATION ACTIVE' : ' SIMULATED INPUT ONLY')
+  setReadout('[data-stage-truth]', active ? ' Simulation active' : ' Simulated input only')
 }
 
 function renderStatuses(active: boolean) {

@@ -25,9 +25,13 @@ export function SafetyControls(props: SafetyControlsProps) {
       aria-labelledby="safety-controls-title"
     >
       <div className="ie-safety__heading">
-        <div>
-          <h2 id="safety-controls-title">Adjust for comfort</h2>
-        </div>
+        <h2 id="safety-controls-title" className="ie-sectionHead">
+          <span className="ie-sectionNo ie-ring" aria-hidden="true">
+            2
+          </span>
+          Comfort
+        </h2>
+        <p>Applies to everything you see and hear. Change it at any time.</p>
       </div>
       <div className="ie-safety__controls">
         <LabeledSlider

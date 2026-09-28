@@ -22,12 +22,12 @@ export function CameraHeader({
   onStop,
 }: CameraHeaderProps) {
   return (
-    <header className="ie-header">
+    <header className="ie-header ie-masthead">
       <div className="ie-brand">
         <img className="ie-brandMark" src={brandMarkUrl} alt="" aria-hidden="true" />
         <div className="ie-brandCopy">
           <div className="ie-title">Inner Echo</div>
-          <div className="ie-subtitle">Processed locally</div>
+          <div className="ie-subtitle ie-masthead__note">Processed locally</div>
         </div>
       </div>
 

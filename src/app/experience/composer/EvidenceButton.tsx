@@ -11,7 +11,7 @@ export function EvidenceButton({
   return (
     <button
       type="button"
-      className="composer__evidenceBtn"
+      className="ie-inlineAction composer__evidenceBtn"
       onClick={() => onOpen(doc as EvidenceDocPath)}
       aria-label={`Open evidence doc ${doc}`}
       title={doc}

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useLayoutEffect, useRef } from 'react'
 
 import { AudioMicControls } from '../media/AudioMicControls'
 import { CameraHeader } from '../media/CameraHeader'
@@ -8,6 +8,7 @@ import { DebugPanel } from '../debug/DebugPanel'
 import { EffectControls } from '../media/EffectControls'
 import { ExperienceComposerPanel } from '../composer/ExperienceComposerPanel'
 import { ExperienceFraming } from '../composer/ExperienceFraming'
+import { PlateCaption } from '../media/PlateCaption'
 import { SafetyControls } from '../media/SafetyControls'
 import type { ExperienceWorkspaceModel } from './useExperienceWorkspace'
 import { DEBUG_UI_ENABLED, DEFAULT_PICKER_OPTIONS } from './presentation'
@@ -230,63 +231,123 @@ function WorkspaceDebugSection({ model }: ModelProps) {
   )
 }
 
+function WorkspacePreview({ model }: ModelProps) {
+  const { cameraController } = model
+  return (
+    <section className="ie-previewSection" aria-labelledby="preview-title">
+      <h2 id="preview-title" className="ie-sectionHead">
+        <span className="ie-sectionNo ie-ring" aria-hidden="true">
+          3
+        </span>
+        Preview <span className="ie-previewOptional">(camera optional)</span>
+      </h2>
+      <figure className="ie-plate">
+        <CameraStage
+          containerRef={model.refs.containerRef}
+          videoRef={model.refs.videoRef}
+          webglCanvasRef={model.refs.canvasRef}
+          fallbackCanvasRef={model.refs.fallbackCanvasRef}
+          rmsDebugRef={model.refs.rmsDebugRef}
+          isActive={cameraController.isActive}
+          cameraState={model.camera.cameraState}
+          audioStatus={model.audio.audioStatus}
+          rendererMode={model.camera.overlayState.rendererMode}
+          effectsActive={model.camera.overlayState.effectsActive}
+          debugOverlay={model.ui.debugOverlay}
+        />
+        <PlateCaption
+          selection={model.settings}
+          catalog={model.catalogLoad.catalog ?? DEFAULT_PICKER_OPTIONS}
+          profileStatus={model.profileLoad.profileLoadStatus}
+        />
+      </figure>
+      {!cameraController.isActive && (
+        <div className="ie-previewStart">
+          <button
+            type="button"
+            className="ie-btn ie-btn--accent"
+            onClick={cameraController.start}
+            disabled={cameraController.isRequesting}
+            aria-busy={cameraController.isRequesting}
+          >
+            {cameraController.isRequesting ? 'Requesting camera…' : 'Start camera'}
+          </button>
+          <p className="ie-hint">Camera access does not enable sound or microphone.</p>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function WorkspaceChoices({ model }: ModelProps) {
+  return (
+    <div className="ie-choiceColumn" id="experience-choices" tabIndex={-1}>
+      <div className="ie-workspaceIntro">
+        <h1>Choose what the mirror shows.</h1>
+        <p>
+          Pick experience dimensions or a curated collection and set your comfort limits. The camera
+          starts only when you ask; sound is separate.
+        </p>
+        <nav className="ie-workspaceNav" aria-label="Workspace sections">
+          <a href="#experience-choices">Pattern</a>
+          <a href="#comfort-preview">Comfort &amp; preview</a>
+        </nav>
+      </div>
+      <ExperienceFraming
+        profile={model.profileLoad.profile}
+        isLoading={model.profileLoad.isProfileLoading}
+      />
+      <h2 className="ie-sectionHead">
+        <span className="ie-sectionNo ie-ring" aria-hidden="true">
+          1
+        </span>
+        Pattern
+      </h2>
+      <ComposerControls model={model} />
+      <ComposerReport model={model} />
+    </div>
+  )
+}
+
+function WorkspacePanel({ model }: ModelProps) {
+  const panelRef = useRef<HTMLElement>(null)
+  const cameraActive = model.cameraController.isActive
+
+  useLayoutEffect(() => {
+    if (cameraActive && panelRef.current) panelRef.current.scrollTop = 0
+  }, [cameraActive])
+
+  return (
+    <aside
+      ref={panelRef}
+      className="ie-panel"
+      aria-label="Controls panel"
+      id="comfort-preview"
+      tabIndex={-1}
+    >
+      <WorkspaceComfort model={model} />
+      <WorkspacePreview model={model} />
+      <MediaControls model={model} />
+      <WorkspaceDebugSection model={model} />
+    </aside>
+  )
+}
+
+/**
+ * Setup reads choices first; live leads with the mirror. The order changes in the DOM, not just
+ * visually, so focus order matches what is on screen. The children are keyed so React moves the
+ * choice column and never remounts the panel that holds the video and canvases.
+ */
 function WorkspaceLayout({ model }: ModelProps) {
+  const live = model.cameraController.isActive
+  const choices = <WorkspaceChoices key="choices" model={model} />
+  const panel = <WorkspacePanel key="panel" model={model} />
   return (
     <section
-      className={`ie-layout ie-layout--${model.cameraController.isActive ? 'live' : 'setup'}`}
+      className={`ie-layout ie-layout--${live ? 'live' : 'setup'}`}
       aria-label="Experience workspace"
     >
-      <div className="ie-choiceColumn" id="experience-choices" tabIndex={-1}>
-        <div className="ie-workspaceIntro">
-          <h1>Shape your experience.</h1>
-          <p>Choose patterns, adjust for comfort, then explore with optional camera and sound.</p>
-          <nav className="ie-workspaceNav" aria-label="Workspace sections">
-            <a href="#experience-choices">Choose</a>
-            <a href="#comfort-preview">Comfort &amp; preview</a>
-          </nav>
-        </div>
-        <ExperienceFraming
-          profile={model.profileLoad.profile}
-          isLoading={model.profileLoad.isProfileLoading}
-        />
-        <ComposerControls model={model} />
-        <ComposerReport model={model} />
-      </div>
-      <aside className="ie-panel" aria-label="Controls panel" id="comfort-preview" tabIndex={-1}>
-        <WorkspaceComfort model={model} />
-        <section className="ie-previewSection" aria-labelledby="preview-title">
-          <h2 id="preview-title">
-            Preview <span className="ie-previewOptional">(camera optional)</span>
-          </h2>
-          <CameraStage
-            containerRef={model.refs.containerRef}
-            videoRef={model.refs.videoRef}
-            webglCanvasRef={model.refs.canvasRef}
-            fallbackCanvasRef={model.refs.fallbackCanvasRef}
-            rmsDebugRef={model.refs.rmsDebugRef}
-            isActive={model.cameraController.isActive}
-            cameraState={model.camera.cameraState}
-            audioStatus={model.audio.audioStatus}
-            rendererMode={model.camera.overlayState.rendererMode}
-            effectsActive={model.camera.overlayState.effectsActive}
-            debugOverlay={model.ui.debugOverlay}
-          />
-          {!model.cameraController.isActive && (
-            <button
-              type="button"
-              className="ie-btn ie-btn--accent"
-              onClick={model.cameraController.start}
-              disabled={model.cameraController.isRequesting}
-              aria-busy={model.cameraController.isRequesting}
-            >
-              {model.cameraController.isRequesting ? 'Requesting camera…' : 'Start camera'}
-            </button>
-          )}
-          <p className="ie-hint">Camera access does not enable sound or microphone.</p>
-        </section>
-        <MediaControls model={model} />
-        <WorkspaceDebugSection model={model} />
-      </aside>
+      {live ? [panel, choices] : [choices, panel]}
     </section>
   )
 }

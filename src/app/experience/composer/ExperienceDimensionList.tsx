@@ -5,6 +5,7 @@ import type {
 import type { EvidenceDocPath } from '../../../content/evidence'
 import type { ChangeEvent } from 'react'
 import { EvidenceButton } from './EvidenceButton'
+import { EvidenceGrade } from './EvidenceGrade'
 import { strengthBadge, upsertDimension } from './selection'
 
 function DimensionRow({
@@ -34,7 +35,7 @@ function DimensionRow({
         <span className="composer__row-sub">{dim.description}</span>
       </label>
       <div className="composer__row-meta">
-        {badge && <span className={badge.className}>{badge.label}</span>}
+        <EvidenceGrade badge={badge} />
         <EvidenceButton doc={dim.rationale_doc} onOpen={onEvidence} />
       </div>
       {selected && <DimensionWeightSlider dimension={dim} weight={weight} onWeight={onWeight} />}

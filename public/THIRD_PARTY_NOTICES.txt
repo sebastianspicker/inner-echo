@@ -37,3 +37,17 @@ License text: third-party-licenses/three-0.183.2-MIT.txt
 zod 4.3.6
 Package license: MIT
 License text: third-party-licenses/zod-4.3.6-MIT.txt
+
+Bundled fonts
+
+The following typefaces are self-hosted under src/shared/design/fonts/. They are
+the Google Fonts "latin" subsets, with their variable axes limited to the ranges
+the interface uses. No Reserved Font Name is declared for either family.
+
+Newsreader (Production Type)
+Font license: SIL Open Font License 1.1
+License text: third-party-licenses/newsreader-OFL-1.1.txt
+
+Inclusive Sans (Olivia King)
+Font license: SIL Open Font License 1.1
+License text: third-party-licenses/inclusive-sans-OFL-1.1.txt

@@ -1,21 +1,21 @@
 .debug-panel {
-  margin-top: var(--sp-2);
-  padding: var(--sp-3);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: rgba(0, 0, 0, 0.18);
+  margin-top: var(--s-2);
+  padding: var(--s-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-control);
+  background: var(--paper-recessed);
   font-size: 12px;
   font-family: var(--font-mono);
-  color: var(--text);
+  color: var(--ink);
 }
 
 .debug-panel__title {
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--ink-2);
   font-weight: 650;
-  margin-bottom: var(--sp-2);
+  margin-bottom: var(--s-2);
 }
 
 .debug-panel__grid {
@@ -26,47 +26,47 @@
 }
 
 .debug-panel dt {
-  color: var(--faint);
+  color: var(--ink-3);
   letter-spacing: 0.06em;
 }
 
 .debug-panel dd {
   margin: 0;
-  color: var(--text);
+  color: var(--ink);
 }
 
 .debug-panel__error {
-  color: color-mix(in oklab, var(--danger) 85%, white 0%);
+  color: color-mix(in oklab, var(--stop) 85%, white 0%);
 }
 
 .debug-panel__actions {
-  margin-top: var(--sp-2);
+  margin-top: var(--s-2);
   display: flex;
-  gap: var(--sp-2);
+  gap: var(--s-2);
   flex-wrap: wrap;
 }
 
 .debug-panel__btn {
   padding: 8px 12px;
   font-size: 12px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--border);
-  background: var(--surface-control);
-  color: var(--text);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--rule);
+  background: var(--paper-recessed);
+  color: var(--ink);
   cursor: pointer;
   transition:
-    background var(--duration-normal) var(--ease-gentle),
-    border-color var(--duration-normal) var(--ease-gentle),
-    transform var(--duration-normal) var(--ease-out-soft),
-    box-shadow var(--duration-normal) var(--ease-gentle);
+    background var(--d-fast) var(--ease),
+    border-color var(--d-fast) var(--ease),
+    transform var(--d-fast) var(--ease),
+    box-shadow var(--d-fast) var(--ease);
 }
 
 .debug-panel__btn:hover:not(:disabled) {
-  background: var(--surface-control-hover);
-  border-color: var(--border-strong);
+  background: var(--paper-recessed);
+  border-color: var(--rule-strong);
 }
 
 .debug-panel__btn:active:not(:disabled) {
-  background: var(--surface-3);
+  background: var(--paper-recessed);
   transition-duration: 80ms;
 }

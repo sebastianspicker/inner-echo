@@ -16,7 +16,11 @@ function manifest() {
       imports: ['react'],
       dynamicImports: ['audio', 'graphics', 'evidence'],
     },
-    audio: { src: 'src/runtime/audio/audioEngine.ts', isDynamicEntry: true },
+    audio: {
+      src: 'src/runtime/audio/audioEngine.ts',
+      isDynamicEntry: true,
+      imports: [] as string[],
+    },
     evidence: {
       src: 'src/app/experience/evidence/EvidenceDrawer.tsx',
       isDynamicEntry: true,
@@ -47,6 +51,11 @@ describe('optional runtime bundle boundaries', () => {
     const chunks = { ...manifest(), shared: { imports: ['audio'] } }
     chunks[entry].imports.push('shared')
     expect(inspectRuntimeBoundaries(chunks)).toContain(`${entry} eagerly loads audio`)
+  })
+  it('rejects an audio entry that proxies through the workspace chunk', () => {
+    const chunks = manifest()
+    chunks.audio.imports = ['workspace']
+    expect(inspectRuntimeBoundaries(chunks)).toContain('audio eagerly loads workspace')
   })
   it('rejects a lost lazy entry or eager Three dependency', () => {
     const chunks = { ...manifest(), three: { file: 'assets/three.core-abc.js' } }

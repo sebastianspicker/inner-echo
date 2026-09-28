@@ -85,7 +85,7 @@ export async function composeEffectiveProfileCore(
   const profile: Profile = {
     id: 'composed',
     label: 'Composed Overlay',
-    summary: 'A composed metaphorical overlay built from selected presets and/or dimensions.',
+    summary: 'A combined interpretation of the dimensions or collections you selected.',
     framing: {
       type: 'metaphor',
       disclaimer:

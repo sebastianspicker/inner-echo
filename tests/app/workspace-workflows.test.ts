@@ -63,8 +63,14 @@ describe('passive startup', () => {
 describe('camera start', () => {
   it('requests video only and reaches the active camera state', async () => {
     handle = await mountWorkspace()
+    const video = handle.container.querySelector('video')
+    const panel = handle.container.querySelector<HTMLElement>('.ie-panel')
+    if (!panel) throw new Error('Expected controls panel')
+    panel.scrollTop = 120
     await startCamera(handle.container)
 
+    expect(handle.container.querySelector('video')).toBe(video)
+    expect(panel.scrollTop).toBe(0)
     expect(mediaDevices.getUserMedia).toHaveBeenCalledOnce()
     expect(mediaDevices.getUserMedia).toHaveBeenCalledWith({ video: true, audio: false })
     expect(audioContexts.constructedCount()).toBe(0)

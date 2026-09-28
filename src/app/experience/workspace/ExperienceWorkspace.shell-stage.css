@@ -1,15 +1,20 @@
+/* Shell, header, layout grid, and the plate (camera stage + caption). */
+
 .ie-app,
 .ie-shell {
   min-height: 100dvh;
 }
+
 .ie-shell {
-  background: var(--bg);
+  background: var(--paper);
 }
+
 .ie-main {
-  width: min(100%, 1600px);
+  width: min(100%, 1440px);
   margin: 0 auto;
-  padding: 32px 40px 64px;
+  padding: var(--s-6) clamp(var(--s-4), 4vw, var(--s-7)) var(--s-9);
 }
+
 .ie-liveRegion {
   position: absolute;
   width: 1px;
@@ -18,164 +23,178 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
-.ie-header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  min-height: 72px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 12px 40px;
-  border-bottom: 1px solid var(--border-strong);
-  background: var(--bg);
-}
+
+/* Header: the shared masthead (brand at the left; media truth and the stop path at the right). */
+
 .ie-brand,
 .ie-brandCopy,
 .ie-headerRight,
 .ie-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
 }
+
+.ie-brand {
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.ie-brandCopy {
+  gap: var(--s-4);
+  min-width: 0;
+}
+
 .ie-brandMark {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   flex: 0 0 auto;
 }
+
 .ie-title {
-  font-family: var(--font-display);
-  font-size: 24px;
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+  font-variation-settings: "opsz" 24;
+  line-height: 1;
   white-space: nowrap;
 }
-.ie-subtitle {
-  padding-left: 16px;
-  border-left: 1px solid var(--border-strong);
-  color: var(--faint);
-  font-size: 13px;
+
+.ie-headerRight {
+  gap: var(--s-5);
 }
+
 .ie-headerStatus {
-  color: var(--muted);
-  font-size: 13px;
-}
-.ie-actions {
-  gap: 8px;
-}
-.ie-btn {
-  display: inline-flex;
-  min-height: 44px;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-md);
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 550;
-  transition:
-    background 160ms ease,
-    border-color 160ms ease;
+  gap: var(--s-2);
+  color: var(--ink-2);
+  font-size: var(--t-14);
+  white-space: nowrap;
 }
-.ie-btn:hover:not(:disabled) {
-  background: var(--surface-3);
-  border-color: var(--muted);
-}
-.ie-btn:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-.ie-btn--accent {
+
+.ie-headerStatus::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
   background: var(--accent);
-  color: #102821;
-  border-color: var(--accent);
+  content: "";
 }
-.ie-btn--accent:hover:not(:disabled) {
-  background: var(--accent-2);
-  color: #102821;
+
+.ie-actions {
+  gap: var(--s-2);
 }
-.ie-btn--danger {
-  background: var(--danger);
-  border-color: var(--danger);
-  color: #301719;
-}
-.ie-btn--danger:hover:not(:disabled) {
-  background: #f4b2b2;
-  color: #301719;
-}
-.ie-stopIcon {
-  width: 9px;
-  height: 9px;
-  background: currentColor;
-}
+
+/* Layout: the choices at a reading measure, the panel in the outer column behind a hairline. */
+
 .ie-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 390px);
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 26rem);
   align-items: start;
-  gap: 32px;
+  gap: clamp(var(--s-6), 5vw, var(--s-8));
 }
+
+/* Live: the mirror column leads and takes the width; the choices move to the outer column. */
 .ie-layout--live {
-  grid-template-columns: minmax(0, 1fr) minmax(390px, 0.9fr);
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.7fr);
 }
+
 .ie-choiceColumn {
   min-width: 0;
-  scroll-margin-top: 96px;
+  scroll-margin-top: 88px;
 }
+
 .ie-workspaceIntro {
-  margin-bottom: 24px;
+  max-width: var(--measure);
+  margin-bottom: var(--s-5);
 }
+
 .ie-workspaceIntro h1 {
-  margin: 0 0 12px;
-  font-family: var(--font-display);
-  font-size: clamp(32px, 3.4vw, 52px);
-  line-height: 1.12;
-  font-weight: 400;
-  letter-spacing: -0.035em;
+  margin: 0 0 var(--s-4);
+  font-family: var(--font-serif);
+  font-size: clamp(var(--t-36), 3.6vw, 3.5rem);
+  font-weight: 300;
+  font-variation-settings: "opsz" 60;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.02em;
 }
+
 .ie-workspaceIntro p {
   margin: 0;
-  max-width: 65ch;
-  color: var(--muted);
-  font-size: 17px;
-  line-height: 1.55;
+  color: var(--ink-2);
+  font-size: var(--t-18);
+  line-height: var(--lh-read);
 }
+
 .ie-workspaceNav {
   display: flex;
-  gap: 24px;
-  margin-top: 18px;
+  gap: var(--s-5);
+  margin-top: var(--s-4);
 }
+
 .ie-workspaceNav a {
+  padding-block: var(--s-2);
   color: var(--accent);
-  font-size: 14px;
-  text-underline-offset: 5px;
-  padding-block: 6px;
+  font-weight: 600;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
 }
-.ie-previewSection {
-  padding: 24px;
-  border-top: 1px solid var(--border-strong);
-  display: grid;
-  gap: 16px;
+
+.ie-layout--live > .ie-choiceColumn {
+  padding-left: clamp(var(--s-5), 3vw, var(--s-7));
+  border-left: 1px solid var(--rule);
 }
-.ie-previewSection h2 {
+
+.ie-layout--live .ie-workspaceIntro h1 {
+  font-size: var(--t-36);
+}
+
+/* Section heads carry a ringed serif numeral, a small echo of the aperture mark:
+ * the setup reads 1 Pattern, 2 Comfort, 3 Preview. */
+
+.ie-sectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
   margin: 0;
-  font: 400 25px / 1.2 var(--font-display);
+  color: var(--ink);
 }
+
+.ie-sectionNo {
+  align-self: center;
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--accent-wash);
+}
+
+.ie-choiceColumn > .ie-sectionHead {
+  margin-top: var(--s-7);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--rule);
+}
+
+/* Preview: a plate on a near-black ground in both themes, captioned underneath. */
+
+.ie-previewSection {
+  display: grid;
+  gap: var(--s-4);
+}
+
 .ie-previewOptional {
-  font: 14px var(--font-sans);
-  color: var(--muted);
+  color: var(--ink-3);
+  font-family: var(--font-ui);
+  font-size: var(--t-14);
 }
-.ie-stage {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-md);
-  background: var(--surface-control);
+
+.ie-layout--live .ie-sectionNo,
+.ie-layout--live .ie-previewOptional {
+  display: none;
 }
+
+.ie-plate {
+  display: grid;
+  gap: var(--s-3);
+  margin: 0;
+}
+
 .ie-video,
 .ie-canvas {
   position: absolute;
@@ -184,15 +203,31 @@
   width: 100%;
   height: 100%;
 }
+
 .ie-video {
   object-fit: cover;
 }
+
 .ie-canvas {
   pointer-events: none;
 }
+
 .ie-canvas[hidden] {
   display: none;
 }
+
+/* Idle, the mirror is a shallow slot so the start action stays in view; live, it opens up. */
+.ie-layout--setup .ie-stage:not(.ie-stage--active) {
+  aspect-ratio: 2 / 1;
+  border-radius: 50% 50% 6px 6px / 20% 20% 6px 6px;
+}
+
+/* The picture exposes once, gently, when the camera starts. */
+.ie-stage--active .ie-video,
+.ie-stage--active .ie-canvas {
+  animation: ie-expose var(--d-expose) var(--ease) both;
+}
+
 .ie-placeholder {
   position: absolute;
   inset: 0;
@@ -200,49 +235,65 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 20px;
+  gap: var(--s-2);
+  padding: var(--s-5);
+  color: var(--plate-ink-2);
   text-align: center;
-  color: var(--muted);
 }
-.ie-placeholder p {
-  margin: 0;
-  max-width: 28ch;
-  font-size: 14px;
-}
-.ie-placeholder span {
-  font-size: 12px;
-}
+
 .ie-placeholder svg {
   flex-shrink: 0;
+  margin-bottom: var(--s-1);
+  opacity: 0.8;
 }
+
+.ie-placeholder p {
+  max-width: 26ch;
+  margin: 0;
+  color: var(--plate-ink);
+}
+
+.ie-placeholder span {
+  font-size: var(--t-13);
+}
+
 .ie-stageChrome {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
+
 .ie-stageTruth {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  color: #edf2ed;
-  background: #101c1ee6;
-  font-size: 12px;
+  bottom: var(--s-3);
 }
+
 .ie-statusDot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent);
+  background: #86c9bd;
 }
+
 .ie-debugChip {
   position: absolute;
   bottom: 40px;
-  left: 12px;
-  font: 11px var(--font-mono);
+  left: var(--s-3);
+  font: var(--t-12) var(--font-mono);
+}
+
+.ie-captionWeight {
+  color: var(--ink-2);
+  font-style: normal;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.ie-previewStart {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.ie-previewStart .ie-btn {
+  width: 100%;
+  min-height: 52px;
+  font-size: var(--t-18);
 }

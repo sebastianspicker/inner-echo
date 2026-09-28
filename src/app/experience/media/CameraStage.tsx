@@ -46,7 +46,7 @@ export function CameraStage({
   return (
     <section
       ref={containerRef}
-      className={`ie-stage${isActive ? ' ie-stage--active' : ''}`}
+      className={`ie-stage ie-mirror${isActive ? ' ie-stage--active' : ''}`}
       aria-label="Camera stage"
     >
       <video ref={videoRef} className="ie-video" playsInline muted aria-label="Camera feed" />
@@ -54,7 +54,7 @@ export function CameraStage({
       <canvas ref={fallbackCanvasRef} className="ie-canvas" hidden />
       {isActive && (
         <div className="ie-stageChrome">
-          <div className="ie-stageTruth">
+          <div className="ie-stageTruth ie-mirrorChip">
             <span className="ie-statusDot is-active" aria-hidden="true" />
             {stageReadout}
           </div>
@@ -80,7 +80,7 @@ export function CameraStage({
               strokeLinejoin="round"
             />
           </svg>
-          <p>
+          <p className="ie-gloss">
             {cameraState === 'requesting'
               ? 'Waiting for camera permission…'
               : 'Your preview stays off until you start it.'}

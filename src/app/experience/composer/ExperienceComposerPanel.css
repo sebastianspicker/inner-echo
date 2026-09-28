@@ -1,36 +1,6 @@
-@import "../ui/ExperienceFormPrimitives.css";
+/* The pattern list is set like a book index: a serif entry, its gloss, and a citation grade. */
 
-.composer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-}
-
-.composer__header,
-.composer__inspectorHeader,
-.composer__row-meta,
-.composer__quick-buttons {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-2);
-}
-
-.composer__heading {
-  margin: var(--sp-2) 0 0;
-  color: var(--text);
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -0.005em;
-}
-
-.composer__hint {
-  margin: var(--sp-2) 0 0;
-  color: var(--faint);
-  font-size: 14px;
-  line-height: 1.5;
-}
-
+.composer,
 .composer__workspace,
 .composer__inspector,
 .composer__section,
@@ -40,121 +10,159 @@
   flex-direction: column;
 }
 
+.composer {
+  gap: var(--s-4);
+}
+
 .composer__workspace,
 .composer__inspector {
-  gap: var(--sp-4);
+  gap: var(--s-5);
 }
 
-.composer__section,
-.composer__list,
-.composer__advanced-body {
-  gap: var(--sp-3);
-}
-
-.composer__mode {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.composer__section {
+  min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
-  border-bottom: 1px solid var(--border-strong);
+  gap: var(--s-3);
 }
+
+.composer__list {
+  gap: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.composer__advanced-body {
+  gap: var(--s-4);
+  padding: var(--s-2) 0 var(--s-5);
+  animation: ie-reveal var(--d-base) var(--ease) both;
+}
+
+.composer__hint {
+  max-width: var(--measure);
+  line-height: var(--lh-read);
+}
+
+.composer__title {
+  margin: 0;
+  padding: 0;
+  color: var(--ink-2);
+  font-size: var(--t-14);
+  font-weight: 700;
+}
+
+/* Mode: three typeset tabs on a rule. */
+
+.composer__mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s-5);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+}
+
 .composer__mode .composer__toggle {
   position: relative;
   display: flex;
+  min-height: var(--target);
   align-items: center;
-  justify-content: center;
-  min-height: 60px;
-  padding: 12px 8px;
-  border-bottom: 3px solid transparent;
-  color: var(--muted);
-  font-size: 14px;
-  text-align: center;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-3);
   cursor: pointer;
+  font-size: var(--t-16);
+  font-weight: 600;
+  transition:
+    color var(--d-fast) var(--ease),
+    border-color var(--d-fast) var(--ease);
 }
+
 .composer__modeInput {
   position: absolute;
   width: 1px;
   height: 1px;
   opacity: 0;
 }
-.composer__mode .composer__toggle:has(input:checked) {
-  border-color: var(--accent);
-  color: var(--accent);
+
+.composer__mode .composer__toggle:hover {
+  color: var(--ink);
 }
+
+.composer__mode .composer__toggle:has(input:checked) {
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+}
+
 .composer__mode .composer__toggle:has(input:focus-visible) {
   outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-.composer__mode .composer__toggle:hover {
-  background: var(--surface-2);
+  outline-offset: 2px;
 }
 
-.composition-map {
-  display: none;
-}
+/* Search. */
 
-.composer__inspectorHeader {
-  align-items: flex-start;
-}
-
-.composer__inspectorHeader .composer__hint {
-  max-width: 20ch;
-  margin: 0;
-  text-align: right;
-}
-
-.composer__slider {
-  display: grid;
-  grid-template-columns: minmax(92px, 1fr) minmax(96px, 1.2fr) auto;
+.composer__filter {
+  display: flex;
   align-items: center;
-  gap: var(--sp-2);
-  color: var(--text);
-  font-size: 13px;
+  gap: var(--s-4);
 }
 
-.composer__slider input[type="text"],
-.composer__slider select {
-  min-height: 36px;
+.composer__filter input {
+  width: 100%;
+  min-width: 0;
+  max-width: 28rem;
 }
 
-.composer__slider input[type="text"]::placeholder {
-  color: var(--muted);
+.composer__filterCount {
+  flex: 0 0 auto;
+  color: var(--ink-3);
+  font-size: var(--t-14);
+  font-variant-numeric: tabular-nums;
 }
+
+/* Rows. */
 
 .composer__row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-  padding: 20px 12px;
-  border-bottom: 1px solid var(--border);
-  transition: background var(--duration-normal) var(--ease-gentle);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-2);
+  padding: var(--s-4) 0 var(--s-4) var(--s-4);
+  border-bottom: 1px solid var(--rule);
+  border-left: 2px solid transparent;
+  transition:
+    background-color var(--d-fast) var(--ease),
+    border-color var(--d-fast) var(--ease);
 }
 
 .composer__row:hover {
-  background: var(--surface-1);
+  background: var(--paper-recessed);
+}
+
+.composer__row:has(.composer__row-main input:checked) {
+  border-left-color: var(--accent);
+  background: var(--sheet);
 }
 
 .composer__row-main {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
-  gap: 2px var(--sp-2);
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: var(--s-1) var(--s-4);
   align-items: start;
   cursor: pointer;
 }
 
 .composer__row-main input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  margin: 3px 0 0;
-  accent-color: var(--accent);
+  margin-top: 6px;
 }
 
 .composer__row-title {
-  color: var(--text);
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 400;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+  font-variation-settings: "opsz" 24;
+  line-height: 1.25;
 }
 
 .composer__row-main:has(input:checked) .composer__row-title {
@@ -163,264 +171,228 @@
 
 .composer__row-sub {
   grid-column: 2;
-  color: var(--faint);
-  font-size: 14px;
-  line-height: 1.45;
+  max-width: 52ch;
+  color: var(--ink-2);
+  font-size: var(--t-16);
+  line-height: var(--lh-ui);
 }
 
-.composer__row-meta {
-  justify-content: flex-start;
-  padding-left: var(--sp-5);
-}
-
-.composer__badge,
-.composer__evidence-path {
-  color: var(--muted);
-  font-family: var(--font-sans);
-  font-size: 12px;
-}
-
-.composer__badge {
-  text-transform: none;
-}
-
-.composer__badge--high {
-  color: var(--accent);
-}
-
-.composer__badge--medium {
-  color: var(--warn);
-}
-
-.composer__badge--low {
-  color: var(--danger);
-}
-
-.composer__evidence,
 .composer__row-meta {
   display: flex;
-  align-items: center;
-  gap: var(--sp-2);
   flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-1) var(--s-4);
+  padding-left: calc(20px + var(--s-4));
 }
 
-.composer__evidence-label {
-  color: var(--faint);
-  font-size: 12px;
+.composer__section > .composer__row-meta {
+  padding-left: 0;
+}
+
+.composer__row .composer__slider {
+  max-width: 28rem;
+  margin: var(--s-2) 0 0 calc(20px + var(--s-4));
+}
+
+/* Evidence grade: a three-step tally set before the words, never colour alone. */
+
+.composer__badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  color: var(--ink-3);
+  font-size: var(--t-13);
+}
+
+.composer__badge::before {
+  color: var(--accent);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+}
+
+.composer__badge--high::before {
+  content: "●●●" / "";
+}
+
+.composer__badge--medium::before {
+  content: "●●○" / "";
+}
+
+.composer__badge--low::before {
+  content: "●○○" / "";
+}
+
+.composer__badge--hyp::before {
+  content: "○○○" / "";
 }
 
 .composer__evidenceBtn {
-  font-size: 13px;
-}
-
-.composer__evidenceBtn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  min-height: 24px;
+  font-size: var(--t-14);
+  font-weight: 600;
 }
 
 .composer__empty {
   margin: 0;
-  padding: var(--sp-5) var(--sp-3);
-  color: var(--faint);
-  font-size: 13px;
-  line-height: 1.55;
-  text-align: center;
+  padding: var(--s-6) 0;
+  color: var(--ink-3);
 }
+
+.composer__summary {
+  padding-top: var(--s-2);
+  color: var(--ink-2);
+  font-size: var(--t-14);
+}
+
+.composer__summary ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-5);
+  margin: var(--s-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.composer__summary strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Disclosures in the composer. */
 
 .composer__advanced {
-  padding-top: var(--sp-3);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--rule);
 }
 
-.composer__advanced summary {
-  min-height: 30px;
-  letter-spacing: 0;
-}
-
-.composer__advanced summary::-webkit-details-marker {
-  display: none;
-}
-
-.composer__advanced[open] > summary::after {
-  transform: rotate(225deg);
-}
-
-.composer__advanced-body {
-  padding-top: var(--sp-3);
-  animation: ie-fadeIn var(--duration-normal) var(--ease-out-soft) both;
+.composer__advanced + .composer__advanced {
+  margin-top: calc(-1 * var(--s-5));
 }
 
 .composer__quick-buttons {
-  justify-content: flex-start;
+  display: flex;
   flex-wrap: wrap;
-}
-
-.composer__quick-buttons button {
-  min-height: 36px;
-  padding: 0 var(--sp-3);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-md);
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.composer__quick-buttons button:hover:not(:disabled) {
-  border-color: var(--muted);
-  color: var(--text);
-}
-
-.composer__quick-buttons button:disabled {
-  opacity: 0.4;
+  gap: var(--s-2);
 }
 
 .composer__readiness {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sp-3);
-  padding-top: var(--sp-4);
-  border-top: 1px solid var(--border);
+  gap: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--rule);
 }
 
 .composer__readiness > div {
   display: grid;
 }
 
-.composer__readiness strong {
-  font-size: 13px;
-}
-
 .composer__readiness span {
-  color: var(--faint);
-  font-size: 12px;
+  color: var(--ink-3);
+  font-size: var(--t-14);
 }
 
-.composer__summary {
-  color: var(--muted);
-  font-size: 12px;
-}
+/* Framing above the list: the loaded description, then the standing caveat. */
 
-.composer__summary ul {
-  margin: var(--sp-2) 0 0;
-  padding-left: var(--sp-5);
-}
-
-@media (max-width: 560px) {
-  .composer__slider {
-    grid-template-columns: 1fr auto;
-  }
-
-  .composer__slider input,
-  .composer__slider select {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-}
-
-.composer__filter {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.composer__filter input {
-  min-width: 0;
-  width: 100%;
-  min-height: 46px;
-  padding: 10px 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-md);
-  background: var(--surface-control);
-  color: var(--text);
-  font-size: 14px;
-}
-.composer__filter input::placeholder {
-  color: var(--faint);
-}
-.composer__section {
+.ie-experienceFraming {
+  display: grid;
+  gap: var(--s-2);
+  max-width: var(--measure);
   margin: 0;
-  padding: 0;
-  border: 0;
-  min-width: 0;
 }
-.composer__row:has(input[type="checkbox"]:checked) {
-  background: var(--surface-2);
-  border-radius: var(--r-md);
-  border-bottom-color: var(--border-strong);
+
+.ie-experienceFraming > .ie-gloss {
+  margin: 0;
+  color: var(--ink);
 }
-.composer__row-meta {
-  padding-left: 30px;
-  gap: 16px;
-}
-.composer__row .composer__slider {
-  margin: 10px 0 0 30px;
-}
-.composer__advanced summary {
-  min-height: 44px;
-}
-.composer__badge--high,
-.composer__badge--medium,
-.composer__badge--low {
-  color: var(--muted);
-}
-.ie-choiceColumn > .ie-panelSection {
-  padding: 20px 0;
-}
-.ie-choiceColumn > .ie-panelSection:first-of-type {
+
+.ie-experienceFraming .composer__advanced {
   border-top: 0;
 }
+
+.ie-experienceFraming .composer__advanced > summary {
+  justify-content: flex-start;
+  min-height: 40px;
+  color: var(--accent);
+  font-size: var(--t-14);
+}
+
+.ie-experienceFraming .composer__advanced > summary::after {
+  color: var(--accent);
+}
+
+.ie-experienceFraming .composer__advanced > .composer__hint {
+  padding-bottom: var(--s-2);
+}
+
+/* Wide screens: title, gloss, and grade in three columns, like an index with notes. */
+
 @media (min-width: 1200px) {
-  .composer__row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px 20px;
+  .ie-layout--setup .composer__row {
+    grid-template-columns: minmax(0, 1fr) 7.5rem;
+    column-gap: var(--s-5);
   }
-  .composer__row-main {
-    grid-template-columns: 22px minmax(140px, 0.8fr) minmax(0, 1.2fr);
-    gap: 12px;
-    align-items: start;
+
+  .ie-layout--setup .composer__row-main {
+    grid-template-columns: 20px minmax(9rem, 0.75fr) minmax(0, 1.25fr);
   }
-  .composer__row-sub {
+
+  .ie-layout--setup .composer__row-sub {
     grid-column: 3;
+    padding-top: 4px;
   }
-  .composer__row-meta {
-    padding-left: 0;
+
+  .ie-layout--setup .composer__row-meta {
     flex-direction: column;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 6px;
+    align-items: flex-start;
+    gap: var(--s-1);
+    padding: 6px 0 0;
   }
+
+  .ie-layout--setup .composer__section > .composer__row-meta {
+    padding-left: 0;
+  }
+
   .composer__row .composer__slider {
     grid-column: 1 / -1;
   }
 }
-@media (max-width: 560px) {
-  .composer__mode .composer__toggle {
-    font-size: 12px;
-    padding-inline: 4px;
-  }
-  .composer__row {
-    padding: 16px 8px;
-  }
-  .composer__row-title {
-    font-size: 21px;
-  }
+
+/* Narrow columns (live outer column, phones): three equal cells whose labels may take two lines. */
+.ie-layout--live .composer__mode {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 var(--s-3);
 }
 
-.ie-experienceFraming {
-  margin: 20px 0;
+.ie-layout--live .composer__mode .composer__toggle {
+  padding-block: var(--s-2);
+  font-size: var(--t-14);
+  line-height: 1.25;
 }
-.ie-experienceFraming .composer__advanced {
-  border: 0;
-  padding: 0;
-}
-.ie-experienceFraming .composer__advanced summary {
-  min-height: 36px;
-  width: fit-content;
-  gap: 16px;
-  color: var(--accent);
-}
-.ie-experienceFraming .composer__hint {
-  font-size: 13px;
+
+@media (max-width: 560px) {
+  .composer__mode {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 var(--s-3);
+  }
+
+  .composer__mode .composer__toggle {
+    padding-block: var(--s-2);
+    font-size: var(--t-14);
+    line-height: 1.25;
+  }
+
+  .composer__row {
+    padding-left: var(--s-3);
+  }
+
+  .composer__row-title {
+    font-size: var(--t-22);
+  }
+
+  .composer__row-sub {
+    font-size: var(--t-14);
+  }
 }

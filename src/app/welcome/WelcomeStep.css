@@ -1,132 +1,17 @@
-.welcome-step {
-  display: grid;
-  min-height: 100dvh;
-  align-items: center;
-  padding: 64px 6vw;
-  background: var(--bg);
-}
-.welcome-step__lead {
-  width: min(100%, 1280px);
-  margin: auto;
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  column-gap: 9%;
-  grid-template-areas: "brand brand" "intro facts" "actions facts" "note facts";
-}
-.welcome-step__brand {
-  grid-area: brand;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  margin-bottom: 64px;
-  color: var(--text);
-  font: 30px var(--font-display);
-}
-.welcome-step__mark {
-  width: 44px;
-  height: 44px;
-}
-.welcome-step__intro {
-  grid-area: intro;
-}
-.welcome-step h1 {
-  max-width: none;
-  margin: 0 0 32px;
-  color: var(--text);
-  font: 400 clamp(56px, 6.7vw, 96px) / 1.04 var(--font-display);
-  letter-spacing: -0.04em;
-}
-.welcome-step__intro > p {
-  max-width: 42ch;
-  margin: 0;
-  color: var(--muted);
-  font-size: 19px;
-  line-height: 1.65;
-}
-.welcome-step__facts {
-  grid-area: facts;
-  display: grid;
-  align-content: start;
-  gap: 30px;
-}
-.welcome-step__facts section + section {
-  border-top: 1px solid var(--border-strong);
-  padding-top: 30px;
-}
-.welcome-step__facts h2 {
-  margin: 0 0 16px;
-  color: var(--text);
-  font: 400 30px / 1.2 var(--font-display);
-}
-.welcome-step__facts p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 17px;
-  line-height: 1.6;
-}
-.welcome-step__facts .ie-inlineAction {
-  display: inline;
-  color: var(--accent);
-  font-size: inherit;
-  line-height: inherit;
-}
-.welcome-step__actions {
-  grid-area: actions;
-  margin-top: 40px;
-}
-.welcome-step__actions .ie-btn {
-  min-width: 220px;
-  min-height: 54px;
-  font-size: 16px;
-}
+/* The welcome uses the shared title page (src/shared/design/components.css). This file only keeps
+ * the quiet loading state that App shows while the workspace chunk loads. */
+
 .welcome-step__note {
-  grid-area: note;
-  margin: 16px 0 0;
-  max-width: 46ch;
-  color: var(--faint);
-  font-size: 13px;
-  line-height: 1.5;
-}
-@media (max-width: 800px) {
-  .welcome-step {
-    align-items: start;
-    padding: 32px 24px;
-  }
-  .welcome-step__lead {
-    grid-template-columns: 1fr;
-    grid-template-areas: "brand" "intro" "actions" "note" "facts";
-  }
-  .welcome-step__brand {
-    margin-bottom: 40px;
-    font-size: 24px;
-  }
-  .welcome-step__mark {
-    width: 32px;
-    height: 32px;
-  }
-  .welcome-step h1 {
-    font-size: clamp(48px, 16vw, 64px);
-  }
-  .welcome-step__intro > p {
-    font-size: 17px;
-  }
-  .welcome-step__actions {
-    margin-top: 28px;
-  }
-  .welcome-step__actions .ie-btn {
-    width: 100%;
-  }
-  .welcome-step__facts {
-    margin-top: 48px;
-  }
-  .welcome-step__facts h2 {
-    font-size: 26px;
-  }
-  .welcome-step__facts p {
-    font-size: 15px;
-  }
+  margin: 0;
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-size: var(--t-18);
+  font-style: italic;
 }
 
-.welcome-step h1 span {
-  display: block;
+main.welcome-step {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: var(--s-6);
 }

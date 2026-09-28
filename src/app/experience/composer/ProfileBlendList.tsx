@@ -2,6 +2,7 @@ import type { CatalogEntry } from '../../../domain/experience/schema'
 import type { SelectedPreset } from '../../../domain/experience/composition/types'
 import type { EvidenceDocPath } from '../../../content/evidence'
 import { EvidenceButton } from './EvidenceButton'
+import { EvidenceGrade } from './EvidenceGrade'
 import { strengthBadge, upsertPreset } from './selection'
 
 export interface ProfileBlendListProps {
@@ -78,7 +79,7 @@ function ProfileBlendRow(props: ProfileBlendRowProps) {
         <span className="composer__row-sub">{entry.description ?? ''}</span>
       </label>
       <div className="composer__row-meta">
-        {badge && <span className={badge.className}>{badge.label}</span>}
+        <EvidenceGrade badge={badge} />
         <EvidenceButton doc={`docs/references/conditions/${entry.id}.md`} onOpen={onOpenEvidence} />
       </div>
       {enabled && (
