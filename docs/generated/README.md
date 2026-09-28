@@ -1,19 +1,7 @@
-# Derived contract references
-
-Don't edit the catalog or schema reference files by hand. Update their source contracts and run:
-
-```bash
-npm run docs:gen
-```
-
-`tools/docs/gen-docs.ts` derives the files deterministically.
+# Contract references
 
 | File | Source and purpose |
 |---|---|
 | `conditions-catalog.md` | Catalog and profile data, including tags, safety intensity maximums, nodes, and warnings. |
 | `preset-schema.json` | Draft 7 JSON Schema derived from the profile Zod schema. |
 | `preset-schema.md` | Human-readable profile schema summary. |
-
-Run the command after changing catalog entries, profile structure, profile safety fields, or the
-schema derivation script. Commit the result only when it matches the source change and passes
-repository validation.

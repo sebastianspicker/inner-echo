@@ -1,7 +1,5 @@
 # Preset profile JSON Schema
 
-<!-- Source: tools/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen. -->
-
 This is the JSON Schema for experience profile files under `src/content/experience/profiles/<id>.json`.
 
 ## Required keys
@@ -376,7 +374,6 @@ The machine-readable schema is embedded below and also written to `preset-schema
     "video_stack",
     "safety"
   ],
-  "additionalProperties": {},
-  "$comment": "Source: tools/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen."
+  "additionalProperties": {}
 }
 ```

@@ -26,7 +26,7 @@ current collection boundaries and audiovisual design decisions.
 3. Say whether each claim is source-backed, mixed, or a hypothesis.
 4. Keep uncertain mappings conservative and off by default where practical.
 5. Preserve the sensory constraints in [../SAFETY.md](../SAFETY.md).
-6. Run `npm run evidence:gen`, `npm run evidence:verify`, and `npm run docs:links`.
+6. Run `npm run verify` and review the affected evidence pages in the application.
 
 Use precise language. Describe a mapping as a metaphor or design hypothesis, not a simulation or
 clinical representation.

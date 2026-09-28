@@ -21,41 +21,22 @@ aren't enough.
 
 ## Validation
 
-Run the narrowest relevant test while you work, then the broader gate appropriate to the change.
+Run the relevant checks while you work, then the complete public gate before proposing a change.
 
 | Command | Scope |
 |---|---|
-| `npm run typecheck` | Browser, pure-domain, build-config, repository-tool, and test TypeScript projects. |
-| `npm run lint` | Biome checks for source, tests, tools, and Vite configuration. Warnings fail. |
-| `npm run quality:duplication` | Strict TS, TSX, JavaScript, and CSS clone detection with zero tolerance. |
-| `npm run quality:check` | Lint plus 400-line code/500-line CSS file limits, a 60-line function limit, complexity 12, and zero duplication at 6 lines/50 tokens. |
-| `npm run architecture:check` | Source dependency direction, cycle enforcement, and the app's single runtime entry (`src/runtime/session/`). |
-| `npm test` | Compact Vitest core-contract tests. |
+| `npm run typecheck` | Browser, pure-domain, and build-configuration TypeScript projects. |
 | `npm run build` | TypeScript build and Vite production build. |
 | `npm run bundle:verify` | Lazy Three.js boundary and production diagnostic exclusion. |
 | `npm run notices:verify` | Installed and distributed third-party license texts. Run after `npm run build`. |
-| `npm run docs:verify` | Tracked generated catalog and schema freshness. |
-| `npm run docs:links` | Local targets in maintained Markdown documentation. |
-| `npm run verify:contracts` | Profile references and runtime node contracts. |
-| `npm run conditions:validate` | Condition profiles and mapping data. |
-| `npm run composer:validate` | Composer output and safety ranges. |
-| `npm run evidence:verify` | Evidence pages, links, and `MAPPING_SUMMARY.md` freshness. |
-| `npm run verify` | Complete quality, build, architecture, test, documentation, contract, data, and inspect gate. |
+| `npm run pages:build` | Assemble a GitHub Pages artifact. |
+| `npm run pages:verify` | Verify Pages paths, CSP, demo isolation, notices, and artifact hygiene. |
+| `npm run verify` | Type-check, build, and verify the runtime bundle and distributed notices. |
 | `npm run check` | Alias for `verify`. |
 | `npm run audit:dependencies` | Moderate-threshold npm advisory check. |
-| `npm run release:alpha:local` | Dependency audit plus the complete local gate. |
+| `npm run release:alpha:checklist` | Clean install, dependency audit, and complete public gate. |
 
-The full clean-install, artifact, and manual-evidence sequence is in
-[docs/RELEASING.md](docs/RELEASING.md).
-
-## Derived files
-
-- Run `npm run docs:gen` after changing catalog or schema inputs that affect `docs/generated/`.
-- Run `npm run evidence:gen` when source mappings, research notes, or evidence-page templates change; it also
-  regenerates `docs/references/MAPPING_SUMMARY.md`.
-
-Don't hand-edit derived catalog, schema, dimension, motif, or condition pages. Update the source and
-run the matching command.
+## Screenshots
 
 The screenshots in `assets/screenshots/` are maintained by hand. They are referenced from
 `README.md` and bundled into the demo page. Replace them when the interface changes.
@@ -63,7 +44,6 @@ The screenshots in `assets/screenshots/` are maintained by hand. They are refere
 ## Change scope
 
 - Keep changes focused on one reviewable concern.
-- Add a regression test for a corrected contract or failure mode when practical.
 - Treat `src/content/experience/profiles/*.json`, schemas, mappings, graph builders, and node
   registries as one runtime contract.
 - Keep `src/demo/` dependency-free and isolated from application, content, domain, runtime, React,
@@ -93,7 +73,7 @@ New or changed dimensions, profiles, and motifs must include:
 - the matching schema, mapping, and registry update when applicable;
 - evidence references and a clear statement of evidence limits;
 - safety clamps and Reduced Motion behavior; and
-- focused tests and contract validation.
+- a successful build and artifact verification.
 
 The full authoring and verification contract is in
 [docs/PROFILE_AUTHORING.md](docs/PROFILE_AUTHORING.md). Don't describe a profile as an accurate
@@ -101,9 +81,9 @@ representation of a diagnosis or of another person's experience.
 
 ## Pull requests
 
-Use the repository pull request template. Describe behavior, affected contracts, exact validation,
-skipped checks, and remaining uncertainty. Don't include secrets, personal health information, raw
-media, device identifiers, or private vulnerability details in a public pull request.
+Describe behavior, affected contracts, exact validation, skipped checks, and remaining uncertainty.
+Don't include secrets, personal health information, raw media, device identifiers, or private
+vulnerability details in a public pull request.
 
 ## Security reports
 

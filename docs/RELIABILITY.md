@@ -51,13 +51,11 @@ Run the complete local gate from the repository root:
 npm run verify
 ```
 
-This runs type checking and the production build, runtime-bundle and notice checks,
-generated-document freshness and Markdown links, Biome, architecture enforcement, Vitest, condition
-and composer validation, evidence validation, contract probes, and the debug inspection command.
+This runs type checking and the production build, then checks runtime loading boundaries,
+production diagnostic exclusion, and distributed third-party notices.
 
-`npm run verify:source` runs the reusable non-build source gate; the complete local gate is still
-`npm run verify`. Main-push CI builds one Pages candidate and runs all source and artifact checks,
-then Pages validates and deploys that same artifact without rebuilding it.
+Main-push CI builds one Pages candidate and runs the public artifact checks, then Pages validates and
+deploys that same artifact without rebuilding it.
 
 For an alpha candidate, start from the checked-in lockfile and include the dependency audit with
 `npm run release:alpha:checklist`. Prepare and inspect a local Pages artifact separately:
@@ -100,8 +98,7 @@ VITE_INNER_ECHO_DEBUG_UI=true npm run dev
 ```
 
 Production builds must exclude the debug interface, deliberate stress load, and non-error diagnostic
-logging; the environment flag alone cannot enable them in production. See
-[decisions/0003-production-diagnostics-boundary.md](decisions/0003-production-diagnostics-boundary.md).
+logging; the environment flag alone cannot enable them in production.
 
 List skipped engines and manual gaps in release notes. A passing local subset is not evidence for
 unrun browsers, devices, assistive technology, or deployed headers.

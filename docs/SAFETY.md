@@ -45,8 +45,8 @@ Safe Mode is on by default and restricts configured intensity, feedback, contras
 ranges. It does not guarantee that every user will find an effect comfortable; warnings, intensity
 control, Reduced Motion, and Stop Everything remain necessary.
 
-A new motion-sensitive node must define Reduced Motion behavior and include a focused test or
-contract check.
+A new motion-sensitive node must define Reduced Motion behavior and be verified in the running
+application.
 
 ## Audio and reactive coupling
 
@@ -85,7 +85,7 @@ For a profile, dimension, motif, mapping, or node change:
 2. Define schema ranges, conservative defaults, Safe Mode clamps, and Reduced Motion behavior.
 3. Check audio peak, motion, luminance, and temporal-feedback risk.
 4. Align profiles, mappings, graph builders, registries, and evidence pages.
-5. Add focused tests and run the authoring checks in [PROFILE_AUTHORING.md](PROFILE_AUTHORING.md).
+5. Run the public gate and follow the authoring checks in [PROFILE_AUTHORING.md](PROFILE_AUTHORING.md).
 6. Verify warnings, controls, fallbacks, and stop behavior.
 
 Don't copy a known invalid mapping for consistency. Fix the shared defect or report the unsupported

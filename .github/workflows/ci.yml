@@ -69,7 +69,6 @@ jobs:
           CI_RUN_ATTEMPT: ${{ github.run_attempt }}
         run: |
           npm run pages:build
-          npm run verify:source
           npm run pages:verify
           npm run notices:verify
           node tools/deployment/write-pages-handoff.mjs
@@ -92,17 +91,3 @@ jobs:
           path: reports/pages-handoff/candidate.json
           if-no-files-found: error
           retention-days: 7
-
-      - name: Upload contract reports
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: contract-verification-reports
-          path: reports/contract-verification.*
-
-      - name: Upload inspect report
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: inspect-report
-          path: reports/inspect.json

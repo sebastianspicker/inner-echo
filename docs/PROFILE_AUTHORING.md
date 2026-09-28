@@ -14,11 +14,9 @@ diagnostic categories or clinical simulations.
 | `src/domain/experience/schema.ts` | Zod contracts for loaded experience data. |
 | `src/domain/experience/composition/` | Dimension and weighted-profile composition policy. |
 | `src/runtime/visual/graph/graphBuilder.ts` | Executable video-node construction. |
-| `tools/contracts/probes/` | Audio and video registry metadata and deterministic probes. |
 | `docs/references/` | Evidence corpus, rationale, confidence, and stated gaps. |
 
 When you change a node, parameter, profile, mapping, or safety rule, keep these sources aligned.
-Registry metadata is introspection-only: it describes runtime behavior but must not change it.
 
 ## Current setup contract
 
@@ -37,7 +35,7 @@ or that the output represents a measured person.
 ## Invalid and unknown input
 
 - Schema-invalid profiles fail loading and produce an error state.
-- Unknown nodes or parameters fail contract verification.
+- Runtime builders reject or skip unknown nodes and parameters according to their current policy.
 - Runtime builders warn and skip unsupported entries according to their current policy.
 - Schemas, composition policy, profiles, and engines reject or clamp numeric values.
 - Unknown input must never produce a false active or verified state.
@@ -48,40 +46,8 @@ or that the output represents a measured person.
 2. Use only implemented node identifiers and parameters.
 3. Define conservative defaults, bounds, warnings, Safe Mode clamps, and Reduced Motion behavior.
 4. Update graph construction or runtime behavior before referencing a new node.
-5. Update matching registry metadata and deterministic probes.
-6. Add or update evidence sources and label mapping claims as supported, mixed, hypothesis, or artistic.
-7. Add a focused test for the contract or failure mode.
-8. Regenerate derived documentation and run the applicable validation.
-
-Commands run from the repository root:
-
-```bash
-npm run docs:gen
-npm run evidence:gen
-npm run conditions:validate
-npm run composer:validate
-npm run evidence:verify
-npm run verify:contracts
-npm test
-```
-
-`npm run docs:gen` rewrites the tracked catalog and schema references under `docs/generated/`.
-`npm run evidence:gen` rewrites generated dimension, motif, and condition pages under
-`docs/references/`. Edit their source contracts or research notes, not generated output.
-
-## Contract verifier
-
-`npm run verify:contracts` reads profiles, dimensions, mappings, runtime graph behavior, and registry
-probes. It checks node and parameter existence, measurable low and high probe behavior, numeric
-ranges and clamps, Safe Mode and Reduced Motion references, and the mapping targets used by profiles
-and composition.
-
-The command exits nonzero on errors and writes ignored local reports to:
-
-- `reports/contract-verification.json`
-- `reports/contract-verification.md`
-
-Reports are disposable evidence from the current run, not maintained documentation.
+5. Add or update evidence sources and label mapping claims as supported, mixed, hypothesis, or artistic.
+6. Run `npm run verify` and manually exercise the affected experience.
 
 ## Evidence rules
 

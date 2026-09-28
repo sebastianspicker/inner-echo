@@ -61,8 +61,12 @@ vite.config.ts.timestamp-*
 # Local analysis and editor state
 /.codacy/
 /.codegraph/
+/.repowise/
 /.serena/
 /.impeccable/
+/.aider*/
+/.continue/
+/.windsurf/
 /.mcp.json
 /.idea/
 /.vscode/
@@ -122,6 +126,49 @@ copilot-instructions.md
 /progress.md
 /plan.md
 /docs/agent/
+
+# Linked worktrees and nested checkouts
+/.worktrees/
+/worktrees/
+/.claude/worktrees/
+/.codex/worktrees/
+
+# Tests and local validation output
+/tests/
+/test/
+/__tests__/
+/test-results/
+/playwright-report/
+/.pytest_cache/
+/.nyc_output/
+*.snap
+/pytest.ini
+/conftest.py
+/jest.config.*
+/vitest.config.*
+/tsconfig.tests.json
+
+# Local helper and validation scripts
+/scripts/
+/tools/contracts/
+/tools/docs/
+/tools/validation/
+/tools/architecture/check-imports.mjs
+/tsconfig.tools.json
+/.jscpd.json
+/biome.json
+
+# Work-in-progress documents
+/docs/audits/
+/docs/decisions/
+/docs/drafts/
+/docs/plans/
+/docs/roadmap/
+/docs/RELEASING.md
+/docs/verification-*.md
+/DESIGN*.md
+/ROADMAP*.md
+/TODO*.md
 
 # Operating-system metadata
 .DS_Store

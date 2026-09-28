@@ -1,6 +1,6 @@
 # Architecture
 
-Inner Echo is one private npm package that builds two static browser entries: the live experience
+Inner Echo is one npm package that builds two static browser entries: the live experience
 and a device-free mock. There is no backend, service process, database, account system, or remote
 application API.
 
@@ -33,14 +33,14 @@ never fetches citations in the background.
 | `src/domain/experience/` | Pure schemas, safety and motion policy, parameter addressing and control resolution, stack resolution, and composition. |
 | `src/content/experience/` | Bundled catalog, profiles, dimensions, mappings, and validating adapters. |
 | `src/content/evidence/` | Bundled Markdown lookup, parsing, and sanitization. |
-| `src/runtime/session/` | The media session: the single owner of the camera stream, audio engine, microphone, and overlay lifecycle ([ADR-0004](decisions/0004-media-session-ownership.md)). |
+| `src/runtime/session/` | The media session: the single owner of the camera stream, audio engine, microphone, and overlay lifecycle. |
 | `src/runtime/camera/` | Video-only camera acquisition and track cleanup. |
 | `src/runtime/audio/` | `AudioContext`, synth, optional microphone, effects, analysis, and disposal. |
 | `src/runtime/visual/` | Video-node factories, WebGL rendering, Canvas2D fallback, metrics, and GPU cleanup. |
 | `src/runtime/coupling/` | Bounded audio-to-video and video-to-audio mappings. |
 | `src/platform/`, `src/shared/` | Focused diagnostics and cross-layer primitives. |
 | `demo/index.html` → `src/demo/main.ts` | Semantic mock product states plus a dependency-free DOM controller, with no live device, persistence, clipboard, or network capability. |
-| `tools/` | Build-time validation, documentation generation, release inspection, and Pages assembly. |
+| `tools/` | Release artifact inspection and Pages assembly. |
 
 The mock entry imports no React and no production layer. `src/demo/` may import only itself and
 `src/shared/`, and its current controller has no dependencies at all. Pages verification walks the
@@ -72,9 +72,8 @@ flowchart BT
 browser handles. `content` turns bundled data into validated domain values. `runtime` owns effects
 and side effects. `app` combines the inward layers and owns user-facing workflow state.
 
-`npm run architecture:check` enforces these import directions and rejects static or dynamic import
-cycles. `tsconfig.domain.json` omits DOM libraries so domain and shared code cannot pick up browser
-globals by accident.
+`tsconfig.domain.json` omits DOM libraries so domain and shared code cannot pick up browser globals
+by accident.
 
 ## Experience data flow
 
@@ -150,8 +149,8 @@ Interruptions and browser blocks surface through the applicable error state and 
 separate public union members. Visible state follows real runtime transitions; clicking a control
 never optimistically claims capability.
 
-The session is created once per workspace. Its browser services are injected, so tests replace
-them without mocking module paths. Request-sequence guards discard stale async results. Stop Everything invalidates pending camera and
+The session is created once per workspace. Its browser services are injected behind a narrow
+boundary. Request-sequence guards discard stale async results. Stop Everything invalidates pending camera and
 audio work, then stops the overlay, audio graph, microphone tracks, camera tracks, video bindings,
 and canvases before returning the UI to idle. A camera interruption tears down the camera and
 overlay but does not silently stop independently activated audio.
@@ -177,7 +176,7 @@ tracks container size and capped DPR independently from internal render-target s
 Vite emits `index.html` and `demo/index.html` without source maps and includes the public notice
 files. The Pages assembler applies the configured base path, adds `.nojekyll`, and injects the
 document-level CSP fallback before load-bearing elements in every HTML entry. See
-[RELEASING.md](RELEASING.md) and [../SECURITY.md](../SECURITY.md).
+[../SECURITY.md](../SECURITY.md).
 
 ## App layer map
 
@@ -204,5 +203,3 @@ document-level CSP fallback before load-bearing elements in every HTML entry. Se
 - Keep registry metadata introspection-only; runtime builders remain the executable authority.
 - Never add passive media activation, unbounded coupling, unsanitized evidence HTML, production
   stress controls, or device capability to the mock entry.
-
-Accepted rationale and rollback triggers are recorded in [decisions/](decisions/README.md).

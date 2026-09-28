@@ -106,18 +106,14 @@ Run everything from the repository root.
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Start the Vite dev server. |
-| `npm test` | Run the Vitest contract suite. |
 | `npm run build` | Type-check and build both static entries into `dist/`. |
-| `npm run verify` | Run the complete repository gate. |
-| `npm run typecheck` | Check the browser, domain, build-config, tools, and tests TypeScript projects. |
-| `npm run lint` | Run Biome; warnings fail. |
-| `npm run quality:check` | Lint plus file-size, function-length, complexity, and duplication limits. |
-| `npm run architecture:check` | Reject forbidden imports and import cycles. |
+| `npm run verify` | Build and verify the runtime bundle and distributed notices. |
+| `npm run typecheck` | Check the browser, domain, and build-configuration TypeScript projects. |
+| `npm run bundle:verify` | Verify production loading boundaries and diagnostic exclusion. |
 | `npm run pages:build` | Assemble the GitHub Pages artifact. |
 | `npm run pages:verify` | Verify Pages paths, entries, CSP fallback, demo isolation, and artifact hygiene. |
 
-The full command matrix, generated-file workflow, and release procedure live in
-[CONTRIBUTING.md](CONTRIBUTING.md) and [docs/RELEASING.md](docs/RELEASING.md).
+The contribution command matrix lives in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Project layout
 
@@ -128,8 +124,7 @@ The full command matrix, generated-file workflow, and release procedure live in
 | `src/content/` | Bundled profile, mapping, and evidence adapters. |
 | `src/runtime/` | Camera, Web Audio, visual rendering, reactive coupling, and the media session that owns them. |
 | `src/demo/`, `demo/` | The device-free mock: a dependency-free controller and semantic HTML. |
-| `tools/` | Build-time validators, doc generators, release checks, and Pages assembly. |
-| `tests/` | Vitest tests organized by architectural boundary. |
+| `tools/` | Release artifact checks and Pages assembly. |
 | `docs/references/` | Evidence corpus and the generated evidence pages the app bundles. |
 | `docs/generated/` | Derived catalog and schema references. |
 
@@ -143,7 +138,6 @@ or local-only and should not be committed.
 - [Safety and ethics](docs/SAFETY.md)
 - [Profile and mapping authoring](docs/PROFILE_AUTHORING.md)
 - [Reliability and manual verification](docs/RELIABILITY.md)
-- [Alpha release procedure](docs/RELEASING.md)
 - [Evidence method and corpus](docs/references/README.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)

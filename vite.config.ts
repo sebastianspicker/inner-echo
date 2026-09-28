@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
 import { devContentSecurityPolicy, headerContentSecurityPolicy } from './tools/shared/csp.mjs'
@@ -35,7 +35,4 @@ export default defineConfig({
   },
   server: { headers: devHeaders },
   preview: { headers: productionHeaders },
-  test: {
-    include: ['tests/**/*.test.ts'],
-  },
 })

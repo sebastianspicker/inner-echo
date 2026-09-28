@@ -1,7 +1,5 @@
 # Conditions catalog
 
-<!-- Source: tools/docs/gen-docs.ts. Edit the source contracts, then run npm run docs:gen. -->
-
 Every condition with its label, tags, safety intensity maximum, and nodes.
 
 ## Table

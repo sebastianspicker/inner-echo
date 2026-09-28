@@ -87,9 +87,8 @@ required when the complete repository policy must be configured.
 ## Dependency and release controls
 
 - CI installs the lockfile with lifecycle scripts disabled, rebuilds `esbuild`, runs `npm audit` at
-  the moderate threshold, and runs the complete repository gate.
-- Dependabot covers npm and GitHub Actions dependencies. GitHub Actions references are pinned to full
-  commit identifiers.
+  the moderate threshold, and runs the build and artifact gate. GitHub Actions references are pinned
+  to full commit identifiers.
 - `npm run bundle:verify` rejects production diagnostic markers and an eager Three.js closure.
 - `npm run pages:verify` traverses the mock demo's static and dynamic import closure and rejects
   invalid entry paths, external or escaping assets, source maps, local paths, and forbidden device,
@@ -103,6 +102,4 @@ For a clean lockfile-backed alpha candidate, run:
 npm run release:alpha:checklist
 ```
 
-Use `npm run release:alpha:local` only to rerun the audit and gate after the clean installation. See
-[docs/RELEASING.md](docs/RELEASING.md) for the complete procedure and required live-browser and
-live-host evidence.
+Use `npm run release:alpha:local` only to rerun the audit and gate after the clean installation.
