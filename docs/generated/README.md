@@ -1,12 +1,12 @@
 # Derived contract references
 
-Do not edit the catalog or schema reference files by hand. Update their source contracts and run:
+Don't edit the catalog or schema reference files by hand. Update their source contracts and run:
 
 ```bash
 npm run docs:gen
 ```
 
-`scripts/docs/gen-docs.ts` derives the files deterministically.
+`tools/docs/gen-docs.ts` derives the files deterministically.
 
 | File | Source and purpose |
 |---|---|
@@ -14,4 +14,6 @@ npm run docs:gen
 | `preset-schema.json` | Draft 7 JSON Schema derived from the profile Zod schema. |
 | `preset-schema.md` | Human-readable profile schema summary. |
 
-Run the command after changing catalog entries, profile structure, profile safety fields, or the schema derivation script. Commit the resulting changes only when they match the source change and pass repository validation.
+Run the command after changing catalog entries, profile structure, profile safety fields, or the
+schema derivation script. Commit the result only when it matches the source change and passes
+repository validation.

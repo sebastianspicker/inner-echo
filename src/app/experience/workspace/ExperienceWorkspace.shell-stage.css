@@ -1,0 +1,299 @@
+/* Shell, header, layout grid, and the plate (camera stage + caption). */
+
+.ie-app,
+.ie-shell {
+  min-height: 100dvh;
+}
+
+.ie-shell {
+  background: var(--paper);
+}
+
+.ie-main {
+  width: min(100%, 1440px);
+  margin: 0 auto;
+  padding: var(--s-6) clamp(var(--s-4), 4vw, var(--s-7)) var(--s-9);
+}
+
+.ie-liveRegion {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Header: the shared masthead (brand at the left; media truth and the stop path at the right). */
+
+.ie-brand,
+.ie-brandCopy,
+.ie-headerRight,
+.ie-actions {
+  display: flex;
+  align-items: center;
+}
+
+.ie-brand {
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.ie-brandCopy {
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+.ie-brandMark {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+}
+
+.ie-title {
+  font-family: var(--font-serif);
+  font-size: var(--t-22);
+  font-variation-settings: "opsz" 24;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ie-headerRight {
+  gap: var(--s-5);
+}
+
+.ie-headerStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--ink-2);
+  font-size: var(--t-14);
+  white-space: nowrap;
+}
+
+.ie-headerStatus::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  content: "";
+}
+
+.ie-actions {
+  gap: var(--s-2);
+}
+
+/* Layout: the choices at a reading measure, the panel in the outer column behind a hairline. */
+
+.ie-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 26rem);
+  align-items: start;
+  gap: clamp(var(--s-6), 5vw, var(--s-8));
+}
+
+/* Live: the mirror column leads and takes the width; the choices move to the outer column. */
+.ie-layout--live {
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.7fr);
+}
+
+.ie-choiceColumn {
+  min-width: 0;
+  scroll-margin-top: 88px;
+}
+
+.ie-workspaceIntro {
+  max-width: var(--measure);
+  margin-bottom: var(--s-5);
+}
+
+.ie-workspaceIntro h1 {
+  margin: 0 0 var(--s-4);
+  font-family: var(--font-serif);
+  font-size: clamp(var(--t-36), 3.6vw, 3.5rem);
+  font-weight: 300;
+  font-variation-settings: "opsz" 60;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.02em;
+}
+
+.ie-workspaceIntro p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--t-18);
+  line-height: var(--lh-read);
+}
+
+.ie-workspaceNav {
+  display: flex;
+  gap: var(--s-5);
+  margin-top: var(--s-4);
+}
+
+.ie-workspaceNav a {
+  padding-block: var(--s-2);
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+
+.ie-layout--live > .ie-choiceColumn {
+  padding-left: clamp(var(--s-5), 3vw, var(--s-7));
+  border-left: 1px solid var(--rule);
+}
+
+.ie-layout--live .ie-workspaceIntro h1 {
+  font-size: var(--t-36);
+}
+
+/* Section heads carry a ringed serif numeral, a small echo of the aperture mark:
+ * the setup reads 1 Pattern, 2 Comfort, 3 Preview. */
+
+.ie-sectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  margin: 0;
+  color: var(--ink);
+}
+
+.ie-sectionNo {
+  align-self: center;
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--accent-wash);
+}
+
+.ie-choiceColumn > .ie-sectionHead {
+  margin-top: var(--s-7);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--rule);
+}
+
+/* Preview: a plate on a near-black ground in both themes, captioned underneath. */
+
+.ie-previewSection {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.ie-previewOptional {
+  color: var(--ink-3);
+  font-family: var(--font-ui);
+  font-size: var(--t-14);
+}
+
+.ie-layout--live .ie-sectionNo,
+.ie-layout--live .ie-previewOptional {
+  display: none;
+}
+
+.ie-plate {
+  display: grid;
+  gap: var(--s-3);
+  margin: 0;
+}
+
+.ie-video,
+.ie-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ie-video {
+  object-fit: cover;
+}
+
+.ie-canvas {
+  pointer-events: none;
+}
+
+.ie-canvas[hidden] {
+  display: none;
+}
+
+/* Idle, the mirror is a shallow slot so the start action stays in view; live, it opens up. */
+.ie-layout--setup .ie-stage:not(.ie-stage--active) {
+  aspect-ratio: 2 / 1;
+  border-radius: 50% 50% 6px 6px / 20% 20% 6px 6px;
+}
+
+/* The picture exposes once, gently, when the camera starts. */
+.ie-stage--active .ie-video,
+.ie-stage--active .ie-canvas {
+  animation: ie-expose var(--d-expose) var(--ease) both;
+}
+
+.ie-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  padding: var(--s-5);
+  color: var(--plate-ink-2);
+  text-align: center;
+}
+
+.ie-placeholder svg {
+  flex-shrink: 0;
+  margin-bottom: var(--s-1);
+  opacity: 0.8;
+}
+
+.ie-placeholder p {
+  max-width: 26ch;
+  margin: 0;
+  color: var(--plate-ink);
+}
+
+.ie-placeholder span {
+  font-size: var(--t-13);
+}
+
+.ie-stageChrome {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ie-stageTruth {
+  bottom: var(--s-3);
+}
+
+.ie-statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #86c9bd;
+}
+
+.ie-debugChip {
+  position: absolute;
+  bottom: 40px;
+  left: var(--s-3);
+  font: var(--t-12) var(--font-mono);
+}
+
+.ie-captionWeight {
+  color: var(--ink-2);
+  font-style: normal;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.ie-previewStart {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.ie-previewStart .ie-btn {
+  width: 100%;
+  min-height: 52px;
+  font-size: var(--t-18);
+}

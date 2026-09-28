@@ -1,0 +1,154 @@
+{
+  "id": "dpdr",
+  "label": "Depersonalization / derealization experiences",
+  "summary": "A light veil and a quiet, filtered sound bed offer an artistic interpretation of distance or detachment. These are design choices, not a reproduction of how a person sees, hears or experiences their body.",
+  "framing": {
+    "type": "metaphor",
+    "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
+  },
+  "experience_dimensions": [
+    {
+      "id": "derealization",
+      "weight": 0.8
+    },
+    {
+      "id": "depersonalization",
+      "weight": 0.65
+    }
+  ],
+  "safety": {
+    "intensity_default": 0.35,
+    "intensity_max": 0.58,
+    "warnings": [
+      "Start with low intensity and volume; sound is optional.",
+      "Use Reduced Motion for a steadier image. Stop Everything is always available."
+    ],
+    "safe_mode_clamps": {
+      "max_intensity": 0.55,
+      "max_temporal_feedback": 0.12,
+      "max_chroma": 0.1,
+      "max_contrast": 0.25,
+      "no_strobe": true,
+      "max_flash_hz": 3,
+      "max_luminance_delta_per_frame": 0.25,
+      "audio_ceiling_dbfs": -6,
+      "max_tremolo_rate_hz": 4,
+      "max_tremolo_depth": 0.15,
+      "max_noise_level": 0.08,
+      "max_feedback": 0.12,
+      "max_jitter": 0.05
+    },
+    "reduced_motion_policy": {
+      "disable_nodes": ["temporal_smear", "feedback_loop", "pulse", "focus_jitter", "glass_veil"],
+      "note": "Reduced Motion removes time-based feedback/jitter nodes and keeps a calmer static overlay."
+    }
+  },
+  "ui": {
+    "controls": [
+      {
+        "id": "intensity",
+        "type": "slider",
+        "label": "Intensity",
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "id": "safe_mode",
+        "type": "toggle",
+        "label": "Safe Mode"
+      },
+      {
+        "id": "reduced_motion",
+        "type": "toggle",
+        "label": "Reduced Motion"
+      },
+      {
+        "id": "audio_enabled",
+        "type": "toggle",
+        "label": "Audio (optional)"
+      },
+      {
+        "id": "veil",
+        "type": "slider",
+        "label": "Glass Veil",
+        "min": 0,
+        "max": 0.45,
+        "step": 0.01,
+        "target": "video.glass_veil.veil"
+      }
+    ]
+  },
+  "video_stack": [
+    {
+      "id": "glass",
+      "node": "glass_veil",
+      "params": {
+        "veil": 0.14,
+        "feedback": 0,
+        "refraction": 0,
+        "chroma": 0
+      }
+    },
+    {
+      "id": "haze",
+      "node": "haze",
+      "params": {
+        "amount": 0.1
+      }
+    },
+    {
+      "id": "grade",
+      "node": "color_grade",
+      "params": {
+        "contrast": -0.06,
+        "saturation": -0.18,
+        "brightness": -0.01,
+        "temperature": 0,
+        "tint": 0
+      }
+    }
+  ],
+  "audio_stack": {
+    "enabled": true,
+    "input": "synth",
+    "master": {
+      "volume": 0.18
+    },
+    "chain": [
+      {
+        "node": "lowpass",
+        "params": {
+          "cutoff": 3600,
+          "q": 0.7
+        }
+      },
+      {
+        "node": "reverb",
+        "params": {
+          "mix": 0.06,
+          "decay": 1.8
+        }
+      },
+      {
+        "node": "compressor_limiter",
+        "params": {
+          "threshold": -20,
+          "ratio": 3,
+          "attack": 0.02,
+          "release": 0.3,
+          "ceiling": -10
+        }
+      }
+    ]
+  },
+  "reactive": {
+    "analyser_to_params": []
+  },
+  "references": {
+    "dimensions": [
+      "docs/references/dimensions/derealization.md",
+      "docs/references/dimensions/depersonalization.md"
+    ]
+  }
+}

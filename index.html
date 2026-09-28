@@ -7,20 +7,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <!-- Header-capable hosts deliver CSP as a response header. The Pages build injects a production-only meta fallback. -->
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta name="color-scheme" content="dark" />
-  <meta name="theme-color" content="#080A0E" />
-  <meta name="description" content="A private, browser-only media lab for careful audiovisual metaphors." />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f2eee5" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#151412" media="(prefers-color-scheme: dark)" />
+  <meta name="description" content="A camera mirror for talking about inner experience: gentle audiovisual metaphors, processed only in your browser." />
   <link rel="icon" type="image/svg+xml" href="/assets/brand/inner-echo-favicon.svg" />
-  <title>Inner Echo: Reflective audiovisual media lab</title>
+  <title>Inner Echo — a camera mirror for talking about inner experience</title>
 </head>
 
 <body>
-  <!-- Fallback for users/environments where JavaScript is strictly disabled -->
   <noscript>
-    <strong>We're sorry but Inner Echo doesn't work properly without JavaScript enabled. Please enable it to
-      continue.</strong>
+    <strong>Inner Echo requires JavaScript. Enable it to continue.</strong>
   </noscript>
-  <!-- Main mounting point for the React application -->
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

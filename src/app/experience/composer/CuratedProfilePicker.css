@@ -1,0 +1,22 @@
+.condition-picker {
+  display: grid;
+  gap: var(--s-2);
+  width: 100%;
+  max-width: 34rem;
+}
+
+.condition-picker__label {
+  color: var(--ink);
+  font-size: var(--t-16);
+  font-weight: 600;
+}
+
+.condition-picker__select {
+  width: 100%;
+  min-height: 48px;
+}
+
+.condition-picker__description {
+  margin: 0;
+  color: var(--ink);
+}

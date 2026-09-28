@@ -21,18 +21,12 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "types": [
       "react",
       "react-dom",
       "vite/client",
       "node"
     ],
-    "paths": {
-      "@/*": [
-        "src/*"
-      ]
-    },
     "resolveJsonModule": true
   },
   "include": [

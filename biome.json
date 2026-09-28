@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["src/**", "tests/**", "scripts/**"],
+    "includes": ["src/**", "tests/**", "tools/**", "vite.config.ts"],
     "ignoreUnknown": true
   },
   "formatter": {
@@ -32,29 +32,45 @@
     "rules": {
       "recommended": true,
       "correctness": {
-        "noUnusedVariables": "off",
-        "noUnusedImports": "off",
-        "noSelfAssign": "off",
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
+        "noSelfAssign": "error",
         "useExhaustiveDependencies": "warn"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": {
+          "level": "error",
+          "options": { "maxAllowedComplexity": 12 }
+        },
+        "noExcessiveLinesPerFunction": {
+          "level": "error",
+          "options": { "maxLines": 60, "skipBlankLines": true, "skipIifes": false }
+        }
+      },
+      "nursery": {
+        "noExcessiveLinesPerFile": {
+          "level": "error",
+          "options": { "maxLines": 400, "skipBlankLines": true }
+        }
       },
       "suspicious": {
         "noExplicitAny": "warn",
-        "noArrayIndexKey": "off",
-        "noAssignInExpressions": "off",
+        "noArrayIndexKey": "error",
+        "noAssignInExpressions": "error",
         "noShadowRestrictedNames": "warn",
         "noRedeclare": "warn",
-        "useIterableCallbackReturn": "off"
+        "useIterableCallbackReturn": "error"
       },
       "style": {
-        "noNonNullAssertion": "off",
-        "useImportType": "off",
-        "noParameterAssign": "off"
+        "noNonNullAssertion": "error",
+        "useImportType": "error",
+        "noParameterAssign": "error"
       },
       "a11y": {
-        "useSemanticElements": "off",
-        "useAriaPropsSupportedByRole": "off",
-        "noInteractiveElementToNoninteractiveRole": "off",
-        "noAriaHiddenOnFocusable": "off",
+        "useSemanticElements": "error",
+        "useAriaPropsSupportedByRole": "error",
+        "noInteractiveElementToNoninteractiveRole": "error",
+        "noAriaHiddenOnFocusable": "error",
         "useValidAnchor": "warn",
         "useKeyWithClickEvents": "warn"
       },
@@ -63,6 +79,21 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["**/*.css"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noExcessiveLinesPerFile": {
+              "level": "error",
+              "options": { "maxLines": 500, "skipBlankLines": true }
+            }
+          }
+        }
+      }
+    }
+  ],
   "assist": {
     "enabled": false
   }

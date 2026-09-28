@@ -1,0 +1,55 @@
+/* A plain page: what happened, and one way forward. */
+
+.ie-errorBoundary {
+  width: min(40rem, calc(100% - 32px));
+  margin: max(var(--s-7), 14vh) auto var(--s-8);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--rule);
+}
+
+.ie-errorBoundaryTitle {
+  margin: 0 0 var(--s-4);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: clamp(var(--t-36), 5vw, var(--t-48));
+  font-weight: 300;
+  font-variation-settings: "opsz" 60;
+  line-height: var(--lh-tight);
+}
+
+.ie-errorBoundaryBody {
+  max-width: 52ch;
+  margin: 0 0 var(--s-5);
+  color: var(--ink-2);
+  font-size: var(--t-18);
+  line-height: var(--lh-read);
+}
+
+.ie-errorBoundaryMessage {
+  margin: 0 0 var(--s-6);
+  padding: var(--s-3) var(--s-4);
+  border-left: 3px solid var(--rule-strong);
+  background: var(--paper-recessed);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-13);
+  overflow-wrap: anywhere;
+}
+
+.ie-errorBoundaryAction {
+  min-width: 10rem;
+  min-height: 48px;
+  padding: 10px 20px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+  font-size: var(--t-16);
+  font-weight: 600;
+}
+
+.ie-errorBoundaryAction:hover {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+}
