@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const publicRootFiles = ['README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'PRODUCT.md', 'AGENTS.md']
+const publicRootFiles = ['README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'PRODUCT.md']
 const publicDirectories = ['.github', 'docs', 'src/content/experience']
 
 function markdownFiles(directory) {

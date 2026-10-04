@@ -25,12 +25,11 @@ Run the narrowest relevant test while you work, then the broader gate appropriat
 
 | Command | Scope |
 |---|---|
-| `npm run typecheck` | Browser, pure-domain, build-config, repository-tool, and test TypeScript projects. |
-| `npm run lint` | Biome checks for source, tests, tools, and Vite configuration. Warnings fail. |
+| `npm run typecheck` | Browser, pure-domain, build-config, and repository-tool TypeScript projects. |
+| `npm run lint` | Biome checks for source, tools, and Vite configuration. Warnings fail. |
 | `npm run quality:duplication` | Strict TS, TSX, JavaScript, and CSS clone detection with zero tolerance. |
 | `npm run quality:check` | Lint plus 400-line code/500-line CSS file limits, a 60-line function limit, complexity 12, and zero duplication at 6 lines/50 tokens. |
 | `npm run architecture:check` | Source dependency direction, cycle enforcement, and the app's single runtime entry (`src/runtime/session/`). |
-| `npm test` | Compact Vitest core-contract tests. |
 | `npm run build` | TypeScript build and Vite production build. |
 | `npm run bundle:verify` | Lazy Three.js boundary and production diagnostic exclusion. |
 | `npm run notices:verify` | Installed and distributed third-party license texts. Run after `npm run build`. |

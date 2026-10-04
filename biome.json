@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["src/**", "tests/**", "tools/**", "vite.config.ts"],
+    "includes": ["src/**", "tools/**", "vite.config.ts"],
     "ignoreUnknown": true
   },
   "formatter": {

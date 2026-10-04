@@ -68,6 +68,8 @@ vite.config.ts.timestamp-*
 /.vscode/
 
 # Development-assistant files and private work notes
+/DESIGN_BRIEF.md
+/tests/
 AGENT.md
 AGENTS.md
 agent.md

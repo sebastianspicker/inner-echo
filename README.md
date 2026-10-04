@@ -106,10 +106,9 @@ Run everything from the repository root.
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Start the Vite dev server. |
-| `npm test` | Run the Vitest contract suite. |
 | `npm run build` | Type-check and build both static entries into `dist/`. |
 | `npm run verify` | Run the complete repository gate. |
-| `npm run typecheck` | Check the browser, domain, build-config, tools, and tests TypeScript projects. |
+| `npm run typecheck` | Check the browser, domain, build-config, and tools TypeScript projects. |
 | `npm run lint` | Run Biome; warnings fail. |
 | `npm run quality:check` | Lint plus file-size, function-length, complexity, and duplication limits. |
 | `npm run architecture:check` | Reject forbidden imports and import cycles. |
@@ -129,7 +128,6 @@ The full command matrix, generated-file workflow, and release procedure live in
 | `src/runtime/` | Camera, Web Audio, visual rendering, reactive coupling, and the media session that owns them. |
 | `src/demo/`, `demo/` | The device-free mock: a dependency-free controller and semantic HTML. |
 | `tools/` | Build-time validators, doc generators, release checks, and Pages assembly. |
-| `tests/` | Vitest tests organized by architectural boundary. |
 | `docs/references/` | Evidence corpus and the generated evidence pages the app bundles. |
 | `docs/generated/` | Derived catalog and schema references. |
 

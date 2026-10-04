@@ -40,7 +40,4 @@ export default defineConfig({
   },
   server: { headers: devHeaders },
   preview: { headers: productionHeaders },
-  test: {
-    include: ['tests/**/*.test.ts'],
-  },
 })

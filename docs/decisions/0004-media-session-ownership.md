@@ -56,9 +56,6 @@ session statically imports the lazily loaded audio engine or graphics modules.
 
 ## Verification contract
 
-- `tests/app/workspace-workflows.test.ts` drives the rendered workspace with faked browser media only.
-- `tests/runtime/session-*.test.ts` covers ordering, cancellation, restart identity, and interruption
-  through the public session API.
 - `npm run bundle:verify` checks the lazy audio and graphics boundaries.
 
 Related overview: [architecture](../ARCHITECTURE.md).

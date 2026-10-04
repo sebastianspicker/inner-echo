@@ -9,9 +9,7 @@
  *
  * Used by build-time contract probes and inspection scenarios
  * (`tools/contracts/probes/audioNodeRegistry.ts`,
- * `tools/validation/inspect/audio-scenario.ts`) and by Vitest runtime tests
- * (`tests/runtime/modulation-comfort.test.ts`, `tests/runtime/audio-reset.test.ts`).
- * Tests may import from `tools/`; this module must not import from `tests/`.
+ * `tools/validation/inspect/audio-scenario.ts`).
  */
 
 export class FakeAudioParam {
@@ -209,12 +207,12 @@ export class FakeAudioContext {
     return this.record(this.bufferSources, new FakeAudioBufferSourceNode())
   }
 
-  /** Alias matching tests/runtime/audio-reset.test.ts's node-count naming. */
+  /** Alias for the node-count naming. */
   get filters(): FakeBiquadFilterNode[] {
     return this.biquads
   }
 
-  /** Alias matching tests/runtime/audio-reset.test.ts's node-count naming. */
+  /** Alias for the node-count naming. */
   get constants(): FakeConstantSourceNode[] {
     return this.constantSources
   }

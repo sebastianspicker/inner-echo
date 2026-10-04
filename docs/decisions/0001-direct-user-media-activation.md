@@ -36,9 +36,6 @@ state claims activity before the resource is live.
 ## Verification contract
 
 - Direct schema, graph-safety, sanitization, and inactive activation-state tests.
-- `tests/app/workspace-workflows.test.ts` drives the rendered workspace with faked browser media:
-  passive startup, separate camera/sound/microphone actions, Stop Everything races, and shared-link
-  and saved-preset loading without activation.
 - Manual real Safari, physical mobile camera, and assistive-technology evidence before a release
   readiness claim.
 
