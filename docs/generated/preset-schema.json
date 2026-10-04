@@ -173,7 +173,10 @@
                   {
                     "type": "number"
                   }
-                ]
+                ],
+                "additionalItems": false,
+                "minItems": 2,
+                "maxItems": 2
               }
             },
             "required": [

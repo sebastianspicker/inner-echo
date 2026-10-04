@@ -208,7 +208,10 @@ The machine-readable schema is embedded below and also written to `preset-schema
                   {
                     "type": "number"
                   }
-                ]
+                ],
+                "additionalItems": false,
+                "minItems": 2,
+                "maxItems": 2
               }
             },
             "required": [
