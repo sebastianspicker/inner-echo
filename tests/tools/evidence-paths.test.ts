@@ -22,19 +22,15 @@ afterEach(() => {
 })
 
 describe('evidence output boundaries', () => {
-  it.each([
-    '../../outside',
-    '/tmp/outside',
-    '..\\outside',
-    '.',
-    '%2e%2e',
-    'a'.repeat(65),
-  ])('rejects %s before writing any pages', (id) => {
-    const input = fixture()
-    input.profiles.push({ id, label: 'Invalid' })
-    expect(() => writeEvidencePages(input)).toThrow('Invalid evidence page identifier')
-    expect(fs.readdirSync(input.root)).toEqual([])
-  })
+  it.each(['../../outside', '/tmp/outside', '..\\outside', '.', '%2e%2e', 'a'.repeat(65)])(
+    'rejects %s before writing any pages',
+    (id) => {
+      const input = fixture()
+      input.profiles.push({ id, label: 'Invalid' })
+      expect(() => writeEvidencePages(input)).toThrow('Invalid evidence page identifier')
+      expect(fs.readdirSync(input.root)).toEqual([])
+    },
+  )
 
   it('validates motif names as well as profile names before writes', () => {
     const input = fixture()

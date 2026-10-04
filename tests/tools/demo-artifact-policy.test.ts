@@ -58,17 +58,19 @@ describe('demo artifact policy', () => {
     )
   })
 
-  it.each(
-    demoForbiddenCapabilities,
-  )('rejects %s in any demo chunk', (capability, _pattern, example) => {
-    expect(findForbiddenDemoCapabilities(example)).toContain(capability)
-  })
+  it.each(demoForbiddenCapabilities)(
+    'rejects %s in any demo chunk',
+    (capability, _pattern, example) => {
+      expect(findForbiddenDemoCapabilities(example)).toContain(capability)
+    },
+  )
 
-  it.each(
-    demoForbiddenFrameworks,
-  )('rejects %s in the demo closure', (framework, _pattern, example) => {
-    expect(findForbiddenDemoFrameworks(example)).toContain(framework)
-  })
+  it.each(demoForbiddenFrameworks)(
+    'rejects %s in the demo closure',
+    (framework, _pattern, example) => {
+      expect(findForbiddenDemoFrameworks(example)).toContain(framework)
+    },
+  )
 
   it('accepts a clean demo closure', () => {
     const manifest = { entry: { imports: ['shared'] }, shared: {} }

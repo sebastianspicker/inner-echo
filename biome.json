@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.8/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -30,7 +30,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "correctness": {
         "noUnusedVariables": "error",
         "noUnusedImports": "error",
@@ -47,12 +47,6 @@
           "options": { "maxLines": 60, "skipBlankLines": true, "skipIifes": false }
         }
       },
-      "nursery": {
-        "noExcessiveLinesPerFile": {
-          "level": "error",
-          "options": { "maxLines": 400, "skipBlankLines": true }
-        }
-      },
       "suspicious": {
         "noExplicitAny": "warn",
         "noArrayIndexKey": "error",
@@ -64,7 +58,11 @@
       "style": {
         "noNonNullAssertion": "error",
         "useImportType": "error",
-        "noParameterAssign": "error"
+        "noParameterAssign": "error",
+        "noExcessiveLinesPerFile": {
+          "level": "error",
+          "options": { "maxLines": 400, "skipBlankLines": true }
+        }
       },
       "a11y": {
         "useSemanticElements": "error",
@@ -84,7 +82,7 @@
       "includes": ["**/*.css"],
       "linter": {
         "rules": {
-          "nursery": {
+          "style": {
             "noExcessiveLinesPerFile": {
               "level": "error",
               "options": { "maxLines": 500, "skipBlankLines": true }

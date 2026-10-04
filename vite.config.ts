@@ -31,6 +31,11 @@ export default defineConfig({
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         demo: fileURLToPath(new URL('./demo/index.html', import.meta.url)),
       },
+      experimental: {
+        // Rolldown 1.2 folds chunks that every importer already loads into the importing lazy chunk,
+        // which makes the audio, coupling and graph runtimes depend on the workspace chunk.
+        chunkOptimization: { avoidRedundantChunkLoads: false },
+      },
     },
   },
   server: { headers: devHeaders },

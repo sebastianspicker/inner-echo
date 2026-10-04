@@ -73,7 +73,7 @@ for (const file of files) {
   const source = readFileSync(file, 'utf8')
   for (const match of source.matchAll(importPattern)) {
     const imported = resolveSourceImport(file, match[1])
-    if (!imported || !imported.startsWith(`${sourceRoot}${sep}`)) continue
+    if (!imported?.startsWith(`${sourceRoot}${sep}`)) continue
     graph.get(file).push(imported)
     const fromLayer = layer(file)
     const toLayer = layer(imported)

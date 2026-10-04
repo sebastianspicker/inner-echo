@@ -34,24 +34,22 @@ describe('optional runtime bundle boundaries', () => {
   it('accepts separate lazy closures with shared React', () => {
     expect(inspectRuntimeBoundaries(manifest())).toEqual([])
   })
-  it.each([
-    'workspace',
-    'audio',
-    'evidence',
-    'graphics',
-  ] as const)('rejects eager %s loading from welcome', (boundary) => {
-    const chunks = manifest()
-    chunks.welcome.imports.push(boundary)
-    expect(inspectRuntimeBoundaries(chunks)).toContain(`welcome eagerly loads ${boundary}`)
-  })
-  it.each([
-    'workspace',
-    'evidence',
-  ] as const)('rejects an indirect audio dependency from %s', (entry) => {
-    const chunks = { ...manifest(), shared: { imports: ['audio'] } }
-    chunks[entry].imports.push('shared')
-    expect(inspectRuntimeBoundaries(chunks)).toContain(`${entry} eagerly loads audio`)
-  })
+  it.each(['workspace', 'audio', 'evidence', 'graphics'] as const)(
+    'rejects eager %s loading from welcome',
+    (boundary) => {
+      const chunks = manifest()
+      chunks.welcome.imports.push(boundary)
+      expect(inspectRuntimeBoundaries(chunks)).toContain(`welcome eagerly loads ${boundary}`)
+    },
+  )
+  it.each(['workspace', 'evidence'] as const)(
+    'rejects an indirect audio dependency from %s',
+    (entry) => {
+      const chunks = { ...manifest(), shared: { imports: ['audio'] } }
+      chunks[entry].imports.push('shared')
+      expect(inspectRuntimeBoundaries(chunks)).toContain(`${entry} eagerly loads audio`)
+    },
+  )
   it('rejects an audio entry that proxies through the workspace chunk', () => {
     const chunks = manifest()
     chunks.audio.imports = ['workspace']

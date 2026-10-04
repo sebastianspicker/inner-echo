@@ -44,16 +44,13 @@ describe('verified Pages handoff', () => {
     ).resolves.toBeUndefined()
   })
 
-  it.each([
-    'sha',
-    'runId',
-    'runAttempt',
-    'basePath',
-    'version',
-  ])('rejects mismatched %s', async (key) => {
-    const metadata = { ...(await createHandoff(directory, environment, now)), [key]: 'wrong' }
-    await expect(validateHandoff(metadata, directory, environment, now)).rejects.toThrow()
-  })
+  it.each(['sha', 'runId', 'runAttempt', 'basePath', 'version'])(
+    'rejects mismatched %s',
+    async (key) => {
+      const metadata = { ...(await createHandoff(directory, environment, now)), [key]: 'wrong' }
+      await expect(validateHandoff(metadata, directory, environment, now)).rejects.toThrow()
+    },
+  )
 
   it('rejects stale main and expired or future metadata', async () => {
     const metadata = await createHandoff(directory, environment, now)
@@ -84,18 +81,16 @@ describe('verified Pages handoff', () => {
     )
   })
 
-  it.each([
-    'modified',
-    'added',
-    'missing',
-    'symlink',
-  ])('rejects %s site content', async (change) => {
-    const metadata = await createHandoff(directory, environment, now)
-    if (change === 'modified') await writeFile(join(directory, 'index.html'), 'modified')
-    if (change === 'added') await writeFile(join(directory, 'candidate.json'), '{}')
-    if (change === 'missing') await rm(join(directory, 'demo/index.html'))
-    if (change === 'symlink')
-      await symlink(join(directory, 'index.html'), join(directory, 'linked.html'))
-    await expect(validateHandoff(metadata, directory, environment, now)).rejects.toThrow()
-  })
+  it.each(['modified', 'added', 'missing', 'symlink'])(
+    'rejects %s site content',
+    async (change) => {
+      const metadata = await createHandoff(directory, environment, now)
+      if (change === 'modified') await writeFile(join(directory, 'index.html'), 'modified')
+      if (change === 'added') await writeFile(join(directory, 'candidate.json'), '{}')
+      if (change === 'missing') await rm(join(directory, 'demo/index.html'))
+      if (change === 'symlink')
+        await symlink(join(directory, 'index.html'), join(directory, 'linked.html'))
+      await expect(validateHandoff(metadata, directory, environment, now)).rejects.toThrow()
+    },
+  )
 })

@@ -21,7 +21,6 @@ function lerp(a: number, b: number, t: number): number {
 export class FocusJitterNode implements VideoNode {
   readonly nodeName = 'focus_jitter'
   private material: ShaderMaterial | null = null
-  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: used in tick()
   private t = 0
   private nextSampleIn = 0
   private targetX = 0

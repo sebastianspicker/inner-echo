@@ -155,29 +155,26 @@ describe('overlay lifecycle reuse', () => {
     expect(manager.getControl()).toBe(firstControl)
   })
 
-  it.each([
-    'video',
-    'audio',
-    'reactive',
-    'safety',
-    'motion',
-  ] as const)('restarts for changed %s configuration', async (change) => {
-    const profile = fixtureProfile()
-    const { manager, firstControl } = await startActiveManager(profile)
+  it.each(['video', 'audio', 'reactive', 'safety', 'motion'] as const)(
+    'restarts for changed %s configuration',
+    async (change) => {
+      const profile = fixtureProfile()
+      const { manager, firstControl } = await startActiveManager(profile)
 
-    const next = structuredClone(profile) as Profile
-    if (change === 'video') next.video_stack[0].params = { amount: 0.3 }
-    if (change === 'audio') next.audio_stack = { chain: [{ node: 'tremolo' }] }
-    if (change === 'reactive') {
-      next.reactive = { analyser_to_params: [{ source: 'rms', target: 'video.grain.amount' }] }
-    }
-    if (change === 'safety') next.safety.safe_mode_clamps.max_intensity = 0.2
-    const settings = liveSettings(next, { reducedMotion: change === 'motion' })
-    manager.setLiveSettings(settings)
-    await waitForControl(manager.getControl, firstControl)
+      const next = structuredClone(profile) as Profile
+      if (change === 'video') next.video_stack[0].params = { amount: 0.3 }
+      if (change === 'audio') next.audio_stack = { chain: [{ node: 'tremolo' }] }
+      if (change === 'reactive') {
+        next.reactive = { analyser_to_params: [{ source: 'rms', target: 'video.grain.amount' }] }
+      }
+      if (change === 'safety') next.safety.safe_mode_clamps.max_intensity = 0.2
+      const settings = liveSettings(next, { reducedMotion: change === 'motion' })
+      manager.setLiveSettings(settings)
+      await waitForControl(manager.getControl, firstControl)
 
-    expect(manager.getControl()).not.toBe(firstControl)
-  })
+      expect(manager.getControl()).not.toBe(firstControl)
+    },
+  )
 
   it('restarts on explicit retry even for an equivalent configuration', async () => {
     const { manager, firstControl } = await startActiveManager(fixtureProfile())
