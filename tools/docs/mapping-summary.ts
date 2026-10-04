@@ -25,7 +25,7 @@ import { motifNodes } from '../contracts/motifs/nodes'
 import { dimensionMappingValues } from './dimensionMappingValues'
 
 function mdEscape(s: string) {
-  return s.replace(/\|/g, '\\|')
+  return s.replace(/\\/g, '\\\\').replace(/\|/g, '\\|')
 }
 
 function mapDimension(

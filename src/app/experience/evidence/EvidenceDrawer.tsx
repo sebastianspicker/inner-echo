@@ -90,7 +90,11 @@ function useEvidenceArticleActivation(
       if (!anchor) return
       const href = anchor.getAttribute('href') ?? ''
       const normalized = href.trim().toLowerCase()
-      if (normalized.startsWith('javascript:') || normalized.startsWith('data:')) {
+      if (
+        normalized.startsWith('javascript:') ||
+        normalized.startsWith('vbscript:') ||
+        normalized.startsWith('data:')
+      ) {
         event.preventDefault()
         return
       }

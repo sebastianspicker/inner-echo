@@ -91,7 +91,7 @@ function appendCatalogTableRow(
   const tags = entry?.tags?.length ? entry.tags.join(', ') : '-'
   const intensityMax = profile.safety?.intensity_max ?? '-'
   const nodes = allNodeNames(profile).join(', ') || '-'
-  const label = profile.label.replace(/\|/g, '\\|')
+  const label = profile.label.replace(/\\/g, '\\\\').replace(/\|/g, '\\|')
   lines.push(`| ${profile.id} | ${label} | ${tags} | ${intensityMax} | ${nodes} |`)
 }
 
