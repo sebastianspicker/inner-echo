@@ -4,7 +4,7 @@
 
 This report covers the first three experience dimensions in
 `src/content/experience/experience-dimensions.json`: hyperarousal, hypervigilance, and panic_peaks.
-The goal is to support metaphorical, non-diagnostic audiovisual (AV) design hypotheses — not to show
+The goal is to support metaphorical, non-diagnostic audiovisual (AV) design hypotheses, not to show
 "what a condition looks or sounds like," simulate clinical states, or give medical advice.
 
 **Databases and source types.** Evidence came mainly from Europe PMC / PubMed-indexed records, major
@@ -134,13 +134,13 @@ Rationale: multiple converging reviews/meta-analyses plus widely used measuremen
 ---
 
 ## Bibliography (APA; DOI/PMID + stable links)
-- Blevins, C. A., Weathers, F. W., Davis, M. T., Witte, T. K., & Domino, J. L. (2015). The Posttraumatic Stress Disorder Checklist for DSM-5 (PCL-5): Development and initial psychometric evaluation. *Journal of Traumatic Stress, 28*(6), 489–498. https://doi.org/10.1002/jts.22059 (PMID: 26606250) https://pubmed.ncbi.nlm.nih.gov/26606250/
-- Mather, M., & Sutherland, M. R. (2011). Arousal-biased competition in perception and memory. *Perspectives on Psychological Science, 6*(2), 114–133. https://doi.org/10.1177/1745691611400234 (PMCID: PMC3110019) https://pmc.ncbi.nlm.nih.gov/articles/PMC3110019/
+- Blevins, C. A., Weathers, F. W., Davis, M. T., Witte, T. K., & Domino, J. L. (2015). The Posttraumatic Stress Disorder Checklist for DSM-5 (PCL-5): Development and initial psychometric evaluation. *Journal of Traumatic Stress, 28*(6), 489-498. https://doi.org/10.1002/jts.22059 (PMID: 26606250) https://pubmed.ncbi.nlm.nih.gov/26606250/
+- Mather, M., & Sutherland, M. R. (2011). Arousal-biased competition in perception and memory. *Perspectives on Psychological Science, 6*(2), 114-133. https://doi.org/10.1177/1745691611400234 (PMCID: PMC3110019) https://pmc.ncbi.nlm.nih.gov/articles/PMC3110019/
 - Maples-Keller, J. L., Rauch, S. A. M., Jovanovic, T., et al. (2019). Changes in trauma-potentiated startle, skin conductance, and heart rate within prolonged exposure therapy for PTSD in high and low treatment responders. *Journal of Anxiety Disorders, 68*, 102147. https://doi.org/10.1016/j.janxdis.2019.102147 (PMID: 31669786) https://pubmed.ncbi.nlm.nih.gov/31669786/
-- Pole, N. (2007). The psychophysiology of posttraumatic stress disorder: A meta-analysis. *Psychological Bulletin, 133*(5), 725–746. https://doi.org/10.1037/0033-2909.133.5.725 (PMID: 17723027) https://pubmed.ncbi.nlm.nih.gov/17723027/
-- Riemann, D., Spiegelhalder, K., Feige, B., et al. (2010). The hyperarousal model of insomnia: A review of the concept and its evidence. *Sleep Medicine Reviews, 14*(1), 19–31. https://doi.org/10.1016/j.smrv.2009.04.002 (PMID: 19481481) https://pubmed.ncbi.nlm.nih.gov/19481481/
-- Schneider, M., & Schwerdtfeger, A. (2020). Autonomic dysfunction in posttraumatic stress disorder indexed by heart rate variability: A meta-analysis. *Psychological Medicine, 50*(12), 1937–1948. (PMID: 32854795; PMCID: PMC7525781) https://pubmed.ncbi.nlm.nih.gov/32854795/
-- Van Bockstaele, E. J., et al. (2020). The locus coeruleus–norepinephrine system in stress and arousal: New insights from optogenetics and chemogenetics. *Frontiers in Psychiatry*. https://doi.org/10.3389/fpsyt.2020.601519
+- Pole, N. (2007). The psychophysiology of posttraumatic stress disorder: A meta-analysis. *Psychological Bulletin, 133*(5), 725-746. https://doi.org/10.1037/0033-2909.133.5.725 (PMID: 17723027) https://pubmed.ncbi.nlm.nih.gov/17723027/
+- Riemann, D., Spiegelhalder, K., Feige, B., et al. (2010). The hyperarousal model of insomnia: A review of the concept and its evidence. *Sleep Medicine Reviews, 14*(1), 19-31. https://doi.org/10.1016/j.smrv.2009.04.002 (PMID: 19481481) https://pubmed.ncbi.nlm.nih.gov/19481481/
+- Schneider, M., & Schwerdtfeger, A. (2020). Autonomic dysfunction in posttraumatic stress disorder indexed by heart rate variability: A meta-analysis. *Psychological Medicine, 50*(12), 1937-1948. (PMID: 32854795; PMCID: PMC7525781) https://pubmed.ncbi.nlm.nih.gov/32854795/
+- Van Bockstaele, E. J., et al. (2020). The locus coeruleus-norepinephrine system in stress and arousal: New insights from optogenetics and chemogenetics. *Frontiers in Psychiatry*. https://doi.org/10.3389/fpsyt.2020.601519
 - (Foundational example) Sensory gating in chronic PTSD: reduced P50 suppression. *Biological Psychiatry* (paired-click paradigm; older foundational electrophysiology). (Example landing page: https://www.biologicalpsychiatryjournal.com/article/S0006-3223(99)00047-5/fulltext)
 ```
 
@@ -234,13 +234,13 @@ Rationale: substantial review literature supports threat-related attention effec
 
 ## Bibliography (APA; DOI/PMID + stable links)
 - Alon, Y., Bar-Haim, Y., Dykan, C. D. G., Suarez-Jiminez, B., Zhu, X., Neria, Y., & Lazarov, A. (2023). Eye-tracking indices of attention allocation and attention bias variability are differently related to trauma exposure and PTSD. *Journal of Anxiety Disorders, 96*, 102715. https://doi.org/10.1016/j.janxdis.2023.102715
-- Bar-Haim, Y., Lamy, D., Pergamin, L., Bakermans-Kranenburg, M. J., & van IJzendoorn, M. H. (2007). Threat-related attentional bias in anxious and nonanxious individuals: A meta-analytic study. *Psychological Bulletin, 133*(1), 1–24. https://doi.org/10.1037/0033-2909.133.1.1 (PMID: 17201568) https://pubmed.ncbi.nlm.nih.gov/17201568/
-- Bernstein, R. E., Delker, B. C., Knight, J. A., & Freyd, J. J. (2015). Hypervigilance in college students: Associations with betrayal and dissociation and psychometric properties in a Brief Hypervigilance Scale. *Psychological Trauma: Theory, Research, Practice, and Policy, 7*, 448–455. https://doi.org/10.1037/tra0000070 (PMID: 26121174)
-- Cisler, J. M., & Koster, E. H. W. (2010). Mechanisms of attentional biases towards threat in anxiety disorders: An integrative review. *Clinical Psychology Review, 30*(2), 203–216. (PMCID: PMC2814889) https://pmc.ncbi.nlm.nih.gov/articles/PMC2814889/
+- Bar-Haim, Y., Lamy, D., Pergamin, L., Bakermans-Kranenburg, M. J., & van IJzendoorn, M. H. (2007). Threat-related attentional bias in anxious and nonanxious individuals: A meta-analytic study. *Psychological Bulletin, 133*(1), 1-24. https://doi.org/10.1037/0033-2909.133.1.1 (PMID: 17201568) https://pubmed.ncbi.nlm.nih.gov/17201568/
+- Bernstein, R. E., Delker, B. C., Knight, J. A., & Freyd, J. J. (2015). Hypervigilance in college students: Associations with betrayal and dissociation and psychometric properties in a Brief Hypervigilance Scale. *Psychological Trauma: Theory, Research, Practice, and Policy, 7*, 448-455. https://doi.org/10.1037/tra0000070 (PMID: 26121174)
+- Cisler, J. M., & Koster, E. H. W. (2010). Mechanisms of attentional biases towards threat in anxiety disorders: An integrative review. *Clinical Psychology Review, 30*(2), 203-216. (PMCID: PMC2814889) https://pmc.ncbi.nlm.nih.gov/articles/PMC2814889/
 - Clauss, K., Gorday, J. Y., & Bardeen, J. R. (2022). Eye tracking evidence of threat-related attentional bias in anxiety- and fear-related disorders: A systematic review and meta-analysis. *Clinical Psychology Review, 93*, 102142. https://doi.org/10.1016/j.cpr.2022.102142
 - Kimble, M. O., et al. (2014). The impact of hypervigilance: Evidence for a forward feedback loop. *Journal of Anxiety Disorders*. (PMID: 24507631) https://pubmed.ncbi.nlm.nih.gov/24507631/
 - McNally, R. J. (2019). Attentional bias for threat: Crisis or opportunity? *Clinical Psychology Review*. https://doi.org/10.1016/j.cpr.2018.05.005
-- Schmidt, N. B., Lerew, D. R., & Trakowski, J. H. (1997). Body vigilance in panic disorder: Evaluating attention to bodily perturbations. *Journal of Consulting and Clinical Psychology, 65*(2), 214–220. https://doi.org/10.1037/0022-006X.65.2.214 (PMID: 9086684) https://pubmed.ncbi.nlm.nih.gov/9086684/
+- Schmidt, N. B., Lerew, D. R., & Trakowski, J. H. (1997). Body vigilance in panic disorder: Evaluating attention to bodily perturbations. *Journal of Consulting and Clinical Psychology, 65*(2), 214-220. https://doi.org/10.1037/0022-006X.65.2.214 (PMID: 9086684) https://pubmed.ncbi.nlm.nih.gov/9086684/
 ```
 
 ## Panic peaks
@@ -336,12 +336,12 @@ Rationale: panic surges are extensively studied and measured; multiple reviews a
 ---
 
 ## Bibliography (APA; DOI/PMID + stable links)
-- Amaral, J. M. X., Spadaro, P. T. M., Pereira, V. M., Silva, A. C. O., & Nardi, A. E. (2013). The carbon dioxide challenge test in panic disorder: A systematic review of preclinical and clinical research. *Brazilian Journal of Psychiatry, 35*(3), 318–331. https://doi.org/10.1590/1516-4446-2012-1045 (PMID: 24142095)
-- Clark, D. M. (1986). A cognitive approach to panic. *Behaviour Research and Therapy, 24*(4), 461–470. https://doi.org/10.1016/0005-7967(86)90011-2 (PMID: 3741311) https://pubmed.ncbi.nlm.nih.gov/3741311/
+- Amaral, J. M. X., Spadaro, P. T. M., Pereira, V. M., Silva, A. C. O., & Nardi, A. E. (2013). The carbon dioxide challenge test in panic disorder: A systematic review of preclinical and clinical research. *Brazilian Journal of Psychiatry, 35*(3), 318-331. https://doi.org/10.1590/1516-4446-2012-1045 (PMID: 24142095)
+- Clark, D. M. (1986). A cognitive approach to panic. *Behaviour Research and Therapy, 24*(4), 461-470. https://doi.org/10.1016/0005-7967(86)90011-2 (PMID: 3741311) https://pubmed.ncbi.nlm.nih.gov/3741311/
 - Clemente, R., Murphy, A., & Murphy, J. (2024). The relationship between self-reported interoception and anxiety: A systematic review and meta-analysis. *Neuroscience & Biobehavioral Reviews, 167*, 105923. https://doi.org/10.1016/j.neubiorev.2024.105923
 - Guan, X., & Cao, P. (2023/2024). Brain mechanisms underlying panic attack and panic disorder. *Neuroscience Bulletin*. https://doi.org/10.1007/s12264-023-01088-9 (PMID: 37477800) https://pubmed.ncbi.nlm.nih.gov/37477800/
-- Shear, M. K., et al. (1997). Multicenter collaborative Panic Disorder Severity Scale. *American Journal of Psychiatry, 154*(11), 1571–1575. https://doi.org/10.1176/ajp.154.11.1571 (PMID: 9356566) https://pubmed.ncbi.nlm.nih.gov/9356566/
-- Tural, U., & Iosifescu, D. V. (2021). A systematic review and network meta-analysis of carbon dioxide provocation in psychiatric disorders. *Journal of Psychiatric Research, 143*, 508–515. https://doi.org/10.1016/j.jpsychires.2020.11.032 (PMID: 33250190) https://pubmed.ncbi.nlm.nih.gov/33250190/
+- Shear, M. K., et al. (1997). Multicenter collaborative Panic Disorder Severity Scale. *American Journal of Psychiatry, 154*(11), 1571-1575. https://doi.org/10.1176/ajp.154.11.1571 (PMID: 9356566) https://pubmed.ncbi.nlm.nih.gov/9356566/
+- Tural, U., & Iosifescu, D. V. (2021). A systematic review and network meta-analysis of carbon dioxide provocation in psychiatric disorders. *Journal of Psychiatric Research, 143*, 508-515. https://doi.org/10.1016/j.jpsychires.2020.11.032 (PMID: 33250190) https://pubmed.ncbi.nlm.nih.gov/33250190/
 - (Qualitative phenomenology) Adolescents’ lived experience of panic disorder: Interpretative phenomenological analysis. *BMC Psychology* (PMCID: PMC9167912) https://pmc.ncbi.nlm.nih.gov/articles/PMC9167912/
 - (Example interoceptive learning) Generalization of fear to respiratory sensations. (PMID: 26459842) https://pubmed.ncbi.nlm.nih.gov/26459842/
 ```

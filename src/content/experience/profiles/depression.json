@@ -1,7 +1,7 @@
 {
   "id": "depression",
   "label": "Depression-related energy and concentration",
-  "summary": "Mild tonal softening and a quiet, filtered sound bed offer an artistic interpretation of reduced energy or concentration. Depression varies between people and does not mean seeing a grey or blurred world.",
+  "summary": "Muted colour and contrast, fog and softness, and a faint afterimage of slowed time over a low, dull, distant bed with a slow wow offer an artistic interpretation of reduced energy or concentration. These experiences vary; depression does not mean seeing a grey or blurred world.",
   "framing": {
     "type": "metaphor",
     "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
@@ -21,14 +21,14 @@
     }
   ],
   "safety": {
-    "intensity_default": 0.35,
-    "intensity_max": 0.7,
+    "intensity_default": 0.5,
+    "intensity_max": 1,
     "warnings": [
       "Start with low intensity and volume; sound is optional.",
       "Use Reduced Motion for a steadier image. Stop Everything is always available."
     ],
     "safe_mode_clamps": {
-      "max_intensity": 0.65,
+      "max_intensity": 0.8,
       "max_temporal_feedback": 0.25,
       "max_chroma": 0.12,
       "max_contrast": 0.25,
@@ -76,7 +76,7 @@
         "id": "saturation",
         "type": "slider",
         "label": "Visual tone",
-        "min": -0.6,
+        "min": -0.7,
         "max": 0,
         "step": 0.01,
         "target": "video.color_grade.saturation"
@@ -89,6 +89,15 @@
         "max": 0.35,
         "step": 0.01,
         "target": "video.soft_blur.amount"
+      },
+      {
+        "id": "haze",
+        "type": "slider",
+        "label": "Haze",
+        "min": 0,
+        "max": 0.4,
+        "step": 0.01,
+        "target": "video.haze.amount"
       }
     ]
   },
@@ -97,10 +106,10 @@
       "id": "grade",
       "node": "color_grade",
       "params": {
-        "contrast": -0.08,
-        "saturation": -0.12,
-        "brightness": 0,
-        "temperature": 0,
+        "contrast": -0.14,
+        "saturation": -0.42,
+        "brightness": -0.05,
+        "temperature": -0.1,
         "tint": 0
       }
     },
@@ -108,61 +117,92 @@
       "id": "haze",
       "node": "haze",
       "params": {
-        "amount": 0.08
+        "amount": 0.22
       }
     },
     {
       "id": "blur",
       "node": "soft_blur",
       "params": {
-        "amount": 0.08
+        "amount": 0.28
+      }
+    },
+    {
+      "id": "smear",
+      "node": "temporal_smear",
+      "params": {
+        "feedback": 0.08,
+        "decay": 0.94,
+        "jitter": 0
       }
     },
     {
       "id": "grain",
       "node": "grain",
       "params": {
-        "amount": 0.012,
-        "scale": 1.4,
-        "speed": 0.015
+        "amount": 0.04,
+        "scale": 1.6,
+        "speed": 0.03
+      }
+    },
+    {
+      "id": "vignette",
+      "node": "vignette",
+      "params": {
+        "amount": 0.22,
+        "softness": 0.9
       }
     }
   ],
   "audio_stack": {
     "enabled": true,
     "input": "synth",
+    "synth": {
+      "frequency": 110,
+      "detune": 4,
+      "waveform": "triangle",
+      "brightness": 0.25,
+      "swell_interval": 14
+    },
     "master": {
-      "volume": 0.18
+      "volume": 0.3
     },
     "chain": [
       {
         "node": "lowpass",
         "params": {
-          "cutoff": 3400,
+          "cutoff": 1500,
           "q": 0.7
         }
       },
       {
         "node": "noise_bed",
         "params": {
-          "level": 0.018,
+          "level": 0.05,
           "color": "brown"
+        }
+      },
+      {
+        "node": "flutter",
+        "params": {
+          "rate": 0.3,
+          "depth": 0.06
         }
       },
       {
         "node": "reverb",
         "params": {
-          "mix": 0.055,
-          "decay": 1.9
+          "mix": 0.12,
+          "decay": 2.4
         }
       },
       {
         "node": "compressor_limiter",
         "params": {
-          "threshold": -20,
+          "threshold": -22,
           "ratio": 3,
           "attack": 0.02,
-          "release": 0.3,
+          "release": 0.35,
           "ceiling": -10
         }
       }

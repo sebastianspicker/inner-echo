@@ -1,38 +1,75 @@
 /**
  * Audio Synthesizer
  *
- * This module provides a simple, built-in dual-oscillator synthesizer (with an optional noise bed).
+ * Built-in profile synth: two detuned oscillators plus a quiet sawtooth layer, with optional
+ * sparse swells (see `synthScheduler.ts`) so delay and reverb have something to ring on.
  * It acts as the default audio source when the microphone is disabled.
  * The output is a single Web Audio `GainNode` that gets piped into the `AudioEngine`'s effects chain.
  */
 
+import { clamp } from '../../shared/numbers'
+import { createSwellScheduler } from './synthScheduler'
 import type { AudioModule } from './types'
 
 const DEFAULT_FREQ = 220
 const DEFAULT_DETUNE = 8
+const DEFAULT_BRIGHTNESS = 0.5
+const OSC_GAIN = 0.2
+// The detuned voice is quieter so the pair never beats down to silence.
+const DETUNED_GAIN = 0.12
+const SAW_GAIN = 0.14
 
 export interface SynthParams {
-  /** Base frequency (Hz). */
+  /** Base frequency (Hz), 55..440. */
   frequency?: number
-  /** Detune (cents) for second oscillator. */
+  /** Detune (cents) for second oscillator, 0..40. */
   detune?: number
-  /** Noise bed level 0..1 (optional). */
-  noiseLevel?: number
+  waveform?: 'sine' | 'triangle'
+  /** Level of the sawtooth harmonic layer, 0..1. */
+  brightness?: number
+  /** Seconds between swells, 0..30 (0 = none). */
+  swell_interval?: number
 }
 
+const clampFrequency = (v: number) => clamp(v, 55, 440)
+const clampDetune = (v: number) => clamp(v, 0, 40)
+const clampBrightness = (v: number) => clamp(v, 0, 1)
+const clampInterval = (v: number) => clamp(v, 0, 30)
+
 /**
- * Create a simple two-oscillator + optional noise synth. Output is a single GainNode.
+ * Create the profile synth. Output is a single GainNode.
  */
 export function createSynth(context: BaseAudioContext, params: SynthParams = {}): AudioModule {
-  const freq = params.frequency ?? DEFAULT_FREQ
-  const detune = params.detune ?? DEFAULT_DETUNE
-  const noiseLevel = params.noiseLevel ?? 0
+  let freq = clampFrequency(params.frequency ?? DEFAULT_FREQ)
+  const waveform = params.waveform === 'sine' ? 'sine' : 'triangle'
 
   const outGain = context.createGain()
   outGain.gain.value = 1
 
-  const { osc1, osc2 } = createOscillators(context, outGain, freq, detune)
-  const noise = createNoiseSource(context, outGain, noiseLevel)
+  const makeOsc = (type: OscillatorType, frequency: number, level: number) => {
+    const osc = context.createOscillator()
+    osc.type = type
+    osc.frequency.value = frequency
+    const gain = context.createGain()
+    gain.gain.value = level
+    osc.connect(gain)
+    gain.connect(outGain)
+    osc.start(0)
+    return { osc, gain }
+  }
+
+  const o1 = makeOsc(waveform, freq, OSC_GAIN)
+  const o2 = makeOsc(waveform, freq, DETUNED_GAIN)
+  o2.osc.detune.value = clampDetune(params.detune ?? DEFAULT_DETUNE)
+  // A sawtooth layer supplies the upper harmonics that the profile filters shape; `brightness`
+  // sets how much of it is present.
+  const o3 = makeOsc(
+    'sawtooth',
+    freq,
+    SAW_GAIN * clampBrightness(params.brightness ?? DEFAULT_BRIGHTNESS),
+  )
+  const swells = createSwellScheduler(context, outGain)
+  swells.start(clampInterval(params.swell_interval ?? 0), freq)
 
   return {
     connect(destination: AudioNode): void {
@@ -42,100 +79,36 @@ export function createSynth(context: BaseAudioContext, params: SynthParams = {})
       return outGain
     },
     setParams(p: Record<string, unknown>): void {
-      const frequency = p.frequency as number | undefined
-      const detuneVal = p.detune as number | undefined
-      const noiseLevel = p.noiseLevel as number | undefined
-      if (typeof frequency === 'number') {
-        osc1.frequency.setValueAtTime(frequency, context.currentTime)
-        osc2.frequency.setValueAtTime(frequency, context.currentTime)
+      const now = context.currentTime
+      if (typeof p.frequency === 'number') {
+        freq = clampFrequency(p.frequency)
+        o1.osc.frequency.setValueAtTime(freq, now)
+        o2.osc.frequency.setValueAtTime(freq, now)
+        o3.osc.frequency.setValueAtTime(freq, now)
+        swells.setBaseFrequency(freq, now)
       }
-      if (typeof detuneVal === 'number') {
-        osc2.detune.setValueAtTime(detuneVal, context.currentTime)
+      if (typeof p.detune === 'number') {
+        o2.osc.detune.setValueAtTime(clampDetune(p.detune), now)
       }
-      if (typeof noiseLevel === 'number' && noise.gain) {
-        noise.gain.gain.setValueAtTime(noiseLevel * 0.3, context.currentTime)
+      if (typeof p.brightness === 'number') {
+        o3.gain.gain.setValueAtTime(SAW_GAIN * clampBrightness(p.brightness), now)
+      }
+      if (typeof p.swell_interval === 'number') {
+        swells.start(clampInterval(p.swell_interval), freq)
       }
     },
     dispose(): void {
-      try {
-        osc1.stop()
-        osc2.stop()
-      } catch {
-        // already stopped
+      swells.dispose()
+      for (const { osc, gain } of [o1, o2, o3]) {
+        try {
+          osc.stop()
+        } catch {
+          // already stopped
+        }
+        osc.disconnect()
+        gain.disconnect()
       }
-      osc1.disconnect()
-      osc2.disconnect()
       outGain.disconnect()
-      disposeNoiseSource(noise)
     },
   }
-}
-
-function createOscillators(
-  context: BaseAudioContext,
-  output: GainNode,
-  frequency: number,
-  detune: number,
-) {
-  const osc1 = context.createOscillator()
-  osc1.type = 'sine'
-  osc1.frequency.value = frequency
-  osc1.connect(output)
-  osc1.start(0)
-  const osc2 = context.createOscillator()
-  osc2.type = 'sine'
-  osc2.frequency.value = frequency
-  osc2.detune.value = detune
-  osc2.connect(output)
-  osc2.start(0)
-  return { osc1, osc2 }
-}
-
-function createNoiseSource(context: BaseAudioContext, output: GainNode, level: number) {
-  if (level <= 0) return { source: null, gain: null }
-  const source = context.createBufferSource()
-  source.buffer = createNoiseBuffer(context, 2)
-  source.loop = true
-  const gain = context.createGain()
-  gain.gain.value = level * 0.3
-  source.connect(gain)
-  gain.connect(output)
-  source.start(0)
-  return { source, gain }
-}
-
-function disposeNoiseSource(noise: {
-  source: AudioBufferSourceNode | null
-  gain: GainNode | null
-}): void {
-  if (noise.source) {
-    try {
-      noise.source.stop()
-    } catch {
-      /* already stopped */
-    }
-    noise.source.disconnect()
-  }
-  noise.gain?.disconnect()
-}
-
-/** Generate a short noise buffer (white or filtered for pink-ish). */
-function createNoiseBuffer(context: BaseAudioContext, durationSeconds: number): AudioBuffer {
-  const sampleRate = context.sampleRate
-  const length = sampleRate * durationSeconds
-  const buffer = context.createBuffer(1, length, sampleRate)
-  const data = buffer.getChannelData(0)
-  let b0 = 0,
-    b1 = 0,
-    b2 = 0
-  for (let i = 0; i < length; i++) {
-    const white = Math.random() * 2 - 1
-    b0 = 0.99886 * b0 + white * 0.0555179
-    b1 = 0.99332 * b1 + white * 0.0750759
-    b2 = 0.969 * b2 + white * 0.153852
-    // Division by 3 is an intentional approximation (Kellett 3-pole pink noise);
-    // sufficient for an ambient noise bed where scientific accuracy is not required.
-    data[i] = Math.max(-1, Math.min(1, (b0 + b1 + b2) / 3))
-  }
-  return buffer
 }

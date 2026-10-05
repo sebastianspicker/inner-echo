@@ -42,6 +42,7 @@ export interface AudioEngineDebugState {
 
 export interface AudioEngineControl {
   setMasterVolume(value: number): void
+  setIntensity(value: number): void
   setConditionAudio(audioStack: AudioStackConfig | null | undefined): void
   getRms(): number
   getMetrics(): AudioMetrics
@@ -80,6 +81,9 @@ function createAudioEngineControl({
   return {
     setMasterVolume(value) {
       graphSession.setMasterVolume(value)
+    },
+    setIntensity(value) {
+      graphSession.setIntensity(value)
     },
     setConditionAudio(audioStack) {
       graphSession.setConditionAudio(audioStack)

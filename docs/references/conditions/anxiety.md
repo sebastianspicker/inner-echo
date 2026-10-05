@@ -10,7 +10,7 @@
 - Scope: a curated composition of experience dimensions and conservative audiovisual motifs.
 - Exclusions: not a diagnostic model, therapy tool, or statement about what a condition looks like.
 
-Gentle focus narrowing, restrained detail and a quiet sound bed offer an artistic interpretation of tension and worry. These experiences vary; anxiety does not have a single visual or auditory form.
+A narrowed, crisp field with fine tense texture and a thin trembling sound bed with a faint echo offer an artistic interpretation of tension and worry. These experiences vary; anxiety does not have a single visual or auditory form.
 
 Profile weights express authoring emphasis, not symptom prevalence, severity, or diagnostic probability.
 
@@ -35,9 +35,10 @@ not validate its visual form, sound, or parameter values.
 
 - `color_grade`: Adjusts saturation/contrast/tonal balance (clamped).: `docs/references/motifs/color_grade.md`
 - `compressor_limiter`: Reduces peaks and smooths dynamics (safety-first).: `docs/references/motifs/compressor_limiter.md`
-- `edge_sharpen`: Subtle edge enhancement (non-flickering).: `docs/references/motifs/edge_sharpen.md`
-- `gaze_tunnel`: Softly narrows the visible focus area and adjusts edge detail.: `docs/references/motifs/gaze_tunnel.md`
-- `grain`: Adds fine noise texture (clamped).: `docs/references/motifs/grain.md`
+- `delay`: Short echo with low feedback/mix (clamped).: `docs/references/motifs/delay.md`
+- `edge_sharpen`: Unsharp-mask detail gain up to 2.2x (non-flickering).: `docs/references/motifs/edge_sharpen.md`
+- `gaze_tunnel`: Keeps the centre clear and crisp while the periphery softens, dims and loses colour (static).: `docs/references/motifs/gaze_tunnel.md`
+- `grain`: Adds fine midtone-weighted grain that re-seeds at a bounded rate (clamped).: `docs/references/motifs/grain.md`
 - `highpass`: Attenuates low frequencies below cutoff (clamped).: `docs/references/motifs/highpass.md`
 - `noise_bed`: Adds quiet broadband noise floor (clamped).: `docs/references/motifs/noise_bed.md`
 - `tremolo`: Slow amplitude modulation (rate/depth clamped).: `docs/references/motifs/tremolo.md`

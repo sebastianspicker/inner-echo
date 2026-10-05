@@ -8,7 +8,7 @@
 
 ## Technical summary
 
-Adds gentle distortion artifacts (clamped; no strobe).
+Slowly drifting soft bands and faint line static with sparse eased micro-bursts (clamped; no strobe).
 
 ## Evidence and implementation
 
@@ -25,7 +25,8 @@ Adds gentle distortion artifacts (clamped; no strobe).
 
 ### Used by condition presets
 
-Not currently referenced by any condition preset.
+- OCD-related intrusive thoughts and repetition (`ocd`): `docs/references/conditions/ocd.md`
+- PTSD-related experiences (`trauma_ptsd`): `docs/references/conditions/trauma_ptsd.md`
 
 ## Scientific sources (peer-reviewed, from the in-repo corpus)
 

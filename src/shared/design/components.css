@@ -1,21 +1,21 @@
 /* Shared components: the pieces that make the app and the device-free demo one product.
- * Title page, ringed numerals, masthead, the arched mirror, its chips, and its caption. */
+ * Title page, commitments, masthead, the mirror, its readout, and its caption. */
 
 /* Typographic roles shared across screens. Each role is declared once; screens add only layout. */
 
-/* Section title: the serif head of a section, a dialog, or a document chapter. */
+/* Section title: the head of a section, a dialog, or a document chapter. */
 .ie-sectionHead,
+.ie-commitments > h2,
 .evidence-title,
 .evidence-markdown h2 {
-  font-family: var(--font-serif);
-  font-size: var(--t-28);
-  font-weight: 400;
-  font-variation-settings: "opsz" 32;
+  font-family: var(--font-display);
+  font-size: var(--t-22);
+  font-weight: 500;
+  letter-spacing: var(--track-title);
   line-height: var(--lh-title);
 }
 
 /* Small print: hints, notes, and footnotes. */
-.ie-titlePage__note,
 .ie-hint,
 .ie-controlHint,
 .composer__hint,
@@ -28,50 +28,40 @@
   line-height: var(--lh-ui);
 }
 
-/* Serif italic gloss: descriptions, captions, and empty states speak in the book voice. */
+/* Gloss: descriptions, captions, and empty states, in the secondary ink. */
 .ie-gloss {
-  font-family: var(--font-serif);
-  font-size: var(--t-18);
-  font-style: italic;
-  font-variation-settings: "opsz" 18;
-  line-height: 1.4;
-}
-
-/* Ringed numeral: a small echo of the aperture mark. */
-.ie-ring,
-.ie-notes > li::before {
-  display: inline-grid;
-  width: 1.8rem;
-  height: 1.8rem;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid var(--accent);
-  border-radius: 50%;
-  color: var(--accent);
-  font-family: var(--font-serif);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
   font-size: var(--t-16);
-  font-style: italic;
-  font-variant-numeric: lining-nums;
-  line-height: 1;
+  line-height: var(--lh-ui);
 }
 
-/* Title page: running head, the title with an italic second line, a lede, and numbered notes. */
+/* Readout: numerals and live state, set in mono so values align and never jitter. */
+.ie-readout {
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-13);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* Title page: running head, an asymmetric hero (copy left, a real render right), then the
+ * commitments as a ruled definition list. */
 
 .ie-titlePage {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto auto;
   width: min(100%, 1320px);
-  min-height: 100dvh;
   margin: 0 auto;
-  padding: var(--s-5) clamp(var(--s-4), 5vw, var(--s-8)) var(--s-8);
+  padding: 0 clamp(var(--s-4), 5vw, var(--s-8)) var(--s-8);
 }
 
 .ie-titlePage__head {
   display: flex;
+  min-height: 64px;
   align-items: center;
   justify-content: space-between;
   gap: var(--s-5);
-  padding-bottom: var(--s-4);
   border-bottom: 1px solid var(--rule);
 }
 
@@ -80,15 +70,16 @@
   align-items: center;
   gap: var(--s-3);
   color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: var(--t-22);
-  font-variation-settings: "opsz" 24;
+  font-family: var(--font-display);
+  font-size: var(--t-18);
+  font-weight: 500;
+  letter-spacing: var(--track-title);
 }
 
 .ie-titlePage__brand img {
   display: block;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
 }
 
 .ie-titlePage__running {
@@ -99,41 +90,33 @@
 
 .ie-titlePage__body {
   display: grid;
-  grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
-  column-gap: clamp(var(--s-6), 8vw, var(--s-9));
-  align-items: end;
-  align-self: center;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  column-gap: clamp(var(--s-6), 6vw, var(--s-9));
+  align-items: center;
+  min-height: calc(100dvh - 64px);
   padding-block: var(--s-7);
 }
 
 .ie-titlePage__title {
-  margin: 0 0 var(--s-6);
+  margin: 0 0 var(--s-5);
   color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: clamp(var(--t-48), 8.4vw, 7.5rem);
-  font-weight: 300;
-  font-variation-settings: "opsz" 72;
-  line-height: 0.98;
-  letter-spacing: -0.025em;
-}
-
-.ie-titlePage__title span,
-.ie-titlePage__title em {
-  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 6.4vw, 6rem);
+  font-weight: 500;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track-display);
 }
 
 .ie-titlePage__title em {
-  padding-left: 0.62em;
-  font-variation-settings: "opsz" 36;
+  color: var(--ink-3);
+  font-style: normal;
 }
 
 .ie-titlePage__lede {
-  max-width: 34rem;
+  max-width: 30rem;
   margin: 0;
   color: var(--ink-2);
-  font-family: var(--font-serif);
-  font-size: var(--t-22);
-  font-variation-settings: "opsz" 18;
+  font-size: var(--t-18);
   line-height: 1.5;
 }
 
@@ -141,110 +124,143 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--s-3) var(--s-5);
-  margin-top: var(--s-7);
+  gap: var(--s-3);
+  margin-top: var(--s-6);
 }
 
 .ie-titlePage__actions .ie-btn {
-  min-width: 13.5rem;
-  min-height: 52px;
-  font-size: var(--t-18);
+  min-height: 48px;
 }
 
-.ie-titlePage__note {
-  max-width: 26ch;
+/* The hero's real render: a still of the mirror running an effect over the synthetic clip. */
+.ie-titlePage__media {
+  margin: 0;
+}
+
+.ie-titlePage__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-sheet);
+  background: var(--plate);
+  object-fit: cover;
+}
+
+.ie-titlePage__media figcaption {
+  margin-top: var(--s-3);
+}
+
+/* Commitments: term on the left, the promise on the right, one hairline between rows. */
+.ie-commitments {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  column-gap: clamp(var(--s-6), 6vw, var(--s-9));
+  padding-top: var(--s-7);
+  border-top: 1px solid var(--rule);
+}
+
+.ie-commitments > h2 {
+  margin: 0;
+  color: var(--ink);
 }
 
 .ie-notes {
   margin: 0;
   padding: 0;
   list-style: none;
-  counter-reset: note;
 }
 
 .ie-notes > li {
-  position: relative;
-  padding: var(--s-5) 0 var(--s-5) 2.75rem;
+  display: grid;
+  grid-template-columns: minmax(0, 13rem) minmax(0, 1fr);
+  gap: var(--s-2) var(--s-5);
+  padding: var(--s-5) 0;
+}
+
+.ie-notes > li + li {
   border-top: 1px solid var(--rule);
-  counter-increment: note;
 }
 
-.ie-notes > li:last-child {
-  padding-bottom: 0;
+.ie-notes > li:first-child {
+  padding-top: 0;
 }
 
-.ie-notes > li::before {
-  position: absolute;
-  top: calc(var(--s-5) - 2px);
-  left: 0;
-  content: counter(note);
-}
-
-.ie-notes h2 {
-  margin: 0 0 var(--s-2);
+.ie-notes h3 {
+  margin: 0;
   color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: var(--t-22);
-  font-weight: 400;
-  font-variation-settings: "opsz" 24;
-  line-height: 1.2;
+  font-size: var(--t-16);
+  font-weight: 500;
+  line-height: var(--lh-ui);
 }
 
 .ie-notes p {
+  max-width: var(--measure);
   margin: 0;
   color: var(--ink-2);
   font-size: var(--t-16);
   line-height: var(--lh-read);
 }
 
-@media (max-width: 960px) {
-  .ie-titlePage__body {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
+/* Load-in: the headline, then the lede, then the actions, then the render exposes. It states the
+ * reading order once; nothing loops. */
+@media (prefers-reduced-motion: no-preference) {
+  .ie-titlePage__body > * > *,
+  .ie-titlePage__media {
+    animation: ie-rise var(--d-expose) var(--ease) both;
   }
 
-  .ie-notes {
-    margin-top: var(--s-8);
+  .ie-titlePage__lede {
+    animation-delay: 80ms;
+  }
+
+  .ie-titlePage__actions {
+    animation-delay: 160ms;
+  }
+
+  .ie-titlePage__media {
+    animation-name: ie-expose;
+    animation-duration: 900ms;
+    animation-delay: 200ms;
+  }
+}
+
+@media (max-width: 960px) {
+  .ie-titlePage__body,
+  .ie-commitments {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ie-titlePage__body {
+    min-height: 0;
+    row-gap: var(--s-7);
+    padding-block: var(--s-7);
+  }
+
+  .ie-commitments > h2 {
+    margin-bottom: var(--s-5);
   }
 }
 
 @media (max-width: 560px) {
-  .ie-titlePage {
-    padding-top: var(--s-4);
-    padding-bottom: var(--s-7);
-  }
-
   .ie-titlePage__running {
     display: none;
   }
 
-  .ie-titlePage__title {
-    margin-bottom: var(--s-5);
-    font-size: clamp(2.75rem, 15vw, var(--t-64));
-  }
-
-  .ie-titlePage__title em {
-    padding-left: 0.4em;
+  .ie-titlePage__body {
+    padding-block: var(--s-6) var(--s-7);
   }
 
   .ie-titlePage__lede {
-    font-size: var(--t-18);
-  }
-
-  .ie-titlePage__actions {
-    margin-top: var(--s-6);
+    font-size: var(--t-16);
   }
 
   .ie-titlePage__actions .ie-btn {
     width: 100%;
   }
 
-  .ie-titlePage__note {
-    max-width: none;
-  }
-
-  .ie-notes {
-    margin-top: var(--s-7);
+  .ie-notes > li {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -268,35 +284,27 @@
   padding-left: var(--s-4);
   border-left: 1px solid var(--rule);
   color: var(--ink-3);
-  font-family: var(--font-ui);
-  font-size: var(--t-14);
+  font-family: var(--font-mono);
+  font-size: var(--t-13);
   white-space: nowrap;
 }
 
-/* The mirror: the only arched object on the page, on a near-black ground in both themes. */
+/* The mirror: the camera surface, the darkest object on the page. Squared like everything else. */
 
 .ie-mirror {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  border-radius: 50% 50% 6px 6px / 16% 16% 6px 6px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sheet);
   background: var(--plate);
   color: var(--plate-ink);
 }
 
-.ie-mirrorChip {
-  position: absolute;
-  left: var(--s-3);
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  margin: 0;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  background: rgb(9 11 11 / 0.8);
-  color: var(--plate-ink);
-  font-size: var(--t-13);
+/* Stage readout: the truthful state line sits under the mirror, never on top of the image. */
+.ie-stageReadout {
+  margin: var(--s-2) 0 0;
 }
 
 /* The caption under the mirror: what it shows, then what it is not. */
@@ -304,16 +312,29 @@
 .ie-caption {
   display: grid;
   gap: var(--s-1);
-  margin: 0;
-  padding: 0 var(--s-1);
-  text-align: center;
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  text-align: left;
 }
 
 .ie-caption > * {
   margin: 0;
 }
 
+.ie-caption .ie-gloss {
+  color: var(--ink);
+  font-size: var(--t-16);
+}
+
+.ie-captionWeight {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--t-14);
+  font-variant-numeric: tabular-nums;
+}
+
 .ie-caption__note {
   color: var(--ink-3);
-  font-size: var(--t-14);
+  font-family: var(--font-mono);
+  font-size: var(--t-13);
 }

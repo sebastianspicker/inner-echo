@@ -92,6 +92,17 @@ fieldset {
   }
 }
 
+@keyframes ie-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes ie-expose {
   from {
     opacity: 0;

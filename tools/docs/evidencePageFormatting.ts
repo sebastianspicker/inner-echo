@@ -43,26 +43,34 @@ export function nodeTechnicalSummary(node: string) {
   const n = node.toLowerCase()
   // Keep this strictly technical (what it does), not psychological claims.
   const map: Record<string, string> = {
-    grain: 'Adds fine noise texture (clamped).',
-    gaze_tunnel: 'Softly narrows the visible focus area and adjusts edge detail.',
-    somatic_pulse: 'Applies a shallow visual wave with bounded softening.',
-    salience_competition: 'Smoothly shifts areas of visual emphasis.',
-    glass_veil: 'Adds a light veil, with optional bounded temporal and refraction effects.',
+    grain: 'Adds fine midtone-weighted grain that re-seeds at a bounded rate (clamped).',
+    gaze_tunnel:
+      'Keeps the centre clear and crisp while the periphery softens, dims and loses colour (static).',
+    somatic_pulse:
+      'Slow breath-like wave plus sparse rise-crest-release surges: bounded brightening, pull-in and peripheral narrowing.',
+    salience_competition:
+      'An attention spot stays sharp and lifted while the rest softens; the spot holds, then moves with eased transitions.',
+    glass_veil:
+      'Pale, low-contrast veil with slow large-scale ripple, a small colour fringe and a short persistence ghost (bounded).',
     vignette: 'Darkens edges to narrow the frame (static or gently modulated).',
-    edge_sharpen: 'Subtle edge enhancement (non-flickering).',
+    edge_sharpen: 'Unsharp-mask detail gain up to 2.2x (non-flickering).',
     chroma_aberration: 'Minor RGB channel offset near edges (very low).',
-    temporal_smear: 'Blends previous frames for persistence/smear (feedback clamped).',
+    temporal_smear:
+      'Faint afterimage with a bounded, frame-rate-independent persistence time (feedback clamped).',
     color_grade: 'Adjusts saturation/contrast/tonal balance (clamped).',
-    haze: 'Adds soft fog/veil (clamped).',
-    soft_blur: 'Applies mild blur to reduce sharp detail (clamped).',
+    haze: 'Pale fog veil whose density drifts very slowly at large scale (clamped).',
+    soft_blur: '13-tap disc blur up to about 1.4% of the frame height (clamped).',
     pulse: 'Slow, bounded envelope modulation (no strobe).',
-    interference: 'Adds gentle distortion artifacts (clamped; no strobe).',
+    interference:
+      'Slowly drifting soft bands and faint line static with sparse eased micro-bursts (clamped; no strobe).',
     focus_jitter: 'Small, smoothed focal instability (bounded).',
-    feedback_loop: 'Low-feedback image recurrence (bounded; reduced-motion disables).',
+    feedback_loop:
+      'Short afterimage whose persistence lengthens on a slow cycle so the image resurfaces (bounded; reduced-motion disables).',
     grid_hint: 'Subtle grid overlay hint (very low contrast).',
 
     compressor_limiter: 'Reduces peaks and smooths dynamics (safety-first).',
-    lowpass: 'Attenuates high frequencies above cutoff (clamped).',
+    lowpass:
+      'Attenuates high frequencies above cutoff, with an optional slow bounded sweep (clamped).',
     highpass: 'Attenuates low frequencies below cutoff (clamped).',
     tremolo: 'Slow amplitude modulation (rate/depth clamped).',
     delay: 'Short echo with low feedback/mix (clamped).',

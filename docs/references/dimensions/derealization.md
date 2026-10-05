@@ -26,9 +26,9 @@ Hypothesis, or Artistic), and in-repository sources you can check.
 
 | Motif (node) | What the implementation does | Mapping claim | Experience evidence | Sources |
 |---|---|---|---|---|
-| `haze` | Adds soft fog/veil (clamped). | Artistic | Medium | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/haze.md` |
+| `haze` | Pale fog veil whose density drifts very slowly at large scale (clamped). | Artistic | Medium | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/haze.md` |
 | `color_grade` | Adjusts saturation/contrast/tonal balance (clamped). | Artistic | Medium | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/color_grade.md` |
-| `lowpass` | Attenuates high frequencies above cutoff (clamped). | Artistic | Medium | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |
+| `lowpass` | Attenuates high frequencies above cutoff, with an optional slow bounded sweep (clamped). | Artistic | Medium | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |
 | `reverb` | Adds gentle space/decay (clamped). | Artistic | Medium | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/reverb.md` |
 | `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | Artistic | Medium | `docs/references/dimensions/derealization.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |
 

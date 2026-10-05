@@ -1,3 +1,4 @@
+import { scaleAudioParam } from '../../domain/experience/audioIntensity'
 import type { Profile } from '../../domain/experience/schema'
 
 export function getProfileAudioBase(profile: Profile, key: string): number {
@@ -7,4 +8,19 @@ export function getProfileAudioBase(profile: Profile, key: string): number {
   if (!Number.isFinite(index) || index < 0) return 0
   const value = profile.audio_stack?.chain?.[index]?.params?.[parts.slice(2).join('.')]
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
+export function getScaledProfileAudioBase(
+  profile: Profile,
+  key: string,
+  intensity: number,
+): number {
+  const parts = key.split('.')
+  const nodeType = profile.audio_stack?.chain?.[Number(parts[1])]?.node ?? ''
+  return scaleAudioParam(
+    nodeType,
+    parts.slice(2).join('.'),
+    getProfileAudioBase(profile, key),
+    intensity,
+  )
 }

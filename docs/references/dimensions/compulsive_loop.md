@@ -26,11 +26,11 @@ Hypothesis, or Artistic), and in-repository sources you can check.
 
 | Motif (node) | What the implementation does | Mapping claim | Experience evidence | Sources |
 |---|---|---|---|---|
-| `feedback_loop` | Low-feedback image recurrence (bounded; reduced-motion disables). | Artistic | High | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/feedback_loop.md` |
+| `feedback_loop` | Short afterimage whose persistence lengthens on a slow cycle so the image resurfaces (bounded; reduced-motion disables). | Artistic | High | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/feedback_loop.md` |
 | `vignette` | Darkens edges to narrow the frame (static or gently modulated). | Artistic | High | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/vignette.md` |
-| `grain` | Adds fine noise texture (clamped). | Artistic | High | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
+| `grain` | Adds fine midtone-weighted grain that re-seeds at a bounded rate (clamped). | Artistic | High | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
 | `delay` | Short echo with low feedback/mix (clamped). | Artistic | High | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/delay.md` |
-| `lowpass` | Attenuates high frequencies above cutoff (clamped). | Artistic | High | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |
+| `lowpass` | Attenuates high frequencies above cutoff, with an optional slow bounded sweep (clamped). | Artistic | High | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |
 | `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | Artistic | High | `docs/references/dimensions/compulsive_loop.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |
 
 ## Evidence links (in-repo)

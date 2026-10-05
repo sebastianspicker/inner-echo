@@ -23,8 +23,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-1) var(--s-4);
-  color: var(--ink-2);
-  font-size: var(--t-14);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--t-13);
 }
 
 .status-item {
@@ -34,26 +35,8 @@
   white-space: nowrap;
 }
 
-.status-label {
-  color: var(--ink-3);
-}
-
 .status-value.is-on {
   color: var(--ink);
-  font-weight: 700;
-}
-
-.status-dot {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 auto;
-  border: 1px solid var(--rule-control);
-  border-radius: 50%;
-}
-
-.status-dot.is-on {
-  border-color: var(--accent);
-  background: var(--accent);
 }
 
 .topbar-actions {
@@ -91,13 +74,17 @@
 .stage-frame {
   display: grid;
   place-items: center;
+  transition: border-color var(--d-base) var(--ease);
 }
 
-/* The simulated feed: two soft pools of light standing in for a camera image. */
+/* Running: the frame takes the accent so the simulated state reads at a glance, with the
+ * readout text below saying the same thing in words. */
 .stage.is-active .stage-frame {
-  background:
-    radial-gradient(ellipse at 32% 40%, rgb(196 154 98 / 0.55), transparent 55%),
-    radial-gradient(ellipse at 70% 55%, rgb(111 143 134 / 0.6), transparent 60%), var(--plate);
+  border-color: var(--accent);
+}
+
+.stage-figure .ie-readout {
+  margin: 0;
 }
 
 .stage-mark {
@@ -109,7 +96,7 @@
 }
 
 .stage-glyph {
-  color: #86c9bd;
+  color: var(--accent);
   opacity: 0.85;
 }
 
@@ -118,28 +105,11 @@
   font-size: var(--t-22);
 }
 
-.feed-readout {
-  top: 18%;
-}
-
-.stage-truth {
-  bottom: var(--s-3);
-}
-
-.ie-mirrorChip .status-dot {
-  border-color: var(--plate-ink-2);
-}
-
-.stage-truth .status-dot.is-on,
-.stage.is-active .feed-readout .status-dot {
-  border-color: #86c9bd;
-  background: #86c9bd;
-}
-
 .feedback {
   margin: 0;
   padding: var(--s-3) var(--s-4);
-  border-left: 3px solid var(--accent);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sheet);
   background: var(--accent-wash);
   color: var(--ink);
   font-size: var(--t-14);
@@ -263,8 +233,9 @@
 }
 
 .evidence-note {
-  padding-left: var(--s-4);
-  border-left: 3px solid var(--accent);
+  padding: var(--s-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sheet);
 }
 
 .rail-footer .ie-btn {

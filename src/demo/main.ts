@@ -24,7 +24,7 @@ type DemoState = {
 const profiles: Profile[] = [
   { name: 'None (clean)', description: 'Baseline mock feed, with no visual treatment.' },
   {
-    name: 'Anxiety — generalized / social',
+    name: 'Anxiety: generalized / social',
     description: 'Heightened tension and threat-scanning attention, kept bounded and controllable.',
   },
   {
@@ -71,7 +71,6 @@ function updateStatus(selector: string, value: string, active: boolean) {
   const item = getRequiredElement<HTMLElement>(selector)
   getRequiredElement<HTMLElement>('.status-value', item).textContent = value
   getRequiredElement<HTMLElement>('.status-value', item).classList.toggle('is-on', active)
-  getRequiredElement<HTMLElement>('.status-dot', item).classList.toggle('is-on', active)
 }
 
 function formatWeight(value: number) {
@@ -100,12 +99,12 @@ function renderStage(active: boolean, profile: Profile) {
   stage.classList.toggle('is-active', active)
   setReadout(
     '[data-feed-readout]',
-    active ? ' Simulated feed · 1280×720' : ' Demo preview · no device access',
+    active ? 'Simulated feed · 1280×720' : 'Demo preview · no device access',
   )
   getRequiredElement<HTMLElement>('[data-stage-profile]').textContent = active
     ? profile.name
     : 'Ready to simulate'
-  setReadout('[data-stage-truth]', active ? ' Simulation active' : ' Simulated input only')
+  setReadout('[data-stage-truth]', active ? 'Simulation active' : 'Simulated input only')
 }
 
 function renderStatuses(active: boolean) {

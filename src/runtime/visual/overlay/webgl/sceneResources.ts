@@ -4,7 +4,8 @@ import {
   MeshBasicMaterial,
   OrthographicCamera,
   Scene,
-  SRGBColorSpace,
+  LinearSRGBColorSpace,
+  NoColorSpace,
   VideoTexture,
   WebGLRenderer,
 } from 'three'
@@ -31,10 +32,15 @@ export function initializeWebGLScene(
   const scene = new Scene()
   const camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1)
   camera.position.z = 0
+  // The effect chain is authored in display-referred (sRGB-encoded) values: contrast pivots at
+  // mid-grey, haze and veil colours are the greys a viewer sees. Keep the video bytes untouched
+  // through the chain and skip the output encode, so passthrough is identical to the video and
+  // the effects act on the image as displayed rather than in linear light.
+  renderer.outputColorSpace = LinearSRGBColorSpace
   const videoTexture = new VideoTexture(video)
   videoTexture.minFilter = LinearFilter
   videoTexture.magFilter = LinearFilter
-  videoTexture.colorSpace = SRGBColorSpace
+  videoTexture.colorSpace = NoColorSpace
   startupDisposers.push(() => videoTexture.dispose())
   const videoPassthroughMaterial = createPassthroughMaterial(videoTexture)
   const initialMeshMaterial = usePassthrough

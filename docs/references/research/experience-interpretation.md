@@ -43,7 +43,7 @@ a visual or acoustic signature for a camera overlay.
 
 Micoulaud-Franchi, J.-A., et al. (2015). *Sensory gating in adult with attention-deficit/hyperactivity
 disorder: Event-evoked potential and perceptual experience reports comparisons with schizophrenia*.
-Biological Psychology, 107, 16–23. [Publication record](https://pubmed.ncbi.nlm.nih.gov/25766264/),
+Biological Psychology, 107, 16-23. [Publication record](https://pubmed.ncbi.nlm.nih.gov/25766264/),
 [DOI](https://doi.org/10.1016/j.biopsycho.2015.03.002). This small comparative adult study used an
 auditory electrophysiological measure and self-report. Its group findings do not establish universal
 sensory overload in ADHD, and do not validate visual jitter, moving markers, or sound modulation. That

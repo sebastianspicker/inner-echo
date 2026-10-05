@@ -85,6 +85,7 @@ interface OverlayInternal {
   couplingStrengthRef: Ref<number>
   maxFeedbackRef: Ref<number>
   safeModeRef: Ref<boolean>
+  intensityRef: Ref<number>
   diagnosticsActiveRef: Ref<boolean>
 }
 
@@ -101,6 +102,7 @@ function createInternal(): OverlayInternal {
     couplingStrengthRef: { current: DEFAULT_LIVE_SETTINGS.couplingStrength },
     maxFeedbackRef: { current: DEFAULT_LIVE_SETTINGS.maxFeedback },
     safeModeRef: { current: DEFAULT_LIVE_SETTINGS.safeMode },
+    intensityRef: { current: 0 },
     diagnosticsActiveRef: { current: DEFAULT_LIVE_SETTINGS.diagnosticsActive },
   }
 }
@@ -128,7 +130,12 @@ function pushParams(internal: OverlayInternal): void {
   internal.overlayControlRef.current.setParams({
     intensity: clamped,
     safeMode: settings.safeMode,
-    controlValues: { ...settings.controlValues, intensity: clamped, safeMode: settings.safeMode },
+    controlValues: {
+      ...settings.controlValues,
+      intensity: clamped,
+      safeMode: settings.safeMode,
+      reducedMotion: settings.reducedMotion,
+    },
     stressMode: settings.stressMode,
     safetyContext: getSafetyContext(settings.profile),
   })
@@ -158,6 +165,7 @@ function startLifecycle(
         couplingStrengthRef: internal.couplingStrengthRef,
         maxFeedbackRef: internal.maxFeedbackRef,
         safeModeRef: internal.safeModeRef,
+        intensityRef: internal.intensityRef,
         diagnosticsActiveRef: internal.diagnosticsActiveRef,
       },
       safeMode: settings.safeMode,
@@ -206,6 +214,9 @@ export function createOverlayManager(deps: OverlayManagerDeps): OverlayManager {
       internal.couplingStrengthRef.current = next.couplingStrength
       internal.maxFeedbackRef.current = next.maxFeedback
       internal.safeModeRef.current = next.safeMode
+      internal.intensityRef.current = next.profile
+        ? clampIntensity(next.profile, next.intensity, next.safeMode)
+        : 0
       internal.diagnosticsActiveRef.current = next.diagnosticsActive
       sync(internal, deps, false)
       pushParams(internal)

@@ -27,8 +27,8 @@ Hypothesis, or Artistic), and in-repository sources you can check.
 | Motif (node) | What the implementation does | Mapping claim | Experience evidence | Sources |
 |---|---|---|---|---|
 | `vignette` | Darkens edges to narrow the frame (static or gently modulated). | Artistic | Medium | `docs/references/dimensions/hypervigilance.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/vignette.md` |
-| `edge_sharpen` | Subtle edge enhancement (non-flickering). | Artistic | Medium | `docs/references/dimensions/hypervigilance.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/edge_sharpen.md` |
-| `grain` | Adds fine noise texture (clamped). | Artistic | Medium | `docs/references/dimensions/hypervigilance.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
+| `edge_sharpen` | Unsharp-mask detail gain up to 2.2x (non-flickering). | Artistic | Medium | `docs/references/dimensions/hypervigilance.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/edge_sharpen.md` |
+| `grain` | Adds fine midtone-weighted grain that re-seeds at a bounded rate (clamped). | Artistic | Medium | `docs/references/dimensions/hypervigilance.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
 | `noise_bed` | Adds quiet broadband noise floor (clamped). | Artistic | Medium | `docs/references/dimensions/hypervigilance.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/noise_bed.md` |
 | `highpass` | Attenuates low frequencies below cutoff (clamped). | Artistic | Medium | `docs/references/dimensions/hypervigilance.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/highpass.md` |
 | `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | Artistic | Medium | `docs/references/dimensions/hypervigilance.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |

@@ -38,9 +38,9 @@ meta-analysis.
 
 Selection criteria per dimension:
 
-- 6–10 peer-reviewed sources, including at least 2 reviews, meta-analyses, or guidelines and at least
+- 6-10 peer-reviewed sources, including at least 2 reviews, meta-analyses, or guidelines and at least
   2 primary empirical studies whenever feasible.
-- Prefer recent work (roughly 2016–2026), plus seminal psychometrics or phenomenology when needed
+- Prefer recent work (roughly 2016-2026), plus seminal psychometrics or phenomenology when needed
   (foundational scales, for example).
 - Exclude low-quality and popular-press material. If a key detail could not be verified, it was left
   out rather than guessed.
@@ -63,7 +63,7 @@ Definition & scope: Intrusion refers to involuntary, unwanted mental content (of
 - Obsessive intrusions: can overlap in “unwantedness,” but intrusion here is broader (images/memories/thoughts), not limited to OCD-like obsessional themes.
 
 Common measurement instruments (examples):
-- Impact of Event Scale–Revised (IES-R) Intrusion subscale (and total); also widely used as a trauma-response symptom measure.
+- Impact of Event Scale-Revised (IES-R) Intrusion subscale (and total); also widely used as a trauma-response symptom measure.
 - PTSD symptom instruments that include intrusion/re-experiencing items (e.g., PTSD checklists / clinician interviews).
 - Research paradigms: ecological momentary assessment (EMA) and diary-based intrusion monitoring.
 
@@ -99,7 +99,7 @@ Perceptual correlates that can be represented modestly:
 
 ### Safety clamps & Reduced Motion
 - No flicker/strobe; no rapid glitch cuts; avoid loud transients.
-- Clamp duration (e.g., 150–500 ms) and opacity (e.g., <= 10–15%).
+- Clamp duration (e.g., 150-500 ms) and opacity (e.g., <= 10-15%).
 - Reduced Motion option: replace any temporal modulation with a static, low-opacity overlay + softer audio-only cue.
 
 ## Motif consistency check
@@ -117,21 +117,21 @@ Avoid (high trigger risk / overly literal)
 Rationale: strong empirical and methodological base for intrusive memories/imagery and their measurement (reviews + EMA/diaries + experimental paradigms), but mapping to specific AV parameters remains inferential and must be tested with safety constraints.
 
 ## Bibliography (APA + DOI/PMID + stable links)
-- Brewin, C. R., Gregory, J. D., Lipton, M., & Burgess, N. (2010). Intrusive images in psychological disorders: Characteristics, neural mechanisms, and treatment implications. *Psychological Review, 117*(1), 210–232. https://doi.org/10.1037/a0018113
+- Brewin, C. R., Gregory, J. D., Lipton, M., & Burgess, N. (2010). Intrusive images in psychological disorders: Characteristics, neural mechanisms, and treatment implications. *Psychological Review, 117*(1), 210-232. https://doi.org/10.1037/a0018113
  DOI: 10.1037/a0018113
-- Holmes, E. A., & Bourne, C. (2008). Inducing and modulating intrusive emotional memories: A review of the trauma film paradigm. *Acta Psychologica, 127*(3), 553–566. https://doi.org/10.1016/j.actpsy.2007.11.002
+- Holmes, E. A., & Bourne, C. (2008). Inducing and modulating intrusive emotional memories: A review of the trauma film paradigm. *Acta Psychologica, 127*(3), 553-566. https://doi.org/10.1016/j.actpsy.2007.11.002
  DOI: 10.1016/j.actpsy.2007.11.002
-- James, E. L., Lau-Zhu, A., Clark, I. A., Visser, R. M., Hagenaars, M. A., & Holmes, E. A. (2016). The trauma film paradigm as an experimental psychopathology model of psychological trauma: Intrusive memories and beyond. *Clinical Psychology Review, 47*, 106–142. https://doi.org/10.1016/j.cpr.2016.04.010
+- James, E. L., Lau-Zhu, A., Clark, I. A., Visser, R. M., Hagenaars, M. A., & Holmes, E. A. (2016). The trauma film paradigm as an experimental psychopathology model of psychological trauma: Intrusive memories and beyond. *Clinical Psychology Review, 47*, 106-142. https://doi.org/10.1016/j.cpr.2016.04.010
  DOI: 10.1016/j.cpr.2016.04.010
 - Brewin, C. R. (2015). Re-experiencing traumatic events in PTSD: New avenues in research on intrusive memories and flashbacks. *European Journal of Psychotraumatology, 6*, 27180. https://doi.org/10.3402/ejpt.v6.27180
  DOI: 10.3402/ejpt.v6.27180
-- Holmes, E. A., Brewin, C. R., & Hennessy, R. G. (2004). Trauma films, information processing, and intrusive memory development. *Journal of Experimental Psychology: General, 133*(1), 3–22. https://doi.org/10.1037/0096-3445.133.1.3
+- Holmes, E. A., Brewin, C. R., & Hennessy, R. G. (2004). Trauma films, information processing, and intrusive memory development. *Journal of Experimental Psychology: General, 133*(1), 3-22. https://doi.org/10.1037/0096-3445.133.1.3
  DOI: 10.1037/0096-3445.133.1.3 | PMID: 14979748 | PubMed: https://pubmed.ncbi.nlm.nih.gov/14979748/
-- Kleim, B., Graham, B., Bryant, R. A., & Ehlers, A. (2013). Capturing intrusive re-experiencing in trauma survivors’ daily lives using ecological momentary assessment. *Journal of Abnormal Psychology, 122*(4), 998–1009. https://doi.org/10.1037/a0034957
+- Kleim, B., Graham, B., Bryant, R. A., & Ehlers, A. (2013). Capturing intrusive re-experiencing in trauma survivors’ daily lives using ecological momentary assessment. *Journal of Abnormal Psychology, 122*(4), 998-1009. https://doi.org/10.1037/a0034957
  DOI: 10.1037/a0034957 | PMID: 24364602 | PubMed: https://pubmed.ncbi.nlm.nih.gov/24364602/ | PMC: https://pmc.ncbi.nlm.nih.gov/articles/PMC3906879/
 - Kuijpers, K. F., et al. (2022). Using a daily diary for monitoring intrusive memories of trauma: A convergent validity study. *International Journal of Methods in Psychiatric Research, 32*(1), e1936. https://doi.org/10.1002/mpr.1936
  DOI: 10.1002/mpr.1936 | PMID: 35976618 | PubMed: https://pubmed.ncbi.nlm.nih.gov/35976618/ | PMC: https://pmc.ncbi.nlm.nih.gov/articles/PMC9976599/
-- Creamer, M., Bell, R., & Failla, S. (2003). Psychometric properties of the Impact of Event Scale–Revised. *Behaviour Research and Therapy, 41*(12), 1489–1496. https://doi.org/10.1016/j.brat.2003.07.010
+- Creamer, M., Bell, R., & Failla, S. (2003). Psychometric properties of the Impact of Event Scale-Revised. *Behaviour Research and Therapy, 41*(12), 1489-1496. https://doi.org/10.1016/j.brat.2003.07.010
  DOI: 10.1016/j.brat.2003.07.010 | PMID: 14705607 | PubMed: https://pubmed.ncbi.nlm.nih.gov/14705607/
 
 ```
@@ -203,13 +203,13 @@ Avoid
 Rationale: large literature base including reviews, psychometrics, and meta-analyses; core phenomenological features (repetition, stickiness, disengagement difficulty) are robust and measurable.
 
 ## Bibliography (APA + DOI/PMID + stable links)
-- Nolen-Hoeksema, S., Wisco, B. E., & Lyubomirsky, S. (2008). Rethinking rumination. *Perspectives on Psychological Science, 3*(5), 400–424. https://doi.org/10.1111/j.1745-6924.2008.00088.x
+- Nolen-Hoeksema, S., Wisco, B. E., & Lyubomirsky, S. (2008). Rethinking rumination. *Perspectives on Psychological Science, 3*(5), 400-424. https://doi.org/10.1111/j.1745-6924.2008.00088.x
  DOI: 10.1111/j.1745-6924.2008.00088.x
-- Treynor, W., Gonzalez, R., & Nolen-Hoeksema, S. (2003). Rumination reconsidered: A psychometric analysis. *Cognitive Therapy and Research, 27*, 247–259. https://doi.org/10.1023/A:1023910315561
+- Treynor, W., Gonzalez, R., & Nolen-Hoeksema, S. (2003). Rumination reconsidered: A psychometric analysis. *Cognitive Therapy and Research, 27*, 247-259. https://doi.org/10.1023/A:1023910315561
  DOI: 10.1023/A:1023910315561
-- Ehring, T., Zetsche, U., Weidacker, K., Wahl, K., Schönfeld, S., & Ehlers, A. (2011). The Perseverative Thinking Questionnaire (PTQ): Validation of a content-independent measure of repetitive negative thinking. *Journal of Behavior Therapy and Experimental Psychiatry, 42*(2), 225–232. https://doi.org/10.1016/j.jbtep.2010.12.003
+- Ehring, T., Zetsche, U., Weidacker, K., Wahl, K., Schönfeld, S., & Ehlers, A. (2011). The Perseverative Thinking Questionnaire (PTQ): Validation of a content-independent measure of repetitive negative thinking. *Journal of Behavior Therapy and Experimental Psychiatry, 42*(2), 225-232. https://doi.org/10.1016/j.jbtep.2010.12.003
  DOI: 10.1016/j.jbtep.2010.12.003
-- Kovács, L. N., Takacs, Z. K., Tóth, Z., Simon, E., Schmelowszky, Á., & Kökönyei, G. (2020). Rumination in major depressive and bipolar disorder – A meta-analysis. *Journal of Affective Disorders, 276*, 1131–1141. https://doi.org/10.1016/j.jad.2020.07.131
+- Kovács, L. N., Takacs, Z. K., Tóth, Z., Simon, E., Schmelowszky, Á., & Kökönyei, G. (2020). Rumination in major depressive and bipolar disorder - A meta-analysis. *Journal of Affective Disorders, 276*, 1131-1141. https://doi.org/10.1016/j.jad.2020.07.131
  DOI: 10.1016/j.jad.2020.07.131
 - Zhou, H.-X., Zheng, Q., Zhang, H., & Zang, Y.-F. (2020). Rumination and the default mode network: Meta-analysis of brain imaging studies and implications for depression. *NeuroImage, 206*, 116287. https://doi.org/10.1016/j.neuroimage.2019.116287
  DOI: 10.1016/j.neuroimage.2019.116287
@@ -287,7 +287,7 @@ Avoid
 Rationale: strong conceptual and emerging empirical support for reward/positive-affect alterations and for nuanced definitions; however, mechanisms are heterogeneous and mapping to AV parameters should be treated as a hypothesis.
 
 ## Bibliography (APA + DOI/PMID + stable links)
-- Litz, B. T. (1992). Emotional numbing in combat-related post-traumatic stress disorder: A critical review and reformulation. *Clinical Psychology Review, 12*(4), 417–432. https://doi.org/10.1016/0272-7358(92)90125-R
+- Litz, B. T. (1992). Emotional numbing in combat-related post-traumatic stress disorder: A critical review and reformulation. *Clinical Psychology Review, 12*(4), 417-432. https://doi.org/10.1016/0272-7358(92)90125-R
  DOI: 10.1016/0272-7358(92)90125-R
 - Nawijn, L., et al. (2021). The reward system and post-traumatic stress disorder: Does trauma affect reward functioning? *Biological Psychiatry: Cognitive Neuroscience and Neuroimaging.* https://doi.org/10.1177/2470547021996006
  DOI: 10.1177/2470547021996006
@@ -372,7 +372,7 @@ Rationale: strong evidence that subjective “fog” occurs transdiagnostically 
 ## Bibliography (APA + DOI/PMID + stable links)
 - Denno, P., Zhao, S., Husain, M., & Hampshire, A. (2025). Defining brain fog across medical conditions. *Trends in Neurosciences.* https://doi.org/10.1016/j.tins.2025.01.003
  DOI: 10.1016/j.tins.2025.01.003
-- Denno, P., & Hampshire, A. (2025). Defining Brain Fog – A Transdiagnostic Narrative Review. *European Psychiatry (Abstracts).* https://doi.org/10.1192/j.eurpsy.2025.1226
+- Denno, P., & Hampshire, A. (2025). Defining Brain Fog - A Transdiagnostic Narrative Review. *European Psychiatry (Abstracts).* https://doi.org/10.1192/j.eurpsy.2025.1226
  DOI: 10.1192/j.eurpsy.2025.1226
 - Jacob, S. N., Dodge, C. P., & Vasterling, J. J. (2019). Posttraumatic stress disorder and neurocognition: A bidirectional relationship? *Clinical Psychology Review, 72*, 101747. https://doi.org/10.1016/j.cpr.2019.101747
  DOI: 10.1016/j.cpr.2019.101747 | PMID: 31234094 | PubMed: https://pubmed.ncbi.nlm.nih.gov/31234094/
@@ -382,7 +382,7 @@ Rationale: strong evidence that subjective “fog” occurs transdiagnostically 
  DOI: 10.3389/fpsyt.2020.00176
 - (Meta-analysis) Assessing neurocognitive outcomes in PTSD: A multilevel meta-analytical approach. *European Journal of Psychotraumatology.* https://doi.org/10.1080/20008066.2025.2469978
  DOI: 10.1080/20008066.2025.2469978
-- Topiwala, A., et al. (2021). Subjective cognitive complaints in questionnaire: Relationship with brain structure, cognitive performance and depressive symptoms. *The American Journal of Geriatric Psychiatry, 29*(3), 217–226. https://doi.org/10.1016/j.jagp.2020.07.002
+- Topiwala, A., et al. (2021). Subjective cognitive complaints in questionnaire: Relationship with brain structure, cognitive performance and depressive symptoms. *The American Journal of Geriatric Psychiatry, 29*(3), 217-226. https://doi.org/10.1016/j.jagp.2020.07.002
  DOI: 10.1016/j.jagp.2020.07.002
 - Chung, C., et al. (2024). Cognitive Failures Questionnaire 2.0: Validation and improved measurement invariance. *Personality and Individual Differences, 224*, 112472. https://doi.org/10.1016/j.paid.2023.112472
  DOI: 10.1016/j.paid.2023.112472
@@ -455,13 +455,13 @@ Avoid
 Rationale: substantial perception literature with reviews/meta-analyses; direction/magnitude depends on arousal, attention, and context, so AV mapping must remain conservative and testable.
 
 ## Bibliography (APA + DOI/PMID + stable links)
-- Lake, J. I., LaBar, K. S., & Meck, W. H. (2016). Emotional modulation of interval timing and time perception. *Neuroscience & Biobehavioral Reviews, 64*, 403–420. https://doi.org/10.1016/j.neubiorev.2016.03.003
+- Lake, J. I., LaBar, K. S., & Meck, W. H. (2016). Emotional modulation of interval timing and time perception. *Neuroscience & Biobehavioral Reviews, 64*, 403-420. https://doi.org/10.1016/j.neubiorev.2016.03.003
  DOI: 10.1016/j.neubiorev.2016.03.003
 - Cui, S., et al. (2023). The effect of emotion on time perception: A meta-analysis. *Psychonomic Bulletin & Review.* https://doi.org/10.3758/s13423-022-02148-3
  DOI: 10.3758/s13423-022-02148-3
 - Sarigiannidis, I., Grillon, C., Ernst, M., Roiser, J. P., & Robinson, O. J. (2020). Anxiety makes time pass quicker while fear has no effect. *Cognition, 197*, 104116. https://doi.org/10.1016/j.cognition.2019.104116
  DOI: 10.1016/j.cognition.2019.104116
-- Bar-Haim, Y., Kerem, A., Lamy, D., & Zakay, D. (2010). When time slows down: The influence of threat on time perception in anxiety. *Cognition & Emotion, 24*(2), 255–263. https://doi.org/10.1080/02699930903387603
+- Bar-Haim, Y., Kerem, A., Lamy, D., & Zakay, D. (2010). When time slows down: The influence of threat on time perception in anxiety. *Cognition & Emotion, 24*(2), 255-263. https://doi.org/10.1080/02699930903387603
  DOI: 10.1080/02699930903387603
 - Antal, A., et al. (2025). Physiological stress and time perception: A systematic review. Psychoneuroendocrinology. https://doi.org/10.1016/j.psyneuen.2025.106664
  DOI: 10.1016/j.psyneuen.2025.106664
@@ -488,7 +488,7 @@ Common measurement instruments (examples):
 - Dissociation scales (DES) and state measures (CADSS) often include derealization components.
 
 ## Evidence highlights
-- Systematic reviews synthesize experimental evidence in depersonalisation–derealisation disorder (DDD), including affective, cognitive, autonomic, and neural responsivity alterations (review).
+- Systematic reviews synthesize experimental evidence in depersonalisation-derealisation disorder (DDD), including affective, cognitive, autonomic, and neural responsivity alterations (review).
 - Phenomenology-driven scale development work emphasizes derealization’s complexity and common co-features (e.g., altered emotional coloring, time/space experience) (psychometrics/phenomenology).
 - Systematic review of electrodermal activity suggests patterns consistent with emotional detachment alongside arousal/hypervigilance features (review).
 - Epidemiology reviews report derealization/depersonalization experiences are not rare in some clinical contexts and can be transient; prevalence estimates vary widely by sampling (systematic review).
@@ -538,13 +538,13 @@ Rationale: solid phenomenology/scales and growing systematic-review literature; 
 ## Bibliography (APA + DOI/PMID + stable links)
 - Merritt Millman, L. S., Huang, X., Wainipitapong, S., Medford, N., & Pick, S. (2024). Behavioural, autonomic, and neural responsivity in depersonalisation-derealisation disorder: A systematic review of experimental evidence. *Neuroscience & Biobehavioral Reviews.* https://doi.org/10.1016/j.neubiorev.2024.105783
  DOI: 10.1016/j.neubiorev.2024.105783
-- Sierra, M., & Berrios, G. E. (2000). The Cambridge Depersonalisation Scale: A new instrument for the measurement of depersonalisation. *Psychiatry Research, 93*(2), 153–164. https://doi.org/10.1016/S0165-1781(00)00100-1
+- Sierra, M., & Berrios, G. E. (2000). The Cambridge Depersonalisation Scale: A new instrument for the measurement of depersonalisation. *Psychiatry Research, 93*(2), 153-164. https://doi.org/10.1016/S0165-1781(00)00100-1
  DOI: 10.1016/S0165-1781(00)00100-1
 - Horn, M., Fovet, T., Vaiva, G., Thomas, P., Amad, A., & D’Hondt, F. (2020). Emotional response in depersonalization: A systematic review of electrodermal activity studies. *Journal of Affective Disorders.* https://doi.org/10.1016/j.jad.2020.07.064
  DOI: 10.1016/j.jad.2020.07.064 | PMID: 32739705 | PubMed: https://pubmed.ncbi.nlm.nih.gov/32739705/
 - Dalenberg, C. J., et al. (2023). The prevalence of depersonalisation and derealisation: A systematic review. *Journal of Trauma & Dissociation.* https://doi.org/10.1080/15299732.2022.2079796
  DOI: 10.1080/15299732.2022.2079796 | PMID: 35699456 | PubMed: https://pubmed.ncbi.nlm.nih.gov/35699456/
-- BMC Psychiatry (2024). Unraveling the brain dynamics of depersonalization–derealization disorder. *BMC Psychiatry.* https://doi.org/10.1186/s12888-024-06096-1
+- BMC Psychiatry (2024). Unraveling the brain dynamics of depersonalization-derealization disorder. *BMC Psychiatry.* https://doi.org/10.1186/s12888-024-06096-1
  DOI: 10.1186/s12888-024-06096-1
 - Medford, N., & Sierra, M. (2000s). Understanding and treating depersonalisation disorder. *Advances in Psychiatric Treatment.* (Use Cambridge Core publisher page for stable link; DOI varies by version.) https://www.cambridge.org/core/journals/advances-in-psychiatric-treatment/article/understanding-and-treating-depersonalisation-disorder/6216AE06994D1094873145C016CC1F57
 
@@ -616,7 +616,7 @@ Avoid
 Rationale: strong phenomenology/scales and systematic reviews; mechanistic specificity is limited and AV mapping must be conservative.
 
 ## Bibliography (APA + DOI/PMID + stable links)
-- Sierra, M., & Berrios, G. E. (2000). The Cambridge Depersonalisation Scale: A new instrument for the measurement of depersonalisation. *Psychiatry Research, 93*(2), 153–164. https://doi.org/10.1016/S0165-1781(00)00100-1
+- Sierra, M., & Berrios, G. E. (2000). The Cambridge Depersonalisation Scale: A new instrument for the measurement of depersonalisation. *Psychiatry Research, 93*(2), 153-164. https://doi.org/10.1016/S0165-1781(00)00100-1
  DOI: 10.1016/S0165-1781(00)00100-1
 - Merritt Millman, L. S., Huang, X., Wainipitapong, S., Medford, N., & Pick, S. (2024). Behavioural, autonomic, and neural responsivity in depersonalisation-derealisation disorder: A systematic review of experimental evidence. *Neuroscience & Biobehavioral Reviews.* https://doi.org/10.1016/j.neubiorev.2024.105783
  DOI: 10.1016/j.neubiorev.2024.105783
@@ -624,7 +624,7 @@ Rationale: strong phenomenology/scales and systematic reviews; mechanistic speci
  DOI: 10.1016/j.jad.2020.07.064 | PMID: 32739705 | PubMed: https://pubmed.ncbi.nlm.nih.gov/32739705/
 - Dalenberg, C. J., et al. (2023). The prevalence of depersonalisation and derealisation: A systematic review. *Journal of Trauma & Dissociation.* https://doi.org/10.1080/15299732.2022.2079796
  DOI: 10.1080/15299732.2022.2079796 | PMID: 35699456 | PubMed: https://pubmed.ncbi.nlm.nih.gov/35699456/
-- BMC Psychiatry (2024). Unraveling the brain dynamics of depersonalization–derealization disorder. *BMC Psychiatry.* https://doi.org/10.1186/s12888-024-06096-1
+- BMC Psychiatry (2024). Unraveling the brain dynamics of depersonalization-derealization disorder. *BMC Psychiatry.* https://doi.org/10.1186/s12888-024-06096-1
  DOI: 10.1186/s12888-024-06096-1
 - Medford, N., & Sierra, M. (2000s). Understanding and treating depersonalisation disorder. *Advances in Psychiatric Treatment.* https://www.cambridge.org/core/journals/advances-in-psychiatric-treatment/article/understanding-and-treating-depersonalisation-disorder/6216AE06994D1094873145C016CC1F57
 
@@ -697,9 +697,9 @@ Avoid
 Rationale: meta-analytic and empirical support for transdiagnostic sensory processing difficulties and subjective overload constructs; direct mapping from these to AV parameters is inferential and must be safety-tested.
 
 ## Bibliography (APA + DOI/PMID + stable links)
-- van den Boogert, F., Klein, K., Spaan, P., Sizoo, B., Bouman, Y. H. A., Hoogendijk, W. J. G., & Roza, S. J. (2022). Sensory processing difficulties in psychiatric disorders: A meta-analysis. *Journal of Psychiatric Research, 151*, 173–180. https://doi.org/10.1016/j.jpsychires.2022.04.020
+- van den Boogert, F., Klein, K., Spaan, P., Sizoo, B., Bouman, Y. H. A., Hoogendijk, W. J. G., & Roza, S. J. (2022). Sensory processing difficulties in psychiatric disorders: A meta-analysis. *Journal of Psychiatric Research, 151*, 173-180. https://doi.org/10.1016/j.jpsychires.2022.04.020
  DOI: 10.1016/j.jpsychires.2022.04.020
-- Micoulaud-Franchi, J.-A., et al. (2015). Sensory gating in adults with ADHD: Event-evoked potential and perceptual experience reports comparisons with schizophrenia. *Biological Psychology, 106*, 47–56. https://doi.org/10.1016/j.biopsycho.2015.03.002
+- Micoulaud-Franchi, J.-A., et al. (2015). Sensory gating in adults with ADHD: Event-evoked potential and perceptual experience reports comparisons with schizophrenia. *Biological Psychology, 106*, 47-56. https://doi.org/10.1016/j.biopsycho.2015.03.002
  DOI: 10.1016/j.biopsycho.2015.03.002
 - Kotz, S., et al. (2023). Validation of the Dutch Sensory Gating Inventory (D-SGI): Psychometric properties. *Psychology & Neuroscience / (Taylor & Francis).* https://doi.org/10.1080/23279095.2023.2235453
  DOI: 10.1080/23279095.2023.2235453
@@ -728,7 +728,7 @@ Common measurement instruments (examples):
 - Sustained attention tasks (e.g., SART/CPT) and mind-wandering measures (research context).
 
 ## Evidence highlights
-- Attentional Control Theory proposes anxiety shifts balance toward stimulus-driven attention and away from goal-directed control; a large meta-analysis supports an anxiety–attentional control deficit relationship, especially under high cognitive load (review/meta-analysis).
+- Attentional Control Theory proposes anxiety shifts balance toward stimulus-driven attention and away from goal-directed control; a large meta-analysis supports an anxiety-attentional control deficit relationship, especially under high cognitive load (review/meta-analysis).
 - ACS psychometric work supports focusing and shifting factors and links facets differentially to anxiety vs depression (psychometrics).
 - Chronic stress research using attention-network paradigms reports measurable performance/ERP differences consistent with reduced efficiency (primary).
 - Attention-network frameworks (alerting/orienting/executive) provide a principled decomposition for mapping “fragmentation” to specific control failures (foundational methods).
@@ -753,7 +753,7 @@ A cautious AV metaphor is gentle focus jitter + micro-interruptions (not camera 
 - Low grain: slight textural noise can imply competing micro-signals.
 
 ### Audio motifs (metaphor hypotheses)
-- Very low-depth tremolo (1–5 Hz): subtle amplitude modulation can suggest attentional instability without harshness.
+- Very low-depth tremolo (1-5 Hz): subtle amplitude modulation can suggest attentional instability without harshness.
 - Limiter: prevent fatigue from modulation + protect hearing.
 
 ### Safety clamps & Reduced Motion
@@ -778,9 +778,9 @@ Rationale: strong theory + meta-analytic evidence for attentional control defici
  DOI: 10.1016/j.cpr.2019.101754
 - Eysenck, M. W., Derakshan, N., Santos, R., & Calvo, M. G. (2007). Anxiety and cognitive performance: Attentional Control Theory. (Theory paper; use publisher copy.) https://tu-dresden.de/mn/psychologie/ifap/allgpsy/ressourcen/dateien/lehre/pruefungsliteratur_KN_2013/Eysenck-2007.pdf
  Stable link: author-hosted PDF.
-- Ólafsson, R. P., Smári, J., Guðmundsdóttir, F., Ólafsdóttir, G., Harðardóttir, H. L., & Einarsson, S. M. (2011). Self reported attentional control with the Attentional Control Scale: Factor structure and relationship with symptoms of anxiety and depression. *Journal of Anxiety Disorders, 25*(6), 777–782. https://doi.org/10.1016/j.janxdis.2011.03.013
+- Ólafsson, R. P., Smári, J., Guðmundsdóttir, F., Ólafsdóttir, G., Harðardóttir, H. L., & Einarsson, S. M. (2011). Self reported attentional control with the Attentional Control Scale: Factor structure and relationship with symptoms of anxiety and depression. *Journal of Anxiety Disorders, 25*(6), 777-782. https://doi.org/10.1016/j.janxdis.2011.03.013
  DOI: 10.1016/j.janxdis.2011.03.013
-- Fan, J., McCandliss, B. D., Sommer, T., Raz, A., & Posner, M. I. (2002). Testing the efficiency and independence of attentional networks. *Journal of Cognitive Neuroscience, 14*(3), 340–347. https://direct.mit.edu/jocn/article/14/3/340/3628/Testing-the-Efficiency-and-Independence-of
+- Fan, J., McCandliss, B. D., Sommer, T., Raz, A., & Posner, M. I. (2002). Testing the efficiency and independence of attentional networks. *Journal of Cognitive Neuroscience, 14*(3), 340-347. https://direct.mit.edu/jocn/article/14/3/340/3628/Testing-the-Efficiency-and-Independence-of
  Stable link: MIT Press publisher page.
 - Zhao, X., et al. (2020). Impact of chronic stress on attention control: Evidence from attention network task and ERPs. *Neuroscience Bulletin.* https://doi.org/10.1007/s12264-020-00549-9
  DOI: 10.1007/s12264-020-00549-9
@@ -801,8 +801,8 @@ Definition & scope: Compulsive loop refers to repetitive actions or mental check
 - Tics: often non-goal-directed motor phenomena (different mechanism/experience).
 
 Common measurement instruments (examples):
-- Yale–Brown Obsessive Compulsive Scale (Y-BOCS) for severity of obsessive/compulsive symptoms (clinician measure).
-- Obsessive Compulsive Inventory–Revised (OCI-R) as a self-report symptom measure.
+- Yale-Brown Obsessive Compulsive Scale (Y-BOCS) for severity of obsessive/compulsive symptoms (clinician measure).
+- Obsessive Compulsive Inventory-Revised (OCI-R) as a self-report symptom measure.
 - Behavioral tasks probing goal-directed vs habitual control (research).
 
 ## Evidence highlights
@@ -854,17 +854,17 @@ Avoid
 Rationale: strong guideline and mechanistic literature; core phenomenology of repetition/urge is well characterized. AV mapping remains a hypothesis but grounded in robust “repetition + control difficulty” evidence.
 
 ## Bibliography (APA + DOI/PMID + stable links)
-- Bandelow, B., et al. (2023). WFSBP guidelines for the pharmacological treatment of anxiety, obsessive–compulsive and posttraumatic stress disorders (Part II: OCD/PTSD). *World Journal of Biological Psychiatry, 24*(2), 118–134. https://doi.org/10.1080/15622975.2022.2086296
+- Bandelow, B., et al. (2023). WFSBP guidelines for the pharmacological treatment of anxiety, obsessive-compulsive and posttraumatic stress disorders (Part II: OCD/PTSD). *World Journal of Biological Psychiatry, 24*(2), 118-134. https://doi.org/10.1080/15622975.2022.2086296
  DOI: 10.1080/15622975.2022.2086296
 - NICE. (2005, updated). Obsessive-compulsive disorder and body dysmorphic disorder: Treatment (CG31). https://www.nice.org.uk/Guidance/CG31
  Stable guideline link.
-- Gillan, C. M., Robbins, T. W., Sahakian, B. J., van den Heuvel, O. A., & van Wingen, G. (2016). The role of habit in compulsivity. *European Neuropsychopharmacology, 26*(5), 828–840. https://doi.org/10.1016/j.euroneuro.2015.12.033
+- Gillan, C. M., Robbins, T. W., Sahakian, B. J., van den Heuvel, O. A., & van Wingen, G. (2016). The role of habit in compulsivity. *European Neuropsychopharmacology, 26*(5), 828-840. https://doi.org/10.1016/j.euroneuro.2015.12.033
  DOI: 10.1016/j.euroneuro.2015.12.033
-- Gillan, C. M., & Robbins, T. W. (2014). Goal-directed learning and obsessive–compulsive disorder. *Philosophical Transactions of the Royal Society B, 369*(1655), 20130475. https://doi.org/10.1098/rstb.2013.0475
+- Gillan, C. M., & Robbins, T. W. (2014). Goal-directed learning and obsessive-compulsive disorder. *Philosophical Transactions of the Royal Society B, 369*(1655), 20130475. https://doi.org/10.1098/rstb.2013.0475
  DOI: 10.1098/rstb.2013.0475
-- Gillan, C. M., et al. (2011). Disruption in the balance between goal-directed behavior and habit learning in obsessive–compulsive disorder. *American Journal of Psychiatry.* https://doi.org/10.1176/appi.ajp.2011.10071062
+- Gillan, C. M., et al. (2011). Disruption in the balance between goal-directed behavior and habit learning in obsessive-compulsive disorder. *American Journal of Psychiatry.* https://doi.org/10.1176/appi.ajp.2011.10071062
  DOI: 10.1176/appi.ajp.2011.10071062
-- Vaghi, M. M., et al. (2024). Action sequence learning, habits, and automaticity in obsessive–compulsive disorder. eLife. https://doi.org/10.7554/eLife.87346
+- Vaghi, M. M., et al. (2024). Action sequence learning, habits, and automaticity in obsessive-compulsive disorder. eLife. https://doi.org/10.7554/eLife.87346
  DOI: 10.7554/eLife.87346
 
 ```

@@ -8,7 +8,7 @@
 
 ## Technical summary
 
-Applies a shallow visual wave with bounded softening.
+Slow breath-like wave plus sparse rise-crest-release surges: bounded brightening, pull-in and peripheral narrowing.
 
 ## Evidence and implementation
 

@@ -17,5 +17,6 @@ export function createLowpass(context: BaseAudioContext, params: LowpassParams =
     cutoffRange: [300, 12000],
     defaultQ: DEFAULT_Q,
     qRange: [0.5, 1.2],
+    sweep: true,
   })
 }

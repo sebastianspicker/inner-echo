@@ -51,5 +51,6 @@ export function applyMicrophoneRoutingGain(
 }
 
 function microphonePreGain(sensitivity: number): number {
-  return 0.05 + 0.55 * clamp01(sensitivity)
+  // Speech at a laptop mic is ~0.03..0.1 RMS and used to land near -45 dBFS after the master gain.
+  return 0.5 + 5 * clamp01(sensitivity)
 }

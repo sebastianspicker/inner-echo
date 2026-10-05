@@ -28,9 +28,9 @@ Hypothesis, or Artistic), and in-repository sources you can check.
 |---|---|---|---|---|
 | `pulse` | Slow, bounded envelope modulation (no strobe). | Artistic | High | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/pulse.md` |
 | `vignette` | Darkens edges to narrow the frame (static or gently modulated). | Artistic | High | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/vignette.md` |
-| `soft_blur` | Applies mild blur to reduce sharp detail (clamped). | Artistic | High | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/soft_blur.md` |
-| `grain` | Adds fine noise texture (clamped). | Artistic | High | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
-| `lowpass` | Attenuates high frequencies above cutoff (clamped). | Artistic | High | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |
+| `soft_blur` | 13-tap disc blur up to about 1.4% of the frame height (clamped). | Artistic | High | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/soft_blur.md` |
+| `grain` | Adds fine midtone-weighted grain that re-seeds at a bounded rate (clamped). | Artistic | High | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
+| `lowpass` | Attenuates high frequencies above cutoff, with an optional slow bounded sweep (clamped). | Artistic | High | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |
 | `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | Artistic | High | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |
 | `reverb` | Adds gentle space/decay (clamped). | Artistic | High | `docs/references/dimensions/panic_peaks.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/reverb.md` |
 

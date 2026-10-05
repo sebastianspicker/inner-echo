@@ -26,6 +26,18 @@ export function createEffectMaterial(
   })
 }
 
+/** Create the node material on first use, otherwise rebind the current pass input. */
+export function acquireEffectMaterial(
+  material: ShaderMaterial | null,
+  inputTexture: Texture,
+  fragmentShader: string,
+  uniforms: () => UniformValues,
+): ShaderMaterial {
+  if (!material) return createEffectMaterial(inputTexture, fragmentShader, uniforms())
+  bindInputTexture(material, inputTexture)
+  return material
+}
+
 /** Rebind the current pass input whenever the pipeline reuses a node material. */
 export function bindInputTexture(material: ShaderMaterial, inputTexture: Texture): void {
   material.uniforms.u_map.value = inputTexture

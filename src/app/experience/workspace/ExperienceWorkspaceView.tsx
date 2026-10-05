@@ -236,9 +236,6 @@ function WorkspacePreview({ model }: ModelProps) {
   return (
     <section className="ie-previewSection" aria-labelledby="preview-title">
       <h2 id="preview-title" className="ie-sectionHead">
-        <span className="ie-sectionNo ie-ring" aria-hidden="true">
-          3
-        </span>
         Preview <span className="ie-previewOptional">(camera optional)</span>
       </h2>
       <figure className="ie-plate">
@@ -297,12 +294,7 @@ function WorkspaceChoices({ model }: ModelProps) {
         profile={model.profileLoad.profile}
         isLoading={model.profileLoad.isProfileLoading}
       />
-      <h2 className="ie-sectionHead">
-        <span className="ie-sectionNo ie-ring" aria-hidden="true">
-          1
-        </span>
-        Pattern
-      </h2>
+      <h2 className="ie-sectionHead">Pattern</h2>
       <ComposerControls model={model} />
       <ComposerReport model={model} />
     </div>

@@ -8,7 +8,7 @@
 
 ## Technical summary
 
-Adds soft fog/veil (clamped).
+Pale fog veil whose density drifts very slowly at large scale (clamped).
 
 ## Evidence and implementation
 

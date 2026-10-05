@@ -1,6 +1,7 @@
 /**
- * Temporal smear: blends with the previous frame using feedback and optional jitter.
- * Uses ping-pong RenderTargets managed by the pipeline; this node only provides the material.
+ * Temporal smear: a faint, continuous afterimage trail with an optional slow drift of the
+ * retained frame. Uses the pipeline's ping-pong render targets; this node only provides
+ * the material.
  */
 
 import { TemporalBlendNode } from './temporalBlendNode'
@@ -9,9 +10,8 @@ export class TemporalSmearNode extends TemporalBlendNode {
   readonly nodeName = 'temporal_smear'
   protected readonly config = {
     feedbackLimit: 'max_temporal_feedback' as const,
-    jitterX: 12.3,
-    jitterY: 7.7,
-    initialFeedback: 0.5,
-    wrapAt: 1000,
+    tauMaxSeconds: 0.6,
+    recurrenceBoost: 0,
+    recurrencePeriodSeconds: 1,
   }
 }

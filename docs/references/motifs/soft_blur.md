@@ -8,7 +8,7 @@
 
 ## Technical summary
 
-Applies mild blur to reduce sharp detail (clamped).
+13-tap disc blur up to about 1.4% of the frame height (clamped).
 
 ## Evidence and implementation
 

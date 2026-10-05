@@ -24,7 +24,7 @@ Low-depth pitch/phase wobble (clamped).
 
 ### Used by condition presets
 
-Not currently referenced by any condition preset.
+- Depression-related energy and concentration (`depression`): `docs/references/conditions/depression.md`
 
 ## Scientific sources (peer-reviewed, from the in-repo corpus)
 

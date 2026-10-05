@@ -10,7 +10,7 @@
 - Scope: a curated composition of experience dimensions and conservative audiovisual motifs.
 - Exclusions: not a diagnostic model, therapy tool, or statement about what a condition looks like.
 
-Subtle image persistence and a quiet echo offer an artistic interpretation of unwanted recurrence. OCD can involve varied intrusive thoughts and mental or physical compulsions; this collection does not equate it with tidiness or order.
+An image that keeps resurfacing, restrained abstract intrusions and a quiet repeating echo offer an artistic interpretation of unwanted recurrence. These experiences vary; OCD does not have a single visual or auditory form.
 
 Profile weights express authoring emphasis, not symptom prevalence, severity, or diagnostic probability.
 
@@ -32,10 +32,12 @@ These motifs come from the actual bundled video and enabled audio stacks, so rel
 may differ. Each effect is an artistic or engineering choice; evidence for a reported experience does
 not validate its visual form, sound, or parameter values.
 
+- `color_grade`: Adjusts saturation/contrast/tonal balance (clamped).: `docs/references/motifs/color_grade.md`
 - `compressor_limiter`: Reduces peaks and smooths dynamics (safety-first).: `docs/references/motifs/compressor_limiter.md`
 - `delay`: Short echo with low feedback/mix (clamped).: `docs/references/motifs/delay.md`
-- `feedback_loop`: Low-feedback image recurrence (bounded; reduced-motion disables).: `docs/references/motifs/feedback_loop.md`
-- `lowpass`: Attenuates high frequencies above cutoff (clamped).: `docs/references/motifs/lowpass.md`
+- `feedback_loop`: Short afterimage whose persistence lengthens on a slow cycle so the image resurfaces (bounded; reduced-motion disables).: `docs/references/motifs/feedback_loop.md`
+- `interference`: Slowly drifting soft bands and faint line static with sparse eased micro-bursts (clamped; no strobe).: `docs/references/motifs/interference.md`
+- `lowpass`: Attenuates high frequencies above cutoff, with an optional slow bounded sweep (clamped).: `docs/references/motifs/lowpass.md`
 - `vignette`: Darkens edges to narrow the frame (static or gently modulated).: `docs/references/motifs/vignette.md`
 
 ## Safety notes / warnings shown in product

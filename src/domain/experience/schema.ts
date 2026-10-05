@@ -72,9 +72,21 @@ export const uiControlSchema = z.object({
 export const audioStackNodeSchema = stackNodeSchema
 
 /** Audio stack config in profile: input (synth), master volume, chain of FX nodes. */
+/** Profile-specific synth source: base pitch, beating, timbre and sparse swells. */
+export const synthSchema = z.object({
+  frequency: z.number().min(55).max(440).optional(),
+  /** Detune in cents for the second oscillator. */
+  detune: z.number().min(0).max(40).optional(),
+  waveform: z.enum(['sine', 'triangle']).optional(),
+  brightness: z.number().min(0).max(1).optional(),
+  /** Seconds between swells (0 = none). */
+  swell_interval: z.number().min(0).max(30).optional(),
+})
+
 export const audioStackSchema = z.object({
   enabled: z.boolean().optional(),
   input: z.enum(['synth']).optional(),
+  synth: synthSchema.optional(),
   master: z.object({ volume: z.number().min(0).max(1).optional() }).optional(),
   chain: z.array(audioStackNodeSchema).max(20).optional(),
 })
@@ -235,6 +247,7 @@ export const profileSchema = z
   .passthrough()
 
 export type UIControl = z.infer<typeof uiControlSchema>
+export type SynthConfig = z.infer<typeof synthSchema>
 export type AudioStackConfig = z.infer<typeof audioStackSchema>
 
 export type CatalogEntry = z.infer<typeof catalogEntrySchema>

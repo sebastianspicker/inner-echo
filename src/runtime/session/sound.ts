@@ -53,6 +53,7 @@ export interface SoundManager {
   disableSound(): void
   setSoundEnabled(enabled: boolean): void
   setMasterVolume(value: number): void
+  setIntensity(value: number): void
   enableMic(): void
   disableMic(): void
   setInputMode(mode: AudioInputMode): void
@@ -74,6 +75,7 @@ interface SoundState {
   error: string | null
   enabled: boolean
   masterVolume: number
+  intensity: number
   mic: MicStatus
   micError: string | null
   inputMode: AudioInputMode
@@ -90,6 +92,7 @@ function createInitialState(): SoundState {
     error: null,
     enabled: false,
     masterVolume: 0.22,
+    intensity: 1,
     mic: 'off',
     micError: null,
     inputMode: 'synth',
@@ -166,6 +169,7 @@ function install(
   state.masterVolume = selectMasterVolume(state.profile, requested)
   state.status = 'on'
   state.control.setMasterVolume(state.masterVolume)
+  state.control.setIntensity(state.intensity)
   state.control.setInputMode(state.inputMode)
   state.control.setMicSensitivity(state.micSensitivity)
   state.control.setMicGate(state.micGate)
@@ -229,7 +233,12 @@ function disableSound(state: SoundState, deps: SoundManagerDeps): void {
 
 type EngineActions = Pick<
   SoundManager,
-  'setProfile' | 'enableSound' | 'disableSound' | 'setSoundEnabled' | 'setMasterVolume'
+  | 'setProfile'
+  | 'enableSound'
+  | 'disableSound'
+  | 'setSoundEnabled'
+  | 'setMasterVolume'
+  | 'setIntensity'
 >
 type LifecycleActions = Pick<SoundManager, 'stopForStopEverything' | 'releaseEngine'>
 type MicActions = Pick<
@@ -262,6 +271,10 @@ function createEngineActions(state: SoundState, deps: SoundManagerDeps): EngineA
       state.masterVolume = value
       state.control?.setMasterVolume(value)
       deps.notify()
+    },
+    setIntensity(value) {
+      state.intensity = value
+      state.control?.setIntensity(value)
     },
   }
 }

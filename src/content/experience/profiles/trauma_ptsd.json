@@ -1,34 +1,25 @@
 {
   "id": "trauma_ptsd",
   "label": "PTSD-related experiences",
-  "summary": "Fine static texture and restrained detail offer an artistic interpretation of heightened alertness. This collection does not replay memories or represent the full range of PTSD experiences.",
+  "summary": "Crisp detail, persistent static texture, a watchful narrowing and sparse abstract intrusions over a steady hiss with a faint tick offer an artistic interpretation of heightened alertness. These experiences vary; there is no single visual or auditory form.",
   "framing": {
     "type": "metaphor",
     "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
   },
   "experience_dimensions": [
-    {
-      "id": "hyperarousal",
-      "weight": 0.8
-    },
-    {
-      "id": "hypervigilance",
-      "weight": 0.6
-    },
-    {
-      "id": "intrusion",
-      "weight": 0.55
-    }
+    { "id": "hyperarousal", "weight": 0.8 },
+    { "id": "hypervigilance", "weight": 0.6 },
+    { "id": "intrusion", "weight": 0.55 }
   ],
   "safety": {
-    "intensity_default": 0.35,
-    "intensity_max": 0.62,
+    "intensity_default": 0.5,
+    "intensity_max": 1,
     "warnings": [
       "Start with low intensity and volume; sound is optional.",
       "Use Reduced Motion for a steadier image. Stop Everything is always available."
     ],
     "safe_mode_clamps": {
-      "max_intensity": 0.62,
+      "max_intensity": 0.8,
       "max_temporal_feedback": 0.25,
       "max_chroma": 0.12,
       "max_contrast": 0.25,
@@ -48,7 +39,8 @@
         "feedback_loop",
         "pulse",
         "focus_jitter",
-        "intrusion_burst"
+        "intrusion_burst",
+        "interference"
       ],
       "note": "Reduced Motion removes time-based feedback/jitter nodes and keeps a calmer static overlay."
     }
@@ -63,57 +55,62 @@
         "max": 1,
         "step": 0.01
       },
+      { "id": "safe_mode", "type": "toggle", "label": "Safe Mode" },
+      { "id": "reduced_motion", "type": "toggle", "label": "Reduced Motion" },
+      { "id": "audio_enabled", "type": "toggle", "label": "Audio (optional)" },
       {
-        "id": "safe_mode",
-        "type": "toggle",
-        "label": "Safe Mode"
-      },
-      {
-        "id": "reduced_motion",
-        "type": "toggle",
-        "label": "Reduced Motion"
-      },
-      {
-        "id": "audio_enabled",
-        "type": "toggle",
-        "label": "Audio (optional)"
+        "id": "intrusion_texture",
+        "type": "slider",
+        "label": "Intrusion texture",
+        "min": 0,
+        "max": 0.2,
+        "step": 0.01,
+        "target": "video.interference.amount"
       },
       {
         "id": "intrusion_burst",
         "type": "slider",
         "label": "Texture amount",
         "min": 0,
-        "max": 0.06,
+        "max": 0.2,
         "step": 0.01,
         "target": "video.grain.amount"
+      },
+      {
+        "id": "detail_gain",
+        "type": "slider",
+        "label": "Detail gain",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "target": "video.edge_sharpen.amount"
       }
     ]
   },
   "video_stack": [
+    { "id": "sharpen", "node": "edge_sharpen", "params": { "amount": 0.45 } },
+    { "id": "grain", "node": "grain", "params": { "amount": 0.08, "scale": 1, "speed": 0 } },
+    { "id": "vignette", "node": "vignette", "params": { "amount": 0.28, "softness": 0.8 } },
     {
-      "id": "sharpen",
-      "node": "edge_sharpen",
+      "id": "interference",
+      "node": "interference",
       "params": {
-        "amount": 0.08
-      }
-    },
-    {
-      "id": "grain",
-      "node": "grain",
-      "params": {
-        "amount": 0.012,
-        "scale": 1.15,
-        "speed": 0
+        "amount": 0.14,
+        "banding": 0.05,
+        "smoothing": 0.92,
+        "burst_probability": 0.12,
+        "burst_duration_ms": 360,
+        "burst_min_gap_ms": 2500
       }
     },
     {
       "id": "grade",
       "node": "color_grade",
       "params": {
-        "contrast": 0.08,
-        "saturation": -0.05,
-        "brightness": -0.01,
-        "temperature": 0,
+        "contrast": 0.16,
+        "saturation": -0.1,
+        "brightness": -0.03,
+        "temperature": -0.08,
         "tint": 0
       }
     }
@@ -121,39 +118,25 @@
   "audio_stack": {
     "enabled": true,
     "input": "synth",
-    "master": {
-      "volume": 0.18
+    "synth": {
+      "frequency": 174.6,
+      "detune": 4,
+      "waveform": "triangle",
+      "brightness": 0.7,
+      "swell_interval": 0
     },
+    "master": { "volume": 0.3 },
     "chain": [
-      {
-        "node": "noise_bed",
-        "params": {
-          "level": 0.02,
-          "color": "pink"
-        }
-      },
-      {
-        "node": "highpass",
-        "params": {
-          "cutoff": 170,
-          "q": 0.7
-        }
-      },
+      { "node": "noise_bed", "params": { "level": 0.055, "color": "pink" } },
+      { "node": "highpass", "params": { "cutoff": 260, "q": 0.9 } },
+      { "node": "delay", "params": { "time": 0.09, "feedback": 0.04, "mix": 0.05 } },
       {
         "node": "compressor_limiter",
-        "params": {
-          "threshold": -22,
-          "ratio": 4,
-          "attack": 0.015,
-          "release": 0.25,
-          "ceiling": -8
-        }
+        "params": { "threshold": -24, "ratio": 6, "attack": 0.005, "release": 0.2, "ceiling": -8 }
       }
     ]
   },
-  "reactive": {
-    "analyser_to_params": []
-  },
+  "reactive": { "analyser_to_params": [] },
   "references": {
     "dimensions": [
       "docs/references/dimensions/hyperarousal.md",

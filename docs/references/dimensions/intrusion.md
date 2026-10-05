@@ -26,9 +26,9 @@ Hypothesis, or Artistic), and in-repository sources you can check.
 
 | Motif (node) | What the implementation does | Mapping claim | Experience evidence | Sources |
 |---|---|---|---|---|
-| `interference` | Adds gentle distortion artifacts (clamped; no strobe). | Artistic | Medium | `docs/references/dimensions/intrusion.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/interference.md` |
+| `interference` | Slowly drifting soft bands and faint line static with sparse eased micro-bursts (clamped; no strobe). | Artistic | Medium | `docs/references/dimensions/intrusion.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/interference.md` |
 | `vignette` | Darkens edges to narrow the frame (static or gently modulated). | Artistic | Medium | `docs/references/dimensions/intrusion.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/vignette.md` |
-| `grain` | Adds fine noise texture (clamped). | Artistic | Medium | `docs/references/dimensions/intrusion.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
+| `grain` | Adds fine midtone-weighted grain that re-seeds at a bounded rate (clamped). | Artistic | Medium | `docs/references/dimensions/intrusion.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
 | `delay` | Short echo with low feedback/mix (clamped). | Artistic | Medium | `docs/references/dimensions/intrusion.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/delay.md` |
 | `noise_bed` | Adds quiet broadband noise floor (clamped). | Artistic | Medium | `docs/references/dimensions/intrusion.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/noise_bed.md` |
 | `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | Artistic | Medium | `docs/references/dimensions/intrusion.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |

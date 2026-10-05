@@ -41,9 +41,16 @@ resource or parameter behavior is a defect.
 Profile `safe_mode_clamps`, `reduced_motion_policy`, schema ranges, composer policy, user controls,
 and engine limits form one safety contract. A profile cannot opt out of engine limits.
 
-Safe Mode is on by default and restricts configured intensity, feedback, contrast, motion, and audio
-ranges. It does not guarantee that every user will find an effect comfortable; warnings, intensity
-control, Reduced Motion, and Stop Everything remain necessary.
+Safe Mode is on by default. It damps the effective intensity proportionally (the slider keeps its
+full travel, but 100% means the profile's `max_intensity` share of the full effect) and restricts
+feedback, contrast, motion, and audio ranges. Profile values describe the full-intensity state, and
+the Intensity slider scales video nodes and the audio chain alike: noise levels, effect mixes and
+modulation depths scale linearly, and filters open toward neutral as intensity falls. For the
+temporal nodes, the clamped `feedback` value selects how long a retained image lingers (a
+frame-rate-independent time constant, never above 1.2 s) rather than a raw per-frame mix weight,
+so persistence stays bounded on every display refresh rate. Safe Mode does
+not guarantee that every user will find an effect comfortable; warnings, intensity control, Reduced
+Motion, and Stop Everything remain necessary.
 
 A new motion-sensitive node must define Reduced Motion behavior and include a focused test or
 contract check.

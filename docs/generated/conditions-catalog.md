@@ -8,14 +8,14 @@ Every condition with its label, tags, safety intensity maximum, and nodes.
 
 | id | label | tags | safety (intensity max) | nodes |
 |----|-------|------|------------------------|-------|
-| adhd | ADHD-related attention experiences | attention_fragmentation | 0.65 | color_grade, compressor_limiter, edge_sharpen, highpass, lowpass, noise_bed, salience_competition |
-| anxiety | Anxiety-related tension and worry | hyperarousal, hypervigilance, rumination_loop | 0.65 | color_grade, compressor_limiter, edge_sharpen, gaze_tunnel, grain, highpass, noise_bed, tremolo |
-| depression | Depression-related energy and concentration | emotional_numbing, cognitive_fog, time_dilation | 0.7 | color_grade, compressor_limiter, grain, haze, lowpass, noise_bed, reverb, soft_blur |
-| dpdr | Depersonalization / derealization experiences | derealization, depersonalization | 0.58 | color_grade, compressor_limiter, glass_veil, haze, lowpass, reverb |
+| adhd | ADHD-related attention experiences | attention_fragmentation | 1 | color_grade, compressor_limiter, edge_sharpen, grain, highpass, lowpass, noise_bed, salience_competition |
+| anxiety | Anxiety-related tension and worry | hyperarousal, hypervigilance, rumination_loop | 1 | color_grade, compressor_limiter, delay, edge_sharpen, gaze_tunnel, grain, highpass, noise_bed, tremolo |
+| depression | Depression-related energy and concentration | emotional_numbing, cognitive_fog, time_dilation | 1 | color_grade, compressor_limiter, flutter, grain, haze, lowpass, noise_bed, reverb, soft_blur, temporal_smear, vignette |
+| dpdr | Depersonalization / derealization experiences | derealization, depersonalization | 1 | color_grade, compressor_limiter, delay, glass_veil, haze, lowpass, reverb, vignette |
 | none | None (Clean) | baseline | 0 | - |
-| ocd | OCD-related intrusive thoughts and repetition | intrusion, compulsive_loop | 0.66 | compressor_limiter, delay, feedback_loop, lowpass, vignette |
-| panic | Panic-related alarm | panic_peaks, hyperarousal | 0.6 | color_grade, compressor_limiter, lowpass, noise_bed, reverb, somatic_pulse |
-| trauma_ptsd | PTSD-related experiences | hyperarousal, hypervigilance, intrusion | 0.62 | color_grade, compressor_limiter, edge_sharpen, grain, highpass, noise_bed |
+| ocd | OCD-related intrusive thoughts and repetition | intrusion, compulsive_loop | 1 | color_grade, compressor_limiter, delay, feedback_loop, interference, lowpass, vignette |
+| panic | Panic-related alarm | panic_peaks, hyperarousal | 1 | color_grade, compressor_limiter, lowpass, noise_bed, reverb, somatic_pulse, vignette |
+| trauma_ptsd | PTSD-related experiences | hyperarousal, hypervigilance, intrusion | 1 | color_grade, compressor_limiter, delay, edge_sharpen, grain, highpass, interference, noise_bed, vignette |
 
 ## Per-condition details
 
@@ -28,7 +28,7 @@ Warnings:
 - Start with low intensity and volume; sound is optional.
 - Use Reduced Motion for a steadier image. Stop Everything is always available.
 
-Nodes: color_grade, compressor_limiter, edge_sharpen, highpass, lowpass, noise_bed, salience_competition
+Nodes: color_grade, compressor_limiter, edge_sharpen, grain, highpass, lowpass, noise_bed, salience_competition
 
 ### Anxiety-related tension and worry (`anxiety`)
 
@@ -39,7 +39,7 @@ Warnings:
 - Start with low intensity and volume; sound is optional.
 - Use Reduced Motion for a steadier image. Stop Everything is always available.
 
-Nodes: color_grade, compressor_limiter, edge_sharpen, gaze_tunnel, grain, highpass, noise_bed, tremolo
+Nodes: color_grade, compressor_limiter, delay, edge_sharpen, gaze_tunnel, grain, highpass, noise_bed, tremolo
 
 ### Depression-related energy and concentration (`depression`)
 
@@ -50,7 +50,7 @@ Warnings:
 - Start with low intensity and volume; sound is optional.
 - Use Reduced Motion for a steadier image. Stop Everything is always available.
 
-Nodes: color_grade, compressor_limiter, grain, haze, lowpass, noise_bed, reverb, soft_blur
+Nodes: color_grade, compressor_limiter, flutter, grain, haze, lowpass, noise_bed, reverb, soft_blur, temporal_smear, vignette
 
 ### Depersonalization / derealization experiences (`dpdr`)
 
@@ -61,7 +61,7 @@ Warnings:
 - Start with low intensity and volume; sound is optional.
 - Use Reduced Motion for a steadier image. Stop Everything is always available.
 
-Nodes: color_grade, compressor_limiter, glass_veil, haze, lowpass, reverb
+Nodes: color_grade, compressor_limiter, delay, glass_veil, haze, lowpass, reverb, vignette
 
 ### None (Clean) (`none`)
 
@@ -78,7 +78,7 @@ Warnings:
 - Start with low intensity and volume; sound is optional.
 - Use Reduced Motion for a steadier image. Stop Everything is always available.
 
-Nodes: compressor_limiter, delay, feedback_loop, lowpass, vignette
+Nodes: color_grade, compressor_limiter, delay, feedback_loop, interference, lowpass, vignette
 
 ### Panic-related alarm (`panic`)
 
@@ -89,7 +89,7 @@ Warnings:
 - Start with low intensity and volume; sound is optional.
 - Use Reduced Motion for a steadier image. Stop Everything is always available.
 
-Nodes: color_grade, compressor_limiter, lowpass, noise_bed, reverb, somatic_pulse
+Nodes: color_grade, compressor_limiter, lowpass, noise_bed, reverb, somatic_pulse, vignette
 
 ### PTSD-related experiences (`trauma_ptsd`)
 
@@ -100,4 +100,4 @@ Warnings:
 - Start with low intensity and volume; sound is optional.
 - Use Reduced Motion for a steadier image. Stop Everything is always available.
 
-Nodes: color_grade, compressor_limiter, edge_sharpen, grain, highpass, noise_bed
+Nodes: color_grade, compressor_limiter, delay, edge_sharpen, grain, highpass, interference, noise_bed, vignette

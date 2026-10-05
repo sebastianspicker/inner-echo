@@ -27,7 +27,10 @@ Short echo with low feedback/mix (clamped).
 
 ### Used by condition presets
 
+- Anxiety-related tension and worry (`anxiety`): `docs/references/conditions/anxiety.md`
+- Depersonalization / derealization experiences (`dpdr`): `docs/references/conditions/dpdr.md`
 - OCD-related intrusive thoughts and repetition (`ocd`): `docs/references/conditions/ocd.md`
+- PTSD-related experiences (`trauma_ptsd`): `docs/references/conditions/trauma_ptsd.md`
 
 ## Scientific sources (peer-reviewed, from the in-repo corpus)
 

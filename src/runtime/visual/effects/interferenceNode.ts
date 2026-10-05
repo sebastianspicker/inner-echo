@@ -1,13 +1,10 @@
 /**
- * Abstract, non-strobing interference bands with optional micro-bursts.
+ * Interference: an abstract, restrained texture for intrusion. Soft horizontal bands drift
+ * slowly across the frame over a faint line static; a sparse, eased micro-burst briefly
+ * thickens the static and lifts the bands, then dissipates. Never strobes: burst envelopes
+ * are at least 120 ms long and separated by a minimum gap.
  *
- * Params:
- * - amount
- * - banding
- * - smoothing
- * - burst_probability
- * - burst_duration_ms
- * - burst_min_gap_ms
+ * Params: amount, banding, smoothing, burst_probability, burst_duration_ms, burst_min_gap_ms.
  */
 
 import type { VideoNode, VideoNodeParams } from './VideoNode'
@@ -34,14 +31,17 @@ void main() {
   vec2 uv = vUv * u_uvScale + u_uvOffset;
   vec4 color = texture2D(u_map, uv);
 
-  // Horizontal bands + subtle static grain; time term is smoothed (slow).
-  float bandFreq = mix(6.0, 18.0, clamp(u_banding, 0.0, 1.0));
-  float t = u_time * mix(0.15, 0.55, 1.0 - u_smoothing);
-  float band = sin((uv.y * bandFreq + t) * 6.2831853) * 0.5 + 0.5;
-  float n = hash(vec2(uv.y * 93.7, uv.x * 17.3)) - 0.5;
+  // Slow drifting bands; smoothing slows the drift further.
+  float bandFreq = mix(4.0, 14.0, clamp(u_banding, 0.0, 1.0));
+  float t = u_time * mix(0.08, 0.3, 1.0 - u_smoothing);
+  float band = sin((vUv.y * bandFreq + t) * 6.2831853);
 
-  float strength = u_amount * (0.65 + 0.35 * u_burst);
-  float lift = (band - 0.5) * 0.46 * strength + n * 0.16 * strength;
+  // Faint line static, re-seeded 3 times per second (mean luminance unchanged).
+  float seed = floor(u_time * 3.0);
+  float stat = hash(vec2(floor(vUv.y * 240.0) + seed * 0.37, floor(vUv.x * 6.0) + seed)) - 0.5;
+
+  float strength = u_amount * (0.6 + 0.4 * u_burst);
+  float lift = band * 0.3 * strength + stat * 0.35 * strength * (0.4 + 0.6 * u_burst);
   color.rgb += lift;
 
   gl_FragColor = clamp(color, 0.0, 1.0);

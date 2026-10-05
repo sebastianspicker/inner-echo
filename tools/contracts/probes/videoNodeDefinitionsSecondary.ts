@@ -84,12 +84,12 @@ export const SECONDARY_VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         max: 0.75,
       }),
       edge_gain: numberParam('node.material.uniforms.u_edge_gain.value', {
-        defaultValue: 0.12,
+        defaultValue: 0.3,
         min: 0,
-        max: 0.35,
+        max: 1,
       }),
       desaturate: numberParam('node.material.uniforms.u_desaturate.value', {
-        defaultValue: 0.16,
+        defaultValue: 0.3,
         min: 0,
         max: 0.7,
       }),
@@ -110,6 +110,16 @@ export const SECONDARY_VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         defaultValue: 0.12,
         min: 0,
         max: 0.35,
+      }),
+      surge: numberParam('node.surgeStrength', {
+        defaultValue: 0,
+        min: 0,
+        max: 1,
+      }),
+      surge_interval: numberParam('node.surgeIntervalSec', {
+        defaultValue: 12,
+        min: 4,
+        max: 30,
       }),
     },
     createHarness: () => new VideoProbeHarness(() => new SomaticPulseNode()),
@@ -164,7 +174,7 @@ export const SECONDARY_VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
       amount: numberParam('node.material.uniforms.u_amount.value', {
         defaultValue: 0,
         min: 0,
-        max: 0.3,
+        max: 1,
         safeModeClampKey: 'max_intensity',
       }),
       marker_strength: numberParam('node.material.uniforms.u_marker_strength.value', {
@@ -173,7 +183,7 @@ export const SECONDARY_VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         max: 1,
       }),
       shift: numberParam('node.material.uniforms.u_shift.value', {
-        defaultValue: 0.04,
+        defaultValue: 0.03,
         min: 0,
         max: 0.08,
         safeModeClampKey: 'max_jitter',
@@ -193,7 +203,7 @@ export const SECONDARY_VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
       veil: numberParam('node.material.uniforms.u_veil.value', {
         defaultValue: 0,
         min: 0,
-        max: 0.45,
+        max: 1,
       }),
       feedback: numberParam('node.material.uniforms.u_feedback.value', {
         defaultValue: 0,

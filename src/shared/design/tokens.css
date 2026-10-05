@@ -1,41 +1,35 @@
 /*
- * Inner Echo design tokens — "Plates & Captions".
+ * Inner Echo design tokens: "Dark Instrument" (see DESIGN_BRIEF.md).
  * Shared by the live app (src/index.css) and the device-free demo (src/demo/demo.css).
- * Fonts are self-hosted (CSP font-src falls back to 'self'); both families are SIL OFL 1.1.
+ * One theme only: a graphite ground, off-white ink, the brand mint as the single accent, and
+ * vermilion reserved for Stop Everything and errors.
+ * Fonts are self-hosted (CSP font-src falls back to 'self'); Geist and Geist Mono are SIL OFL 1.1.
  */
 
 @font-face {
-  font-family: "Newsreader";
+  font-family: "Geist";
   font-style: normal;
-  font-weight: 300 500;
+  font-weight: 100 900;
   font-display: swap;
-  src: url("./fonts/newsreader-roman-latin.woff2") format("woff2");
+  src: url("./fonts/geist-variable.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "Newsreader";
-  font-style: italic;
-  font-weight: 300 450;
-  font-display: swap;
-  src: url("./fonts/newsreader-italic-latin.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Inclusive Sans";
+  font-family: "Geist Mono";
   font-style: normal;
-  font-weight: 400 700;
+  font-weight: 100 900;
   font-display: swap;
-  src: url("./fonts/inclusive-sans-latin.woff2") format("woff2");
+  src: url("./fonts/geist-mono-variable.woff2") format("woff2");
 }
 
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
-  /* Type families: the serif carries the voice and every numeral (tabular, lining); Inclusive Sans
-   * carries the controls. Code falls back to the system monospace; no mono web font ships. */
-  --font-serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --font-ui: "Inclusive Sans", "Segoe UI", system-ui, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* Type families: Geist carries every word; Geist Mono carries numerals, readouts, and the
+   * mirror's caption so values align and never jitter. */
+  --font-display: "Geist", "Segoe UI", system-ui, sans-serif;
+  --font-ui: "Geist", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* Type scale (px). */
   --t-12: 0.75rem;
@@ -49,11 +43,13 @@
   --t-48: 3rem;
   --t-64: 4rem;
   --t-88: 5.5rem;
-  --lh-tight: 1.05;
-  --lh-title: 1.15;
+  --lh-tight: 1.02;
+  --lh-title: 1.12;
   --lh-ui: 1.45;
   --lh-read: 1.6;
-  --measure: 62ch;
+  --measure: 64ch;
+  --track-display: -0.035em;
+  --track-title: -0.02em;
 
   /* Spacing: a 4px base that doubles through the larger steps. */
   --s-1: 4px;
@@ -66,73 +62,45 @@
   --s-8: 64px;
   --s-9: 96px;
 
-  /* Colour roles — mist (light): the pale green-grey of breath on glass. */
-  --paper: #e8ece6;
-  --paper-recessed: #dce2da;
-  --sheet: #f4f6f1;
-  --ink: #172120;
-  --ink-2: #43504c;
-  --ink-3: #5a6662;
-  --rule: #c9d1c9;
-  --rule-strong: #99a59e;
-  --rule-control: #717e78;
-  --accent: #1d5b54;
-  --accent-hover: #164a44;
-  --accent-ink: #f4f6f1;
-  --accent-wash: #d2e2db;
-  --stop: #a8321f;
-  --stop-hover: #8e2817;
-  --stop-ink: #fff8f4;
-  --stop-wash: #f2ddd5;
-  --caution: #775200;
-  --caution-wash: #ede3c9;
-  --plate: #0f1312;
-  --plate-ink: #e4eae6;
-  --plate-ink-2: #b3bdb8;
-  --backdrop: rgb(15 20 19 / 0.55);
-  --selection: #c3dcd4;
+  /* Colour roles: graphite, not black; neutral greys with no blue cast. */
+  --paper: #0f1112;
+  --paper-recessed: #171a1c;
+  --sheet: #141719;
+  --ink: #e7e9e8;
+  --ink-2: #b5bbba;
+  --ink-3: #8d9493;
+  --rule: #24292b;
+  --rule-strong: #3a4144;
+  --rule-control: #687174;
+  --accent: #8cc7ba;
+  --accent-hover: #a9d8cd;
+  --accent-ink: #0b1a17;
+  --accent-wash: #15231f;
+  --stop: #e5684f;
+  --stop-hover: #ee8570;
+  --stop-ink: #1c0905;
+  --stop-wash: #2a1612;
+  /* Cautions are ink, not a second hue: one palette, one accent. */
+  --caution: var(--ink-2);
+  --caution-wash: var(--paper-recessed);
+  --plate: #08090a;
+  --plate-ink: #e7e9e8;
+  --plate-ink-2: #b5bbba;
+  --backdrop: rgb(5 6 7 / 0.78);
+  --selection: #24403a;
 
-  /* Shape: structure is ruled, not boxed. Anything you press is round, after the aperture's arcs;
-   * the mirror is the one arched object. */
-  --radius-pill: 999px;
-  --radius-control: 8px;
-  --radius-check: 4px;
-  --radius-sheet: 14px;
+  /* Shape: one rule. Everything is 4px; switch tracks alone stay round, by convention. */
+  --radius-control: 4px;
+  --radius-check: 3px;
+  --radius-sheet: 4px;
+  --radius-switch: 999px;
   --hairline: 1px;
 
   /* Motion: small, slow, and only on opacity/transform. */
-  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --d-fast: 140ms;
   --d-base: 220ms;
-  --d-expose: 420ms;
+  --d-expose: 520ms;
 
   --target: 44px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Night: the same mist after dark; the accent returns to the brand's original mint. */
-    --paper: #111514;
-    --paper-recessed: #1a201e;
-    --sheet: #161b19;
-    --ink: #e4eae6;
-    --ink-2: #b3bdb8;
-    --ink-3: #909b96;
-    --rule: #2a3230;
-    --rule-strong: #4a5551;
-    --rule-control: #6f7b76;
-    --accent: #86c9bd;
-    --accent-hover: #a3d8ce;
-    --accent-ink: #0d2320;
-    --accent-wash: #1b2c28;
-    --stop: #f08a73;
-    --stop-hover: #f5a795;
-    --stop-ink: #2a0d07;
-    --stop-wash: #3a1f18;
-    --caution: #d9b35e;
-    --caution-wash: #2d2817;
-    --plate: #090b0b;
-    --backdrop: rgb(4 6 6 / 0.72);
-    --selection: #28433d;
-  }
 }

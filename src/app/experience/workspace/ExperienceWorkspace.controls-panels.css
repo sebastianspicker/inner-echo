@@ -255,26 +255,25 @@ fieldset.ie-panelSection {
   font-size: var(--t-14);
 }
 
-/* Notices: a coloured rule and a wash, never a floating card. */
+/* Notices: a ruled box on the recessed ground. Only errors carry a colour, the stop vermilion. */
 
 .ie-callout {
   position: relative;
   width: 100%;
   margin: 0 0 var(--s-4);
   padding: var(--s-3) var(--s-4);
-  border: 0;
-  border-left: 3px solid var(--rule-strong);
-  border-radius: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sheet);
   background: var(--paper-recessed);
 }
 
 .ie-callout--error {
-  border-left-color: var(--stop);
+  border-color: var(--stop);
   background: var(--stop-wash);
 }
 
 .ie-callout--warn {
-  border-left-color: var(--caution);
+  border-color: var(--rule-strong);
   background: var(--caution-wash);
 }
 
@@ -287,7 +286,7 @@ fieldset.ie-panelSection {
   margin-bottom: 2px;
   color: var(--ink);
   font-size: var(--t-16);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .ie-calloutBody,

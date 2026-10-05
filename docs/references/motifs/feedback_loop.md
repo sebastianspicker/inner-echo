@@ -8,7 +8,7 @@
 
 ## Technical summary
 
-Low-feedback image recurrence (bounded; reduced-motion disables).
+Short afterimage whose persistence lengthens on a slow cycle so the image resurfaces (bounded; reduced-motion disables).
 
 ## Evidence and implementation
 

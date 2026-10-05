@@ -66,7 +66,27 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
   {
     kind: 'audio',
     node: 'lowpass',
-    params: biquadParams({ defaultValue: 800, min: 300, max: 12000 }),
+    params: {
+      ...biquadParams({ defaultValue: 800, min: 300, max: 12000 }),
+      sweep_rate: numberParam('created.oscillators.0.frequency.value', {
+        defaultValue: 0,
+        min: 0,
+        max: 0.6,
+      }),
+      sweep_depth: {
+        type: 'number',
+        defaultValue: 0,
+        min: 0,
+        max: 3,
+        readEffective(harness: ProbeHarness): unknown {
+          const h = harness as AudioProbeHarness
+          const g = h.readPath('created.gains.1.gain.value')
+          const cutoff = h.readPath('created.biquads.0.frequency.value')
+          if (typeof g !== 'number' || typeof cutoff !== 'number') return g
+          return g <= 0 ? 0 : -Math.log2(1 - g / cutoff)
+        },
+      },
+    },
     createHarness: () => new AudioProbeHarness((ctx) => createLowpass(ctx, {})),
   },
   {

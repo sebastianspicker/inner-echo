@@ -26,7 +26,7 @@ export const PRIMARY_VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         max: 0.5,
         safeModeClampKey: 'max_intensity',
       }),
-      speed: numberParam('node.material.uniforms.u_time.value', {
+      speed: numberParam('node.speed', {
         defaultValue: 0.08,
         min: 0,
         max: 0.2,
@@ -138,7 +138,7 @@ export const PRIMARY_VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
       amount: numberParam('node.material.uniforms.u_amount.value', {
         defaultValue: 0,
         min: 0,
-        max: 0.25,
+        max: 0.4,
       }),
     },
     createHarness: () => new VideoProbeHarness(() => new HazeNode()),
@@ -162,7 +162,7 @@ export const PRIMARY_VIDEO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
       amount: numberParam('node.material.uniforms.u_amount.value', {
         defaultValue: 0,
         min: 0,
-        max: 0.2,
+        max: 1,
       }),
     },
     createHarness: () => new VideoProbeHarness(() => new EdgeSharpenNode()),

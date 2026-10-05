@@ -5,12 +5,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" content="#e8ece6" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#111514" media="(prefers-color-scheme: dark)" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#0f1112" />
   <meta name="description" content="An interactive, mock-data-only walkthrough of Inner Echo. No camera, microphone, or audio device is used." />
   <link rel="icon" type="image/svg+xml" href="/assets/brand/inner-echo-favicon.svg" />
-  <title>Inner Echo — device-free demo</title>
+  <title>Inner Echo - device-free demo</title>
 </head>
 
 <body>
@@ -25,54 +24,40 @@
 
     <section class="ie-titlePage__body">
       <div>
-        <h1 id="demo-title" class="ie-titlePage__title"><span>Notice</span> <em>what shifts.</em></h1>
+        <h1 id="demo-title" class="ie-titlePage__title">Notice <em>what shifts.</em></h1>
         <p class="ie-titlePage__lede">
-          A walkthrough of an Inner Echo session with simulated data. It shows the interface only:
-          no camera, microphone, audio device, recording, or upload is used.
+          A walkthrough of an Inner Echo session with simulated data. No camera, microphone, or audio device is used.
         </p>
         <div class="ie-titlePage__actions">
           <button class="ie-btn ie-btn--accent" type="button" data-action="continue">Continue to demo setup</button>
-          <p class="ie-titlePage__note">No device access occurs in this demo.</p>
+          <a class="ie-btn" href="../">Open the live app</a>
         </div>
       </div>
-      <ol class="ie-notes" aria-label="About this demo">
+
+      <figure class="ie-titlePage__media">
+        <img src="/assets/screens/mirror-render.webp" width="1600" height="1000" alt="A narrow stone alley opening onto the sea, seen through the Inner Echo mirror: a grainy veil softens the walls and the edges darken toward the bright opening." />
+        <figcaption class="ie-caption__note">
+          Derealization and Time Dilation, rendered over a photograph. An interpretation, not a reproduction.
+        </figcaption>
+      </figure>
+    </section>
+
+    <section class="ie-commitments" aria-labelledby="demo-commitments">
+      <h2 id="demo-commitments">About this demo</h2>
+      <ol class="ie-notes">
         <li>
-          <h2>Fully simulated</h2>
-          <p>The feed, renderer labels, sound, and microphone states are deterministic demo data.</p>
+          <h3>Fully simulated</h3>
+          <p>The feed, renderer labels, sound, and microphone states are deterministic demo data. No device access occurs in this demo.</p>
         </li>
         <li>
-          <h2>Try the workflow</h2>
+          <h3>Try the workflow</h3>
           <p>Select a profile, tune the composition, switch on mock controls, and stop the demo at any time.</p>
         </li>
         <li>
-          <h2>Evidence is disclosed</h2>
+          <h3>Evidence is disclosed</h3>
           <p>Open the evidence note to see how the live app describes its sources and limits.</p>
         </li>
       </ol>
-    </section>
-
-    <section class="demo-tour" aria-labelledby="demo-tour-title">
-      <h2 id="demo-tour-title">The live app</h2>
-      <p class="demo-tour__lede">
-        This demo stands in for the full app, which runs locally with an optional camera.
-      </p>
-      <ol class="demo-tour__grid">
-        <li>
-          <img src="/assets/screenshots/setup.png" alt="Setup screen with experience dimensions, comfort controls, and an idle preview" loading="lazy" width="1440" height="900" />
-          <p><strong>Setup.</strong> Choose experience dimensions or a curated collection, then set comfort limits.</p>
-        </li>
-        <li>
-          <img src="/assets/screenshots/live.png" alt="Live session with an audiovisual effect over the camera feed and its caption" loading="lazy" width="1440" height="900" />
-          <p><strong>Live session.</strong> The effect runs over your camera feed. Safe Mode and Stop Everything stay in reach.</p>
-        </li>
-        <li>
-          <img src="/assets/screenshots/evidence.png" alt="Method and Evidence dialog showing the evidence method" loading="lazy" width="1440" height="900" />
-          <p><strong>Evidence.</strong> The sources, confidence grades, and limits behind every mapping.</p>
-        </li>
-      </ol>
-      <p class="demo-tour__link">
-        <a class="ie-btn" href="../">Open the live app</a>
-      </p>
     </section>
   </main>
 
@@ -84,10 +69,10 @@
         <span class="ie-masthead__note">Demo · no device access</span>
       </div>
       <div class="status-strip" role="status" aria-label="Simulated demo status">
-        <span class="status-item" data-status="feed"><span class="status-dot"></span><span class="status-label">Feed</span><span class="status-value">Idle</span></span>
-        <span class="status-item" data-status="audio"><span class="status-dot"></span><span class="status-label">Audio</span><span class="status-value">Off</span></span>
-        <span class="status-item" data-status="mic"><span class="status-dot"></span><span class="status-label">Mic</span><span class="status-value">Off</span></span>
-        <span class="status-item" data-status="effects"><span class="status-dot"></span><span class="status-label">Effects</span><span class="status-value">Standby</span></span>
+        <span class="status-item" data-status="feed"><span class="status-label">Feed</span><span class="status-value">Idle</span></span>
+        <span class="status-item" data-status="audio"><span class="status-label">Audio</span><span class="status-value">Off</span></span>
+        <span class="status-item" data-status="mic"><span class="status-label">Mic</span><span class="status-value">Off</span></span>
+        <span class="status-item" data-status="effects"><span class="status-label">Effects</span><span class="status-value">Standby</span></span>
       </div>
       <div class="topbar-actions">
         <button class="ie-btn ie-btn--small" type="button" data-action="evidence" data-evidence-toggle>Evidence</button>
@@ -101,13 +86,14 @@
       <section class="stage" data-stage aria-label="Simulated visual feed">
         <figure class="stage-figure">
           <div class="stage-frame ie-mirror">
-            <div class="feed-readout ie-mirrorChip" data-feed-readout><span class="status-dot"></span> Demo preview · no device access</div>
+            <div class="feed-readout ie-mirrorChip" data-feed-readout> Demo preview · no device access</div>
             <div class="stage-mark">
               <svg class="stage-glyph" viewBox="0 0 64 64" width="56" height="56" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-linecap="round"><path d="M47 10.7A24 24 0 1 0 47 53.3" stroke-width="2" /><path d="M44 17.2A18 18 0 1 0 44 46.8" stroke-width="2.5" /><path d="M41 23.7A12 12 0 1 0 41 40.3" stroke-width="3" /></g><circle cx="32" cy="32" r="3" fill="currentColor" /></svg>
               <span class="ie-gloss" data-stage-profile>Ready to simulate</span>
             </div>
-            <p class="stage-truth ie-mirrorChip" data-stage-truth><span class="status-dot is-on"></span> Simulated input only</p>
           </div>
+          <p class="feed-readout ie-readout ie-stageReadout" data-feed-readout>Demo preview · no device access</p>
+          <p class="stage-truth ie-readout" data-stage-truth>Simulated input only</p>
           <figcaption class="ie-caption">
             <span class="ie-gloss">A metaphor, not a measurement.</span>
             <span class="ie-caption__note">An interpretation, not a reproduction.</span>
@@ -117,28 +103,28 @@
       </section>
       <aside class="control-rail" aria-label="Demo controls">
         <section>
-          <div class="section-heading"><span><span class="ie-ring" aria-hidden="true">1</span>Experience</span><button class="ie-inlineAction text-button" type="button" data-action="evidence">Evidence</button></div>
+          <div class="section-heading"><span>Experience</span><button class="ie-inlineAction text-button" type="button" data-action="evidence">Evidence</button></div>
           <div class="profile-list">
             <button class="profile-row" type="button" data-profile="None (clean)" aria-pressed="false"><span class="profile-name">None (clean)</span><small>Baseline mock feed, with no visual treatment.</small></button>
-            <button class="profile-row" type="button" data-profile="Anxiety — generalized / social" aria-pressed="true"><span class="profile-name">Anxiety — generalized / social</span><small>Heightened tension and threat-scanning attention, kept bounded and controllable.</small></button>
+            <button class="profile-row" type="button" data-profile="Anxiety: generalized / social" aria-pressed="true"><span class="profile-name">Anxiety: generalized / social</span><small>Heightened tension and threat-scanning attention, kept bounded and controllable.</small></button>
             <button class="profile-row" type="button" data-profile="Depersonalization / derealization" aria-pressed="false"><span class="profile-name">Depersonalization / derealization</span><small>A gentle behind-glass distance with subtle time drift.</small></button>
             <button class="profile-row" type="button" data-profile="Depressive disorder" aria-pressed="false"><span class="profile-name">Depressive disorder</span><small>Reduced affective contrast and cognitive fog, subtle and non-stereotyped.</small></button>
           </div>
           <p class="rail-note">Mock collection · 4 profiles · one selected at a time.</p>
         </section>
         <section>
-          <div class="section-heading"><span><span class="ie-ring" aria-hidden="true">2</span>Composition</span></div>
+          <div class="section-heading"><span>Composition</span></div>
           <label class="range-control"><span><span>Hyperarousal</span><output data-output="hyperarousal">0.65</output></span><input type="range" min="0" max="100" value="65" data-range="hyperarousal" /></label>
           <label class="range-control"><span><span>Hypervigilance</span><output data-output="hypervigilance">0.35</output></span><input type="range" min="0" max="100" value="35" data-range="hypervigilance" /></label>
           <label class="range-control"><span><span>Global intensity</span><output data-output="intensity">50%</output></span><input type="range" min="0" max="100" value="50" data-range="intensity" /></label>
         </section>
         <section>
-          <div class="section-heading"><span><span class="ie-ring" aria-hidden="true">3</span>Comfort</span></div>
+          <div class="section-heading"><span>Comfort</span></div>
           <div class="switch-control"><div><strong>Safe Mode</strong><small>Keeps simulated effects in gentle ranges</small></div><button class="ie-switch" type="button" role="switch" aria-checked="true" aria-label="Safe Mode" data-switch="safeMode"><span></span></button></div>
           <div class="switch-control"><div><strong>Reduced Motion</strong><small>Removes time-based motion from the mock feed</small></div><button class="ie-switch" type="button" role="switch" aria-checked="false" aria-label="Reduced Motion" data-switch="reducedMotion"><span></span></button></div>
         </section>
         <section>
-          <div class="section-heading"><span><span class="ie-ring" aria-hidden="true">4</span>Sound</span></div>
+          <div class="section-heading"><span>Sound</span></div>
           <div class="switch-control"><div><strong>Synthesized audio</strong><small>A state-only simulation; no audio is produced</small></div><button class="ie-btn ie-btn--small" type="button" aria-label="Synthesized audio" aria-pressed="false" data-simulation="audioEnabled">Simulate</button></div>
           <div class="switch-control"><div><strong>Microphone coupling</strong><small>A state-only simulation; no microphone is requested</small></div><button class="ie-btn ie-btn--small" type="button" aria-label="Microphone coupling" aria-pressed="false" data-simulation="micEnabled">Simulate</button></div>
         </section>

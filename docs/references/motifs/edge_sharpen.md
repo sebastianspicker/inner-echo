@@ -8,7 +8,7 @@
 
 ## Technical summary
 
-Subtle edge enhancement (non-flickering).
+Unsharp-mask detail gain up to 2.2x (non-flickering).
 
 ## Evidence and implementation
 

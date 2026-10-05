@@ -8,7 +8,7 @@
 
 ## Technical summary
 
-Attenuates high frequencies above cutoff (clamped).
+Attenuates high frequencies above cutoff, with an optional slow bounded sweep (clamped).
 
 ## Evidence and implementation
 

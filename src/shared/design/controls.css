@@ -1,8 +1,8 @@
 /* Controls: buttons, fields, checks, switches, ranges, and disclosures. Shared by app and demo. */
 
 /* Buttons --------------------------------------------------------------------------------------
- * Round, after the aperture mark. Secondary is an outline; primary is the verdigris the brand has
- * always used; danger is vermilion and belongs to Stop Everything alone. */
+ * Squared at 4px like every other surface. Secondary is an outline; primary is the brand mint;
+ * danger is vermilion and belongs to Stop Everything alone. */
 
 .ie-btn {
   display: inline-flex;
@@ -118,7 +118,7 @@ select {
   padding: 0 var(--s-3);
   border: 1px solid var(--rule-control);
   border-radius: var(--radius-control);
-  background: var(--sheet);
+  background: var(--paper-recessed);
   color: var(--ink);
   font-size: var(--t-16);
 }

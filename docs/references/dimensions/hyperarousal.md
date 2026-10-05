@@ -26,8 +26,8 @@ Hypothesis, or Artistic), and in-repository sources you can check.
 
 | Motif (node) | What the implementation does | Mapping claim | Experience evidence | Sources |
 |---|---|---|---|---|
-| `grain` | Adds fine noise texture (clamped). | Artistic | High | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
-| `edge_sharpen` | Subtle edge enhancement (non-flickering). | Artistic | High | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/edge_sharpen.md` |
+| `grain` | Adds fine midtone-weighted grain that re-seeds at a bounded rate (clamped). | Artistic | High | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
+| `edge_sharpen` | Unsharp-mask detail gain up to 2.2x (non-flickering). | Artistic | High | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/edge_sharpen.md` |
 | `vignette` | Darkens edges to narrow the frame (static or gently modulated). | Artistic | High | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/vignette.md` |
 | `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | Artistic | High | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |
 | `highpass` | Attenuates low frequencies below cutoff (clamped). | Artistic | High | `docs/references/dimensions/hyperarousal.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/highpass.md` |

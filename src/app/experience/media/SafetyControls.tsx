@@ -26,9 +26,6 @@ export function SafetyControls(props: SafetyControlsProps) {
     >
       <div className="ie-safety__heading">
         <h2 id="safety-controls-title" className="ie-sectionHead">
-          <span className="ie-sectionNo ie-ring" aria-hidden="true">
-            2
-          </span>
           Comfort
         </h2>
         <p>Applies to everything you see and hear. Change it at any time.</p>
@@ -47,7 +44,7 @@ export function SafetyControls(props: SafetyControlsProps) {
           id="core-safe-mode"
           className="ie-control ie-control--toggle"
           label="Safe Mode"
-          description="Limits stronger feedback and effect parameters."
+          description="Damps intensity and limits stronger feedback and effect parameters."
           checked={props.safeMode}
           onChange={props.onSafeModeChange}
         />

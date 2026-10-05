@@ -28,6 +28,7 @@ export interface ReactivePipelineRefs {
   couplingStrengthRef: Ref<number>
   maxFeedbackRef: Ref<number>
   safeModeRef: Ref<boolean>
+  intensityRef?: Ref<number>
   diagnosticsActiveRef: Ref<boolean>
 }
 
@@ -82,6 +83,7 @@ export function createOverridesGetter(
     maxFeedback: refs.maxFeedbackRef.current,
     reducedMotion,
     safeMode: refs.safeModeRef.current,
+    intensity: refs.intensityRef?.current ?? 1,
   })
   const baseAfterReactive: Record<string, number | boolean> = {}
   // Shared mutable objects reused each frame to avoid GC pressure.
@@ -95,6 +97,7 @@ export function createOverridesGetter(
       couplingStrength: refs.couplingStrengthRef.current,
       maxFeedback: refs.maxFeedbackRef.current,
       safeMode: refs.safeModeRef.current,
+      intensity: refs.intensityRef?.current ?? 1,
       reducedMotion,
     })
   }
@@ -237,6 +240,7 @@ export function startReactiveOverlay(
       ...controlValues,
       intensity: clampedIntensity,
       safeMode,
+      reducedMotion,
     },
     stressMode,
     safetyContext: getSafetyContext(activeProfile),

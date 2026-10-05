@@ -10,7 +10,7 @@
 - Scope: a curated composition of experience dimensions and conservative audiovisual motifs.
 - Exclusions: not a diagnostic model, therapy tool, or statement about what a condition looks like.
 
-Gently shifting areas of detail and a steady optional sound bed offer an artistic interpretation of competing attention. Attention and sensory experiences vary; this is one adjustable interpretation, not a depiction of everyone with ADHD.
+A spotlight of attention that will not stay put, slightly vivid busy micro-texture and a brighter, busier bed whose focus wanders offer an artistic interpretation of shifting attention. These experiences vary; ADHD does not have a single visual or auditory form.
 
 Profile weights express authoring emphasis, not symptom prevalence, severity, or diagnostic probability.
 
@@ -33,11 +33,12 @@ not validate its visual form, sound, or parameter values.
 
 - `color_grade`: Adjusts saturation/contrast/tonal balance (clamped).: `docs/references/motifs/color_grade.md`
 - `compressor_limiter`: Reduces peaks and smooths dynamics (safety-first).: `docs/references/motifs/compressor_limiter.md`
-- `edge_sharpen`: Subtle edge enhancement (non-flickering).: `docs/references/motifs/edge_sharpen.md`
+- `edge_sharpen`: Unsharp-mask detail gain up to 2.2x (non-flickering).: `docs/references/motifs/edge_sharpen.md`
+- `grain`: Adds fine midtone-weighted grain that re-seeds at a bounded rate (clamped).: `docs/references/motifs/grain.md`
 - `highpass`: Attenuates low frequencies below cutoff (clamped).: `docs/references/motifs/highpass.md`
-- `lowpass`: Attenuates high frequencies above cutoff (clamped).: `docs/references/motifs/lowpass.md`
+- `lowpass`: Attenuates high frequencies above cutoff, with an optional slow bounded sweep (clamped).: `docs/references/motifs/lowpass.md`
 - `noise_bed`: Adds quiet broadband noise floor (clamped).: `docs/references/motifs/noise_bed.md`
-- `salience_competition`: Smoothly shifts areas of visual emphasis.: `docs/references/motifs/salience_competition.md`
+- `salience_competition`: An attention spot stays sharp and lifted while the rest softens; the spot holds, then moves with eased transitions.: `docs/references/motifs/salience_competition.md`
 
 ## Safety notes / warnings shown in product
 

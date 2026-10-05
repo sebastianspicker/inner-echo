@@ -8,7 +8,7 @@
 
 ## Technical summary
 
-Softly narrows the visible focus area and adjusts edge detail.
+Keeps the centre clear and crisp while the periphery softens, dims and loses colour (static).
 
 ## Evidence and implementation
 

@@ -10,7 +10,7 @@
 - Scope: a curated composition of experience dimensions and conservative audiovisual motifs.
 - Exclusions: not a diagnostic model, therapy tool, or statement about what a condition looks like.
 
-A shallow, slow visual wave and a steady optional sound bed offer an artistic interpretation of changing alarm. The rhythm is a design choice, not a heartbeat or a reproduction of a panic attack.
+Sudden visual waves rise, crest and release, narrowing and muffling the scene at the crest while a thin bed dulls and reopens. An artistic interpretation of reported surges; experiences of panic vary widely.
 
 Profile weights express authoring emphasis, not symptom prevalence, severity, or diagnostic probability.
 
@@ -34,10 +34,11 @@ not validate its visual form, sound, or parameter values.
 
 - `color_grade`: Adjusts saturation/contrast/tonal balance (clamped).: `docs/references/motifs/color_grade.md`
 - `compressor_limiter`: Reduces peaks and smooths dynamics (safety-first).: `docs/references/motifs/compressor_limiter.md`
-- `lowpass`: Attenuates high frequencies above cutoff (clamped).: `docs/references/motifs/lowpass.md`
+- `lowpass`: Attenuates high frequencies above cutoff, with an optional slow bounded sweep (clamped).: `docs/references/motifs/lowpass.md`
 - `noise_bed`: Adds quiet broadband noise floor (clamped).: `docs/references/motifs/noise_bed.md`
 - `reverb`: Adds gentle space/decay (clamped).: `docs/references/motifs/reverb.md`
-- `somatic_pulse`: Applies a shallow visual wave with bounded softening.: `docs/references/motifs/somatic_pulse.md`
+- `somatic_pulse`: Slow breath-like wave plus sparse rise-crest-release surges: bounded brightening, pull-in and peripheral narrowing.: `docs/references/motifs/somatic_pulse.md`
+- `vignette`: Darkens edges to narrow the frame (static or gently modulated).: `docs/references/motifs/vignette.md`
 
 ## Safety notes / warnings shown in product
 

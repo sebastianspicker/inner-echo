@@ -27,9 +27,9 @@ Hypothesis, or Artistic), and in-repository sources you can check.
 | Motif (node) | What the implementation does | Mapping claim | Experience evidence | Sources |
 |---|---|---|---|---|
 | `color_grade` | Adjusts saturation/contrast/tonal balance (clamped). | Artistic | Medium | `docs/references/dimensions/emotional_numbing.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/color_grade.md` |
-| `soft_blur` | Applies mild blur to reduce sharp detail (clamped). | Artistic | Medium | `docs/references/dimensions/emotional_numbing.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/soft_blur.md` |
+| `soft_blur` | 13-tap disc blur up to about 1.4% of the frame height (clamped). | Artistic | Medium | `docs/references/dimensions/emotional_numbing.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/soft_blur.md` |
 | `vignette` | Darkens edges to narrow the frame (static or gently modulated). | Artistic | Medium | `docs/references/dimensions/emotional_numbing.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/vignette.md` |
-| `lowpass` | Attenuates high frequencies above cutoff (clamped). | Artistic | Medium | `docs/references/dimensions/emotional_numbing.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |
+| `lowpass` | Attenuates high frequencies above cutoff, with an optional slow bounded sweep (clamped). | Artistic | Medium | `docs/references/dimensions/emotional_numbing.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/lowpass.md` |
 | `noise_bed` | Adds quiet broadband noise floor (clamped). | Artistic | Medium | `docs/references/dimensions/emotional_numbing.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/noise_bed.md` |
 | `reverb` | Adds gentle space/decay (clamped). | Artistic | Medium | `docs/references/dimensions/emotional_numbing.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/reverb.md` |
 | `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | Artistic | Medium | `docs/references/dimensions/emotional_numbing.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |

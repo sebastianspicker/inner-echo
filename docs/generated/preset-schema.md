@@ -122,6 +122,39 @@ The machine-readable schema is embedded below and also written to `preset-schema
             "synth"
           ]
         },
+        "synth": {
+          "type": "object",
+          "properties": {
+            "frequency": {
+              "type": "number",
+              "minimum": 55,
+              "maximum": 440
+            },
+            "detune": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 40
+            },
+            "waveform": {
+              "type": "string",
+              "enum": [
+                "sine",
+                "triangle"
+              ]
+            },
+            "brightness": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "swell_interval": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 30
+            }
+          },
+          "additionalProperties": false
+        },
         "master": {
           "type": "object",
           "properties": {

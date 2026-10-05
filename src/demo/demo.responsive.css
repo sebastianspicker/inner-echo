@@ -5,10 +5,6 @@
 }
 
 @media (max-width: 960px) {
-  .demo-tour__grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .workspace {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s-6);

@@ -41,13 +41,14 @@ License text: third-party-licenses/zod-4.6.5-MIT.txt
 Bundled fonts
 
 The following typefaces are self-hosted under src/shared/design/fonts/. They are
-the Google Fonts "latin" subsets, with their variable axes limited to the ranges
-the interface uses. No Reserved Font Name is declared for either family.
+the unmodified variable WOFF2 files from the geist npm package (1.7.2).
 
-Newsreader (Production Type)
+Geist and Geist Mono (Vercel, in collaboration with basement.studio)
 Font license: SIL Open Font License 1.1
-License text: third-party-licenses/newsreader-OFL-1.1.txt
+License text: third-party-licenses/geist-OFL-1.1.txt
 
-Inclusive Sans (Olivia King)
-Font license: SIL Open Font License 1.1
-License text: third-party-licenses/inclusive-sans-OFL-1.1.txt
+Bundled photograph
+
+assets/screens/mirror-render.webp is a render of the Inner Echo mirror over a
+photograph by Bertrand Zuchuat (https://unsplash.com/photos/Uax2bg5EizU),
+used under the Unsplash License (https://unsplash.com/license).

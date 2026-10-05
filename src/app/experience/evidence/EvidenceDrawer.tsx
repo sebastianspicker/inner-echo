@@ -54,15 +54,19 @@ function syncEvidenceDialog(
   open: boolean,
 ): (() => void) | undefined {
   if (!dialog || !open) return
+  // The dialog unmounts on close, so the browser cannot restore focus itself; return it to the opener.
+  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
   if (!dialog.open) {
     if (typeof dialog.showModal === 'function') dialog.showModal()
     else dialog.setAttribute('open', '')
   }
   closeButton?.focus()
   return () => {
-    if (!dialog.open) return
-    if (typeof dialog.close === 'function') dialog.close()
-    else dialog.removeAttribute('open')
+    if (dialog.open) {
+      if (typeof dialog.close === 'function') dialog.close()
+      else dialog.removeAttribute('open')
+    }
+    if (opener?.isConnected) opener.focus()
   }
 }
 

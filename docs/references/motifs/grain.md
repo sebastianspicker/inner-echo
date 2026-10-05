@@ -8,7 +8,7 @@
 
 ## Technical summary
 
-Adds fine noise texture (clamped).
+Adds fine midtone-weighted grain that re-seeds at a bounded rate (clamped).
 
 ## Evidence and implementation
 
@@ -32,6 +32,7 @@ Adds fine noise texture (clamped).
 
 ### Used by condition presets
 
+- ADHD-related attention experiences (`adhd`): `docs/references/conditions/adhd.md`
 - Anxiety-related tension and worry (`anxiety`): `docs/references/conditions/anxiety.md`
 - Depression-related energy and concentration (`depression`): `docs/references/conditions/depression.md`
 - PTSD-related experiences (`trauma_ptsd`): `docs/references/conditions/trauma_ptsd.md`

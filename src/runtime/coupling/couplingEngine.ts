@@ -10,6 +10,7 @@ import type { AudioMetrics } from '../audio'
 import type { VideoMetrics } from '../visual/overlay'
 import { clamp, clamp01 } from '../../shared/numbers'
 import { getBaseNumeric } from './baseNumeric'
+import { getScaledProfileAudioBase } from './profileAudioBase'
 import { getProfileVideoBase } from './profileVideoBase'
 import { evaluateCouplingMappings } from './couplingEvaluation'
 import {
@@ -23,6 +24,8 @@ export interface CouplingSettings {
   maxFeedback: number
   reducedMotion: boolean
   safeMode: boolean
+  /** Effective profile intensity (0..1) used to scale audio base values; defaults to 1. */
+  intensity?: number
 }
 
 export interface CouplingStepResult {
@@ -37,6 +40,7 @@ export function createCouplingEngine(
   setSettings: (
     next: Pick<CouplingSettings, 'couplingStrength' | 'maxFeedback' | 'safeMode'> & {
       reducedMotion?: boolean
+      intensity?: number
     },
   ) => void
   step: (
@@ -50,6 +54,7 @@ export function createCouplingEngine(
   let couplingStrength = clamp01(settings.couplingStrength)
   let maxFeedback = clamp01(settings.maxFeedback)
   let safeMode = settings.safeMode === true
+  let intensity = settings.intensity ?? 1
   let mappings: CouplingMapping[] = [
     ...createVideoCouplingMappings(profile, reducedMotion),
     ...createAudioCouplingMappings(profile),
@@ -65,6 +70,7 @@ export function createCouplingEngine(
       couplingStrength = clamp01(next.couplingStrength)
       maxFeedback = clamp01(next.maxFeedback)
       safeMode = next.safeMode === true
+      intensity = next.intensity ?? 1
       if (typeof next.reducedMotion === 'boolean' && next.reducedMotion !== reducedMotion) {
         reducedMotion = next.reducedMotion
         rebuildVideoMappings()
@@ -75,7 +81,7 @@ export function createCouplingEngine(
       const strength = couplingStrength * maxFeedback * safetyDamping
       const resolveBase = (mapping: CouplingMapping) =>
         mapping.kind === 'audio'
-          ? (mapping.base0 ?? 0)
+          ? getScaledProfileAudioBase(profile, mapping.key, intensity)
           : getBaseNumeric(
               baseControlValues,
               mapping.key,

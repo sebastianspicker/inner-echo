@@ -32,7 +32,11 @@ Darkens edges to narrow the frame (static or gently modulated).
 
 ### Used by condition presets
 
+- Depression-related energy and concentration (`depression`): `docs/references/conditions/depression.md`
+- Depersonalization / derealization experiences (`dpdr`): `docs/references/conditions/dpdr.md`
 - OCD-related intrusive thoughts and repetition (`ocd`): `docs/references/conditions/ocd.md`
+- Panic-related alarm (`panic`): `docs/references/conditions/panic.md`
+- PTSD-related experiences (`trauma_ptsd`): `docs/references/conditions/trauma_ptsd.md`
 
 ## Scientific sources (peer-reviewed, from the in-repo corpus)
 

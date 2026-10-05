@@ -45,8 +45,8 @@
 }
 
 .ie-brandMark {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   flex: 0 0 auto;
 }
 
@@ -63,20 +63,10 @@
 }
 
 .ie-headerStatus {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
   color: var(--ink-2);
-  font-size: var(--t-14);
+  font-family: var(--font-mono);
+  font-size: var(--t-13);
   white-space: nowrap;
-}
-
-.ie-headerStatus::before {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  content: "";
 }
 
 .ie-actions {
@@ -144,11 +134,10 @@
 }
 
 .ie-layout--live .ie-workspaceIntro h1 {
-  font-size: var(--t-36);
+  font-size: var(--t-28);
 }
 
-/* Section heads carry a ringed serif numeral, a small echo of the aperture mark:
- * the setup reads 1 Pattern, 2 Comfort, 3 Preview. */
+/* Section heads: plain titles; the column position already orders the setup. */
 
 .ie-sectionHead {
   display: flex;
@@ -156,13 +145,6 @@
   gap: var(--s-3);
   margin: 0;
   color: var(--ink);
-}
-
-.ie-sectionNo {
-  align-self: center;
-  box-shadow:
-    0 0 0 3px var(--paper),
-    0 0 0 4px var(--accent-wash);
 }
 
 .ie-choiceColumn > .ie-sectionHead {
@@ -184,7 +166,6 @@
   font-size: var(--t-14);
 }
 
-.ie-layout--live .ie-sectionNo,
 .ie-layout--live .ie-previewOptional {
   display: none;
 }
@@ -219,7 +200,6 @@
 /* Idle, the mirror is a shallow slot so the start action stays in view; live, it opens up. */
 .ie-layout--setup .ie-stage:not(.ie-stage--active) {
   aspect-ratio: 2 / 1;
-  border-radius: 50% 50% 6px 6px / 20% 20% 6px 6px;
 }
 
 /* The picture exposes once, gently, when the camera starts. */
@@ -241,12 +221,6 @@
   text-align: center;
 }
 
-.ie-placeholder svg {
-  flex-shrink: 0;
-  margin-bottom: var(--s-1);
-  opacity: 0.8;
-}
-
 .ie-placeholder p {
   max-width: 26ch;
   margin: 0;
@@ -254,24 +228,8 @@
 }
 
 .ie-placeholder span {
+  font-family: var(--font-mono);
   font-size: var(--t-13);
-}
-
-.ie-stageChrome {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.ie-stageTruth {
-  bottom: var(--s-3);
-}
-
-.ie-statusDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #86c9bd;
 }
 
 .ie-debugChip {
@@ -279,12 +237,6 @@
   bottom: 40px;
   left: var(--s-3);
   font: var(--t-12) var(--font-mono);
-}
-
-.ie-captionWeight {
-  color: var(--ink-2);
-  font-style: normal;
-  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .ie-previewStart {

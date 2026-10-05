@@ -26,9 +26,9 @@ Hypothesis, or Artistic), and in-repository sources you can check.
 
 | Motif (node) | What the implementation does | Mapping claim | Experience evidence | Sources |
 |---|---|---|---|---|
-| `temporal_smear` | Blends previous frames for persistence/smear (feedback clamped). | Artistic | Medium | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/temporal_smear.md` |
+| `temporal_smear` | Faint afterimage with a bounded, frame-rate-independent persistence time (feedback clamped). | Artistic | Medium | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/temporal_smear.md` |
 | `pulse` | Slow, bounded envelope modulation (no strobe). | Artistic | Medium | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/pulse.md` |
-| `grain` | Adds fine noise texture (clamped). | Artistic | Medium | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
+| `grain` | Adds fine midtone-weighted grain that re-seeds at a bounded rate (clamped). | Artistic | Medium | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/grain.md` |
 | `flutter` | Low-depth pitch/phase wobble (clamped). | Artistic | Medium | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/flutter.md` |
 | `delay` | Short echo with low feedback/mix (clamped). | Artistic | Medium | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/delay.md` |
 | `compressor_limiter` | Reduces peaks and smooths dynamics (safety-first). | Artistic | Medium | `docs/references/dimensions/time_dilation.md`, `docs/references/EVIDENCE_MATRIX.md`, `docs/references/motifs/compressor_limiter.md` |

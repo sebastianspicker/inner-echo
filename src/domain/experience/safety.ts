@@ -29,16 +29,18 @@ export function getReducedMotionDisableNodes(profile: Profile | null | undefined
   return new Set(list.map((s) => String(s).toLowerCase()))
 }
 
+/**
+ * Effective intensity for a profile. The profile's `intensity_max` caps the slider; Safe Mode
+ * then damps proportionally by `max_intensity` so the whole slider keeps meaning instead of
+ * silently flattening its top end.
+ */
 export function clampIntensity(profile: Profile, intensity: number, safeMode: boolean): number {
   const i0 = Number.isFinite(intensity) ? intensity : 0
   const safety = profile.safety
   const maxByProfile = typeof safety?.intensity_max === 'number' ? safety.intensity_max : 1
-  const maxBySafeMode =
-    safeMode && typeof safety?.safe_mode_clamps?.max_intensity === 'number'
-      ? safety.safe_mode_clamps.max_intensity
-      : 1
-  const max = Math.min(1, maxByProfile, maxBySafeMode)
-  return clamp(i0, 0, max)
+  const capped = clamp(i0, 0, Math.min(1, maxByProfile))
+  const safeModeMax = safety?.safe_mode_clamps?.max_intensity
+  return safeMode && typeof safeModeMax === 'number' ? capped * clamp(safeModeMax, 0, 1) : capped
 }
 
 export interface AppliedClampSnapshot {

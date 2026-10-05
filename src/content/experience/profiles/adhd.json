@@ -1,26 +1,21 @@
 {
   "id": "adhd",
   "label": "ADHD-related attention experiences",
-  "summary": "Gently shifting areas of detail and a steady optional sound bed offer an artistic interpretation of competing attention. Attention and sensory experiences vary; this is one adjustable interpretation, not a depiction of everyone with ADHD.",
+  "summary": "A spotlight of attention that will not stay put, slightly vivid busy micro-texture and a brighter, busier bed whose focus wanders offer an artistic interpretation of shifting attention. These experiences vary; ADHD does not have a single visual or auditory form.",
   "framing": {
     "type": "metaphor",
     "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
   },
-  "experience_dimensions": [
-    {
-      "id": "attention_fragmentation",
-      "weight": 0.85
-    }
-  ],
+  "experience_dimensions": [{ "id": "attention_fragmentation", "weight": 0.85 }],
   "safety": {
-    "intensity_default": 0.35,
-    "intensity_max": 0.65,
+    "intensity_default": 0.5,
+    "intensity_max": 1,
     "warnings": [
       "Start with low intensity and volume; sound is optional.",
       "Use Reduced Motion for a steadier image. Stop Everything is always available."
     ],
     "safe_mode_clamps": {
-      "max_intensity": 0.65,
+      "max_intensity": 0.8,
       "max_temporal_feedback": 0.25,
       "max_chroma": 0.12,
       "max_contrast": 0.2,
@@ -55,36 +50,33 @@
         "max": 1,
         "step": 0.01
       },
-      {
-        "id": "safe_mode",
-        "type": "toggle",
-        "label": "Safe Mode"
-      },
-      {
-        "id": "reduced_motion",
-        "type": "toggle",
-        "label": "Reduced Motion"
-      },
-      {
-        "id": "audio_enabled",
-        "type": "toggle",
-        "label": "Audio (optional)"
-      },
+      { "id": "safe_mode", "type": "toggle", "label": "Safe Mode" },
+      { "id": "reduced_motion", "type": "toggle", "label": "Reduced Motion" },
+      { "id": "audio_enabled", "type": "toggle", "label": "Audio (optional)" },
       {
         "id": "salience",
         "type": "slider",
-        "label": "Competing Salience",
+        "label": "Competing salience",
         "min": 0,
-        "max": 0.3,
+        "max": 1,
         "step": 0.01,
         "target": "video.salience_competition.amount"
       },
       {
-        "id": "sharpen",
+        "id": "shift_rate",
         "type": "slider",
-        "label": "Detail Gain",
+        "label": "Shift rate",
+        "min": 0.1,
+        "max": 1.5,
+        "step": 0.01,
+        "target": "video.salience_competition.jump_rate"
+      },
+      {
+        "id": "detail_gain",
+        "type": "slider",
+        "label": "Detail gain",
         "min": 0,
-        "max": 0.2,
+        "max": 1,
         "step": 0.01,
         "target": "video.edge_sharpen.amount"
       }
@@ -94,26 +86,16 @@
     {
       "id": "salience",
       "node": "salience_competition",
-      "params": {
-        "amount": 0.16,
-        "marker_strength": 0.35,
-        "shift": 0,
-        "jump_rate": 0.35
-      }
+      "params": { "amount": 0.7, "marker_strength": 0.5, "shift": 0.03, "jump_rate": 0.4 }
     },
-    {
-      "id": "edge",
-      "node": "edge_sharpen",
-      "params": {
-        "amount": 0.12
-      }
-    },
+    { "id": "edge", "node": "edge_sharpen", "params": { "amount": 0.25 } },
+    { "id": "grain", "node": "grain", "params": { "amount": 0.05, "scale": 1, "speed": 0.12 } },
     {
       "id": "grade",
       "node": "color_grade",
       "params": {
         "contrast": 0.08,
-        "saturation": 0.02,
+        "saturation": 0.08,
         "brightness": 0.02,
         "temperature": 0,
         "tint": 0
@@ -123,47 +105,27 @@
   "audio_stack": {
     "enabled": true,
     "input": "synth",
-    "master": {
-      "volume": 0.18
+    "synth": {
+      "frequency": 329.6,
+      "detune": 5,
+      "waveform": "triangle",
+      "brightness": 0.8,
+      "swell_interval": 6
     },
+    "master": { "volume": 0.3 },
     "chain": [
-      {
-        "node": "highpass",
-        "params": {
-          "cutoff": 150,
-          "q": 0.7
-        }
-      },
+      { "node": "noise_bed", "params": { "level": 0.04, "color": "pink" } },
+      { "node": "highpass", "params": { "cutoff": 180, "q": 0.7 } },
       {
         "node": "lowpass",
-        "params": {
-          "cutoff": 8500,
-          "q": 0.7
-        }
-      },
-      {
-        "node": "noise_bed",
-        "params": {
-          "level": 0.018,
-          "color": "pink"
-        }
+        "params": { "cutoff": 4200, "q": 0.8, "sweep_rate": 0.11, "sweep_depth": 1.3 }
       },
       {
         "node": "compressor_limiter",
-        "params": {
-          "threshold": -22,
-          "ratio": 4,
-          "attack": 0.01,
-          "release": 0.22,
-          "ceiling": -10
-        }
+        "params": { "threshold": -24, "ratio": 5, "attack": 0.01, "release": 0.22, "ceiling": -10 }
       }
     ]
   },
-  "reactive": {
-    "analyser_to_params": []
-  },
-  "references": {
-    "dimensions": ["docs/references/dimensions/attention_fragmentation.md"]
-  }
+  "reactive": { "analyser_to_params": [] },
+  "references": { "dimensions": ["docs/references/dimensions/attention_fragmentation.md"] }
 }

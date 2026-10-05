@@ -8,7 +8,7 @@
 
 ## Technical summary
 
-Smoothly shifts areas of visual emphasis.
+An attention spot stays sharp and lifted while the rest softens; the spot holds, then moves with eased transitions.
 
 ## Evidence and implementation
 

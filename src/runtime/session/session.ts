@@ -3,6 +3,7 @@
  * their cross-cutting behavior (camera activity drives overlay activity; interruption
  * never touches sound), and exposes one immutable snapshot plus subscribe/update API.
  */
+import { clampIntensity } from '../../domain/experience/safety'
 import { closeAudioContext, loadAudioEngine, startAudioContext } from '../audio'
 import { requestVideoStream } from '../camera'
 import { createCameraManager } from './camera'
@@ -115,7 +116,9 @@ function createLifecycleActions(
     },
     update(settings) {
       session.liveSettings = { ...session.liveSettings, ...settings }
-      managers.sound.setProfile(session.liveSettings.profile)
+      const { profile, intensity, safeMode } = session.liveSettings
+      managers.sound.setProfile(profile)
+      managers.sound.setIntensity(profile ? clampIntensity(profile, intensity, safeMode) : 0)
       managers.overlay.setLiveSettings(session.liveSettings)
     },
     retryOverlay: () => managers.overlay.retry(),

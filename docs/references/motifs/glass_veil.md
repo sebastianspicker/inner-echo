@@ -8,7 +8,7 @@
 
 ## Technical summary
 
-Adds a light veil, with optional bounded temporal and refraction effects.
+Pale, low-contrast veil with slow large-scale ripple, a small colour fringe and a short persistence ghost (bounded).
 
 ## Evidence and implementation
 

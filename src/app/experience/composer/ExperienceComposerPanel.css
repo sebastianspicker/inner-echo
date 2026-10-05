@@ -1,4 +1,4 @@
-/* The pattern list is set like a book index: a serif entry, its gloss, and a citation grade. */
+/* The pattern list is set like an index: an entry, its gloss, and an evidence grade. */
 
 .composer,
 .composer__workspace,
@@ -194,36 +194,20 @@
   margin: var(--s-2) 0 0 calc(20px + var(--s-4));
 }
 
-/* Evidence grade: a three-step tally set before the words, never colour alone. */
+/* Evidence grade: a labelled word in mono, never a tally and never colour alone. */
 
 .composer__badge {
   display: inline-flex;
   align-items: baseline;
   gap: var(--s-2);
-  color: var(--ink-3);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
   font-size: var(--t-13);
 }
 
 .composer__badge::before {
-  color: var(--accent);
-  font-size: 0.6rem;
-  letter-spacing: 0.18em;
-}
-
-.composer__badge--high::before {
-  content: "●●●" / "";
-}
-
-.composer__badge--medium::before {
-  content: "●●○" / "";
-}
-
-.composer__badge--low::before {
-  content: "●○○" / "";
-}
-
-.composer__badge--hyp::before {
-  content: "○○○" / "";
+  color: var(--ink-3);
+  content: "Grade" / "";
 }
 
 .composer__evidenceBtn {
@@ -389,7 +373,7 @@
   }
 
   .composer__row-title {
-    font-size: var(--t-22);
+    font-size: var(--t-18);
   }
 
   .composer__row-sub {

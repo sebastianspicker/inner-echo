@@ -13,6 +13,11 @@ export interface NoiseBedParams {
 // Profile defaults lean quieter; runtime safety policy clamps the level.
 const DEFAULT_LEVEL = 0.03
 const MAX_LEVEL = 0.08
+// Every color is normalized to this RMS so `level` means the same thing across colors.
+const TARGET_RMS = 0.4
+const PEAK_CEILING = 0.95
+// Fixed trim so the max level sits roughly -3 dB relative to the synth bed.
+const TRIM_GAIN = 4.5
 
 function normalizeColor(color: unknown): 'white' | 'pink' | 'brown' {
   const c = String(color ?? 'pink').toLowerCase()
@@ -53,7 +58,32 @@ function createNoiseBuffer(
     // sufficient for an ambient noise bed where scientific accuracy is not required.
     data[i] = clamp((pink0 + pink1 + pink2) / 3, -1, 1)
   }
+  normalizeRms(data, TARGET_RMS)
   return buffer
+}
+
+function normalizeRms(data: Float32Array, target: number): void {
+  let sum = 0
+  let peak = 0
+  for (let i = 0; i < data.length; i++) {
+    sum += data[i] * data[i]
+    peak = Math.max(peak, Math.abs(data[i]))
+  }
+  const rms = Math.sqrt(sum / Math.max(1, data.length))
+  if (rms <= 0 || peak <= 0) return
+  // Aim for the target RMS, but never let peaks clip: clipping would add broadband
+  // distortion and turn a brown or pink bed into hiss.
+  const scale = Math.min(target / rms, PEAK_CEILING / peak)
+  for (let i = 0; i < data.length; i++) data[i] = clamp(data[i] * scale, -1, 1)
+}
+
+function stopSource(source: AudioBufferSourceNode): void {
+  try {
+    source.stop()
+  } catch {
+    // ignore
+  }
+  source.disconnect()
 }
 
 export function createNoiseBed(
@@ -70,6 +100,8 @@ export function createNoiseBed(
   const output = context.createGain()
   const noiseGain = context.createGain()
   noiseGain.gain.value = level
+  const trim = context.createGain()
+  trim.gain.value = TRIM_GAIN
 
   const initialBuffer = createNoiseBuffer(context, initialColor, 3)
   let source = context.createBufferSource()
@@ -79,7 +111,8 @@ export function createNoiseBed(
   source.start(0)
 
   input.connect(output)
-  noiseGain.connect(output)
+  noiseGain.connect(trim)
+  trim.connect(output)
 
   let replacePending = false
 
@@ -89,12 +122,7 @@ export function createNoiseBed(
   ): void {
     if (replacePending) return
     replacePending = true
-    try {
-      source.stop()
-    } catch {
-      // ignore
-    }
-    source.disconnect()
+    stopSource(source)
 
     const newSource = context.createBufferSource()
     newSource.buffer = replacementBuffer ?? createNoiseBuffer(context, nextColor, 3)
@@ -133,15 +161,11 @@ export function createNoiseBed(
       }
     },
     dispose(): void {
-      try {
-        source.stop()
-      } catch {
-        // ignore
-      }
-      source.disconnect()
+      stopSource(source)
       input.disconnect()
       output.disconnect()
       noiseGain.disconnect()
+      trim.disconnect()
     },
   }
 }

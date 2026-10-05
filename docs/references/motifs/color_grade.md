@@ -31,6 +31,7 @@ Adjusts saturation/contrast/tonal balance (clamped).
 - Anxiety-related tension and worry (`anxiety`): `docs/references/conditions/anxiety.md`
 - Depression-related energy and concentration (`depression`): `docs/references/conditions/depression.md`
 - Depersonalization / derealization experiences (`dpdr`): `docs/references/conditions/dpdr.md`
+- OCD-related intrusive thoughts and repetition (`ocd`): `docs/references/conditions/ocd.md`
 - Panic-related alarm (`panic`): `docs/references/conditions/panic.md`
 - PTSD-related experiences (`trauma_ptsd`): `docs/references/conditions/trauma_ptsd.md`
 

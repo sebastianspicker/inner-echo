@@ -1,3 +1,4 @@
+import { scaleAudioParams } from '../../domain/experience/audioIntensity'
 import type { AudioStackConfig } from '../../domain/experience/schema'
 import { clamp01 } from '../../shared/numbers'
 import { canonicalJson } from '../../shared/canonicalJson'
@@ -7,6 +8,8 @@ import { configureOutputRouting } from './outputRouting'
 import { getAudioContextTime, getAudioStackTargetVolume } from './audioStackValues'
 import { createSynth } from './synth'
 import type { AudioModule } from './types'
+
+type AudioChainDefinition = NonNullable<AudioStackConfig['chain']>[number]
 
 type AudioGraphSessionOptions = {
   fftSize: number
@@ -26,6 +29,8 @@ class AudioGraphSession {
   private synthGain: GainNode | null = null
   private synthModule: ReturnType<typeof createSynth> | null = null
   private chain: AudioModule[] = []
+  private chainDefinitions: AudioChainDefinition[] = []
+  private intensity = 1
   private activeChainNodes: string[] = []
   private switchTimeoutId: ReturnType<typeof setTimeout> | null = null
   private desiredAudioStack: AudioStackConfig | null | undefined
@@ -80,6 +85,13 @@ class AudioGraphSession {
     )
   }
 
+  setIntensity(value: number) {
+    const next = clamp01(value)
+    if (next === this.intensity) return
+    this.intensity = next
+    this.applyIntensity()
+  }
+
   applySynthInputGain(value: number, now: number) {
     this.synthGain?.gain.cancelScheduledValues(now)
     this.synthGain?.gain.setValueAtTime(value, now)
@@ -121,6 +133,7 @@ class AudioGraphSession {
     this.cancelScheduledSwitch()
     for (const module of this.chain) module.dispose()
     this.chain = []
+    this.chainDefinitions = []
     this.activeChainNodes = []
     this.synthModule?.dispose()
     this.synthModule = null
@@ -144,6 +157,7 @@ class AudioGraphSession {
     this.options.safeDisconnect(this.analyserNode)
     for (const module of this.chain) module.dispose()
     this.chain = []
+    this.chainDefinitions = []
     this.synthModule?.dispose()
     this.synthModule = null
   }
@@ -155,7 +169,10 @@ class AudioGraphSession {
     for (const key of this.overriddenKeys) {
       if (!Number.isFinite(overrides[key])) withdrawnModules.add(Number(key.split('.')[1]))
     }
-    for (const index of withdrawnModules) this.chain[index]?.resetParams?.()
+    for (const index of withdrawnModules) {
+      this.chain[index]?.resetParams?.()
+      this.applyIntensityToModule(index)
+    }
     this.overriddenKeys.clear()
   }
 
@@ -167,6 +184,19 @@ class AudioGraphSession {
     this.configureSynthRouting(context, audioStack ?? {}, enabled)
     this.configureOutput(context, audioStack ?? {}, enabled)
     this.options.applyInputMode()
+    this.applyIntensity()
+  }
+
+  private applyIntensity() {
+    for (let index = 0; index < this.chain.length; index += 1) this.applyIntensityToModule(index)
+  }
+
+  private applyIntensityToModule(index: number) {
+    const module = this.chain[index]
+    const definition = this.chainDefinitions[index]
+    if (!module || !definition) return
+    const node = String(definition.node ?? '').toLowerCase()
+    module.setParams(scaleAudioParams(node, definition.params ?? {}, this.intensity))
   }
 
   private configureSynthRouting(
@@ -184,7 +214,7 @@ class AudioGraphSession {
       this.synthGain.gain.value = 0
       return
     }
-    this.synthModule = createSynth(context, {})
+    this.synthModule = createSynth(context, audioStack.synth ?? {})
     this.synthModule.connect(this.synthGain)
     this.synthGain.gain.value = 1
     this.synthGain.connect(this.mixer)
@@ -203,6 +233,12 @@ class AudioGraphSession {
     )
     this.analyserNode = configured.analyser
     this.chain = configured.chain
+    this.chainDefinitions = enabled
+      ? (audioStack.chain ?? []).filter(
+          (definition) =>
+            typeof definition.node === 'string' && isKnownAudioNodeType(definition.node),
+        )
+      : []
   }
 
   private finishConditionSwitch(nextStack: AudioStackConfig | null | undefined, rampSec: number) {

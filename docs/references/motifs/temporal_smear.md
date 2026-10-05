@@ -8,7 +8,7 @@
 
 ## Technical summary
 
-Blends previous frames for persistence/smear (feedback clamped).
+Faint afterimage with a bounded, frame-rate-independent persistence time (feedback clamped).
 
 ## Evidence and implementation
 
@@ -24,7 +24,7 @@ Blends previous frames for persistence/smear (feedback clamped).
 
 ### Used by condition presets
 
-Not currently referenced by any condition preset.
+- Depression-related energy and concentration (`depression`): `docs/references/conditions/depression.md`
 
 ## Scientific sources (peer-reviewed, from the in-repo corpus)
 

@@ -55,8 +55,8 @@ const videoSpecs: Record<string, MappingSpec> = {
     attack: 0.35,
     release: 0.7,
     clampMin: 0,
-    clampMax: 0.2,
-    compute: (audio, _video, strength, base) => base + micCentroidOr(audio) * (0.06 * strength),
+    clampMax: 1,
+    compute: (audio, _video, strength, base) => base + micCentroidOr(audio) * (0.3 * strength),
   },
   chroma: {
     kind: 'video',
@@ -88,9 +88,9 @@ const videoSpecs: Record<string, MappingSpec> = {
     attack: 0.25,
     release: 0.55,
     clampMin: 0,
-    clampMax: 0.35,
+    clampMax: 1,
     compute: (audio, _video, strength, base) =>
-      base + Math.max(0, micCentroidOr(audio) - 0.35) * (0.08 * strength),
+      base + Math.max(0, micCentroidOr(audio) - 0.35) * (0.3 * strength),
   },
   somaticDepth: {
     kind: 'video',
@@ -123,9 +123,9 @@ const videoSpecs: Record<string, MappingSpec> = {
     attack: 0.08,
     release: 0.28,
     clampMin: 0,
-    clampMax: 0.3,
+    clampMax: 1,
     compute: (audio, _video, strength, base) =>
-      base + (micCentroidOr(audio) * 0.05 + micFluxOr(audio) * 0.04) * strength,
+      base + (micCentroidOr(audio) * 0.2 + micFluxOr(audio) * 0.15) * strength,
   },
   salienceShift: {
     kind: 'video',
@@ -140,9 +140,9 @@ const videoSpecs: Record<string, MappingSpec> = {
     attack: 0.4,
     release: 0.9,
     clampMin: 0,
-    clampMax: 0.45,
+    clampMax: 1,
     compute: (audio, video, strength, base) =>
-      base + (micRmsOr(audio) * 0.04 + Math.max(0, 0.5 - video.luminance) * 0.08) * strength,
+      base + (micRmsOr(audio) * 0.15 + Math.max(0, 0.5 - video.luminance) * 0.3) * strength,
   },
   glassRefraction: {
     kind: 'video',
