@@ -7,8 +7,14 @@
     "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
   },
   "experience_dimensions": [
-    { "id": "intrusion", "weight": 0.55 },
-    { "id": "compulsive_loop", "weight": 0.6 }
+    {
+      "id": "intrusion",
+      "weight": 0.55
+    },
+    {
+      "id": "compulsive_loop",
+      "weight": 0.6
+    }
   ],
   "safety": {
     "intensity_default": 0.5,
@@ -47,9 +53,21 @@
         "max": 1,
         "step": 0.01
       },
-      { "id": "safe_mode", "type": "toggle", "label": "Safe Mode" },
-      { "id": "reduced_motion", "type": "toggle", "label": "Reduced Motion" },
-      { "id": "audio_enabled", "type": "toggle", "label": "Audio (optional)" },
+      {
+        "id": "safe_mode",
+        "type": "toggle",
+        "label": "Safe Mode"
+      },
+      {
+        "id": "reduced_motion",
+        "type": "toggle",
+        "label": "Reduced Motion"
+      },
+      {
+        "id": "audio_enabled",
+        "type": "toggle",
+        "label": "Audio (optional)"
+      },
       {
         "id": "loop_strength",
         "type": "slider",
@@ -74,21 +92,32 @@
     {
       "id": "loop",
       "node": "feedback_loop",
-      "params": { "decay": 0.95, "feedback": 0.14, "jitter": 0 }
+      "params": {
+        "decay": 0.97,
+        "feedback": 0.18,
+        "jitter": 0
+      }
     },
     {
       "id": "interference",
       "node": "interference",
       "params": {
-        "amount": 0.1,
+        "amount": 0.14,
         "banding": 0.04,
         "smoothing": 0.93,
-        "burst_probability": 0.1,
+        "burst_probability": 0.14,
         "burst_duration_ms": 320,
         "burst_min_gap_ms": 3000
       }
     },
-    { "id": "vignette", "node": "vignette", "params": { "amount": 0.26, "softness": 0.85 } },
+    {
+      "id": "vignette",
+      "node": "vignette",
+      "params": {
+        "amount": 0.28,
+        "softness": 0.85
+      }
+    },
     {
       "id": "grade",
       "node": "color_grade",
@@ -109,19 +138,43 @@
       "detune": 4,
       "waveform": "triangle",
       "brightness": 0.55,
+      "spread": 0.35,
       "swell_interval": 8
     },
-    "master": { "volume": 0.3 },
+    "master": {
+      "volume": 0.5
+    },
     "chain": [
-      { "node": "delay", "params": { "time": 0.19, "feedback": 0.14, "mix": 0.1 } },
-      { "node": "lowpass", "params": { "cutoff": 3200, "q": 0.8 } },
+      {
+        "node": "delay",
+        "params": {
+          "time": 0.28,
+          "feedback": 0.35,
+          "mix": 0.25
+        }
+      },
+      {
+        "node": "lowpass",
+        "params": {
+          "cutoff": 2800,
+          "q": 0.8
+        }
+      },
       {
         "node": "compressor_limiter",
-        "params": { "threshold": -22, "ratio": 4, "attack": 0.015, "release": 0.25, "ceiling": -10 }
+        "params": {
+          "threshold": -22,
+          "ratio": 4,
+          "attack": 0.015,
+          "release": 0.25,
+          "ceiling": -6
+        }
       }
     ]
   },
-  "reactive": { "analyser_to_params": [] },
+  "reactive": {
+    "analyser_to_params": []
+  },
   "references": {
     "dimensions": [
       "docs/references/dimensions/intrusion.md",

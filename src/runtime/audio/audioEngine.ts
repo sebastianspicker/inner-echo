@@ -14,7 +14,7 @@ import { createMicLifecycleController } from './micLifecycle'
 import type { AudioContextStatus, AudioInputMode, AudioMetrics, MicStatus } from './types'
 
 const RAMP_MS = 25
-const ANALYSER_FFT_SIZE = 2048
+const ANALYSER_FFT_SIZE = 1024
 
 const safeDisconnect = (node: AudioNode | null) => {
   if (!node) return

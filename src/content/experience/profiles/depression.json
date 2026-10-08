@@ -106,10 +106,10 @@
       "id": "grade",
       "node": "color_grade",
       "params": {
-        "contrast": -0.14,
-        "saturation": -0.42,
-        "brightness": -0.05,
-        "temperature": -0.1,
+        "contrast": -0.2,
+        "saturation": -0.55,
+        "brightness": -0.06,
+        "temperature": -0.12,
         "tint": 0
       }
     },
@@ -117,22 +117,22 @@
       "id": "haze",
       "node": "haze",
       "params": {
-        "amount": 0.22
+        "amount": 0.28
       }
     },
     {
       "id": "blur",
       "node": "soft_blur",
       "params": {
-        "amount": 0.28
+        "amount": 0.32
       }
     },
     {
       "id": "smear",
       "node": "temporal_smear",
       "params": {
-        "feedback": 0.08,
-        "decay": 0.94,
+        "feedback": 0.12,
+        "decay": 0.96,
         "jitter": 0
       }
     },
@@ -140,7 +140,7 @@
       "id": "grain",
       "node": "grain",
       "params": {
-        "amount": 0.04,
+        "amount": 0.05,
         "scale": 1.6,
         "speed": 0.03
       }
@@ -149,7 +149,7 @@
       "id": "vignette",
       "node": "vignette",
       "params": {
-        "amount": 0.22,
+        "amount": 0.26,
         "softness": 0.9
       }
     }
@@ -162,23 +162,24 @@
       "detune": 4,
       "waveform": "triangle",
       "brightness": 0.25,
+      "spread": 0.5,
       "swell_interval": 14
     },
     "master": {
-      "volume": 0.3
+      "volume": 0.5
     },
     "chain": [
       {
         "node": "lowpass",
         "params": {
-          "cutoff": 1500,
+          "cutoff": 1200,
           "q": 0.7
         }
       },
       {
         "node": "noise_bed",
         "params": {
-          "level": 0.05,
+          "level": 0.06,
           "color": "brown"
         }
       },
@@ -186,13 +187,13 @@
         "node": "flutter",
         "params": {
           "rate": 0.3,
-          "depth": 0.06
+          "depth": 0.55
         }
       },
       {
         "node": "reverb",
         "params": {
-          "mix": 0.12,
+          "mix": 0.3,
           "decay": 2.4
         }
       },
@@ -203,7 +204,7 @@
           "ratio": 3,
           "attack": 0.02,
           "release": 0.35,
-          "ceiling": -10
+          "ceiling": -6
         }
       }
     ]

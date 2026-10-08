@@ -15,7 +15,7 @@ Every condition with its label, tags, safety intensity maximum, and nodes.
 | none | None (Clean) | baseline | 0 | - |
 | ocd | OCD-related intrusive thoughts and repetition | intrusion, compulsive_loop | 1 | color_grade, compressor_limiter, delay, feedback_loop, interference, lowpass, vignette |
 | panic | Panic-related alarm | panic_peaks, hyperarousal | 1 | color_grade, compressor_limiter, lowpass, noise_bed, reverb, somatic_pulse, vignette |
-| trauma_ptsd | PTSD-related experiences | hyperarousal, hypervigilance, intrusion | 1 | color_grade, compressor_limiter, delay, edge_sharpen, grain, highpass, interference, noise_bed, vignette |
+| trauma_ptsd | PTSD-related experiences | hyperarousal, hypervigilance, intrusion | 1 | color_grade, compressor_limiter, delay, edge_sharpen, gaze_tunnel, grain, highpass, interference, noise_bed, pulse_tone |
 
 ## Per-condition details
 
@@ -100,4 +100,4 @@ Warnings:
 - Start with low intensity and volume; sound is optional.
 - Use Reduced Motion for a steadier image. Stop Everything is always available.
 
-Nodes: color_grade, compressor_limiter, delay, edge_sharpen, grain, highpass, interference, noise_bed, vignette
+Nodes: color_grade, compressor_limiter, delay, edge_sharpen, gaze_tunnel, grain, highpass, interference, noise_bed, pulse_tone

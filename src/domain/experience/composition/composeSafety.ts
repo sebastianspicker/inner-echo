@@ -222,9 +222,9 @@ export function deriveComposedSafety(
   const intensityDefaultByPresets =
     safetyBlocks.length > 0
       ? safetyBlocks
-          .map((s) => (typeof s.intensity_default === 'number' ? s.intensity_default : 0.3))
+          .map((s) => (typeof s.intensity_default === 'number' ? s.intensity_default : 0.5))
           .reduce((a, b) => Math.min(a, b), Infinity)
-      : 0.3
+      : 0.5
 
   const composedSafety: Profile['safety'] = {
     intensity_default: intensityDefaultByPresets,

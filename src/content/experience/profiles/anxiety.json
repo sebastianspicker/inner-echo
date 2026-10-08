@@ -7,9 +7,18 @@
     "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
   },
   "experience_dimensions": [
-    { "id": "hyperarousal", "weight": 0.8 },
-    { "id": "hypervigilance", "weight": 0.7 },
-    { "id": "rumination_loop", "weight": 0.3 }
+    {
+      "id": "hyperarousal",
+      "weight": 0.8
+    },
+    {
+      "id": "hypervigilance",
+      "weight": 0.7
+    },
+    {
+      "id": "rumination_loop",
+      "weight": 0.3
+    }
   ],
   "safety": {
     "intensity_default": 0.5,
@@ -48,9 +57,21 @@
         "max": 1,
         "step": 0.01
       },
-      { "id": "safe_mode", "type": "toggle", "label": "Safe Mode" },
-      { "id": "reduced_motion", "type": "toggle", "label": "Reduced Motion" },
-      { "id": "audio_enabled", "type": "toggle", "label": "Audio (optional)" },
+      {
+        "id": "safe_mode",
+        "type": "toggle",
+        "label": "Safe Mode"
+      },
+      {
+        "id": "reduced_motion",
+        "type": "toggle",
+        "label": "Reduced Motion"
+      },
+      {
+        "id": "audio_enabled",
+        "type": "toggle",
+        "label": "Audio (optional)"
+      },
       {
         "id": "gaze_tunnel",
         "type": "slider",
@@ -75,16 +96,35 @@
     {
       "id": "gaze",
       "node": "gaze_tunnel",
-      "params": { "amount": 0.6, "radius": 0.42, "edge_gain": 0.5, "desaturate": 0.35 }
+      "params": {
+        "amount": 0.75,
+        "radius": 0.4,
+        "edge_gain": 0.6,
+        "desaturate": 0.45
+      }
     },
-    { "id": "sharpen", "node": "edge_sharpen", "params": { "amount": 0.35 } },
-    { "id": "grain", "node": "grain", "params": { "amount": 0.09, "scale": 1.2, "speed": 0.08 } },
+    {
+      "id": "sharpen",
+      "node": "edge_sharpen",
+      "params": {
+        "amount": 0.5
+      }
+    },
+    {
+      "id": "grain",
+      "node": "grain",
+      "params": {
+        "amount": 0.11,
+        "scale": 1.2,
+        "speed": 0.08
+      }
+    },
     {
       "id": "grade",
       "node": "color_grade",
       "params": {
-        "contrast": 0.14,
-        "saturation": -0.08,
+        "contrast": 0.18,
+        "saturation": -0.1,
         "brightness": 0,
         "temperature": -0.12,
         "tint": 0
@@ -99,21 +139,57 @@
       "detune": 6,
       "waveform": "triangle",
       "brightness": 0.6,
+      "spread": 0.3,
       "swell_interval": 10
     },
-    "master": { "volume": 0.3 },
+    "master": {
+      "volume": 0.5
+    },
     "chain": [
-      { "node": "noise_bed", "params": { "level": 0.045, "color": "pink" } },
-      { "node": "highpass", "params": { "cutoff": 220, "q": 0.8 } },
-      { "node": "tremolo", "params": { "rate": 0.6, "depth": 0.1 } },
-      { "node": "delay", "params": { "time": 0.21, "feedback": 0.1, "mix": 0.06 } },
+      {
+        "node": "noise_bed",
+        "params": {
+          "level": 0.05,
+          "color": "pink"
+        }
+      },
+      {
+        "node": "highpass",
+        "params": {
+          "cutoff": 220,
+          "q": 0.8
+        }
+      },
+      {
+        "node": "tremolo",
+        "params": {
+          "rate": 3.5,
+          "depth": 0.14
+        }
+      },
+      {
+        "node": "delay",
+        "params": {
+          "time": 0.21,
+          "feedback": 0.2,
+          "mix": 0.12
+        }
+      },
       {
         "node": "compressor_limiter",
-        "params": { "threshold": -22, "ratio": 4, "attack": 0.01, "release": 0.25, "ceiling": -8 }
+        "params": {
+          "threshold": -22,
+          "ratio": 4,
+          "attack": 0.01,
+          "release": 0.25,
+          "ceiling": -6
+        }
       }
     ]
   },
-  "reactive": { "analyser_to_params": [] },
+  "reactive": {
+    "analyser_to_params": []
+  },
   "references": {
     "dimensions": [
       "docs/references/dimensions/hyperarousal.md",

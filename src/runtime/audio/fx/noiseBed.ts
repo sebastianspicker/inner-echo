@@ -25,20 +25,12 @@ function normalizeColor(color: unknown): 'white' | 'pink' | 'brown' {
   return 'pink'
 }
 
-function createNoiseBuffer(
-  context: BaseAudioContext,
-  color: 'white' | 'pink' | 'brown',
-  durationSeconds: number,
-): AudioBuffer {
-  const sampleRate = context.sampleRate
-  const length = Math.ceil(sampleRate * durationSeconds)
-  const buffer = context.createBuffer(1, length, sampleRate)
-  const data = buffer.getChannelData(0)
+function fillNoiseChannel(data: Float32Array, color: 'white' | 'pink' | 'brown'): void {
   let pink0 = 0
   let pink1 = 0
   let pink2 = 0
   let brown = 0
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < data.length; i++) {
     const white = Math.random() * 2 - 1
     if (color === 'white') {
       data[i] = white
@@ -58,7 +50,22 @@ function createNoiseBuffer(
     // sufficient for an ambient noise bed where scientific accuracy is not required.
     data[i] = clamp((pink0 + pink1 + pink2) / 3, -1, 1)
   }
-  normalizeRms(data, TARGET_RMS)
+}
+
+/** Stereo buffer with independent noise per channel, each normalised on its own. */
+function createNoiseBuffer(
+  context: BaseAudioContext,
+  color: 'white' | 'pink' | 'brown',
+  durationSeconds: number,
+): AudioBuffer {
+  const sampleRate = context.sampleRate
+  const length = Math.ceil(sampleRate * durationSeconds)
+  const buffer = context.createBuffer(2, length, sampleRate)
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const data = buffer.getChannelData(ch)
+    fillNoiseChannel(data, color)
+    normalizeRms(data, TARGET_RMS)
+  }
   return buffer
 }
 

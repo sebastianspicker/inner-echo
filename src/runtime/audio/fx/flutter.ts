@@ -1,9 +1,11 @@
 /**
- * Subtle time instability using a safety-clamped modulated micro-delay.
+ * Slow pitch wobble ("wow") from a modulated micro-delay in series with the signal.
  *
  * Params:
- * - rate (Hz)
- * - depth (0..1) mapped to a few milliseconds of modulation.
+ * - rate (Hz), 0.1..1.2
+ * - depth (0..1): LFO amplitude of the delay time, up to 8 ms around a 10 ms centre. The
+ *   pitch deviation is 2*pi*rate*amplitude, so depth 0.5 at 0.4 Hz is about 1% (17 cents):
+ *   an audible but gentle wow. Below about 0.2 the wobble is barely perceptible.
  */
 
 import type { AudioModule } from '../types'
@@ -16,12 +18,16 @@ export interface FlutterParams {
 }
 
 const DEFAULT_RATE = 0.55
-const DEFAULT_DEPTH = 0.05
+const DEFAULT_DEPTH = 0.4
+/** Fixed delay-line centre point in seconds. */
+export const FLUTTER_CENTER_SECONDS = 0.01
+/** Delay-time swing in seconds at depth 1; stays inside the centre so the line never hits zero. */
+export const FLUTTER_SECONDS_PER_DEPTH = 0.008
 
 export function createFlutter(context: BaseAudioContext, params: FlutterParams = {}): AudioModule {
   const initial: Required<FlutterParams> = {
     rate: clamp(params.rate ?? DEFAULT_RATE, 0.1, 1.2),
-    depth: clamp(params.depth ?? DEFAULT_DEPTH, 0, 0.12),
+    depth: clamp(params.depth ?? DEFAULT_DEPTH, 0, 1),
   }
   let current = { ...initial }
   const input = context.createGain()
@@ -39,12 +45,12 @@ export function createFlutter(context: BaseAudioContext, params: FlutterParams =
   lfo.type = 'sine'
 
   const depthGain = context.createGain()
-  depthGain.gain.value = 0.0003
+  depthGain.gain.value = initial.depth * FLUTTER_SECONDS_PER_DEPTH
 
   // The constant source provides a fixed DC offset for the delay line center point.
   // The LFO amplitude remains adjustable through depth at runtime.
   const offset = context.createConstantSource()
-  offset.offset.value = 0.008
+  offset.offset.value = FLUTTER_CENTER_SECONDS
 
   lfo.connect(depthGain)
   depthGain.connect(delay.delayTime)
@@ -58,9 +64,8 @@ export function createFlutter(context: BaseAudioContext, params: FlutterParams =
       depth: p.depth ?? current.depth,
     }
     const rate = clamp(current.rate, 0.1, 1.2)
-    const depth = clamp(current.depth, 0, 0.12)
-    // depth maps to ~0..6ms modulation (conservative).
-    depthGain.gain.setValueAtTime(depth * 0.006, context.currentTime)
+    const depth = clamp(current.depth, 0, 1)
+    depthGain.gain.setValueAtTime(depth * FLUTTER_SECONDS_PER_DEPTH, context.currentTime)
     lfo.frequency.setValueAtTime(rate, context.currentTime)
   }
 

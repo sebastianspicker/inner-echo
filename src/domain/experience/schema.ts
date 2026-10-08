@@ -75,8 +75,10 @@ export const audioStackNodeSchema = stackNodeSchema
 /** Profile-specific synth source: base pitch, beating, timbre and sparse swells. */
 export const synthSchema = z.object({
   frequency: z.number().min(55).max(440).optional(),
-  /** Detune in cents for the second oscillator. */
+  /** Detune in cents of the voice pair (+d / -d). */
   detune: z.number().min(0).max(40).optional(),
+  /** Stereo width of the detuned voice pair (0 = mono). */
+  spread: z.number().min(0).max(1).optional(),
   waveform: z.enum(['sine', 'triangle']).optional(),
   brightness: z.number().min(0).max(1).optional(),
   /** Seconds between swells (0 = none). */

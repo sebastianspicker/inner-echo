@@ -43,9 +43,14 @@ and engine limits form one safety contract. A profile cannot opt out of engine l
 
 Safe Mode is on by default. It damps the effective intensity proportionally (the slider keeps its
 full travel, but 100% means the profile's `max_intensity` share of the full effect) and restricts
-feedback, contrast, motion, and audio ranges. Profile values describe the full-intensity state, and
-the Intensity slider scales video nodes and the audio chain alike: noise levels, effect mixes and
-modulation depths scale linearly, and filters open toward neutral as intensity falls. For the
+feedback, contrast, motion, and audio ranges. Profile values describe the full-intensity state. The
+Intensity slider is mapped through a perceptual curve (the square root of the clamped slider value,
+`effectiveIntensity` in `src/domain/experience/safety.ts`) before the Safe Mode share applies, so
+the lower half of the slider produces a visible share of the effect instead of spending most of its
+travel on barely perceptible change; 0 is still nothing and 100% without Safe Mode is still the
+authored value, so every clamp that bounds the authored state keeps holding. The resulting value
+scales video nodes and the audio chain alike: noise levels, effect mixes and modulation depths scale
+with it, and filters open toward neutral as it falls. For the
 temporal nodes, the clamped `feedback` value selects how long a retained image lingers (a
 frame-rate-independent time constant, never above 1.2 s) rather than a raw per-frame mix weight,
 so persistence stays bounded on every display refresh rate. Safe Mode does

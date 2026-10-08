@@ -10,6 +10,7 @@ import {
   createTremolo,
 } from '../../../src/runtime/audio/fx'
 import type { AudioModule } from '../../../src/runtime/audio'
+import { FLUTTER_SECONDS_PER_DEPTH } from '../../../src/runtime/audio/fx/flutter'
 import { FakeAudioContext, type FakeAudioBuffer, hashBuffer } from '../../shared/fakeWebAudio'
 import type { ContractNodeDefinition, ContractParamMetadata, ProbeHarness } from './types'
 import { buildNodeLookup, numberParam, summarizeNodeDefinitions } from './nodeRegistry'
@@ -130,12 +131,12 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
       }),
       depth: {
         type: 'number',
-        defaultValue: 0.05,
+        defaultValue: 0.4,
         min: 0,
-        max: 0.12,
+        max: 1,
         readEffective(harness: ProbeHarness): unknown {
           const v = (harness as AudioProbeHarness).readPath('created.gains.2.gain.value')
-          return typeof v === 'number' ? v / 0.006 : v
+          return typeof v === 'number' ? v / FLUTTER_SECONDS_PER_DEPTH : v
         },
       },
     },
@@ -179,12 +180,12 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
       feedback: numberParam('created.gains.4.gain.value', {
         defaultValue: 0.06,
         min: 0,
-        max: 0.18,
+        max: 0.6,
       }),
       mix: numberParam('created.gains.2.gain.value', {
         defaultValue: 0.03,
         min: 0,
-        max: 0.12,
+        max: 0.5,
       }),
     },
     createHarness: () => new AudioProbeHarness((ctx) => createDelay(ctx, {})),
@@ -196,7 +197,7 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
       mix: numberParam('created.gains.2.gain.value', {
         defaultValue: 0.05,
         min: 0,
-        max: 0.12,
+        max: 0.5,
       }),
       decay: {
         type: 'number',
@@ -242,6 +243,17 @@ const AUDIO_NODE_DEFINITIONS: ContractNodeDefinition[] = [
         min: 60,
         max: 220,
       }),
+      shape: {
+        type: 'enum',
+        defaultValue: 'sine',
+        enumValues: ['sine', 'tick'],
+        probeLow: 'sine',
+        probeHigh: 'tick',
+        // The tick shape silences the LFO path (gains.3) and lets the scheduler drive the tone.
+        readEffective(harness: ProbeHarness): unknown {
+          return (harness as AudioProbeHarness).readPath('created.gains.3.gain.value')
+        },
+      },
     },
     createHarness: () => new AudioProbeHarness((ctx) => createPulseTone(ctx, {})),
   },

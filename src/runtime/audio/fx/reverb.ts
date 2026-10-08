@@ -8,7 +8,7 @@ import { createDryWetMix } from './dryWetMix'
 import { createRoutedAudioModule } from './routedAudioModule'
 
 export interface ReverbParams {
-  /** Wet mix 0..1 (keep low). */
+  /** Wet mix 0..0.5. The convolver normalises the impulse, so wet and dry are level-matched. */
   mix?: number
   /** Decay time in seconds. */
   decay?: number
@@ -16,19 +16,26 @@ export interface ReverbParams {
 
 const DEFAULT_MIX = 0.05
 const DEFAULT_DECAY = 1.3
+const MAX_MIX = 0.5
+
+const PRE_DELAY_SECONDS = 0.012
+// One-pole lowpass coefficient: open at the start of the tail, dark at the end.
+const DAMPING_START = 1
+const DAMPING_END = 0.12
 
 function makeImpulse(context: BaseAudioContext, decaySeconds: number): AudioBuffer {
   const sr = context.sampleRate
   const length = Math.max(1, Math.floor(sr * decaySeconds))
+  const preDelay = Math.min(length, Math.floor(sr * PRE_DELAY_SECONDS))
   const buffer = context.createBuffer(2, length, sr)
   for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
     const data = buffer.getChannelData(ch)
-    for (let i = 0; i < length; i++) {
+    let lp = 0
+    for (let i = preDelay; i < length; i++) {
       const t = i / sr
-      // Exponential decay + gentle high-frequency damping via power.
-      const env = Math.exp(-t / Math.max(0.001, decaySeconds * 0.55))
-      const noise = (Math.random() * 2 - 1) * (1 - i / length) ** 1.5
-      data[i] = noise * env
+      const k = DAMPING_START + (DAMPING_END - DAMPING_START) * (i / length)
+      lp += k * (Math.random() * 2 - 1 - lp)
+      data[i] = lp * Math.exp(-t / Math.max(0.001, decaySeconds * 0.55))
     }
   }
   return buffer
@@ -36,7 +43,7 @@ function makeImpulse(context: BaseAudioContext, decaySeconds: number): AudioBuff
 
 export function createReverb(context: BaseAudioContext, params: ReverbParams = {}): AudioModule {
   const initial: Required<ReverbParams> = {
-    mix: clamp(params.mix ?? DEFAULT_MIX, 0, 0.12),
+    mix: clamp(params.mix ?? DEFAULT_MIX, 0, MAX_MIX),
     decay: clamp(params.decay ?? DEFAULT_DECAY, 0.6, 2.8),
   }
   let current = { ...initial }
@@ -51,7 +58,7 @@ export function createReverb(context: BaseAudioContext, params: ReverbParams = {
       mix: p.mix ?? current.mix,
       decay: p.decay ?? current.decay,
     }
-    const mix = clamp(current.mix, 0, 0.12)
+    const mix = clamp(current.mix, 0, MAX_MIX)
     const decay = clamp(current.decay, 0.6, 2.8)
 
     mixNodes.setMix(mix)

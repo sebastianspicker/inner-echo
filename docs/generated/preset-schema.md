@@ -135,6 +135,11 @@ The machine-readable schema is embedded below and also written to `preset-schema
               "minimum": 0,
               "maximum": 40
             },
+            "spread": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
             "waveform": {
               "type": "string",
               "enum": [
