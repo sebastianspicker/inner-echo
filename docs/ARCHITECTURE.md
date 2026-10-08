@@ -171,8 +171,18 @@ development-only diagnostics out of production chunks.
 
 When a profile changes, the overlay lifecycle compares a canonical identity of video definitions,
 audio-chain definitions, reactive mappings, safety policy, and Reduced Motion. Equivalent profiles
-keep the graph and coupling state while the session applies the current live values. Camera restart and explicit profile retry remain restart triggers. Renderer sizing
-tracks container size and capped DPR independently from internal render-target scale.
+keep the graph and coupling state while the session applies the current live values. Camera restart and explicit profile retry remain restart triggers.
+
+The frame loop renders the effect chain into one cover-fitted source target plus a two-target
+ping-pong pair; only temporal nodes own an extra pair, kept in half-float precision where the
+context can render to it (8-bit history is dithered instead, so a feedback blend cannot leave a
+ghost stuck at the quantisation floor). The chain runs at backing-store resolution (CSS size times
+the DPR, capped at 2) under a pixel budget, and the adaptive render scale lowers it further when
+frame time drops. Internal targets are reallocated only once a resize has settled; the canvas size
+follows the container immediately. The camera texture is uploaded and the source pass rendered
+only when the video reports a new frame, and the last non-temporal node draws straight to the
+screen when the chain already matches the drawing-buffer size. GPU error polling is periodic
+rather than per frame.
 
 Vite emits `index.html` and `demo/index.html` without source maps and includes the public notice
 files. The Pages assembler applies the configured base path, adds `.nojekyll`, and injects the

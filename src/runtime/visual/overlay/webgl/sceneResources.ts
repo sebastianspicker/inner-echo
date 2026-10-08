@@ -12,7 +12,7 @@ import {
 import { createVideoMetricsTracker } from '../videoMetrics'
 import type { VideoNode } from '../../effects/VideoNode'
 import { createStartupCleanup } from '../startupCleanup'
-import { disposeChainRenderTargets, disposeTemporalPairs } from './resources'
+import { disposeFrameTargets } from './resources'
 import type { WebGLOverlayRuntimeState, WebGLSceneResources } from './pipelineState'
 import { createPassthroughMaterial, getQuadGeometry } from './renderHelpers'
 
@@ -29,9 +29,16 @@ export function initializeWebGLScene(
     powerPreference: 'default',
   })
   startupDisposers.push(() => renderer.dispose())
+  // Every pass is one fullscreen quad that covers its whole target: no clears, sorting, culling
+  // or per-frame matrix updates are needed.
+  renderer.autoClear = false
+  renderer.sortObjects = false
   const scene = new Scene()
+  scene.matrixWorldAutoUpdate = false
   const camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1)
   camera.position.z = 0
+  camera.updateMatrixWorld()
+  camera.matrixAutoUpdate = false
   // The effect chain is authored in display-referred (sRGB-encoded) values: contrast pivots at
   // mid-grey, haze and veil colours are the greys a viewer sees. Keep the video bytes untouched
   // through the chain and skip the output encode, so passthrough is identical to the video and
@@ -51,7 +58,11 @@ export function initializeWebGLScene(
     startupDisposers.push(() => videoPassthroughMaterial.dispose())
   const geometry = getQuadGeometry()
   startupDisposers.push(() => geometry.dispose())
-  scene.add(new Mesh(geometry, initialMeshMaterial))
+  const quad = new Mesh(geometry, initialMeshMaterial)
+  quad.frustumCulled = false
+  quad.matrixAutoUpdate = false
+  scene.add(quad)
+  scene.updateMatrixWorld()
   const metricsTracker = createVideoMetricsTracker({
     size: 64,
     everyN: 2,
@@ -75,21 +86,37 @@ export function registerRuntimeCleanup(
   state: WebGLOverlayRuntimeState,
   nodes: VideoNode[],
 ): void {
+  startupDisposers.push(() => disposeFrameTargets(state))
   startupDisposers.push(() => {
-    disposeChainRenderTargets(state.chainRTs)
-    state.chainRTs = []
-  })
-  startupDisposers.push(() => {
-    disposeTemporalPairs(state.temporalPingPong)
-    state.temporalPingPong.length = 0
-  })
-  startupDisposers.push(() => {
-    state.finalBlitMaterial?.dispose()
-    state.finalBlitMaterial = null
-    state.finalBlitMapShaderSignature = null
+    state.blitMaterial?.dispose()
+    state.blitMaterial = null
   })
   startupDisposers.push(() => {
     for (const node of nodes) node.dispose()
+  })
+}
+
+/**
+ * Mark the source frame dirty whenever the camera presents a new frame, so the frame loop can skip
+ * the texture upload and source pass on display refreshes without one. Without the API every frame
+ * counts as new.
+ */
+export function registerVideoFrameCallback(
+  video: HTMLVideoElement,
+  state: WebGLOverlayRuntimeState,
+  startupDisposers: Array<() => void>,
+): void {
+  if (typeof video.requestVideoFrameCallback !== 'function') return
+  const onVideoFrame = (): void => {
+    if (state.stopped || state.videoFrameCallbackId === null) return
+    state.videoFrameDirty = true
+    state.videoFrameCallbackId = video.requestVideoFrameCallback(onVideoFrame)
+  }
+  state.videoFrameCallbackId = video.requestVideoFrameCallback(onVideoFrame)
+  startupDisposers.push(() => {
+    if (state.videoFrameCallbackId !== null)
+      video.cancelVideoFrameCallback(state.videoFrameCallbackId)
+    state.videoFrameCallbackId = null
   })
 }
 

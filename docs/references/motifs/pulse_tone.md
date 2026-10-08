@@ -24,7 +24,7 @@ Not currently referenced by any dimension.
 
 ### Used by condition presets
 
-Not currently referenced by any condition preset.
+- PTSD-related experiences (`trauma_ptsd`): `docs/references/conditions/trauma_ptsd.md`
 
 ## Scientific sources (peer-reviewed, from the in-repo corpus)
 

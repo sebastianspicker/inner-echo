@@ -7,8 +7,14 @@
     "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
   },
   "experience_dimensions": [
-    { "id": "panic_peaks", "weight": 0.9 },
-    { "id": "hyperarousal", "weight": 0.7 }
+    {
+      "id": "panic_peaks",
+      "weight": 0.9
+    },
+    {
+      "id": "hyperarousal",
+      "weight": 0.7
+    }
   ],
   "safety": {
     "intensity_default": 0.5,
@@ -54,9 +60,21 @@
         "max": 1,
         "step": 0.01
       },
-      { "id": "safe_mode", "type": "toggle", "label": "Safe Mode" },
-      { "id": "reduced_motion", "type": "toggle", "label": "Reduced Motion" },
-      { "id": "audio_enabled", "type": "toggle", "label": "Audio (optional)" },
+      {
+        "id": "safe_mode",
+        "type": "toggle",
+        "label": "Safe Mode"
+      },
+      {
+        "id": "reduced_motion",
+        "type": "toggle",
+        "label": "Reduced Motion"
+      },
+      {
+        "id": "audio_enabled",
+        "type": "toggle",
+        "label": "Audio (optional)"
+      },
       {
         "id": "pulse_depth",
         "type": "slider",
@@ -91,22 +109,29 @@
       "id": "body_wave",
       "node": "somatic_pulse",
       "params": {
-        "depth": 0.16,
+        "depth": 0.18,
         "rate": 0.28,
         "smoothing": 0.9,
-        "tunnel": 0.55,
-        "blur": 0.3,
-        "surge": 0.7,
-        "surge_interval": 12
+        "tunnel": 0.65,
+        "blur": 0.35,
+        "surge": 0.9,
+        "surge_interval": 11
       }
     },
-    { "id": "vignette", "node": "vignette", "params": { "amount": 0.3, "softness": 0.85 } },
+    {
+      "id": "vignette",
+      "node": "vignette",
+      "params": {
+        "amount": 0.32,
+        "softness": 0.85
+      }
+    },
     {
       "id": "grade",
       "node": "color_grade",
       "params": {
-        "contrast": 0.1,
-        "saturation": -0.12,
+        "contrast": 0.12,
+        "saturation": -0.15,
         "brightness": -0.02,
         "temperature": 0,
         "tint": 0
@@ -121,23 +146,51 @@
       "detune": 5,
       "waveform": "triangle",
       "brightness": 0.5,
+      "spread": 0.3,
       "swell_interval": 0
     },
-    "master": { "volume": 0.3 },
+    "master": {
+      "volume": 0.5
+    },
     "chain": [
-      { "node": "noise_bed", "params": { "level": 0.035, "color": "pink" } },
+      {
+        "node": "noise_bed",
+        "params": {
+          "level": 0.04,
+          "color": "pink"
+        }
+      },
       {
         "node": "lowpass",
-        "params": { "cutoff": 2600, "q": 0.8, "sweep_rate": 0.28, "sweep_depth": 1.6 }
+        "params": {
+          "cutoff": 2400,
+          "q": 0.8,
+          "sweep_rate": 0.26,
+          "sweep_depth": 2.0
+        }
       },
-      { "node": "reverb", "params": { "mix": 0.12, "decay": 1.4 } },
+      {
+        "node": "reverb",
+        "params": {
+          "mix": 0.18,
+          "decay": 1.4
+        }
+      },
       {
         "node": "compressor_limiter",
-        "params": { "threshold": -24, "ratio": 5, "attack": 0.008, "release": 0.2, "ceiling": -8 }
+        "params": {
+          "threshold": -24,
+          "ratio": 5,
+          "attack": 0.008,
+          "release": 0.2,
+          "ceiling": -8
+        }
       }
     ]
   },
-  "reactive": { "analyser_to_params": [] },
+  "reactive": {
+    "analyser_to_params": []
+  },
   "references": {
     "dimensions": [
       "docs/references/dimensions/panic_peaks.md",

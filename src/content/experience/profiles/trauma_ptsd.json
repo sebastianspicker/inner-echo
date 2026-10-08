@@ -1,15 +1,24 @@
 {
   "id": "trauma_ptsd",
   "label": "PTSD-related experiences",
-  "summary": "Crisp detail, persistent static texture, a watchful narrowing and sparse abstract intrusions over a steady hiss with a faint tick offer an artistic interpretation of heightened alertness. These experiences vary; there is no single visual or auditory form.",
+  "summary": "Crisp detail, persistent static texture, a watchful narrowing of the periphery and sparse abstract intrusions over a steady hiss with a faint tick offer an artistic interpretation of heightened alertness. These experiences vary; there is no single visual or auditory form.",
   "framing": {
     "type": "metaphor",
     "disclaimer": "An adjustable artistic interpretation of selected reported experiences. It does not portray a whole condition, predict an individual experience, or reproduce clinical perception. Visual and audio settings are design choices, not medically validated signals."
   },
   "experience_dimensions": [
-    { "id": "hyperarousal", "weight": 0.8 },
-    { "id": "hypervigilance", "weight": 0.6 },
-    { "id": "intrusion", "weight": 0.55 }
+    {
+      "id": "hyperarousal",
+      "weight": 0.8
+    },
+    {
+      "id": "hypervigilance",
+      "weight": 0.6
+    },
+    {
+      "id": "intrusion",
+      "weight": 0.55
+    }
   ],
   "safety": {
     "intensity_default": 0.5,
@@ -55,9 +64,21 @@
         "max": 1,
         "step": 0.01
       },
-      { "id": "safe_mode", "type": "toggle", "label": "Safe Mode" },
-      { "id": "reduced_motion", "type": "toggle", "label": "Reduced Motion" },
-      { "id": "audio_enabled", "type": "toggle", "label": "Audio (optional)" },
+      {
+        "id": "safe_mode",
+        "type": "toggle",
+        "label": "Safe Mode"
+      },
+      {
+        "id": "reduced_motion",
+        "type": "toggle",
+        "label": "Reduced Motion"
+      },
+      {
+        "id": "audio_enabled",
+        "type": "toggle",
+        "label": "Audio (optional)"
+      },
       {
         "id": "intrusion_texture",
         "type": "slider",
@@ -84,21 +105,53 @@
         "max": 1,
         "step": 0.01,
         "target": "video.edge_sharpen.amount"
+      },
+      {
+        "id": "narrowing",
+        "type": "slider",
+        "label": "Watchful narrowing",
+        "min": 0,
+        "max": 0.85,
+        "step": 0.01,
+        "target": "video.gaze_tunnel.amount"
       }
     ]
   },
   "video_stack": [
-    { "id": "sharpen", "node": "edge_sharpen", "params": { "amount": 0.45 } },
-    { "id": "grain", "node": "grain", "params": { "amount": 0.08, "scale": 1, "speed": 0 } },
-    { "id": "vignette", "node": "vignette", "params": { "amount": 0.28, "softness": 0.8 } },
+    {
+      "id": "sharpen",
+      "node": "edge_sharpen",
+      "params": {
+        "amount": 0.6
+      }
+    },
+    {
+      "id": "grain",
+      "node": "grain",
+      "params": {
+        "amount": 0.1,
+        "scale": 1,
+        "speed": 0
+      }
+    },
+    {
+      "id": "gaze",
+      "node": "gaze_tunnel",
+      "params": {
+        "amount": 0.5,
+        "radius": 0.48,
+        "edge_gain": 0.45,
+        "desaturate": 0.25
+      }
+    },
     {
       "id": "interference",
       "node": "interference",
       "params": {
-        "amount": 0.14,
+        "amount": 0.16,
         "banding": 0.05,
         "smoothing": 0.92,
-        "burst_probability": 0.12,
+        "burst_probability": 0.15,
         "burst_duration_ms": 360,
         "burst_min_gap_ms": 2500
       }
@@ -107,8 +160,8 @@
       "id": "grade",
       "node": "color_grade",
       "params": {
-        "contrast": 0.16,
-        "saturation": -0.1,
+        "contrast": 0.2,
+        "saturation": -0.12,
         "brightness": -0.03,
         "temperature": -0.08,
         "tint": 0
@@ -123,20 +176,59 @@
       "detune": 4,
       "waveform": "triangle",
       "brightness": 0.7,
+      "spread": 0.25,
       "swell_interval": 0
     },
-    "master": { "volume": 0.3 },
+    "master": {
+      "volume": 0.5
+    },
     "chain": [
-      { "node": "noise_bed", "params": { "level": 0.055, "color": "pink" } },
-      { "node": "highpass", "params": { "cutoff": 260, "q": 0.9 } },
-      { "node": "delay", "params": { "time": 0.09, "feedback": 0.04, "mix": 0.05 } },
+      {
+        "node": "noise_bed",
+        "params": {
+          "level": 0.06,
+          "color": "pink"
+        }
+      },
+      {
+        "node": "highpass",
+        "params": {
+          "cutoff": 260,
+          "q": 0.9
+        }
+      },
+      {
+        "node": "delay",
+        "params": {
+          "time": 0.12,
+          "feedback": 0.1,
+          "mix": 0.1
+        }
+      },
+      {
+        "node": "pulse_tone",
+        "params": {
+          "shape": "tick",
+          "rate": 0.4,
+          "mix": 0.08,
+          "base_freq": 200
+        }
+      },
       {
         "node": "compressor_limiter",
-        "params": { "threshold": -24, "ratio": 6, "attack": 0.005, "release": 0.2, "ceiling": -8 }
+        "params": {
+          "threshold": -24,
+          "ratio": 6,
+          "attack": 0.005,
+          "release": 0.2,
+          "ceiling": -6
+        }
       }
     ]
   },
-  "reactive": { "analyser_to_params": [] },
+  "reactive": {
+    "analyser_to_params": []
+  },
   "references": {
     "dimensions": [
       "docs/references/dimensions/hyperarousal.md",

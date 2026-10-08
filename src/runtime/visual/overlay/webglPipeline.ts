@@ -8,6 +8,7 @@ import {
   createStartupCleanup,
   initializeWebGLScene,
   registerRuntimeCleanup,
+  registerVideoFrameCallback,
 } from './webgl/sceneResources'
 import type { VideoPipelineParams } from './webglPipelineTypes'
 import type { WebGLDiagnostics } from './webgl/diagnostics'
@@ -61,6 +62,7 @@ export function startWebGLOverlayLoop({
     }
     registerContextLossHandler(canvas, stop, callbacks, startupDisposers)
     registerRuntimeCleanup(startupDisposers, state, nodes)
+    registerVideoFrameCallback(video, state, startupDisposers)
     // Camera stop, graph replacement, and renderer fallback must also withdraw
     // modulation from independently running audio.
     startupDisposers.push(() => {

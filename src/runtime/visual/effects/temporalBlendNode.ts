@@ -48,6 +48,8 @@ export abstract class TemporalBlendNode implements VideoNode {
     this.jitter = resolved.jitter
     this.material.uniforms.u_feedback.value = resolved.feedback
     this.material.uniforms.u_decay.value = resolved.decay
+    this.material.uniforms.u_dither.value = params.ditherAmplitude ?? 1 / 255
+    this.material.uniforms.u_time.value = this.time
     this.writeJitter()
     applyUvParams(this.material, params)
   }
@@ -60,6 +62,8 @@ export abstract class TemporalBlendNode implements VideoNode {
         u_decay: { value: 0.94 },
         u_blend: { value: 0 },
         u_jitter: { value: new Vector2(0, 0) },
+        u_dither: { value: 1 / 255 },
+        u_time: { value: 0 },
       })
     } else {
       bindInputTexture(this.material, inputTexture)
@@ -79,6 +83,7 @@ export abstract class TemporalBlendNode implements VideoNode {
     }
     tau = Math.min(tau, MAX_PERSISTENCE_SECONDS)
     this.material.uniforms.u_blend.value = persistenceBlend(tau, delta)
+    this.material.uniforms.u_time.value = this.time
     this.writeJitter()
   }
 

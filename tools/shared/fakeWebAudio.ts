@@ -3,7 +3,7 @@
  *
  * Mirrors the subset of the Web Audio API that `src/runtime/audio/**`
  * touches: gain, biquad filter, delay, dynamics compressor, convolver,
- * oscillator, constant source, and buffer/buffer-source nodes, each tracked
+ * oscillator, stereo panner, constant source, and buffer/buffer-source nodes, each tracked
  * per type on the owning `FakeAudioContext` so callers can assert on counts,
  * connections, and disposal.
  *
@@ -69,6 +69,10 @@ export class FakeDynamicsCompressorNode extends FakeAudioNode {
   readonly release = new FakeAudioParam(0.1)
 }
 
+export class FakeStereoPannerNode extends FakeAudioNode {
+  readonly pan = new FakeAudioParam(0)
+}
+
 export class FakeConvolverNode extends FakeAudioNode {
   buffer: FakeAudioBuffer | null = null
 }
@@ -126,6 +130,7 @@ export interface FakeContextMark {
   compressors: number
   convolvers: number
   oscillators: number
+  stereoPanners: number
   constantSources: number
   buffers: number
   bufferSources: number
@@ -138,6 +143,7 @@ export interface FakeCreatedNodes {
   compressors: FakeDynamicsCompressorNode[]
   convolvers: FakeConvolverNode[]
   oscillators: FakeOscillatorNode[]
+  stereoPanners: FakeStereoPannerNode[]
   constantSources: FakeConstantSourceNode[]
   buffers: FakeAudioBuffer[]
   bufferSources: FakeAudioBufferSourceNode[]
@@ -159,6 +165,7 @@ export class FakeAudioContext {
   readonly compressors: FakeDynamicsCompressorNode[] = []
   readonly convolvers: FakeConvolverNode[] = []
   readonly oscillators: FakeOscillatorNode[] = []
+  readonly stereoPanners: FakeStereoPannerNode[] = []
   readonly constantSources: FakeConstantSourceNode[] = []
   readonly buffers: FakeAudioBuffer[] = []
   readonly bufferSources: FakeAudioBufferSourceNode[] = []
@@ -190,6 +197,10 @@ export class FakeAudioContext {
 
   createOscillator(): FakeOscillatorNode {
     return this.record(this.oscillators, new FakeOscillatorNode())
+  }
+
+  createStereoPanner(): FakeStereoPannerNode {
+    return this.record(this.stereoPanners, new FakeStereoPannerNode())
   }
 
   createConstantSource(): FakeConstantSourceNode {
@@ -225,6 +236,7 @@ export class FakeAudioContext {
       compressors: this.compressors.length,
       convolvers: this.convolvers.length,
       oscillators: this.oscillators.length,
+      stereoPanners: this.stereoPanners.length,
       constantSources: this.constantSources.length,
       buffers: this.buffers.length,
       bufferSources: this.bufferSources.length,
@@ -239,6 +251,7 @@ export class FakeAudioContext {
       compressors: this.compressors.slice(mark.compressors),
       convolvers: this.convolvers.slice(mark.convolvers),
       oscillators: this.oscillators.slice(mark.oscillators),
+      stereoPanners: this.stereoPanners.slice(mark.stereoPanners),
       constantSources: this.constantSources.slice(mark.constantSources),
       buffers: this.buffers.slice(mark.buffers),
       bufferSources: this.bufferSources.slice(mark.bufferSources),

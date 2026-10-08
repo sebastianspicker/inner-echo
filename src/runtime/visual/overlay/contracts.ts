@@ -18,6 +18,11 @@ export interface OverlayDiagnostics {
   fps: number | null
   frameTimeMs: number | null
   renderScale: number
+  /** Effect-chain target size in device pixels (WebGL only). */
+  renderWidth?: number
+  renderHeight?: number
+  /** True when the last effect renders straight to the canvas (WebGL only). */
+  directOutput?: boolean
   resourceCounts: {
     renderTargets: number
     temporalPairs: number

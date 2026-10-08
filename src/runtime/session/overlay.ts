@@ -6,7 +6,7 @@
  */
 import type { Profile } from '../../domain/experience/schema'
 import { canonicalJson } from '../../shared/canonicalJson'
-import { clampIntensity, getSafetyContext } from '../../domain/experience/safety'
+import { effectiveIntensity, getSafetyContext } from '../../domain/experience/safety'
 import type { AudioEngineControl } from '../audio'
 import type {
   OverlayControl,
@@ -126,7 +126,7 @@ function disposeRunning(internal: OverlayInternal): void {
 function pushParams(internal: OverlayInternal): void {
   const { settings } = internal
   if (!internal.overlayControlRef.current || !settings.profile) return
-  const clamped = clampIntensity(settings.profile, settings.intensity, settings.safeMode)
+  const clamped = effectiveIntensity(settings.profile, settings.intensity, settings.safeMode)
   internal.overlayControlRef.current.setParams({
     intensity: clamped,
     safeMode: settings.safeMode,
@@ -215,7 +215,7 @@ export function createOverlayManager(deps: OverlayManagerDeps): OverlayManager {
       internal.maxFeedbackRef.current = next.maxFeedback
       internal.safeModeRef.current = next.safeMode
       internal.intensityRef.current = next.profile
-        ? clampIntensity(next.profile, next.intensity, next.safeMode)
+        ? effectiveIntensity(next.profile, next.intensity, next.safeMode)
         : 0
       internal.diagnosticsActiveRef.current = next.diagnosticsActive
       sync(internal, deps, false)

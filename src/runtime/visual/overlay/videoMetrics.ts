@@ -13,7 +13,11 @@ export interface VideoMetrics {
 }
 
 export interface VideoMetricsTracker {
-  stepFromSource(source: CanvasImageSource, deltaSec: number): VideoMetrics
+  /**
+   * Advance smoothing by `deltaSec`. When `sourceChanged` is false the source still shows the
+   * previous frame: no readback happens and the sampling cadence does not advance.
+   */
+  stepFromSource(source: CanvasImageSource, deltaSec: number, sourceChanged?: boolean): VideoMetrics
   getLast(): VideoMetrics
   resetTemporalHistory(): void
   dispose(): void
@@ -153,9 +157,15 @@ function disposeTracker(state: TrackerState): void {
 
 function createActiveVideoMetricsTracker(state: TrackerState): VideoMetricsTracker {
   return {
-    stepFromSource(source: CanvasImageSource, deltaSec: number): VideoMetrics {
-      state.frame += 1
-      if (state.frame % state.everyN === 0) state.last = computeMetrics(state, source)
+    stepFromSource(
+      source: CanvasImageSource,
+      deltaSec: number,
+      sourceChanged = true,
+    ): VideoMetrics {
+      if (sourceChanged) {
+        state.frame += 1
+        if (state.frame % state.everyN === 0) state.last = computeMetrics(state, source)
+      }
       return updateSmoothedMetrics(state, deltaSec)
     },
     getLast: () => state.smoothed,

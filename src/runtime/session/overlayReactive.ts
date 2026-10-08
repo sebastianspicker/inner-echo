@@ -5,7 +5,7 @@
  */
 import type { Profile } from '../../domain/experience/schema'
 import { BASELINE_PROFILE } from '../../domain/experience/fallbackProfile'
-import { clampIntensity, getSafetyContext } from '../../domain/experience/safety'
+import { effectiveIntensity, getSafetyContext } from '../../domain/experience/safety'
 import { IMPLEMENTED_VIDEO_NODES } from '../capabilities'
 import { clamp01 } from '../../shared/numbers'
 import type { AudioEngineControl, AudioMetrics } from '../audio'
@@ -232,7 +232,7 @@ export function startReactiveOverlay(
   )
   overlayControlRef.current = control
 
-  const clampedIntensity = clampIntensity(activeProfile, intensity, safeMode)
+  const clampedIntensity = effectiveIntensity(activeProfile, intensity, safeMode)
   control.setParams({
     intensity: clampedIntensity,
     safeMode,
