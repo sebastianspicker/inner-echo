@@ -17,6 +17,7 @@ import {
   getSafeModeClampNumber,
   resolveNumberParam,
 } from './paramUtils'
+import { DISC_BLUR_GLSL, HASH_GLSL } from './shaderKernels'
 import { acquireEffectMaterial, disposeEffectMaterial, updateTexelSize } from './shaderMaterial'
 
 const FRAG = `
@@ -31,6 +32,7 @@ uniform vec2 u_anchor_a;
 uniform vec2 u_anchor_b;
 varying vec2 vUv;
 
+${HASH_GLSL}${DISC_BLUR_GLSL}
 float spot(vec2 p, vec2 c, float aspect) {
   return 1.0 - smoothstep(0.10, 0.32, distance(p * vec2(aspect, 1.0), c * vec2(aspect, 1.0)));
 }
@@ -46,16 +48,11 @@ void main() {
   float periphery = (1.0 - focus) * u_amount;
 
   // Everything outside the attention spots softens, dims and loses colour.
-  float r = periphery * 0.012;
-  vec2 rx = vec2(r * u_texelSize.x / u_texelSize.y, 0.0);
-  vec2 ry = vec2(0.0, r);
-  vec3 soft = (
-    texture2D(u_map, uv + rx).rgb +
-    texture2D(u_map, uv - rx).rgb +
-    texture2D(u_map, uv + ry).rgb +
-    texture2D(u_map, uv - ry).rgb
-  ) * 0.25;
-  vec3 color = mix(sharp.rgb, soft, clamp(periphery * 1.5, 0.0, 1.0));
+  vec3 color = sharp.rgb;
+  if (periphery > 0.0005) {
+    vec3 soft = ieDiscBlur(u_map, uv, vUv, periphery * 0.02, u_texelSize);
+    color = mix(sharp.rgb, soft, clamp(periphery * 1.5, 0.0, 1.0));
+  }
   float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
   color = mix(color, vec3(luma), periphery * 0.35);
   color *= 1.0 - periphery * 0.3;

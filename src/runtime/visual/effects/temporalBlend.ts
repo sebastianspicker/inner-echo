@@ -1,4 +1,5 @@
 import type { VideoNodeParams } from './VideoNode'
+import { HASH_GLSL, TEMPORAL_DITHER_GLSL } from './shaderKernels'
 import {
   clamp,
   getGlobalClampNumber,
@@ -22,13 +23,18 @@ uniform vec2 u_uvScale;
 uniform vec2 u_uvOffset;
 uniform float u_blend;
 uniform vec2 u_jitter;
+uniform float u_dither;
+uniform float u_time;
 varying vec2 vUv;
 
+${HASH_GLSL}${TEMPORAL_DITHER_GLSL}
 void main() {
   vec2 uv = vUv * u_uvScale + u_uvOffset;
   vec4 curr = texture2D(u_map, uv);
-  vec4 prev = texture2D(u_prev, uv + u_jitter);
-  gl_FragColor = clamp(mix(curr, prev, u_blend), 0.0, 1.0);
+  vec4 prev = texture2D(u_prev, vUv + u_jitter);
+  vec4 color = mix(curr, prev, u_blend);
+  color.rgb += ieDither(vUv, u_time) * u_dither;
+  gl_FragColor = clamp(color, 0.0, 1.0);
 }
 `
 

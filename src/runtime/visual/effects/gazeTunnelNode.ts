@@ -15,6 +15,7 @@ import {
   getSafeModeClampNumber,
   resolveNumberParam,
 } from './paramUtils'
+import { DISC_BLUR_GLSL, HASH_GLSL, RADIAL_GLSL } from './shaderKernels'
 import { acquireEffectMaterial, disposeEffectMaterial, updateTexelSize } from './shaderMaterial'
 
 const FRAG = `
@@ -28,39 +29,37 @@ uniform float u_edge_gain;
 uniform float u_desaturate;
 varying vec2 vUv;
 
+${HASH_GLSL}${DISC_BLUR_GLSL}${RADIAL_GLSL}
 void main() {
   vec2 uv = vUv * u_uvScale + u_uvOffset;
   vec4 center = texture2D(u_map, uv);
 
   // Distance normalised so the frame corners sit at 1.0.
-  float d = length(vUv - 0.5) * 1.4142;
+  float d = ieRadialDistance(vUv, u_texelSize);
   float peripheral = smoothstep(u_radius, 1.0, d);
   float tunnel = peripheral * u_amount;
 
   // Peripheral softening grows with the tunnel.
-  float r = tunnel * 0.012;
-  vec2 rx = vec2(r * u_texelSize.x / u_texelSize.y, 0.0);
-  vec2 ry = vec2(0.0, r);
-  vec3 soft = (
-    texture2D(u_map, uv + rx).rgb +
-    texture2D(u_map, uv - rx).rgb +
-    texture2D(u_map, uv + ry).rgb +
-    texture2D(u_map, uv - ry).rgb
-  ) * 0.25;
-  vec3 color = mix(center.rgb, soft, clamp(tunnel * 1.5, 0.0, 1.0));
+  vec3 color = center.rgb;
+  if (tunnel > 0.0005) {
+    vec3 soft = ieDiscBlur(u_map, uv, vUv, tunnel * 0.02, u_texelSize);
+    color = mix(center.rgb, soft, clamp(tunnel * 1.5, 0.0, 1.0));
+  }
 
   // Centre micro-contrast: a small unsharp mask that fades out toward the periphery.
-  vec2 dx = vec2(u_texelSize.x * 1.5, 0.0);
-  vec2 dy = vec2(0.0, u_texelSize.y * 1.5);
-  vec3 local = (
-    center.rgb +
-    texture2D(u_map, uv + dx).rgb +
-    texture2D(u_map, uv - dx).rgb +
-    texture2D(u_map, uv + dy).rgb +
-    texture2D(u_map, uv - dy).rgb
-  ) * 0.2;
-  vec3 detail = center.rgb - local;
-  color += detail * u_edge_gain * 2.0 * u_amount * (1.0 - peripheral);
+  if (peripheral < 0.9995) {
+    vec2 dx = vec2(u_texelSize.x * 1.5, 0.0);
+    vec2 dy = vec2(0.0, u_texelSize.y * 1.5);
+    vec3 local = (
+      center.rgb +
+      texture2D(u_map, uv + dx).rgb +
+      texture2D(u_map, uv - dx).rgb +
+      texture2D(u_map, uv + dy).rgb +
+      texture2D(u_map, uv - dy).rgb
+    ) * 0.2;
+    vec3 detail = center.rgb - local;
+    color += detail * u_edge_gain * 2.0 * u_amount * (1.0 - peripheral);
+  }
 
   float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
   color = mix(color, vec3(luma), tunnel * u_desaturate);

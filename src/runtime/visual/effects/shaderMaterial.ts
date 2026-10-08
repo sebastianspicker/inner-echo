@@ -23,6 +23,7 @@ export function createEffectMaterial(
     vertexShader: QUAD_VERTEX_SHADER,
     fragmentShader,
     depthWrite: false,
+    depthTest: false,
   })
 }
 

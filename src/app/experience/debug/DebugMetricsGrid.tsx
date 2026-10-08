@@ -1,5 +1,9 @@
 import type { DebugDiagnosticsSnapshot } from './useDebugDiagnostics'
-import type { DebugDiagnosticsSources } from './diagnosticsFormatting'
+import {
+  formatDirectOutput,
+  formatRenderSize,
+  type DebugDiagnosticsSources,
+} from './diagnosticsFormatting'
 
 interface DebugMetricsGridProps
   extends Pick<
@@ -23,6 +27,10 @@ function OverlayRows({
       <dd>{overlay?.frameTimeMs != null ? overlay.frameTimeMs.toFixed(2) : '-'}</dd>
       <dt>renderScale</dt>
       <dd>{overlay?.renderScale ?? '-'}</dd>
+      <dt>render px</dt>
+      <dd>{formatRenderSize(overlay)}</dd>
+      <dt>direct out</dt>
+      <dd>{formatDirectOutput(overlay, '-')}</dd>
       <dt>RTs</dt>
       <dd>{overlay?.resourceCounts?.renderTargets ?? '-'}</dd>
       <dt>FBOs</dt>

@@ -32,6 +32,13 @@ export interface VideoNodeParams {
   controlValues?: Record<string, number | boolean | string>
   /** This node's index in the video_stack (for resolving control keys). */
   nodeIndex?: number
+  /**
+   * Amplitude of the ordered dither temporal nodes add before their output is quantised:
+   * 0 when the pipeline renders temporal history into half-float targets, 1/255 when it
+   * has to fall back to 8-bit targets (where an un-dithered feedback blend leaves ghosts stuck
+   * at the quantisation floor).
+   */
+  ditherAmplitude?: number
 }
 
 /**

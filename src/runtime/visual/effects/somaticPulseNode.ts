@@ -7,12 +7,13 @@
  * surge_interval (seconds between surges). Reduced Motion disables the node.
  */
 
-import type { ShaderMaterial, Material, Texture } from 'three'
+import { Vector2, type ShaderMaterial, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import { applyUvParams, clamp, resolveNumberParam } from './paramUtils'
 import { getPulseMaterial, PulseEnvelope, resolvePulseParameters } from './pulseEffectSupport'
 import { fastRandom, type FastRandom } from './random'
-import { disposeEffectMaterial } from './shaderMaterial'
+import { RADIAL_GLSL } from './shaderKernels'
+import { disposeEffectMaterial, updateTexelSize } from './shaderMaterial'
 import { SurgeEnvelope } from './surgeEnvelope'
 
 const FRAG = `
@@ -24,12 +25,14 @@ uniform float u_pulse;
 uniform float u_surge;
 uniform float u_tunnel;
 uniform float u_blur;
+uniform vec2 u_texelSize;
 varying vec2 vUv;
 
+${RADIAL_GLSL}
 void main() {
   vec2 center = vec2(0.5, 0.5);
   vec2 radial = vUv - center;
-  float d = length(radial) * 1.4142;
+  float d = ieRadialDistance(vUv, u_texelSize);
 
   // The breath swings -1..1; a surge pushes the wave toward its crest.
   float breath = (u_pulse - 0.5) * 2.0;
@@ -41,11 +44,16 @@ void main() {
   zoomUv = zoomUv * u_uvScale + u_uvOffset;
 
   float peripheral = smoothstep(0.35, 1.0, d);
-  vec2 blurDir = normalize(radial + vec2(0.0001)) * u_blur * crest * peripheral * 0.02;
+  float blurAmount = u_blur * crest * peripheral;
   vec4 color = texture2D(u_map, zoomUv);
-  color += texture2D(u_map, zoomUv + blurDir);
-  color += texture2D(u_map, zoomUv - blurDir);
-  color /= 3.0;
+  if (blurAmount > 0.0005) {
+    vec2 blurDir = normalize(radial + vec2(0.0001)) * blurAmount * 0.02;
+    color = texture2D(u_map, zoomUv - blurDir) * 0.15
+      + texture2D(u_map, zoomUv - blurDir * 0.5) * 0.2
+      + color * 0.3
+      + texture2D(u_map, zoomUv + blurDir * 0.5) * 0.2
+      + texture2D(u_map, zoomUv + blurDir) * 0.15;
+  }
 
   float tunnel = peripheral * u_tunnel * (0.45 + 0.55 * crest);
   color.rgb *= 1.0 - tunnel * 0.6;
@@ -95,6 +103,7 @@ export class SomaticPulseNode implements VideoNode {
     this.material.uniforms.u_pulse.value = this.envelope.current()
     this.material.uniforms.u_tunnel.value = tunnel
     this.material.uniforms.u_blur.value = blur
+    updateTexelSize(this.material, this.material.uniforms.u_map.value as Texture)
     this.rateHz = resolved.rate
     this.smoothing = resolved.smoothing
     this.surgeStrength = surge
@@ -125,6 +134,7 @@ export class SomaticPulseNode implements VideoNode {
       u_surge: { value: 0 },
       u_tunnel: { value: 0.3 },
       u_blur: { value: 0.12 },
+      u_texelSize: { value: new Vector2(1 / 400, 1 / 400) },
     })
     return this.material
   }

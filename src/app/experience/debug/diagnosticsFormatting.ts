@@ -23,12 +23,27 @@ export interface DebugDiagnosticsSources {
   micGate?: number
 }
 
+export function formatRenderSize(overlay: OverlayDiagnostics | undefined): string {
+  if (overlay?.renderWidth == null || overlay.renderHeight == null) return 'n/a'
+  return `${overlay.renderWidth}x${overlay.renderHeight}`
+}
+
+export function formatDirectOutput(
+  overlay: OverlayDiagnostics | undefined,
+  unknown: string,
+): string {
+  if (overlay?.directOutput == null) return unknown
+  return overlay.directOutput ? 'yes' : 'no'
+}
+
 function formatOverlayLines(overlay: OverlayDiagnostics | undefined): string[] {
   return [
     `renderer: ${overlay?.rendererMode ?? 'none'}`,
     `fps: ${overlay?.fps != null ? overlay.fps.toFixed(1) : 'n/a'}`,
     `frameTimeMs: ${overlay?.frameTimeMs != null ? overlay.frameTimeMs.toFixed(2) : 'n/a'}`,
     `renderScale: ${overlay?.renderScale ?? 'n/a'}`,
+    `renderSize: ${formatRenderSize(overlay)}`,
+    `directOutput: ${formatDirectOutput(overlay, 'n/a')}`,
     `resources.renderTargets: ${overlay?.resourceCounts?.renderTargets ?? 'n/a'}`,
     `resources.temporalPairs: ${overlay?.resourceCounts?.temporalPairs ?? 'n/a'}`,
     `resources.estimatedTextures: ${overlay?.resourceCounts?.estimatedTextures ?? 'n/a'}`,
@@ -79,7 +94,7 @@ function formatClampStateLines(sources: DebugDiagnosticsSources): string[] {
   const clamps = sources.getAppliedClamps?.()
   if (!clamps) return []
   return [
-    `clamps.intensity: ${clamps.intensityInput.toFixed(3)} -> ${clamps.intensityEffective.toFixed(3)}`,
+    `clamps.intensity: ${clamps.intensityInput.toFixed(3)} -> ${clamps.intensityClamped.toFixed(3)} (engine ${clamps.intensityEffective.toFixed(3)})`,
     `clamps.safeMode: ${clamps.safeMode ? 'on' : 'off'}`,
     `clamps.reducedMotion: ${clamps.reducedMotion ? 'on' : 'off'}`,
     `clamps.safeModeKeys: ${clamps.safeModeClampKeys.join(', ') || 'none'}`,

@@ -21,6 +21,7 @@ import {
   disposeEffectMaterial,
   updateTexelSize,
 } from './shaderMaterial'
+import { DISC_BLUR_GLSL, HASH_GLSL, TEMPORAL_DITHER_GLSL } from './shaderKernels'
 import { persistenceBlend, persistenceSeconds } from './temporalBlend'
 
 const PERSISTENCE_SECONDS_AT_REFERENCE = 0.45
@@ -36,20 +37,18 @@ uniform float u_blend;
 uniform float u_refraction;
 uniform float u_chroma;
 uniform float u_time;
+uniform float u_dither;
 varying vec2 vUv;
 
-float hash(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-}
-
+${HASH_GLSL}${DISC_BLUR_GLSL}${TEMPORAL_DITHER_GLSL}
 float valueNoise(vec2 p) {
   vec2 i = floor(p);
   vec2 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
-  float a = hash(i);
-  float b = hash(i + vec2(1.0, 0.0));
-  float c = hash(i + vec2(0.0, 1.0));
-  float d = hash(i + vec2(1.0, 1.0));
+  float a = ieHash(i);
+  float b = ieHash(i + vec2(1.0, 0.0));
+  float c = ieHash(i + vec2(0.0, 1.0));
+  float d = ieHash(i + vec2(1.0, 1.0));
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
@@ -63,23 +62,19 @@ void main() {
   ) - 0.5;
   vec2 cuv = uv + warp * u_refraction;
 
-  vec2 chroma = vec2(u_chroma * 0.012, 0.0);
-  vec3 curr;
-  curr.r = texture2D(u_map, cuv + chroma).r;
-  curr.g = texture2D(u_map, cuv).g;
-  curr.b = texture2D(u_map, cuv - chroma).b;
+  // Radial colour fringe: red and blue split apart toward the frame edges.
+  vec2 fringe = (cuv - 0.5) * u_chroma * 0.08;
+  vec3 curr = texture2D(u_map, cuv).rgb;
+  if (u_chroma > 0.0) {
+    curr.r = texture2D(u_map, cuv + fringe).r;
+    curr.b = texture2D(u_map, cuv - fringe).b;
+  }
 
   // Milky softening.
-  float r = u_veil * 0.006;
-  vec2 rx = vec2(r * u_texelSize.x / u_texelSize.y, 0.0);
-  vec2 ry = vec2(0.0, r);
-  vec3 soft = (
-    texture2D(u_map, cuv + rx).rgb +
-    texture2D(u_map, cuv - rx).rgb +
-    texture2D(u_map, cuv + ry).rgb +
-    texture2D(u_map, cuv - ry).rgb
-  ) * 0.25;
-  curr = mix(curr, soft, clamp(u_veil * 1.2, 0.0, 1.0));
+  if (u_veil > 0.0005) {
+    vec3 soft = ieDiscBlur(u_map, cuv, vUv, u_veil * 0.008, u_texelSize);
+    curr = mix(curr, soft, clamp(u_veil * 1.2, 0.0, 1.0));
+  }
 
   // The veil is applied to the live frame only. The previous frame is this node's own
   // output and is already veiled, so blending after the veil would accumulate the lift.
@@ -88,9 +83,10 @@ void main() {
   curr = mix(curr, vec3(0.80, 0.84, 0.88), u_veil * 0.3);
   curr = (curr - 0.5) * (1.0 - u_veil * 0.2) + 0.5;
 
-  // Persistence ghost from the previous (already veiled) frame.
-  vec3 prev = texture2D(u_prev, uv).rgb;
+  // Persistence ghost from the previous (already veiled) frame, in output space.
+  vec3 prev = texture2D(u_prev, vUv).rgb;
   vec3 color = mix(curr, prev, u_blend);
+  color += ieDither(vUv, u_time) * u_dither;
 
   gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }
@@ -133,6 +129,7 @@ export class GlassVeilNode implements VideoNode {
     this.material.uniforms.u_refraction.value = refraction
     this.material.uniforms.u_chroma.value = chroma
     this.material.uniforms.u_time.value = this.time
+    this.material.uniforms.u_dither.value = params.ditherAmplitude ?? 1 / 255
     updateTexelSize(this.material, this.material.uniforms.u_map.value as Texture)
     applyUvParams(this.material, params)
   }
@@ -155,6 +152,7 @@ export class GlassVeilNode implements VideoNode {
         u_refraction: { value: 0 },
         u_chroma: { value: 0 },
         u_time: { value: 0 },
+        u_dither: { value: 1 / 255 },
         u_texelSize: { value: new Vector2(1 / 400, 1 / 400) },
       })
     } else {

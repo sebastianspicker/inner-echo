@@ -40,6 +40,23 @@ function getNumberFromRecord(obj: unknown, key: string): number | undefined {
   return typeof v === 'number' && Number.isFinite(v) ? v : undefined
 }
 
+/** `"<nodeIndex>.<key>"` strings per key, filled lazily so per-frame lookups allocate nothing. */
+const indexedKeyCache = new Map<string, string[]>()
+
+function indexedControlKey(nodeIndex: number, key: string): string {
+  let byIndex = indexedKeyCache.get(key)
+  if (!byIndex) {
+    byIndex = []
+    indexedKeyCache.set(key, byIndex)
+  }
+  let indexed = byIndex[nodeIndex]
+  if (indexed === undefined) {
+    indexed = `${nodeIndex}.${key}`
+    byIndex[nodeIndex] = indexed
+  }
+  return indexed
+}
+
 function resolveControlValue<T extends number | boolean>(
   params: VideoNodeParams,
   key: string,
@@ -47,7 +64,7 @@ function resolveControlValue<T extends number | boolean>(
   fallback: T,
 ): T {
   const controlValues = params.controlValues ?? {}
-  const indexed = controlValues[`${params.nodeIndex ?? 0}.${key}`]
+  const indexed = controlValues[indexedControlKey(params.nodeIndex ?? 0, key)]
   if (typeof indexed === expectedType) return indexed as T
   const unkeyed = controlValues[key]
   return typeof unkeyed === expectedType ? (unkeyed as T) : fallback

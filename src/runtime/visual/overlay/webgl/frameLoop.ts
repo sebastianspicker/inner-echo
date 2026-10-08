@@ -1,10 +1,4 @@
-import {
-  ColorManagement,
-  MeshBasicMaterial,
-  SRGBTransfer,
-  type Texture,
-  type VideoTexture,
-} from 'three'
+import type { Texture, VideoTexture, WebGLRenderTarget } from 'three'
 import type { AudioMetrics } from '../../../audio'
 import type { VideoNode } from '../../effects/VideoNode'
 import type { ReactiveLoopOptions } from './reactive'
@@ -13,18 +7,21 @@ import {
   FPS_DOWN_THRESHOLD,
   FPS_SAMPLES,
   FPS_UP_THRESHOLD,
+  GL_ERROR_POLL_FRAMES,
   RENDER_SCALES,
+  RESIZE_SETTLE_MS,
   SCALE_CHANGE_COOLDOWN_MS,
 } from './constants'
 import { computeNextRenderScaleIndex } from './loop'
 import { resolveReactiveOverrides, writeMergedControlValues, writeUvScaleOffset } from './params'
-import type {
-  FinalBlitMapShaderSignature,
-  WebGLOverlayRuntimeState,
-  WebGLSceneResources,
-} from './pipelineState'
-import { allocateRenderTargets, disposeChainRenderTargets, disposeTemporalPairs } from './resources'
-import { renderQuad } from './renderHelpers'
+import type { WebGLOverlayRuntimeState, WebGLSceneResources } from './pipelineState'
+import {
+  allocateFrameTargets,
+  computeChainSize,
+  countFrameTargets,
+  supportsHalfFloatTargets,
+} from './resources'
+import { createBlitMaterial, renderQuad, writeCoverFit } from './renderHelpers'
 import { updateResourceDiagnostics } from './diagnostics'
 
 const EMPTY_AUDIO_METRICS: AudioMetrics = { rms: 0, centroid: 0, flux: 0 }
@@ -70,20 +67,19 @@ export function createFrameLoop(options: FrameLoopOptions): () => void {
       state.rafId = requestAnimationFrame(loop)
       return
     }
-    renderState.setSize()
+    renderState.setSize(now)
     const videoReady = video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0
+    const sourceChanged = hasNewVideoFrame(state)
     const reactiveDemand = readReactiveDemand(reactiveOptions)
-    const videoMetrics = readVideoMetrics(
-      resources,
-      video,
-      delta,
-      videoReady,
-      reactiveDemand,
-      metricsReadState,
-    )
+    const videoMetrics = readVideoMetrics(resources, video, delta, videoReady, sourceChanged, {
+      demand: reactiveDemand,
+      state: metricsReadState,
+    })
     if (reactiveDemand.videoMetrics) reactiveOptions?.onVideoMetrics?.(videoMetrics)
-    if (videoReady) renderState.renderVideoFrame(delta, videoMetrics, reactiveDemand)
-    else clearRenderer(resources)
+    if (videoReady) {
+      renderState.renderVideoFrame(delta, videoMetrics, reactiveDemand, sourceChanged)
+      state.videoFrameDirty = false
+    } else clearRenderer(resources)
     if (hasRepeatedGlErrors(resources.gl, state, videoReady)) {
       failAndFallback('Renderer switched to 2D fallback after repeated GPU errors.')
       return
@@ -98,27 +94,19 @@ function createRenderState(options: FrameLoopOptions) {
     hasAppliedAudioOverrides: false,
     inactiveNotified: false,
   }
-  const allocateTargets = (width: number, height: number): void => {
-    const scale = RENDER_SCALES[state.renderScaleIndex]
-    const renderWidth = Math.max(1, Math.floor(width * scale))
-    const renderHeight = Math.max(1, Math.floor(height * scale))
-    disposeChainRenderTargets(state.chainRTs)
-    state.chainRTs = []
-    disposeTemporalPairs(state.temporalPingPong)
-    state.temporalPingPong.length = 0
-    const allocated = allocateRenderTargets(nodes, renderWidth, renderHeight)
-    state.chainRTs = allocated.chainRTs
-    state.temporalPingPong.push(...allocated.temporalPingPong)
-    state.finalBlitMaterial ??= new MeshBasicMaterial({ map: null, depthWrite: false })
-    syncResourceDiagnostics(state)
-  }
-  const setSize = (): void => {
+  state.halfFloatHistory = supportsHalfFloatTargets(resources.renderer)
+  state.baseParams.ditherAmplitude = state.halfFloatHistory ? 0 : 1 / 255
+  const setSize = (now: number): void => {
     const width = container.clientWidth
     const height = container.clientHeight
     if (width <= 0 || height <= 0) return
-    const dimensionsChanged = syncRendererSize(resources.renderer, state, width, height)
-    if (!state.usePassthrough && (dimensionsChanged || state.chainRTs.length === 0))
-      allocateTargets(width, height)
+    if (syncRendererSize(resources.renderer, state, width, height)) state.resizePendingSinceMs = now
+    if (state.usePassthrough) return
+    // While a resize settles the canvas follows immediately and the existing targets are blitted
+    // into it; reallocation waits until the size holds still.
+    const settled =
+      state.resizePendingSinceMs !== null && now - state.resizePendingSinceMs >= RESIZE_SETTLE_MS
+    if (state.sourceRT === null || settled) allocateTargets(state, nodes)
   }
   const updateRenderScale = (now: number, delta: number): void => {
     const nextScaleIndex = computeScaleIndex(state, now)
@@ -126,35 +114,69 @@ function createRenderState(options: FrameLoopOptions) {
     if (nextScaleIndex !== state.renderScaleIndex) {
       state.renderScaleIndex = nextScaleIndex
       state.lastScaleChangeMs = now
-      if (!state.usePassthrough && state.lastW > 0 && state.lastH > 0)
-        allocateTargets(state.lastW, state.lastH)
+      if (!state.usePassthrough && state.sourceRT !== null) allocateTargets(state, nodes)
     }
     state.diagnostics.fps = state.avgFps
     state.diagnostics.frameTimeMs = delta * 1000
     state.diagnostics.renderScale = RENDER_SCALES[state.renderScaleIndex]
   }
-  const renderVideoFrame = (delta: number, metrics: VideoMetrics, demand: ReactiveDemand): void => {
-    updateVideoTexture(resources.videoTexture)
+  const coverScale: [number, number] = [1, 1]
+  const coverOffset: [number, number] = [0, 0]
+  const renderVideoFrame = (
+    delta: number,
+    metrics: VideoMetrics,
+    demand: ReactiveDemand,
+    sourceChanged: boolean,
+  ): void => {
+    if (sourceChanged) updateVideoTexture(resources.videoTexture)
+    // Cover-fit happens once, in the source pass. Nodes receive identity UV mapping so a chain of
+    // N nodes never crops N times.
     writeUvScaleOffset(
       video.videoWidth,
       video.videoHeight,
       container.clientWidth,
       container.clientHeight,
-      state.baseParams.uvScale,
-      state.baseParams.uvOffset,
+      coverScale,
+      coverOffset,
     )
+    writeCoverFit(resources.videoPassthroughMaterial, coverScale, coverOffset)
     applyReactiveState(state, reactiveOptions, demand, delta, metrics, applyState)
     state.baseParams.intensity = state.currentParams.intensity
     state.baseParams.safeMode = state.currentParams.safeMode
     state.baseParams.safetyContext = state.currentParams.safetyContext
     if (state.usePassthrough) {
+      // The clean passthrough always draws straight to the canvas at drawing-buffer size.
+      state.diagnostics.renderWidth = state.drawingBufferSize.x
+      state.diagnostics.renderHeight = state.drawingBufferSize.y
+      state.diagnostics.directOutput = true
       resources.renderer.setRenderTarget(null)
       resources.renderer.render(resources.scene, resources.camera)
       return
     }
-    if (state.chainRTs.length === nodes.length + 1) renderNodeChain(nodes, resources, state, delta)
+    if (state.sourceRT !== null) renderNodeChain(nodes, resources, state, delta, sourceChanged)
   }
   return { setSize, updateRenderScale, renderVideoFrame }
+}
+
+function allocateTargets(state: WebGLOverlayRuntimeState, nodes: VideoNode[]): void {
+  const size = computeChainSize(
+    state.lastW,
+    state.lastH,
+    state.lastDpr ?? 1,
+    RENDER_SCALES[state.renderScaleIndex],
+  )
+  allocateFrameTargets(state, nodes, size, state.halfFloatHistory)
+  state.resizePendingSinceMs = null
+  // Fresh targets hold no camera frame yet; the next frame must run the source pass.
+  state.videoFrameDirty = true
+  state.diagnostics.renderWidth = size.width
+  state.diagnostics.renderHeight = size.height
+  syncResourceDiagnostics(state)
+}
+
+/** Without requestVideoFrameCallback every display frame counts as a new camera frame. */
+function hasNewVideoFrame(state: WebGLOverlayRuntimeState): boolean {
+  return state.videoFrameCallbackId === null || state.videoFrameDirty
 }
 
 function syncRendererSize(
@@ -165,7 +187,8 @@ function syncRendererSize(
 ): boolean {
   const devicePixelRatio = Math.min(window.devicePixelRatio ?? 1, 2)
   const dimensionsChanged = width !== state.lastW || height !== state.lastH
-  if (devicePixelRatio !== state.lastDpr) {
+  const dprChanged = devicePixelRatio !== state.lastDpr
+  if (dprChanged) {
     state.lastDpr = devicePixelRatio
     renderer.setPixelRatio(devicePixelRatio)
   }
@@ -174,7 +197,8 @@ function syncRendererSize(
     state.lastH = height
     renderer.setSize(width, height)
   }
-  return dimensionsChanged
+  if (dimensionsChanged || dprChanged) renderer.getDrawingBufferSize(state.drawingBufferSize)
+  return dimensionsChanged || dprChanged
 }
 
 function renderNodeChain(
@@ -182,73 +206,97 @@ function renderNodeChain(
   resources: WebGLSceneResources,
   state: WebGLOverlayRuntimeState,
   delta: number,
+  sourceChanged: boolean,
 ): void {
-  const { renderer, scene, camera, videoPassthroughMaterial } = resources
-  renderQuad(renderer, scene, camera, videoPassthroughMaterial, state.chainRTs[0])
-  let inputTexture: Texture = state.chainRTs[0].texture
+  const sourceRT = state.sourceRT as WebGLRenderTarget
+  // A stale camera frame reuses last frame's source pass; nodes still run because they animate.
+  if (sourceChanged) {
+    const { renderer, scene, camera, videoPassthroughMaterial } = resources
+    renderQuad(renderer, scene, camera, videoPassthroughMaterial, sourceRT)
+  }
+  const directOutput = canRenderDirectly(nodes, state, sourceRT)
+  state.diagnostics.directOutput = directOutput
+  const lastIndex = nodes.length - 1
+  let inputTexture: Texture = sourceRT.texture
   let temporalIndex = 0
   for (const [index, node] of nodes.entries()) {
     state.baseParams.nodeIndex = index
-    node.setParams(state.baseParams)
-    ;(node as { tick?: (frameDelta: number) => void }).tick?.(delta)
-    inputTexture = renderNode(node, inputTexture, temporalIndex, resources, state)
+    const toScreen = directOutput && index === lastIndex
+    inputTexture = renderNode(node, inputTexture, temporalIndex, resources, state, delta, toScreen)
     if (node.needsPreviousFrame) temporalIndex += 1
   }
-  if (!state.finalBlitMaterial) return
-  const nextSignature = readFinalBlitMapShaderSignature(inputTexture)
-  const needsMapShader = hasFinalBlitMapShaderChanged(
-    state.finalBlitMapShaderSignature,
-    nextSignature,
-  )
-  state.finalBlitMaterial.map = inputTexture
-  if (needsMapShader) {
-    state.finalBlitMapShaderSignature = nextSignature
-    state.finalBlitMaterial.needsUpdate = true
-  }
-  renderer.setRenderTarget(null)
-  renderer.clear()
-  renderQuad(renderer, scene, camera, state.finalBlitMaterial, null)
+  if (!directOutput) blitToScreen(resources, state, inputTexture)
 }
 
-function readFinalBlitMapShaderSignature(texture: Texture): FinalBlitMapShaderSignature {
-  return {
-    channel: texture.channel,
-    decodeVideoTexture:
-      (texture as Texture & { isVideoTexture?: boolean }).isVideoTexture === true &&
-      ColorManagement.getTransfer(texture.colorSpace) === SRGBTransfer,
-  }
-}
-
-function hasFinalBlitMapShaderChanged(
-  previous: FinalBlitMapShaderSignature | null,
-  next: FinalBlitMapShaderSignature,
+/**
+ * The last node can draw straight to the canvas when it keeps no history (its output is not read
+ * back next frame) and the chain runs at canvas resolution (no budget or adaptive downscale, and
+ * no resize still settling).
+ */
+function canRenderDirectly(
+  nodes: VideoNode[],
+  state: WebGLOverlayRuntimeState,
+  sourceRT: WebGLRenderTarget,
 ): boolean {
   return (
-    previous === null ||
-    previous.channel !== next.channel ||
-    previous.decodeVideoTexture !== next.decodeVideoTexture
+    nodes[nodes.length - 1]?.needsPreviousFrame !== true &&
+    sourceRT.width === state.drawingBufferSize.x &&
+    sourceRT.height === state.drawingBufferSize.y
   )
 }
 
+function blitToScreen(
+  resources: WebGLSceneResources,
+  state: WebGLOverlayRuntimeState,
+  texture: Texture,
+): void {
+  state.blitMaterial ??= createBlitMaterial()
+  state.blitMaterial.uniforms.u_map.value = texture
+  renderQuad(resources.renderer, resources.scene, resources.camera, state.blitMaterial, null)
+}
+
+/** Non-temporal nodes alternate between the two chain targets, never writing their own input. */
+function nextChainTarget(
+  state: WebGLOverlayRuntimeState,
+  inputTexture: Texture,
+): WebGLRenderTarget {
+  return inputTexture === state.chainRTs[0].texture ? state.chainRTs[1] : state.chainRTs[0]
+}
+
+/**
+ * Bind the node's input first, then apply parameters and advance time, then render. Binding
+ * first lets `setParams` read the live input (texel size) on the very first frame instead of
+ * rendering one frame with construction defaults.
+ */
 function renderNode(
   node: VideoNode,
   inputTexture: Texture,
   temporalIndex: number,
   resources: WebGLSceneResources,
   state: WebGLOverlayRuntimeState,
+  delta: number,
+  toScreen: boolean,
 ): Texture {
   const { renderer, scene, camera } = resources
+  const advance = (): void => {
+    node.setParams(state.baseParams)
+    ;(node as { tick?: (frameDelta: number) => void }).tick?.(delta)
+  }
   if (!node.needsPreviousFrame) {
-    const target = state.chainRTs[state.baseParams.nodeIndex + 1]
-    renderQuad(renderer, scene, camera, node.getMaterial(inputTexture), target)
-    return target.texture
+    const target = toScreen ? null : nextChainTarget(state, inputTexture)
+    const material = node.getMaterial(inputTexture)
+    advance()
+    renderQuad(renderer, scene, camera, material, target)
+    return target?.texture ?? inputTexture
   }
   const pingPong = state.temporalPingPong[temporalIndex]
   const previousTexture = pingPong.firstFrame
     ? inputTexture
     : (pingPong.writeIndex === 0 ? pingPong.rtB : pingPong.rtA).texture
   const writeTarget = pingPong.writeIndex === 0 ? pingPong.rtA : pingPong.rtB
-  renderQuad(renderer, scene, camera, node.getMaterial(inputTexture, previousTexture), writeTarget)
+  const material = node.getMaterial(inputTexture, previousTexture)
+  advance()
+  renderQuad(renderer, scene, camera, material, writeTarget)
   if (pingPong.firstFrame) pingPong.firstFrame = false
   pingPong.writeIndex = 1 - pingPong.writeIndex
   return writeTarget.texture
@@ -293,8 +341,8 @@ function readVideoMetrics(
   video: HTMLVideoElement,
   delta: number,
   videoReady: boolean,
-  demand: ReactiveDemand,
-  state: MetricsReadState,
+  sourceChanged: boolean,
+  { demand, state }: { demand: ReactiveDemand; state: MetricsReadState },
 ): VideoMetrics {
   if (!demand.videoMetrics) {
     state.resetBeforeNextSample = true
@@ -305,7 +353,7 @@ function readVideoMetrics(
     state.resetBeforeNextSample = false
   }
   return videoReady
-    ? resources.metricsTracker.stepFromSource(video, delta)
+    ? resources.metricsTracker.stepFromSource(video, delta, sourceChanged)
     : resources.metricsTracker.getLast()
 }
 
@@ -334,7 +382,7 @@ function clearRenderer(resources: WebGLSceneResources): void {
 function syncResourceDiagnostics(state: WebGLOverlayRuntimeState): void {
   updateResourceDiagnostics(
     state.diagnostics,
-    state.chainRTs.length + state.temporalPingPong.length * 2,
+    countFrameTargets(state),
     state.temporalPingPong.length,
   )
 }
@@ -375,13 +423,21 @@ function burnStressFrame(delta: number): number {
   return Math.max(0, delta - (performance.now() - start) / 1000)
 }
 
+/**
+ * `gl.getError()` forces a GPU sync, so it is polled on the first three rendered frames and then
+ * every `GL_ERROR_POLL_FRAMES`. Three consecutive polls with errors trigger the fallback.
+ */
 function hasRepeatedGlErrors(
   gl: WebGLRenderingContext,
   state: WebGLOverlayRuntimeState,
   didRender: boolean,
 ): boolean {
+  if (!didRender) return false
+  state.renderedFrameCount += 1
+  const frame = state.renderedFrameCount
+  if (frame > 3 && frame % GL_ERROR_POLL_FRAMES !== 0) return false
   let hadError = false
   for (let error = gl.getError(); error !== gl.NO_ERROR; error = gl.getError()) hadError = true
-  if (didRender) state.consecutiveGlErrors = hadError ? state.consecutiveGlErrors + 1 : 0
+  state.consecutiveGlErrors = hadError ? state.consecutiveGlErrors + 1 : 0
   return state.consecutiveGlErrors >= 3
 }
