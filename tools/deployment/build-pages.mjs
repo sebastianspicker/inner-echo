@@ -6,6 +6,8 @@ const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 function runScript(name, arguments_ = []) {
   const result = spawnSync(npmCommand, ['run', name, '--', ...arguments_], {
     stdio: 'inherit',
+    // Node refuses to spawn .cmd files without a shell on Windows.
+    shell: process.platform === 'win32',
   })
 
   if (result.error) throw result.error

@@ -7,6 +7,7 @@ import { effectiveIntensity } from '../../domain/experience/safety'
 import { closeAudioContext, loadAudioEngine, startAudioContext } from '../audio'
 import { requestVideoStream } from '../camera'
 import { createCameraManager } from './camera'
+import { createFailureLog } from './failureLog'
 import { createOverlayManager, loadOverlayModules } from './overlay'
 import { createSoundManager } from './sound'
 import { clearStageCanvases } from './stage'
@@ -179,6 +180,7 @@ export function createExperienceSession(
     for (const listener of listeners) listener()
   }
   const managers = createManagers(dependencies, notifyListeners)
+  const reportFailures = createFailureLog()
 
   return {
     getSnapshot() {
@@ -187,6 +189,7 @@ export function createExperienceSession(
         return session.cachedSnapshot
       }
       session.cachedSnapshot = next
+      reportFailures(next)
       return next
     },
     subscribe(listener) {

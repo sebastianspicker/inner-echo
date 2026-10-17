@@ -50,6 +50,8 @@ function createTickScheduler(context: BaseAudioContext, toneGain: GainNode) {
     if (timer !== null) clearTimeout(timer)
     timer = null
     running = null
+    toneGain.gain.cancelScheduledValues(context.currentTime)
+    toneGain.gain.setValueAtTime(0, context.currentTime)
   }
   const fire = (peak: number) => {
     const now = context.currentTime
@@ -58,22 +60,24 @@ function createTickScheduler(context: BaseAudioContext, toneGain: GainNode) {
     toneGain.gain.linearRampToValueAtTime(peak, now + TICK_ATTACK_S)
     toneGain.gain.setTargetAtTime(0, now + TICK_ATTACK_S, TICK_DECAY_TAU_S)
   }
-  const schedule = (meanIntervalSeconds: number, peak: number, factor: number) => {
-    stop()
+  const schedule = (factor: number) => {
+    if (!running) return
     timer = setTimeout(
       () => {
-        fire(peak)
-        schedule(meanIntervalSeconds, peak, 0.7 + 0.6 * Math.random())
+        timer = null
+        if (!running) return
+        fire(running.peak)
+        schedule(0.7 + 0.6 * Math.random())
       },
-      meanIntervalSeconds * factor * 1000,
+      (factor * 1000) / Math.max(0.2, running.rateHz),
     )
   }
   return {
     start(rateHz: number, peak: number): void {
-      // Repeated setParams calls (every intensity change) must not keep postponing the next tick.
-      if (running && running.rateHz === rateHz && running.peak === peak) return
+      // Keep the pending tick through control updates. It uses the latest level; a changed rate
+      // takes effect for the following interval, so continuous modulation cannot starve ticks.
       running = { rateHz, peak }
-      schedule(1 / Math.max(0.2, rateHz), peak, 0.5)
+      if (timer === null) schedule(0.5)
     },
     stop,
   }
@@ -162,8 +166,6 @@ export function createPulseTone(
       return
     }
     ticks.stop()
-    toneGain.gain.cancelScheduledValues(now)
-    toneGain.gain.setValueAtTime(0, now)
     // LFO maps [-1,1] -> [0,1] then scaled by mix.
     lfoGain.gain.setValueAtTime(0.5 * mix, now)
     offset.offset.setValueAtTime(0.5 * mix, now)

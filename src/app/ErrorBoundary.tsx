@@ -32,9 +32,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Keep raw error details out of the production console.
+    // Keep raw error details out of the production console; the error name is enough to report.
     if (import.meta.env.DEV) {
-      logger.error('[inner-echo] ErrorBoundary caught:', error.message, errorInfo.componentStack)
+      logger.error('ErrorBoundary caught:', error.message, errorInfo.componentStack)
+    } else {
+      logger.error('ErrorBoundary caught', error.name)
     }
   }
 
@@ -68,7 +70,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <p className="ie-errorBoundaryBody">
             This is not your fault. The experience ran into an issue it could not recover from.
           </p>
-          <p className="ie-errorBoundaryMessage">{this.state.error.message}</p>
+          {import.meta.env.DEV ? (
+            <p className="ie-errorBoundaryMessage">{this.state.error.message}</p>
+          ) : null}
           <button type="button" onClick={this.handleReset} className="ie-errorBoundaryAction">
             Start fresh
           </button>

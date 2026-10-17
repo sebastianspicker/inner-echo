@@ -1,4 +1,4 @@
-import { readdir, readFile, unlink } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { JSDOM } from 'jsdom'
 import { collectChunkClosure } from '../shared/viteManifest.mjs'
@@ -89,7 +89,6 @@ if (failures.length > 0) {
   console.log(
     `[bundle:verify] Welcome JS: ${compressed(gzipSync)} gzip bytes; ${compressed(brotliCompressSync)} Brotli bytes.`,
   )
-  await unlink(manifestPath)
   console.log(
     '[bundle:verify] Welcome, workspace, audio, evidence and graphics loading boundaries hold; dev-only diagnostics are absent.',
   )

@@ -32,5 +32,7 @@ What did you expect instead?
 
 ## Console output
 
-Include only the smallest relevant excerpt, and remove tokens, device names, local paths, personal
-data, and unrelated logs.
+Copy the lines that start with `[inner-echo]` from the browser console. The app logs one line per
+camera, microphone, sound, or renderer failure or fallback, naming only the state and the error
+type. Include only the smallest relevant excerpt, and remove tokens, device names, local paths,
+personal data, and unrelated logs.

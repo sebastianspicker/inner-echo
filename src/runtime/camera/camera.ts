@@ -13,7 +13,8 @@ export type RequestVideoResult =
   | { ok: false; error: DOMException }
 
 /**
- * Request video-only stream from the default camera.
+ * Request a video-only stream, preferring the user-facing camera on devices with several.
+ * `facingMode` is a preference, not an exact constraint, so single-camera devices still work.
  * Call only in response to a user gesture (e.g. button click).
  */
 export async function requestVideoStream(): Promise<RequestVideoResult> {
@@ -29,7 +30,7 @@ export async function requestVideoStream(): Promise<RequestVideoResult> {
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
+      video: { facingMode: 'user' },
       audio: false,
     })
     return { ok: true, stream }

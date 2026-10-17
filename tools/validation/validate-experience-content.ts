@@ -7,6 +7,7 @@
  * - referenced docs exist under `docs/references/**`
  * - video graph can be built (unknown nodes treated as failures here)
  * - reactive mappings resolve (video + audio targets), unknown targets are failures
+ * - the device-free demo's profile rows use the catalog's labels and descriptions
  *
  * Run: npm run conditions:validate
  */
@@ -90,6 +91,40 @@ function validateReactiveMappings(profile: Profile, failures: { count: number })
   }
 }
 
+const DEMO_PROFILE_ROW =
+  /<button class="profile-row"[^>]*data-profile="([^"]*)" data-profile-id="([^"]*)"[^>]*><span class="profile-name">([^<]*)<\/span><small>([^<]*)<\/small><\/button>/g
+
+function decodeHtml(text: string): string {
+  return text
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#x27;', "'")
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&amp;', '&')
+}
+
+function validateDemoProfiles(
+  conditions: Array<{ id: string; label: string; description?: string }>,
+  failures: { count: number },
+) {
+  const html = readFileSync(join(ROOT, 'demo', 'index.html'), 'utf-8')
+  const rows = [...html.matchAll(DEMO_PROFILE_ROW)].map((match) => match.slice(1).map(decodeHtml))
+  if (rows.length === 0 || rows.length !== html.split('class="profile-row"').length - 1) {
+    console.error('[conditions-validate] demo/index.html profile rows have an unexpected shape')
+    failures.count++
+  }
+  for (const [attribute, id, name, description] of rows) {
+    const condition = conditions.find((entry) => entry.id === id)
+    const label = condition?.label
+    if (attribute !== label || name !== label || description !== condition?.description) {
+      console.error(
+        `[conditions-validate] demo/index.html profile "${attribute}" does not match catalog entry "${id}"`,
+      )
+      failures.count++
+    }
+  }
+}
+
 function main() {
   const catalogRaw = loadJson(CATALOG_PATH)
   const catalogParsed = catalogSchema.safeParse(catalogRaw)
@@ -108,6 +143,7 @@ function main() {
   const ids = new Set(catalogParsed.data.conditions.map((c) => c.id))
 
   for (const file of files) validateProfile(file, ids, failures)
+  validateDemoProfiles(catalogParsed.data.conditions, failures)
 
   if (failures.count > 0) {
     console.error(`[conditions-validate] FAIL (${failures.count} issue(s))`)

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { getPagesBasePath } from './pages-config.mjs'
@@ -44,6 +45,9 @@ export async function createHandoff(directory, environment, now = Date.now()) {
     'THIRD_PARTY_NOTICES.txt',
   ]) {
     await readFile(resolve(directory, required))
+  }
+  if (existsSync(resolve(directory, 'manifest.json'))) {
+    throw new Error('Pages candidate still contains manifest.json; run npm run pages:finalize')
   }
   return {
     version: 1,

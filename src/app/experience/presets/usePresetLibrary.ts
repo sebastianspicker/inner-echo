@@ -135,6 +135,15 @@ function persistAndSet(patch: Patch, next: PresetSnapshotV2[]): boolean {
   return true
 }
 
+const PRESET_LIBRARY_LIMIT = 30
+
+function evictionNotice(evicted: PresetSnapshotV2[]): string | null {
+  if (evicted.length === 0) return null
+  const names = evicted.map((item) => `“${item.name}”`).join(', ')
+  const verb = evicted.length === 1 ? 'was' : 'were'
+  return `Saved. ${names} ${verb} removed because only the ${PRESET_LIBRARY_LIMIT} most recent setups are kept.`
+}
+
 function nowIso(): string {
   return new Date().toISOString()
 }
@@ -154,9 +163,15 @@ function useSaveActions({ state, patch, feedback, currentPayload, selectedSnapsh
       name: state.presetName,
       createdAt: nowIso(),
     })
-    const next = [snapshot, ...state.library.filter((item) => item.id !== snapshot.id)].slice(0, 30)
+    const kept = [snapshot, ...state.library.filter((item) => item.id !== snapshot.id)]
+    const next = kept.slice(0, PRESET_LIBRARY_LIMIT)
     if (!persistAndSet(patch, next)) return
-    patch({ selectedLibraryId: snapshot.id, presetName: snapshot.name })
+    const evicted = kept.slice(PRESET_LIBRARY_LIMIT)
+    patch({
+      selectedLibraryId: snapshot.id,
+      presetName: snapshot.name,
+      libraryWarning: evictionNotice(evicted),
+    })
     feedback.setSaveStatusTimed('saved')
   }, [currentPayload, feedback, patch, state.library, state.presetName])
 

@@ -9,10 +9,10 @@ const noticePath = path.join(root, 'public', 'THIRD_PARTY_NOTICES.txt')
 const entries = [
   {
     name: 'dompurify',
-    version: '3.4.16',
+    version: '3.4.17',
     license: '(MPL-2.0 OR Apache-2.0)',
     source: 'node_modules/dompurify/LICENSE',
-    published: 'third-party-licenses/dompurify-3.4.16-Apache-2.0.txt',
+    published: 'third-party-licenses/dompurify-3.4.17-Apache-2.0.txt',
   },
   {
     name: '@types/trusted-types',
@@ -23,10 +23,10 @@ const entries = [
   },
   {
     name: 'marked',
-    version: '18.0.14',
+    version: '18.1.1',
     license: 'MIT',
     source: 'node_modules/marked/LICENSE',
-    published: 'third-party-licenses/marked-18.0.14.txt',
+    published: 'third-party-licenses/marked-18.1.1.txt',
   },
   {
     name: 'react',
@@ -58,10 +58,10 @@ const entries = [
   },
   {
     name: 'zod',
-    version: '4.6.5',
+    version: '4.6.7',
     license: 'MIT',
     source: 'node_modules/zod/LICENSE',
-    published: 'third-party-licenses/zod-4.6.5-MIT.txt',
+    published: 'third-party-licenses/zod-4.6.7-MIT.txt',
   },
 ]
 

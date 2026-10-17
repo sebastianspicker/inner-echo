@@ -11,6 +11,7 @@ don't belong there.
 | [PROFILE_AUTHORING.md](PROFILE_AUTHORING.md) | Profile, mapping, node-registry, and evidence authoring contract. |
 | [RELIABILITY.md](RELIABILITY.md) | Implemented runtime fallbacks and required manual evidence. |
 | [RELEASING.md](RELEASING.md) | Clean alpha-candidate, artifact, and publication checks. |
+| [releases/](releases/0.1.0-alpha.1.md) | Release notes for each tagged alpha. |
 | [../SECURITY.md](../SECURITY.md) | Vulnerability reporting and security/privacy boundaries. |
 | [decisions/](decisions/README.md) | Accepted decisions governing consent, ownership, and diagnostics. |
 | [references/](references/README.md) | Evidence method, source corpus, and application-visible references. |

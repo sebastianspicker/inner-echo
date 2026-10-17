@@ -24,19 +24,15 @@ export type SelectedDimension = {
   weight: number
 }
 
+/**
+ * Inputs the composer reads. Intensity, Safe Mode, coupling strength, and the microphone are
+ * applied by the runtime to the composed profile, so they are deliberately not composer inputs.
+ */
 export type ComposerSettings = {
-  /** 0..1 global intensity control (always clamped by safety). */
-  intensity: number
-  safeMode: boolean
   reducedMotion: boolean
 
   /** Enables condition-defined audio stack usage (AudioContext still requires user gesture). */
   audioEnabled: boolean
-  /** Requests mic permission/routing when available (user gesture required). */
-  micEnabled: boolean
-
-  /** 0..1 master coupling strength applied to all coupling rules. */
-  couplingStrength: number
   /**
    * 0..1 hard cap on AV feedback influence. This is a safety brake:
    * - higher values allow more modulation
@@ -46,9 +42,6 @@ export type ComposerSettings = {
 
   /** 0..1 amount of nonlinear pairwise interactions between dimensions. */
   interactionAmount: number
-
-  /** UI-only: show debug overlays/panels (never enabled by default). */
-  debugOverlay: boolean
 }
 
 export { clamp01 } from '../../../shared/numbers'

@@ -152,8 +152,6 @@ interface ComposedProfileLoadLifecycle {
   composerMode: ComposerMode
   selectedPresets: SelectedPreset[]
   selectedDimensions: SelectedDimension[]
-  intensity: number
-  safeMode: boolean
   reducedMotion: boolean
   audioEnabled: boolean
   maxFeedback: number
@@ -166,8 +164,6 @@ function useComposedProfileLoad({
   composerMode,
   selectedPresets,
   selectedDimensions,
-  intensity,
-  safeMode,
   reducedMotion,
   audioEnabled,
   maxFeedback,
@@ -183,17 +179,7 @@ function useComposedProfileLoad({
       const outcome = await requestComposedProfile({
         selectedPresets,
         selectedDimensions,
-        settings: {
-          intensity,
-          safeMode,
-          reducedMotion,
-          audioEnabled,
-          micEnabled: false,
-          couplingStrength: 0,
-          maxFeedback,
-          interactionAmount,
-          debugOverlay: false,
-        },
+        settings: { reducedMotion, audioEnabled, maxFeedback, interactionAmount },
         reducedMotion,
       })
       if (ctx.cancelled) return
@@ -204,7 +190,6 @@ function useComposedProfileLoad({
       composerMode,
       selectedPresets,
       selectedDimensions,
-      safeMode,
       reducedMotion,
       audioEnabled,
       maxFeedback,
@@ -221,8 +206,6 @@ export interface UseProfileLoadParams {
   selectedPresets: SelectedPreset[]
   selectedDimensions: SelectedDimension[]
   setIntensity: (v: number) => void
-  intensity: number
-  safeMode: boolean
   reducedMotion: boolean
   audioEnabled: boolean
   maxFeedback: number
@@ -278,8 +261,6 @@ export function useProfileLoad(params: UseProfileLoadParams): {
     selectedPresets,
     selectedDimensions,
     setIntensity,
-    intensity,
-    safeMode,
     reducedMotion,
     audioEnabled,
     maxFeedback,
@@ -288,9 +269,7 @@ export function useProfileLoad(params: UseProfileLoadParams): {
     consumeIntensityOverride,
   } = params
 
-  // Use refs for values the composition/curated-load effects should read without retriggering.
-  const intensityRef = useRef(intensity)
-  intensityRef.current = intensity
+  // A ref, so the curated-load effect reads the latest override without retriggering.
   const intensityOverrideRef = useRef(intensityOverride)
   intensityOverrideRef.current = intensityOverride
 
@@ -317,8 +296,6 @@ export function useProfileLoad(params: UseProfileLoadParams): {
     composerMode,
     selectedPresets,
     selectedDimensions,
-    intensity: intensityRef.current,
-    safeMode,
     reducedMotion,
     audioEnabled,
     maxFeedback,

@@ -55,15 +55,10 @@ async function main(): Promise<void> {
   const f: Failures = { count: 0 }
 
   const baseSettings: ComposerSettings = {
-    intensity: 0.5,
-    safeMode: true,
     reducedMotion: true,
     audioEnabled: true,
-    micEnabled: false,
-    couplingStrength: 0.5,
     maxFeedback: 0.35,
     interactionAmount: 0.15,
-    debugOverlay: false,
   }
 
   const dependencies = { loadPresetProfile, getDimensionMappingEntry, getExperienceDimensions }

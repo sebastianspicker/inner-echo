@@ -29,37 +29,40 @@
     "evidence:gen": "tsx tools/docs/evidence-pages-gen.ts",
     "evidence:verify": "tsx tools/docs/evidence-verify.ts",
     "debug:inspect": "tsx tools/validation/inspect/debug-inspect.ts",
+    "audio:verify": "tsx tools/validation/verify-pulse-tone.ts",
     "verify:contracts": "tsx tools/contracts/verify-contracts.ts",
-    "verify": "npm run build && npm run bundle:verify && npm run notices:verify && npm run verify:source",
+    "test": "node tools/release/run-private-tests.mjs",
+    "verify": "npm run build && npm run bundle:verify && npm run notices:verify && npm run verify:source && npm run test",
     "check": "npm run verify",
     "clean:local": "rm -rf dist reports tsconfig.tsbuildinfo",
     "pages:build": "node tools/deployment/build-pages.mjs",
     "pages:preview": "node tools/deployment/preview-pages.mjs",
     "pages:verify": "node tools/deployment/verify-pages-build.mjs && npm run bundle:verify",
+    "pages:finalize": "node tools/deployment/finalize-pages.mjs",
     "release:alpha:local": "npm run audit:dependencies && npm run check",
     "release:alpha:checklist": "npm run clean:local && npm ci --ignore-scripts && npm rebuild esbuild && npm run release:alpha:local",
-    "verify:source": "npm run docs:verify && npm run docs:links && npm run quality:check && npm run architecture:check && npm run conditions:validate && npm run composer:validate && npm run evidence:verify && npm run verify:contracts && npm run debug:inspect"
+    "verify:source": "npm run docs:verify && npm run docs:links && npm run quality:check && npm run architecture:check && npm run conditions:validate && npm run composer:validate && npm run evidence:verify && npm run verify:contracts && npm run audio:verify && npm run debug:inspect"
   },
   "dependencies": {
-    "dompurify": "^3.4.16",
-    "marked": "^18.0.14",
+    "dompurify": "^3.4.17",
+    "marked": "^18.1.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "three": "^0.186.1",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/three": "^0.186.0",
-    "@vitejs/plugin-react": "^6.1.1",
-    "jscpd": "5.4.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "jscpd": "5.4.1",
     "jsdom": "^30.1.1",
     "tsx": "^4.23.15",
     "typescript": "~7.0.2",
-    "vite": "^8.3.2",
-    "vitest": "^5.0.3"
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
   }
 }

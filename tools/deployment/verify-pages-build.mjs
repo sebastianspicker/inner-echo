@@ -155,12 +155,19 @@ if (demoEntry) {
   }
 }
 
-const hiddenFiles = relativeFiles.filter((path) =>
-  path.split('/').some((part) => part.startsWith('.')),
+const hiddenFiles = relativeFiles.filter(
+  (path) => path !== '.nojekyll' && path.split('/').some((part) => part.startsWith('.')),
 )
 
-if (hiddenFiles.length !== 1 || hiddenFiles[0] !== '.nojekyll') {
-  failures.push(`unexpected hidden artifact paths: ${hiddenFiles.join(', ') || '(none)'}`)
+if (!relativeFiles.includes('.nojekyll')) {
+  failures.push('missing Pages artifact path: .nojekyll')
+}
+
+if (hiddenFiles.length > 0) {
+  failures.push(`unexpected hidden artifact paths: ${hiddenFiles.join(', ')}`)
+  if (hiddenFiles.some((path) => path.split('/').includes('.DS_Store'))) {
+    failures.push('Remove Finder metadata (.DS_Store) from dist and rerun npm run pages:verify.')
+  }
 }
 
 for (const path of relativeFiles) {

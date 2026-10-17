@@ -84,7 +84,8 @@ Before publishing an alpha, record the following against the exact static artifa
    header limitations recorded rather than inferred away.
 7. Runtime requests limited to same-origin static application delivery.
 
-Local validation does not substitute for real Safari permission and accessibility evidence.
+Local validation does not substitute for real Safari permission and accessibility evidence. List
+every item that was not recorded under Known limitations in the release notes.
 
 ## Static artifact
 
@@ -121,7 +122,9 @@ Actions**. The workflow does not self-enable Pages or change that repository set
 
 ## Release notes
 
-Use factual notes with these sections:
+Draft the notes in `docs/releases/<version>.md` (for this candidate,
+[0.1.0-alpha.1](releases/0.1.0-alpha.1.md)) and use them as the GitHub release body. Use factual
+notes with these sections:
 
 - Current capabilities
 - Safety and privacy boundaries
@@ -135,7 +138,8 @@ evidence.
 ## Known limitations for `0.1.0-alpha.1`
 
 - Profile, preset, and interface contracts may change before a stable release.
-- Real Safari, physical mobile camera, and assistive-technology evidence must be recorded separately.
+- Real Safari, physical mobile camera, and assistive-technology evidence has not been recorded.
+  The release notes list each unrecorded item.
 - WebGL performance varies by device and browser; fallback modes omit the full effect stack.
 - There is no backend, account system, recording, export, analytics, or offline cache.
 - The repository cannot configure the complete header policy through bare GitHub Pages, and project

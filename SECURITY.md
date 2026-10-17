@@ -54,7 +54,10 @@ bundled or served from the same origin. Development may use Vite's same-origin c
 no service worker or offline cache.
 
 Production logging must not include device identifiers, media content, stream or track details,
-preset contents, or user identifiers. Development diagnostics are gated by `import.meta.env.DEV`.
+preset contents, or user identifiers. Production builds log one console line per camera,
+microphone, sound, or renderer failure or fallback, naming only the state and the error type, and
+the error screen shows no internal error text. Development diagnostics are gated by
+`import.meta.env.DEV`.
 
 ## Response policy and GitHub Pages
 

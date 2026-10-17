@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile } from 'node:fs/promises'
+import { readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pagesContentSecurityPolicy } from './pages-config.mjs'
 
@@ -25,6 +25,12 @@ async function listHtmlFiles(directory) {
   const nested = await Promise.all(
     entries.map(async (entry) => {
       const path = resolve(directory, entry.name)
+      // Finder can add these while inspecting a local build. Strip only its metadata from
+      // the release output; the verifier still rejects every other unexpected hidden path.
+      if (entry.isFile() && entry.name === '.DS_Store') {
+        await rm(path, { force: true })
+        return []
+      }
       if (entry.isDirectory()) return listHtmlFiles(path)
       return entry.name.endsWith('.html') ? [path] : []
     }),

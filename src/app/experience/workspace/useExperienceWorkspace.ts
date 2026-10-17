@@ -172,8 +172,6 @@ function buildProfileLoadParams(
     selectedPresets: settings.presets,
     selectedDimensions: settings.dimensions,
     setIntensity: settingsModel.setIntensity,
-    intensity: settings.intensity,
-    safeMode: settings.safeMode,
     reducedMotion: settings.reducedMotion,
     audioEnabled,
     maxFeedback: settings.maxFeedback,

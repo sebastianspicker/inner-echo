@@ -52,8 +52,12 @@ npm run verify
 ```
 
 This runs type checking and the production build, runtime-bundle and notice checks,
-generated-document freshness and Markdown links, Biome, architecture enforcement, Vitest, condition
-and composer validation, evidence validation, contract probes, and the debug inspection command.
+generated-document freshness and Markdown links, Biome, architecture enforcement, condition
+and composer validation, evidence validation, contract probes, the debug inspection command, and
+`npm test`. The Vitest suite under `tests/` is kept out of the public repository: `npm test`
+type-checks and runs it in a checkout that has it, and reports that it is absent otherwise, so
+public clones and CI do not run unit or contract tests. Run the candidate gate from a checkout that
+contains the private suite.
 
 `npm run verify:source` runs the reusable non-build source gate; the complete local gate is still
 `npm run verify`. Main-push CI builds one Pages candidate and runs all source and artifact checks,
@@ -67,6 +71,10 @@ npm run pages:build
 npm run pages:verify
 npm run notices:verify
 ```
+
+`pages:verify` can be repeated on the same build. Main-push CI then runs `npm run pages:finalize`,
+which removes the Vite manifest from `dist/`, before it writes the candidate handoff; the handoff
+refuses an artifact that still contains the manifest.
 
 Artifact checks cover the configured base path, both HTML entries, the Pages meta CSP, the complete
 static and dynamic device-free demo JavaScript closure, asset containment, notices, and the absence

@@ -101,6 +101,7 @@ copilot-instructions.md
 /AI_REVIEW*
 /AI_REPORT*
 /AI_AUDIT*
+/*_AUDIT_REPORT.md
 /AI_SUMMARY*
 /LLM_NOTES*
 /GPT_NOTES*

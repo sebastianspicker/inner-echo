@@ -3,7 +3,6 @@ import './demo.css'
 type DemoPhase = 'welcome' | 'setup' | 'active'
 
 type Profile = {
-  description: string
   name: string
 }
 
@@ -21,21 +20,11 @@ type DemoState = {
   safeMode: boolean
 }
 
-const profiles: Profile[] = [
-  { name: 'None (clean)', description: 'Baseline mock feed, with no visual treatment.' },
-  {
-    name: 'Anxiety: generalized / social',
-    description: 'Heightened tension and threat-scanning attention, kept bounded and controllable.',
-  },
-  {
-    name: 'Depersonalization / derealization',
-    description: 'A gentle behind-glass distance with subtle time drift.',
-  },
-  {
-    name: 'Depressive disorder',
-    description: 'Reduced affective contrast and cognitive fog, subtle and non-stereotyped.',
-  },
-]
+// Profile copy lives in demo/index.html; `npm run conditions:validate` checks it against the catalog.
+const profiles: Profile[] = Array.from(
+  document.querySelectorAll<HTMLButtonElement>('[data-profile]'),
+  (row) => ({ name: row.dataset.profile ?? '' }),
+)
 
 const initialState = (): DemoState => ({
   audioEnabled: false,
