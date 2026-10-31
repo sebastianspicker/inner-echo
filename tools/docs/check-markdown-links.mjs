@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -43,6 +44,31 @@ function isExternal(target) {
   return /^(?:[a-z][a-z0-9+.-]*:|#|\/\/)/iu.test(target)
 }
 
+// Git-ignored paths (the private tests, agent notes, build output) never reach a clean clone or
+// CI, so a reference to one must fail here too rather than pass only on a developer machine.
+// Outside a git work tree (for example an exported archive) there is nothing ignored to exclude.
+function listIgnoredPaths() {
+  if (!fs.existsSync(path.join(root, '.git'))) return []
+  const output = execFileSync(
+    'git',
+    ['ls-files', '--others', '--ignored', '--exclude-standard', '--directory', '-z'],
+    { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] },
+  )
+  return output
+    .split('\0')
+    .filter(Boolean)
+    .map((entry) => path.resolve(root, entry))
+}
+
+const ignoredPaths = listIgnoredPaths()
+
+function isAvailable(resolved) {
+  if (!fs.existsSync(resolved)) return false
+  return !ignoredPaths.some(
+    (ignored) => resolved === ignored || resolved.startsWith(`${ignored}${path.sep}`),
+  )
+}
+
 const missing = []
 let checked = 0
 
@@ -64,7 +90,7 @@ for (const filePath of maintainedFiles) {
     if (!withoutFragment) continue
     checked += 1
     const resolved = path.resolve(path.dirname(filePath), decodeURIComponent(withoutFragment))
-    if (!fs.existsSync(resolved)) {
+    if (!isAvailable(resolved)) {
       missing.push(`${path.relative(root, filePath)} -> ${target}`)
     }
   }
@@ -73,7 +99,7 @@ for (const filePath of maintainedFiles) {
     const target = match[1]
     if (!isConcreteRepoPath(target)) continue
     checked += 1
-    if (!fs.existsSync(path.join(root, target))) {
+    if (!isAvailable(path.join(root, target))) {
       missing.push(`${path.relative(root, filePath)} -> \`${target}\``)
     }
   }

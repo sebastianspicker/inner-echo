@@ -54,10 +54,11 @@ npm run verify
 This runs type checking and the production build, runtime-bundle and notice checks,
 generated-document freshness and Markdown links, Biome, architecture enforcement, condition
 and composer validation, evidence validation, contract probes, the debug inspection command, and
-`npm test`. The Vitest suite under `tests/` is kept out of the public repository: `npm test`
-type-checks and runs it in a checkout that has it, and reports that it is absent otherwise, so
-public clones and CI do not run unit or contract tests. Run the candidate gate from a checkout that
-contains the private suite.
+`npm test`. The Vitest suite lives in a git-ignored `tests` directory, outside the public
+repository: `npm test` type-checks and runs it in a checkout that has it, and reports that it is
+absent otherwise, so public clones and CI do not run unit or contract tests. Run the candidate gate
+from a checkout that contains the private suite. `npm run docs:links` treats git-ignored paths as
+missing, so documentation cannot point at the private suite or other local-only files.
 
 `npm run verify:source` runs the reusable non-build source gate; the complete local gate is still
 `npm run verify`. Main-push CI builds one Pages candidate and runs all source and artifact checks,

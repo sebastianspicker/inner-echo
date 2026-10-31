@@ -40,7 +40,7 @@ Run the narrowest relevant test while you work, then the broader gate appropriat
 | `npm run conditions:validate` | Condition profiles and mapping data. |
 | `npm run composer:validate` | Composer output and safety ranges. |
 | `npm run evidence:verify` | Evidence pages, links, and `MAPPING_SUMMARY.md` freshness. |
-| `npm test` | Type-check and run the private Vitest suite in `tests/`; reports a skip in checkouts without it. |
+| `npm test` | Type-check and run the private Vitest suite (git-ignored `tests` directory); reports a skip in checkouts without it. |
 | `npm run verify` | Complete quality, build, architecture, test, documentation, contract, data, and inspect gate. |
 | `npm run check` | Alias for `verify`. |
 | `npm run audit:dependencies` | Moderate-threshold npm advisory check. |
