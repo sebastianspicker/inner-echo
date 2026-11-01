@@ -1,8 +1,8 @@
 # Alpha release procedure
 
 This runbook covers the local, CI, artifact, and manual evidence needed for an Inner Echo alpha
-release. Its commands do not tag, push, or publish; the Pages workflow can publish only after an
-authorized push-triggered `main` CI run.
+release. Its commands do not tag, push, or publish; the Pages workflow publishes only through an
+explicit manual dispatch on `main`. A push, tag or pull request never deploys the site.
 
 ## Candidate identity
 
@@ -45,29 +45,23 @@ That command runs `npm run audit:dependencies` followed by `npm run check`.
 
 ## CI evidence
 
-Require the `validate` job in `.github/workflows/ci.yml` on the exact candidate commit. It installs
-from the lockfile with lifecycle scripts disabled, rebuilds `esbuild`, and runs the
-moderate-threshold dependency audit with Node.js 22 and npm 11. Pull requests run the complete
-`npm run verify` gate and upload no deployment candidates. On main pushes, a separate job with
-`pages: read` obtains the configured base path. The validation job builds and assembles the site
-once, runs `npm run verify:source`, and checks the final Pages artifact and notices.
+Run the `validate` job in `.github/workflows/ci.yml` on the exact candidate commit using
+**Run workflow** when preparing a release. CI runs automatically only for pull requests authored by
+`dependabot[bot]`; other pull requests and pushes do not run its jobs. It installs from the lockfile
+with lifecycle scripts disabled, rebuilds `esbuild`, runs the moderate-threshold dependency audit,
+and runs `npm run verify` with Node.js 22 and npm 11. It uploads reports, not deployment candidates.
 
-CI retains the verified site and separate handoff metadata for seven days. The metadata records the
-commit SHA, CI run ID and attempt, normalized base path, creation time, and a SHA-256 digest of the
-site paths and bytes. It stays outside `dist/` and is never published.
+The separate Pages workflow is manual-only on `main`. It reads the current Pages base path,
+checks out the dispatch's exact commit, installs the lockfile, audits dependencies, builds the site,
+and runs source, available test, artifact and notice checks. Public clones report the private test
+suite's absence explicitly; local candidate evidence must still come from a checkout with that suite.
 
-Pages accepts only successful main-push CI runs from this repository. It downloads the two artifacts
-from the exact triggering run and attempt, checks the metadata against the current Pages
-configuration, verifies the unchanged site digest, and rechecks that main still points to the
-candidate. Missing, expired, mismatched, or stale candidates cannot deploy. A changed base path or
-expired artifact needs a fresh CI run; rerunning Pages does not rebuild a site. The Pages workflow
-installs no dependencies and runs no audit, application tests, or build. It repackages the verified
-directory with the Pages upload action and deploys through the protected `github-pages` environment.
-The deployment job checks main again after any environment approval wait.
-
-Cross-run retrieval uses explicit `run-id` and `github-token` inputs with `actions: read`, as
-documented by
-[actions/download-artifact](https://github.com/actions/download-artifact#download-artifacts-from-other-workflow-runs-or-repositories).
+After verification, Pages removes the build manifest and creates handoff metadata outside `dist/`.
+The metadata identifies this manual run and attempt, the commit, normalized base path, timestamp and
+site digest. The same job validates it against current main and uploads the verified Pages artifact;
+it does not download artifacts from an earlier CI run. The deployment job checks main again after
+any `github-pages` environment approval wait. If main advanced, start a fresh manual Pages run,
+which rebuilds and verifies the candidate. No push or CI completion publishes automatically.
 
 ## Manual evidence
 
@@ -98,7 +92,7 @@ npm run pages:verify
 npm run notices:verify
 ```
 
-The local Pages build uses `/inner-echo/` by default; CI uses the base path returned by the
+The local Pages build uses `/inner-echo/` by default; the manual Pages workflow uses the base path returned by the
 repository's Pages configuration. The artifact contains the live application at its configured base
 and the device-free mock at `<base>/demo/`. The `dist/` directory is ignored and must not be
 committed. Validate the exact contents before deployment, including:
@@ -111,8 +105,8 @@ committed. Validate the exact contents before deployment, including:
 - absence of media, audio, media-playback, persistent-storage, clipboard, and network capability
   across every static and dynamic JavaScript chunk in the mock demo closure
 
-`.github/workflows/pages.yml` publishes to GitHub Pages. A successful push-triggered `main` CI run
-can deploy, so do not commit or push a candidate until publication is authorized. The workflow does
+`.github/workflows/pages.yml` publishes to GitHub Pages only when an operator manually dispatches
+it on `main`. A successful CI run or push does not authorize or trigger deployment. The workflow does
 not remove the manual browser, device, accessibility, origin-isolation, or live-response
 verification requirements. Artifact verification establishes the intended meta CSP but not which
 response headers the host sends.

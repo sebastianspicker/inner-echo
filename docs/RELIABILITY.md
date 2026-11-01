@@ -61,8 +61,8 @@ from a checkout that contains the private suite. `npm run docs:links` treats git
 missing, so documentation cannot point at the private suite or other local-only files.
 
 `npm run verify:source` runs the reusable non-build source gate; the complete local gate is still
-`npm run verify`. Main-push CI builds one Pages candidate and runs all source and artifact checks,
-then Pages validates and deploys that same artifact without rebuilding it.
+`npm run verify`. CI runs for Dependabot-authored pull requests or manual dispatches. Pages deployment is a separate
+manual run on `main`: it builds and validates its own candidate before uploading that same artifact.
 
 For an alpha candidate, start from the checked-in lockfile and include the dependency audit with
 `npm run release:alpha:checklist`. Prepare and inspect a local Pages artifact separately:
@@ -73,7 +73,7 @@ npm run pages:verify
 npm run notices:verify
 ```
 
-`pages:verify` can be repeated on the same build. Main-push CI then runs `npm run pages:finalize`,
+`pages:verify` can be repeated on the same build. The manual Pages workflow then runs `npm run pages:finalize`,
 which removes the Vite manifest from `dist/`, before it writes the candidate handoff; the handoff
 refuses an artifact that still contains the manifest.
 

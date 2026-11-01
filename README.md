@@ -7,8 +7,18 @@ A browser camera toy for talking about inner experience. Pick an experience patt
 lays a gentle audiovisual metaphor over your own camera feed — focus tightening, colour draining,
 a steady pulse — so an invisible state has something to point at.
 
+<details>
+<summary>Status and limitations</summary>
+
+Inner Echo is an independent experimental project exploring audiovisual metaphors for inner experience. Developed independently alongside my main professional work. Version `0.1.0-alpha.1` is an evolving alpha and a starting point for exploration and adaptation, not a finished, supported product; browser, device and accessibility validation remain important.
+
+**Disclaimer.** The effects are design interpretations, not clinical assessments, diagnoses, measurements of a person or medical guidance. Safe Mode and output limits do not guarantee comfort or hearing safety for every user. Review adaptations, keep intensity and device volume low, and stop if an effect causes discomfort.
+
+</details>
+
 It is a conversation starter, not a diagnosis, a measurement, or a simulation of a condition.
-Everything runs locally: no server, no account, no upload, no recording.
+Media processing runs locally in the browser: no account, media upload or recording. The host
+serves the static application files.
 
 [Live app](https://sebastianspicker.github.io/inner-echo/) ·
 [Device-free demo](https://sebastianspicker.github.io/inner-echo/demo/) ·
@@ -32,7 +42,7 @@ Everything runs locally: no server, no account, no upload, no recording.
 - **Live app:** [sebastianspicker.github.io/inner-echo](https://sebastianspicker.github.io/inner-echo/)
   — needs a camera for the live experience.
 - **Device-free demo:** [sebastianspicker.github.io/inner-echo/demo](https://sebastianspicker.github.io/inner-echo/demo/)
-  — the same interface with mock data, safe on any machine.
+  — the same interface with mock data, without media permissions.
 
 Or run it locally:
 
@@ -50,6 +60,16 @@ Requires Node.js 22 and npm 11. Only the live experience needs a camera; everyth
 without one.
 
 ## What it does
+
+A live session keeps setup and media activation separate:
+
+```mermaid
+flowchart LR
+  A[Choose an experience] --> B[Adjust intensity and comfort]
+  B --> C[Start camera or sound yourself]
+  C --> D[Local preview and optional audio]
+  D --> E[Stop Everything releases media]
+```
 
 - Compose an experience from dimensions, a curated collection, or a weighted blend.
 - Render it as WebGL effects over the camera, with Canvas2D and raw-preview fallbacks.
