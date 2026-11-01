@@ -37,7 +37,7 @@ void main() {
   float band = sin((vUv.y * bandFreq + t) * 6.2831853);
 
   // Faint line static, re-seeded 3 times per second (mean luminance unchanged).
-  float seed = floor(u_time * 3.0);
+  float seed = floor(mod(u_time, 256.0) * 3.0);
   float stat = hash(vec2(floor(vUv.y * 240.0) + seed * 0.37, floor(vUv.x * 6.0) + seed)) - 0.5;
 
   float strength = u_amount * (0.6 + 0.4 * u_burst);

@@ -10,9 +10,20 @@ export interface RenderScaleDecisionInput {
   cooldownMs: number
   downThreshold: number
   upThreshold: number
+  /** Time of the last up-step (more resolution); negative infinity when none happened. */
+  lastUpStepMs: number
+  upStepBlockedUntilMs: number
+  flapWindowMs: number
+  upBlockMs: number
 }
 
-export function computeNextRenderScaleIndex(input: RenderScaleDecisionInput): number {
+export interface RenderScaleDecision {
+  index: number
+  lastUpStepMs: number
+  upStepBlockedUntilMs: number
+}
+
+export function computeNextRenderScaleIndex(input: RenderScaleDecisionInput): RenderScaleDecision {
   const {
     currentIndex,
     scaleCount,
@@ -24,25 +35,32 @@ export function computeNextRenderScaleIndex(input: RenderScaleDecisionInput): nu
     cooldownMs,
     downThreshold,
     upThreshold,
+    lastUpStepMs,
+    upStepBlockedUntilMs,
+    flapWindowMs,
+    upBlockMs,
   } = input
+  const keep = { index: currentIndex, lastUpStepMs, upStepBlockedUntilMs }
 
   // When stress mode is toggled off, immediately reset to full resolution so
   // the render scale can recover without waiting for FPS to climb back up.
-  if (prevStressMode && !stressMode) {
-    return 0
-  }
+  if (prevStressMode && !stressMode) return { ...keep, index: 0 }
 
-  if (nowMs - lastScaleChangeMs < cooldownMs) {
-    return currentIndex
-  }
+  if (nowMs - lastScaleChangeMs < cooldownMs) return keep
 
   if (stressMode || avgFps < downThreshold) {
-    return Math.min(currentIndex + 1, scaleCount - 1)
+    if (currentIndex >= scaleCount - 1) return keep
+    const flapped = !stressMode && nowMs - lastUpStepMs < flapWindowMs
+    return {
+      ...keep,
+      index: currentIndex + 1,
+      upStepBlockedUntilMs: flapped ? nowMs + upBlockMs : upStepBlockedUntilMs,
+    }
   }
 
-  if (!stressMode && avgFps > upThreshold) {
-    return Math.max(0, currentIndex - 1)
+  if (avgFps > upThreshold && currentIndex > 0 && nowMs >= upStepBlockedUntilMs) {
+    return { ...keep, index: currentIndex - 1, lastUpStepMs: nowMs }
   }
 
-  return currentIndex
+  return keep
 }

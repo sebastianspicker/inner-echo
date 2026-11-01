@@ -13,7 +13,7 @@ async function main(): Promise<void> {
   const framesRaw = Number(process.env.INSPECT_FRAMES ?? 120)
   const frames = Number.isFinite(framesRaw) ? Math.max(1, Math.floor(framesRaw)) : 120
 
-  const report = await runInspectHarness(rootDir, { frames })
+  const report = runInspectHarness(rootDir, { frames })
 
   const reportsDir = path.join(rootDir, 'reports')
   mkdirSync(reportsDir, { recursive: true })

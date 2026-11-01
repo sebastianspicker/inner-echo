@@ -99,12 +99,13 @@ export class GrainNode implements VideoNode {
 
   /** Advances time once per frame; the seed only changes at the bounded re-seed rate. */
   tick(delta: number): void {
-    this.time = (this.time + delta) % 1000
+    this.time += delta
     if (this.material) this.material.uniforms.u_seed.value = this.currentSeed()
   }
 
+  // Wrapped so the shader's sin-hash keeps float32 precision in long sessions; any seed is a fresh field.
   private currentSeed(): number {
-    return Math.floor(this.time * this.speed * RESEED_HZ_PER_SPEED)
+    return Math.floor(this.time * this.speed * RESEED_HZ_PER_SPEED) % 4096
   }
 
   dispose(): void {

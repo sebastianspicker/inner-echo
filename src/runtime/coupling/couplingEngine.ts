@@ -55,14 +55,26 @@ export function createCouplingEngine(
   let maxFeedback = clamp01(settings.maxFeedback)
   let safeMode = settings.safeMode === true
   let intensity = settings.intensity ?? 1
+  // Profile video bases only change with reducedMotion, so they are computed per rebuild, not per frame.
+  let videoBases = new Map<string, number>()
+  const buildVideoMappings = () => {
+    const videoMappings = createVideoCouplingMappings(profile, reducedMotion)
+    videoBases = new Map(
+      videoMappings.map((mapping) => [
+        mapping.key,
+        getProfileVideoBase(profile, mapping.key, reducedMotion),
+      ]),
+    )
+    return videoMappings
+  }
   let mappings: CouplingMapping[] = [
-    ...createVideoCouplingMappings(profile, reducedMotion),
+    ...buildVideoMappings(),
     ...createAudioCouplingMappings(profile),
   ]
 
   const rebuildVideoMappings = () => {
     const audioMappings = mappings.filter((mapping) => mapping.kind === 'audio')
-    mappings = [...createVideoCouplingMappings(profile, reducedMotion), ...audioMappings]
+    mappings = [...buildVideoMappings(), ...audioMappings]
   }
 
   return {
@@ -82,11 +94,7 @@ export function createCouplingEngine(
       const resolveBase = (mapping: CouplingMapping) =>
         mapping.kind === 'audio'
           ? getScaledProfileAudioBase(profile, mapping.key, intensity)
-          : getBaseNumeric(
-              baseControlValues,
-              mapping.key,
-              getProfileVideoBase(profile, mapping.key, reducedMotion),
-            )
+          : getBaseNumeric(baseControlValues, mapping.key, videoBases.get(mapping.key) as number)
 
       if (strength === 0) {
         for (const mapping of mappings) {

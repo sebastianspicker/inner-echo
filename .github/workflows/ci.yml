@@ -44,6 +44,9 @@ jobs:
       - name: Run validation gate
         run: npm run verify
 
+      - name: Build and verify the Pages artifact
+        run: npm run pages:build && npm run pages:verify
+
       - name: Upload contract reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

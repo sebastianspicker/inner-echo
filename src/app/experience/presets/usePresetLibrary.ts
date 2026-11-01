@@ -90,9 +90,10 @@ function useLoadStoredLibrary(patch: Patch): void {
     try {
       const loaded = loadPresetLibrary()
       const selected = loaded.snapshots[0]
+      // A warning is only ever added here, so a re-run cannot clear the shared-link notice.
       patch({
         library: loaded.snapshots,
-        libraryWarning: loaded.warning,
+        ...(loaded.warning ? { libraryWarning: loaded.warning } : {}),
         ...(selected ? { selectedLibraryId: selected.id, presetName: selected.name } : {}),
       })
     } catch (error) {
@@ -103,24 +104,33 @@ function useLoadStoredLibrary(patch: Patch): void {
   }, [patch])
 }
 
+const SHARED_LINK_WARNING = 'This shared setup link could not be read. Showing your current setup.'
+
 function useSharedPresetHashImport(
   onApply: (payload: PresetPayload) => void,
   setSaveStatusTimed: Feedback['setSaveStatusTimed'],
+  patch: Patch,
 ): void {
-  const consumed = useRef(false)
   useEffect(() => {
-    if (consumed.current) return
-    consumed.current = true
-    const decoded = decodePresetFromHash(window.location.hash)
-    if (!decoded.ok) return
-    onApply(decoded.payload)
-    setSaveStatusTimed('loaded')
-    window.history.replaceState(
-      window.history.state,
-      '',
-      `${window.location.pathname}${window.location.search}`,
-    )
-  }, [onApply, setSaveStatusTimed])
+    const importHash = (): void => {
+      const decoded = decodePresetFromHash(window.location.hash)
+      if (!decoded.ok && decoded.reason === 'missing-prefix') return
+      if (decoded.ok) {
+        onApply(decoded.payload)
+        setSaveStatusTimed('loaded')
+      } else {
+        patch({ libraryWarning: SHARED_LINK_WARNING })
+      }
+      window.history.replaceState(
+        window.history.state,
+        '',
+        `${window.location.pathname}${window.location.search}`,
+      )
+    }
+    importHash()
+    window.addEventListener('hashchange', importHash)
+    return () => window.removeEventListener('hashchange', importHash)
+  }, [onApply, patch, setSaveStatusTimed])
 }
 
 function persistAndSet(patch: Patch, next: PresetSnapshotV2[]): boolean {
@@ -137,11 +147,14 @@ function persistAndSet(patch: Patch, next: PresetSnapshotV2[]): boolean {
 
 const PRESET_LIBRARY_LIMIT = 30
 
-function evictionNotice(evicted: PresetSnapshotV2[]): string | null {
+function evictionNotice(
+  evicted: PresetSnapshotV2[],
+  action: 'Saved' | 'Restored' = 'Saved',
+): string | null {
   if (evicted.length === 0) return null
   const names = evicted.map((item) => `“${item.name}”`).join(', ')
   const verb = evicted.length === 1 ? 'was' : 'were'
-  return `Saved. ${names} ${verb} removed because only the ${PRESET_LIBRARY_LIMIT} most recent setups are kept.`
+  return `${action}. ${names} ${verb} removed because only the ${PRESET_LIBRARY_LIMIT} most recent setups are kept.`
 }
 
 function nowIso(): string {
@@ -208,9 +221,11 @@ function useDeleteActions({ state, patch, feedback, selectedSnapshot }: ActionDe
 
   const onUndoDelete = useCallback(() => {
     if (!state.deletedSnapshot) return
-    const next = [state.deletedSnapshot, ...state.library]
+    const kept = [state.deletedSnapshot, ...state.library]
+    const next = kept.slice(0, PRESET_LIBRARY_LIMIT)
     if (!persistAndSet(patch, next)) return
     patch({
+      libraryWarning: evictionNotice(kept.slice(PRESET_LIBRARY_LIMIT), 'Restored'),
       selectedLibraryId: state.deletedSnapshot.id,
       presetName: state.deletedSnapshot.name,
       deletedSnapshot: null,
@@ -260,7 +275,7 @@ export function usePresetLibrary({ currentPayload, onApply }: UsePresetLibraryOp
   const patch = useCallback<Patch>((partial) => setState((prev) => ({ ...prev, ...partial })), [])
   const feedback = useTimedFeedback(patch)
   useLoadStoredLibrary(patch)
-  useSharedPresetHashImport(onApply, feedback.setSaveStatusTimed)
+  useSharedPresetHashImport(onApply, feedback.setSaveStatusTimed, patch)
 
   const selectedSnapshot = useMemo(
     () => state.library.find((item) => item.id === state.selectedLibraryId) ?? null,

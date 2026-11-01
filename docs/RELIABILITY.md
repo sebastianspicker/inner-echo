@@ -74,8 +74,7 @@ npm run notices:verify
 ```
 
 `pages:verify` can be repeated on the same build. The manual Pages workflow then runs `npm run pages:finalize`,
-which removes the Vite manifest from `dist/`, before it writes the candidate handoff; the handoff
-refuses an artifact that still contains the manifest.
+which removes the Vite manifest from `dist/` before the artifact is uploaded.
 
 Artifact checks cover the configured base path, both HTML entries, the Pages meta CSP, the complete
 static and dynamic device-free demo JavaScript closure, asset containment, notices, and the absence

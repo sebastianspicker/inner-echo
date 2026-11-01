@@ -49,19 +49,19 @@ Run the `validate` job in `.github/workflows/ci.yml` on the exact candidate comm
 **Run workflow** when preparing a release. CI runs automatically only for pull requests authored by
 `dependabot[bot]`; other pull requests and pushes do not run its jobs. It installs from the lockfile
 with lifecycle scripts disabled, rebuilds `esbuild`, runs the moderate-threshold dependency audit,
-and runs `npm run verify` with Node.js 22 and npm 11. It uploads reports, not deployment candidates.
+runs `npm run verify` with Node.js 22 and npm 11, and then builds and verifies the Pages artifact
+(`npm run pages:build && npm run pages:verify`). It uploads reports, not deployment candidates.
 
 The separate Pages workflow is manual-only on `main`. It reads the current Pages base path,
 checks out the dispatch's exact commit, installs the lockfile, audits dependencies, builds the site,
 and runs source, available test, artifact and notice checks. Public clones report the private test
 suite's absence explicitly; local candidate evidence must still come from a checkout with that suite.
 
-After verification, Pages removes the build manifest and creates handoff metadata outside `dist/`.
-The metadata identifies this manual run and attempt, the commit, normalized base path, timestamp and
-site digest. The same job validates it against current main and uploads the verified Pages artifact;
-it does not download artifacts from an earlier CI run. The deployment job checks main again after
-any `github-pages` environment approval wait. If main advanced, start a fresh manual Pages run,
-which rebuilds and verifies the candidate. No push or CI completion publishes automatically.
+After verification, Pages removes the build manifest, confirms that main still points at the built
+commit, and uploads the verified Pages artifact; it does not download artifacts from an earlier CI
+run. The deployment job checks main again after any `github-pages` environment approval wait. If
+main advanced, start a fresh manual Pages run, which rebuilds and verifies the candidate. No push or
+CI completion publishes automatically. To look at a Pages build locally, run `npm run pages:preview`.
 
 ## Manual evidence
 

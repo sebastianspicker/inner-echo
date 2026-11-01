@@ -1,19 +1,18 @@
 import type { Texture, VideoTexture, WebGLRenderTarget } from 'three'
 import type { AudioMetrics } from '../../../audio'
 import type { VideoNode } from '../../effects/VideoNode'
+import { logger } from '../../../../platform/logger'
 import type { ReactiveLoopOptions } from './reactive'
 import type { VideoMetrics } from '../videoMetrics'
+import { MAX_STEP_SECONDS, RENDER_SCALES, RESIZE_SETTLE_MS } from './constants'
+import { computeScaleIndex, hasRepeatedGlErrors, updateFrameTiming } from './frameTiming'
 import {
-  FPS_DOWN_THRESHOLD,
-  FPS_SAMPLES,
-  FPS_UP_THRESHOLD,
-  GL_ERROR_POLL_FRAMES,
-  RENDER_SCALES,
-  RESIZE_SETTLE_MS,
-  SCALE_CHANGE_COOLDOWN_MS,
-} from './constants'
-import { computeNextRenderScaleIndex } from './loop'
-import { resolveReactiveOverrides, writeMergedControlValues, writeUvScaleOffset } from './params'
+  createOverrideScratch,
+  type OverrideScratch,
+  resolveReactiveOverrides,
+  writeMergedControlValues,
+  writeUvScaleOffset,
+} from './params'
 import type { WebGLOverlayRuntimeState, WebGLSceneResources } from './pipelineState'
 import {
   allocateFrameTargets,
@@ -36,6 +35,7 @@ interface ReactiveDemand {
 interface ReactiveApplyState {
   hasAppliedAudioOverrides: boolean
   inactiveNotified: boolean
+  overrideScratch: OverrideScratch
 }
 
 interface MetricsReadState {
@@ -56,35 +56,43 @@ export type FrameLoopOptions = {
 export function createFrameLoop(options: FrameLoopOptions): () => void {
   const renderState = createRenderState(options)
   const metricsReadState: MetricsReadState = { resetBeforeNextSample: false }
-  return function loop(): void {
+  const renderFrame = (): boolean => {
     const { state, video, canvas, container, resources, reactiveOptions, failAndFallback } = options
-    if (state.stopped) return
-    state.rafId = null
     const now = performance.now()
     const delta = updateFrameTiming(state, now)
+    // Raw delta feeds FPS and diagnostics; simulation gets a bounded step after stalls.
+    const step = Math.min(delta, MAX_STEP_SECONDS)
     renderState.updateRenderScale(now, delta)
-    if (!video || !canvas || !container) {
-      state.rafId = requestAnimationFrame(loop)
-      return
-    }
+    if (!video || !canvas || !container) return true
     renderState.setSize(now)
     const videoReady = video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0
     const sourceChanged = hasNewVideoFrame(state)
     const reactiveDemand = readReactiveDemand(reactiveOptions)
-    const videoMetrics = readVideoMetrics(resources, video, delta, videoReady, sourceChanged, {
+    const videoMetrics = readVideoMetrics(resources, video, step, videoReady, sourceChanged, {
       demand: reactiveDemand,
       state: metricsReadState,
     })
     if (reactiveDemand.videoMetrics) reactiveOptions?.onVideoMetrics?.(videoMetrics)
     if (videoReady) {
-      renderState.renderVideoFrame(delta, videoMetrics, reactiveDemand, sourceChanged)
+      renderState.renderVideoFrame(step, videoMetrics, reactiveDemand, sourceChanged)
       state.videoFrameDirty = false
     } else clearRenderer(resources)
     if (hasRepeatedGlErrors(resources.gl, state, videoReady)) {
       failAndFallback('Renderer switched to 2D fallback after repeated GPU errors.')
-      return
+      return false
     }
-    state.rafId = requestAnimationFrame(loop)
+    return true
+  }
+  return function loop(): void {
+    const { state, failAndFallback } = options
+    if (state.stopped) return
+    state.rafId = null
+    try {
+      if (renderFrame()) state.rafId = requestAnimationFrame(loop)
+    } catch (error) {
+      logger.error('WebGL frame failed', error instanceof Error ? error.name : 'unknown')
+      failAndFallback('Renderer switched to 2D fallback after a rendering error.')
+    }
   }
 }
 
@@ -93,6 +101,7 @@ function createRenderState(options: FrameLoopOptions) {
   const applyState: ReactiveApplyState = {
     hasAppliedAudioOverrides: false,
     inactiveNotified: false,
+    overrideScratch: createOverrideScratch(),
   }
   state.halfFloatHistory = supportsHalfFloatTargets(resources.renderer)
   state.baseParams.ditherAmplitude = state.halfFloatHistory ? 0 : 1 / 255
@@ -109,10 +118,12 @@ function createRenderState(options: FrameLoopOptions) {
     if (state.sourceRT === null || settled) allocateTargets(state, nodes)
   }
   const updateRenderScale = (now: number, delta: number): void => {
-    const nextScaleIndex = computeScaleIndex(state, now)
+    const decision = computeScaleIndex(state, now)
     state.prevStressMode = import.meta.env.DEV && Boolean(state.currentParams.stressMode)
-    if (nextScaleIndex !== state.renderScaleIndex) {
-      state.renderScaleIndex = nextScaleIndex
+    state.lastUpStepMs = decision.lastUpStepMs
+    state.upStepBlockedUntilMs = decision.upStepBlockedUntilMs
+    if (decision.index !== state.renderScaleIndex) {
+      state.renderScaleIndex = decision.index
       state.lastScaleChangeMs = now
       if (!state.usePassthrough && state.sourceRT !== null) allocateTargets(state, nodes)
     }
@@ -325,7 +336,7 @@ function applyReactiveState(
   const overrides = reactiveDemand.overrides
     ? reactiveOptions?.getOverrides(delta, audioMetrics, videoMetrics, baseControlValues)
     : undefined
-  const { video, audio } = resolveReactiveOverrides(overrides)
+  const { video, audio } = resolveReactiveOverrides(overrides, reactiveApplyState.overrideScratch)
   if (audio && reactiveOptions?.applyAudioOverrides) {
     reactiveOptions.applyAudioOverrides(audio)
     reactiveApplyState.hasAppliedAudioOverrides = true
@@ -333,7 +344,11 @@ function applyReactiveState(
     reactiveOptions.applyAudioOverrides({})
     reactiveApplyState.hasAppliedAudioOverrides = false
   }
-  writeMergedControlValues(state.mergedControlValues, baseControlValues, video)
+  // Without video overrides the merge equals the base, so the nodes read the base object directly.
+  if (video) {
+    writeMergedControlValues(state.mergedControlValues, baseControlValues, video)
+    state.baseParams.controlValues = state.mergedControlValues
+  } else state.baseParams.controlValues = baseControlValues
 }
 
 function readVideoMetrics(
@@ -385,59 +400,4 @@ function syncResourceDiagnostics(state: WebGLOverlayRuntimeState): void {
     countFrameTargets(state),
     state.temporalPingPong.length,
   )
-}
-
-function computeScaleIndex(state: WebGLOverlayRuntimeState, now: number): number {
-  const stressMode = import.meta.env.DEV && Boolean(state.currentParams.stressMode)
-  return computeNextRenderScaleIndex({
-    currentIndex: state.renderScaleIndex,
-    scaleCount: RENDER_SCALES.length,
-    avgFps: state.avgFps,
-    stressMode,
-    prevStressMode: state.prevStressMode,
-    nowMs: now,
-    lastScaleChangeMs: state.lastScaleChangeMs,
-    cooldownMs: SCALE_CHANGE_COOLDOWN_MS,
-    downThreshold: FPS_DOWN_THRESHOLD,
-    upThreshold: FPS_UP_THRESHOLD,
-  })
-}
-
-function updateFrameTiming(state: WebGLOverlayRuntimeState, now: number): number {
-  let delta = (now - state.lastTime) / 1000
-  state.lastTime = now
-  if (import.meta.env.DEV && state.currentParams.stressMode && delta < 0.05)
-    delta = burnStressFrame(delta)
-  if (delta > 0 && delta < 1) {
-    state.frameTimes.push(delta)
-    if (state.frameTimes.length > FPS_SAMPLES) state.frameTimes.shift()
-    state.avgFps =
-      1 / (state.frameTimes.reduce((total, item) => total + item, 0) / state.frameTimes.length)
-  }
-  return delta
-}
-
-function burnStressFrame(delta: number): number {
-  const start = performance.now()
-  while (performance.now() < start + 25) {}
-  return Math.max(0, delta - (performance.now() - start) / 1000)
-}
-
-/**
- * `gl.getError()` forces a GPU sync, so it is polled on the first three rendered frames and then
- * every `GL_ERROR_POLL_FRAMES`. Three consecutive polls with errors trigger the fallback.
- */
-function hasRepeatedGlErrors(
-  gl: WebGLRenderingContext,
-  state: WebGLOverlayRuntimeState,
-  didRender: boolean,
-): boolean {
-  if (!didRender) return false
-  state.renderedFrameCount += 1
-  const frame = state.renderedFrameCount
-  if (frame > 3 && frame % GL_ERROR_POLL_FRAMES !== 0) return false
-  let hadError = false
-  for (let error = gl.getError(); error !== gl.NO_ERROR; error = gl.getError()) hadError = true
-  state.consecutiveGlErrors = hadError ? state.consecutiveGlErrors + 1 : 0
-  return state.consecutiveGlErrors >= 3
 }

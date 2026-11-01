@@ -68,6 +68,8 @@ export interface WebGLOverlayRuntimeState {
   lastDpr: number | null
   renderScaleIndex: number
   lastScaleChangeMs: number
+  lastUpStepMs: number
+  upStepBlockedUntilMs: number
   prevStressMode: boolean
   avgFps: number
 }
@@ -118,6 +120,8 @@ export function createOverlayRuntimeState(nodes: VideoNode[]): WebGLOverlayRunti
     lastDpr: null,
     renderScaleIndex: 0,
     lastScaleChangeMs: 0,
+    lastUpStepMs: Number.NEGATIVE_INFINITY,
+    upStepBlockedUntilMs: 0,
     prevStressMode: false,
     avgFps: 60,
   }

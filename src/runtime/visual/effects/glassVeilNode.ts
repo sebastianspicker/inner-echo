@@ -86,7 +86,7 @@ void main() {
   // Persistence ghost from the previous (already veiled) frame, in output space.
   vec3 prev = texture2D(u_prev, vUv).rgb;
   vec3 color = mix(curr, prev, u_blend);
-  color += ieDither(vUv, u_time) * u_dither;
+  color += ieDither(vUv, mod(u_time, 256.0)) * u_dither;
 
   gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }
@@ -136,7 +136,7 @@ export class GlassVeilNode implements VideoNode {
 
   tick(delta: number): void {
     if (!this.material) return
-    this.time = (this.time + delta) % 1000
+    this.time += delta
     this.material.uniforms.u_time.value = this.time
     const tau = persistenceSeconds(this.feedback, 0.94, PERSISTENCE_SECONDS_AT_REFERENCE)
     this.material.uniforms.u_blend.value = persistenceBlend(tau, delta)

@@ -6,8 +6,8 @@
 import type { ShaderMaterial, Material, Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import { applyUvParams } from './paramUtils'
-import { getPulseMaterial, PulseEnvelope, resolvePulseParameters } from './pulseEffectSupport'
-import { disposeEffectMaterial } from './shaderMaterial'
+import { PulseEnvelope, resolvePulseParameters } from './pulseEffectSupport'
+import { acquireEffectMaterial, disposeEffectMaterial } from './shaderMaterial'
 
 const FRAG = `
 uniform sampler2D u_map;
@@ -60,10 +60,10 @@ export class PulseNode implements VideoNode {
   }
 
   getMaterial(inputTexture: Texture): Material {
-    this.material = getPulseMaterial(this.material, inputTexture, FRAG, {
+    this.material = acquireEffectMaterial(this.material, inputTexture, FRAG, () => ({
       u_depth: { value: 0 },
       u_pulse: { value: 0.5 },
-    })
+    }))
     return this.material
   }
 

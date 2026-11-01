@@ -4,13 +4,7 @@
   "mode": "strict",
   "format": ["javascript", "typescript", "tsx", "css"],
   "crossFormats": ["js-ts"],
-  "ignore": [
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/coverage/**",
-    "**/reports/**",
-    "**/docs/generated/**"
-  ],
+  "ignore": ["**/node_modules/**"],
   "reporters": ["console", "threshold"],
   "threshold": 0
 }

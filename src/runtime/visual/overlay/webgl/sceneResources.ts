@@ -11,7 +11,6 @@ import {
 } from 'three'
 import { createVideoMetricsTracker } from '../videoMetrics'
 import type { VideoNode } from '../../effects/VideoNode'
-import { createStartupCleanup } from '../startupCleanup'
 import { disposeFrameTargets } from './resources'
 import type { WebGLOverlayRuntimeState, WebGLSceneResources } from './pipelineState'
 import { createPassthroughMaterial, getQuadGeometry } from './renderHelpers'
@@ -119,5 +118,3 @@ export function registerVideoFrameCallback(
     state.videoFrameCallbackId = null
   })
 }
-
-export { createStartupCleanup }

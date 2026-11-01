@@ -1,5 +1,4 @@
 import type { LoadedProfileContract } from '../../contracts/probes/types'
-import { loadProfileContracts } from '../../contracts/profiles'
 import type { InspectIssue } from './types'
 
 export type LoadedProfile = LoadedProfileContract
@@ -29,13 +28,6 @@ export function toNodeName(value: unknown): string {
     .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
     .replace(/([A-Z])([A-Z][a-z])/g, '$1_$2')
     .toLowerCase()
-}
-
-export function loadProfiles(rootDir: string): {
-  profiles: LoadedProfile[]
-  issues: InspectIssue[]
-} {
-  return loadProfileContracts(rootDir)
 }
 
 export function collectFiniteIssues(value: unknown, keyPath: string, output: string[]): void {

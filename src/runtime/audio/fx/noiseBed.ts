@@ -4,6 +4,7 @@
 
 import type { AudioModule } from '../types'
 import { clamp } from '../../../shared/numbers'
+import { GLOBAL_SAFETY_CLAMPS } from '../../../domain/experience/safetyLimits'
 
 export interface NoiseBedParams {
   level?: number
@@ -12,7 +13,7 @@ export interface NoiseBedParams {
 
 // Profile defaults lean quieter; runtime safety policy clamps the level.
 const DEFAULT_LEVEL = 0.03
-const MAX_LEVEL = 0.08
+const MAX_LEVEL = GLOBAL_SAFETY_CLAMPS.max_noise_level
 // Every color is normalized to this RMS so `level` means the same thing across colors.
 const TARGET_RMS = 0.4
 const PEAK_CEILING = 0.95

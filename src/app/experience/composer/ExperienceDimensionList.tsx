@@ -4,6 +4,7 @@ import type {
 } from '../../../domain/experience/composition/types'
 import type { EvidenceDocPath } from '../../../content/evidence'
 import type { ChangeEvent } from 'react'
+import { useCommitOnRelease } from '../ui/useCommitOnRelease'
 import { EvidenceButton } from './EvidenceButton'
 import { EvidenceGrade } from './EvidenceGrade'
 import { strengthBadge, upsertDimension } from './selection'
@@ -52,10 +53,7 @@ function DimensionWeightSlider({
   weight: number
   onWeight: (weight: number) => void
 }) {
-  const handleWeightChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    const nextWeight = Number(event.target.value)
-    if (Number.isFinite(nextWeight)) onWeight(nextWeight)
-  }
+  const { draft, inputProps } = useCommitOnRelease(weight, onWeight)
   return (
     <label className="composer__slider">
       <span>Weight</span>
@@ -64,11 +62,10 @@ function DimensionWeightSlider({
         min={0}
         max={1}
         step={0.01}
-        value={weight}
         aria-label={`Weight for ${dimension.label ?? dimension.id}`}
-        onChange={handleWeightChange}
+        {...inputProps}
       />
-      <span className="composer__slider-val">{Math.round(weight * 100)}%</span>
+      <span className="composer__slider-val">{Math.round(draft * 100)}%</span>
     </label>
   )
 }

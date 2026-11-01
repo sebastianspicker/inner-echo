@@ -4,6 +4,7 @@
 
 import type { AudioModule } from '../types'
 import { clamp } from '../../../shared/numbers'
+import { GLOBAL_SAFETY_CLAMPS } from '../../../domain/experience/safetyLimits'
 
 export interface TremoloParams {
   /** LFO rate in Hz. */
@@ -15,8 +16,8 @@ export interface TremoloParams {
 const DEFAULT_RATE = 3
 const DEFAULT_DEPTH = 0.15
 // Conservative runtime limits for modulation depth and rate.
-const MAX_RATE_HZ = 4
-const MAX_DEPTH = 0.15
+const MAX_RATE_HZ = GLOBAL_SAFETY_CLAMPS.max_tremolo_rate_hz
+const MAX_DEPTH = GLOBAL_SAFETY_CLAMPS.max_tremolo_depth
 
 export function createTremolo(context: BaseAudioContext, params: TremoloParams = {}): AudioModule {
   const rate = clamp(params.rate ?? DEFAULT_RATE, 0.1, MAX_RATE_HZ)

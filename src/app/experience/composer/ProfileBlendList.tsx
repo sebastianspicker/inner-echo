@@ -1,6 +1,7 @@
 import type { CatalogEntry } from '../../../domain/experience/schema'
 import type { SelectedPreset } from '../../../domain/experience/composition/types'
 import type { EvidenceDocPath } from '../../../content/evidence'
+import { useCommitOnRelease } from '../ui/useCommitOnRelease'
 import { EvidenceButton } from './EvidenceButton'
 import { EvidenceGrade } from './EvidenceGrade'
 import { strengthBadge, upsertPreset } from './selection'
@@ -59,11 +60,9 @@ function ProfileBlendRow(props: ProfileBlendRowProps) {
   const { entry, enabled, presets, onPresetsChange, onOpenEvidence } = props
   const weight = presets.find((preset) => preset.profileId === entry.id)?.weight ?? 0.5
   const badge = strengthBadge(props.strength)
-  const updateWeight = (raw: string): void => {
-    const nextWeight = Number(raw)
-    if (!Number.isFinite(nextWeight)) return
-    onPresetsChange(upsertPreset(presets, entry.id, nextWeight, true))
-  }
+  const { draft, inputProps } = useCommitOnRelease(weight, (nextWeight) =>
+    onPresetsChange(upsertPreset(presets, entry.id, nextWeight, true)),
+  )
 
   return (
     <div className="composer__row">
@@ -90,11 +89,10 @@ function ProfileBlendRow(props: ProfileBlendRowProps) {
             min={0}
             max={1}
             step={0.01}
-            value={weight}
             aria-label={`Weight for ${entry.label}`}
-            onChange={(event) => updateWeight(event.target.value)}
+            {...inputProps}
           />
-          <span className="composer__slider-val">{Math.round(weight * 100)}%</span>
+          <span className="composer__slider-val">{Math.round(draft * 100)}%</span>
         </label>
       )}
     </div>

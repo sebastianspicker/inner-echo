@@ -42,7 +42,7 @@ void main() {
   float density = u_amount * (0.85 + 0.3 * (drift / 1.5 - 0.5));
 
   // Fine dither keeps the veil free of banding.
-  float dither = (hash(vUv * 213.7 + u_time * 0.1) - 0.5) * 0.02;
+  float dither = (hash(vUv * 213.7 + mod(u_time, 256.0) * 0.1) - 0.5) * 0.02;
   vec3 veil = vec3(0.66, 0.68, 0.71) + dither;
   color.rgb = mix(color.rgb, veil, clamp(density, 0.0, 1.0));
 
@@ -66,7 +66,7 @@ export class HazeNode implements VideoNode {
   }
 
   tick(delta: number): void {
-    this.time = (this.time + delta) % 1000
+    this.time += delta
   }
 
   getMaterial(inputTexture: Texture): Material {

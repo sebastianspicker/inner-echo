@@ -5,7 +5,6 @@
  */
 
 import type { VideoNode } from '../effects/VideoNode'
-import { syncCanvasToContainer } from './overlayRenderer'
 import { createOverlayRuntime } from './overlayRuntime'
 import {
   startWebGLOverlayLoop,
@@ -15,7 +14,6 @@ import {
 } from './webglPipeline'
 import type { OverlayControl, OverlayRuntimeCallbacks } from './contracts'
 
-export { syncCanvasToContainer }
 export type { VideoPipelineParams, ReactiveLoopOptions }
 export type { VideoMetrics } from './videoMetrics'
 
@@ -27,13 +25,10 @@ export type {
   OverlayRuntimeState,
 } from './contracts'
 
-/** When true, use Three.js WebGL pipeline; when false or when WebGL init fails, use 2D drawImage. */
-const USE_WEBGL = true
-
 /**
  * Start the overlay render loop. Prefers WebGL (Three.js) with the given video nodes
  * (from condition profile); empty or missing nodes = clean passthrough.
- * Falls back to 2D canvas drawImage if USE_WEBGL is false or WebGL init fails.
+ * Falls back to 2D canvas drawImage if WebGL init fails.
  * Pass reactiveOptions to drive AV coupling from audio/video metrics.
  * Returns { stop, setParams }; setParams is a no-op for 2D fallback.
  */
@@ -56,7 +51,7 @@ export function startOverlayLoop(
     return runtime.control
   }
 
-  if (USE_WEBGL && webglCanvas) {
+  if (webglCanvas) {
     let switchedTo2d = false
     const callbacks: WebGLOverlayCallbacks = {
       onFatalRuntimeError(error) {

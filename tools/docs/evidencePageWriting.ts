@@ -21,9 +21,13 @@ function ensureDir(directory: string) {
   fs.mkdirSync(directory, { recursive: true })
 }
 
-function writeFileIfChanged(filePath: string, contents: string) {
+function writeFileIfChanged(filePath: string, contents: string, stale?: string[]) {
   const previous = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf-8') : null
   if (previous === contents) return
+  if (stale) {
+    stale.push(filePath)
+    return
+  }
   fs.writeFileSync(filePath, contents, 'utf-8')
 }
 
@@ -32,6 +36,8 @@ export type EvidencePageInputs = {
   dimensions: ExperienceDimensionDef[]
   matrixByDim: Map<string, EvidenceMatrixRow>
   profiles: Profile[]
+  /** Check mode: when set, pages that differ from disk are pushed here instead of written. */
+  stale?: string[]
   root: string
   sourcesByDim: Map<string, ScientificSource[]>
 }
@@ -41,9 +47,12 @@ export function writeEvidencePages({
   dimensions,
   matrixByDim,
   profiles,
+  stale,
   root,
   sourcesByDim,
 }: EvidencePageInputs) {
+  const write = (filePath: string, contents: string) =>
+    writeFileIfChanged(filePath, contents, stale)
   const dimensionsById = new Map(dimensions.map((dimension) => [dimension.id, dimension]))
   const dimensionsDir = path.join(root, 'docs/references/dimensions')
   const conditionsDir = path.join(root, 'docs/references/conditions')
@@ -63,26 +72,25 @@ export function writeEvidencePages({
     ...motifs.map((id) => evidencePagePath(motifsDir, id)),
     evidencePagePath(motifsDir, 'INDEX'),
   ])
-  ensureDir(dimensionsDir)
-  ensureDir(conditionsDir)
-  ensureDir(motifsDir)
+  if (!stale) {
+    ensureDir(dimensionsDir)
+    ensureDir(conditionsDir)
+    ensureDir(motifsDir)
+  }
   for (const dimension of dimensions) {
-    writeFileIfChanged(
+    write(
       evidencePagePath(dimensionsDir, dimension.id),
       renderDimensionPage(dimension, claimsByKey),
     )
   }
   for (const profile of profiles) {
-    writeFileIfChanged(
-      evidencePagePath(conditionsDir, profile.id),
-      renderConditionPage(profile, dimensionsById),
-    )
+    write(evidencePagePath(conditionsDir, profile.id), renderConditionPage(profile, dimensionsById))
   }
-  writeFileIfChanged(path.join(motifsDir, 'INDEX.md'), renderMotifIndexPage(motifs))
+  write(path.join(motifsDir, 'INDEX.md'), renderMotifIndexPage(motifs))
   for (const motif of motifs) {
     const usedDimensions = usedByDimensions(motif, dimensions)
     const usedConditions = usedByConditions(motif, profiles)
-    writeFileIfChanged(
+    write(
       evidencePagePath(motifsDir, motif),
       renderMotifPage(
         motif,

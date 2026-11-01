@@ -12,20 +12,25 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import type {
+  DimensionToSignalMappingFile,
+  ExperienceDimensionDef,
+  ExperienceDimensionsFile,
+} from '../../src/domain/experience/schema'
+import { parseMotifClaims } from '../contracts/motifs/claims'
+import type { MotifClaim } from '../contracts/motifs/claims'
+import {
+  loadDimensions,
+  loadProfiles,
+  parseCorpusSourcesByDimension,
+  parseEvidenceMatrix,
+} from './evidencePageParsing'
+import { writeEvidencePages } from './evidencePageWriting'
 import { checkMappingSummary } from './mapping-summary'
 import { loadRepoJson } from './repoJson'
 
-type ExperienceDimensionDef = {
-  id: string
-  rationale_doc?: string
-  motif_summary?: { video_nodes?: string[]; audio_nodes?: string[] }
-}
-type ExperienceDimensionsFile = { dimensions: ExperienceDimensionDef[] }
-type DimensionToSignalMappingFile = { mapping: Record<string, { rationale_doc?: string }> }
 type Profile = { id: string }
-type MotifClaimsFile = {
-  claims?: Array<{ dimensionId?: string; motif?: string; label?: string; sources?: string[] }>
-}
+type MotifClaimsFile = { claims?: MotifClaim[] }
 
 function exists(root: string, p: string) {
   return fs.existsSync(path.join(root, p))
@@ -95,7 +100,7 @@ function verifyMotifClaims(root: string, errors: string[]) {
     return
   }
   try {
-    const data = JSON.parse(fs.readFileSync(claimsPath, 'utf-8')) as MotifClaimsFile
+    const data = loadRepoJson<MotifClaimsFile>(root, 'docs/references/MOTIF_CLAIMS.json')
     for (const claim of data.claims ?? []) verifyClaimSources(root, claim, errors)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -103,11 +108,7 @@ function verifyMotifClaims(root: string, errors: string[]) {
   }
 }
 
-function verifyClaimSources(
-  root: string,
-  claim: NonNullable<MotifClaimsFile['claims']>[number],
-  errors: string[],
-) {
+function verifyClaimSources(root: string, claim: MotifClaim, errors: string[]) {
   for (const source of claim.sources ?? []) {
     if (!exists(root, source))
       errors.push(`Motif claim source missing (${claim.dimensionId}|${claim.motif}): ${source}`)
@@ -133,6 +134,24 @@ function verifyMotifPages(root: string, motifs: Set<string>, errors: string[]) {
   }
 }
 
+function verifyGeneratedPages(root: string, errors: string[]) {
+  const stale: string[] = []
+  writeEvidencePages({
+    root,
+    stale,
+    dimensions: loadDimensions(root).slice(),
+    profiles: loadProfiles(root),
+    matrixByDim: parseEvidenceMatrix(root),
+    claimsByKey: parseMotifClaims(root),
+    sourcesByDim: parseCorpusSourcesByDimension(root),
+  })
+  for (const file of stale) {
+    errors.push(
+      `Evidence page is stale: ${path.relative(root, file)}. Regenerate with npm run evidence:gen.`,
+    )
+  }
+}
+
 function verifyMappingSummary(root: string, errors: string[]) {
   try {
     checkMappingSummary(root)
@@ -150,6 +169,7 @@ function main() {
   verifyMotifClaims(root, errors)
   verifyProfilePages(root, errors)
   verifyMotifPages(root, motifs, errors)
+  verifyGeneratedPages(root, errors)
   verifyMappingSummary(root, errors)
 
   if (errors.length) {

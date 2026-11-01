@@ -1,5 +1,6 @@
 import type { AudioStackConfig } from '../../domain/experience/schema'
 import type { AudioModule } from './types'
+import { DEFAULT_MASTER_VOLUME } from './audioStackValues'
 import { buildAudioChain, connectAudioChain } from './audioGraphBuilder'
 
 export function configureOutputRouting(
@@ -26,7 +27,10 @@ function setMasterVolume(args: {
 }): void {
   const { context, masterGain, stack, enabled } = args
   masterGain.gain.cancelScheduledValues(context.currentTime)
-  masterGain.gain.setValueAtTime(enabled ? (stack.master?.volume ?? 0.22) : 0, context.currentTime)
+  masterGain.gain.setValueAtTime(
+    enabled ? (stack.master?.volume ?? DEFAULT_MASTER_VOLUME) : 0,
+    context.currentTime,
+  )
 }
 
 function configureAnalyser(

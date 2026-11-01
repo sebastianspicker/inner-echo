@@ -76,6 +76,13 @@ function packageMetadata(name) {
 const notice = fs.readFileSync(noticePath, 'utf8')
 const failures = []
 
+const { dependencies = {} } = JSON.parse(read('package.json').toString('utf8'))
+for (const name of Object.keys(dependencies)) {
+  if (!entries.some((entry) => entry.name === name)) {
+    failures.push(`${name}: runtime dependency has no entry in this notice check`)
+  }
+}
+
 for (const entry of entries) {
   const metadata = packageMetadata(entry.name)
   if (metadata.version !== entry.version) {

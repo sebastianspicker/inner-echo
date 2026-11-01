@@ -12,7 +12,6 @@ import { logger } from '../../../platform/logger'
 import { getBuiltVideoStackEntries, shouldSkipNode } from '../../../domain/experience/videoStack'
 import { NODE_FACTORY } from './videoNodeFactory'
 
-export { NODE_FACTORY } from './videoNodeFactory'
 import type { BuildVideoNodesOptions } from '../../../domain/experience/videoStack'
 
 /** Logs diagnostics for video_stack entries the domain addressing rule would not build. */

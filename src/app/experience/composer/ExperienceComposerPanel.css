@@ -258,24 +258,6 @@
   gap: var(--s-2);
 }
 
-.composer__readiness {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-4);
-  padding-top: var(--s-4);
-  border-top: 1px solid var(--rule);
-}
-
-.composer__readiness > div {
-  display: grid;
-}
-
-.composer__readiness span {
-  color: var(--ink-3);
-  font-size: var(--t-14);
-}
-
 /* Framing above the list: the loaded description, then the standing caveat. */
 
 .ie-experienceFraming {

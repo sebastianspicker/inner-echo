@@ -66,7 +66,7 @@ export abstract class BurstShaderNode extends BurstEnvelopeState {
 
   tick(delta: number): void {
     if (!this.material) return
-    this.time = (this.time + delta) % 1000
+    this.time += delta
     if (this.shaderConfig.syncTimeUniform) this.material.uniforms.u_time.value = this.time
     this.beforeTickBurstEnvelope(delta)
     this.material.uniforms.u_burst.value = this.tickBurstEnvelope(delta)

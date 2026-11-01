@@ -21,7 +21,6 @@ function lerp(a: number, b: number, t: number): number {
 export class FocusJitterNode implements VideoNode {
   readonly nodeName = 'focus_jitter'
   private material: ShaderMaterial | null = null
-  private t = 0
   private nextSampleIn = 0
   private targetX = 0
   private targetY = 0
@@ -58,7 +57,6 @@ export class FocusJitterNode implements VideoNode {
 
   tick(delta: number): void {
     if (!this.material) return
-    this.t += delta
     const amount = this.material.uniforms.u_amount.value as number
     const smoothing = this.material.uniforms.u_smoothing.value as number
 

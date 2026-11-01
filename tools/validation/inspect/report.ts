@@ -1,15 +1,5 @@
 import type { InspectHarnessReport, InspectIssue, ProfileInspectResult } from './types'
 
-export function appendUnhandledRejections(issues: InspectIssue[], rejections: unknown[]): void {
-  for (const reason of rejections) {
-    issues.push({
-      severity: 'error',
-      code: 'UNHANDLED_REJECTION',
-      message: reason instanceof Error ? reason.message : `Unhandled rejection: ${String(reason)}`,
-    })
-  }
-}
-
 function buildSummary(
   profiles: ProfileInspectResult[],
   warnings: InspectIssue[],

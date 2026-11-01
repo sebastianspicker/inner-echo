@@ -2,10 +2,10 @@
 
 import type { VideoNode } from '../effects/VideoNode'
 import { logger } from '../../../platform/logger'
+import { createStartupCleanup } from './startupCleanup'
 import { createFrameLoop } from './webgl/frameLoop'
 import { createOverlayRuntimeState } from './webgl/pipelineState'
 import {
-  createStartupCleanup,
   initializeWebGLScene,
   registerRuntimeCleanup,
   registerVideoFrameCallback,

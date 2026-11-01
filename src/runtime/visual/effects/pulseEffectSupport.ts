@@ -1,4 +1,3 @@
-import type { ShaderMaterial, Texture } from 'three'
 import type { VideoNodeParams } from './VideoNode'
 import {
   clamp,
@@ -7,7 +6,6 @@ import {
   resolveNumberParam,
 } from './paramUtils'
 import { advancePulsePhase, smoothPulseValue } from './pulseOscillator'
-import { bindInputTexture, createEffectMaterial } from './shaderMaterial'
 
 export interface PulseParameters {
   depth: number
@@ -68,15 +66,4 @@ export function resolvePulseParameters(
     rate,
     smoothing: clamp(resolveNumberParam(params, 'smoothing', defaultSmoothing), 0, 0.999),
   }
-}
-
-export function getPulseMaterial(
-  material: ShaderMaterial | null,
-  inputTexture: Texture,
-  fragmentShader: string,
-  uniforms: Record<string, { value: unknown }>,
-): ShaderMaterial {
-  if (!material) return createEffectMaterial(inputTexture, fragmentShader, uniforms)
-  bindInputTexture(material, inputTexture)
-  return material
 }

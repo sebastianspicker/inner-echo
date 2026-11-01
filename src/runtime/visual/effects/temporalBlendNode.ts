@@ -73,7 +73,7 @@ export abstract class TemporalBlendNode implements VideoNode {
   }
 
   tick(delta: number): void {
-    this.time = (this.time + delta) % 1000
+    this.time += delta
     if (!this.material) return
     let tau = persistenceSeconds(this.feedback, this.decay, this.config.tauMaxSeconds)
     if (this.config.recurrenceBoost > 0) {

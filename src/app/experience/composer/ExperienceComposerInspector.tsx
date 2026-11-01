@@ -35,11 +35,6 @@ export interface ExperienceComposerInspectorControls {
   onInteractionAmountChange: (value: number) => void
 }
 
-export interface ExperienceComposerInspectorReadiness {
-  cameraRequesting?: boolean
-  onStartCamera?: () => void
-}
-
 export interface ExperienceComposerInspectorProps {
   catalog: CatalogEntry[] | null
   dims: ExperienceDimensionDef[]
@@ -48,7 +43,6 @@ export interface ExperienceComposerInspectorProps {
   selection: ExperienceComposerInspectorSelection
   controls: ExperienceComposerInspectorControls
   presetLibrary: PresetLibraryPanelProps
-  readiness: ExperienceComposerInspectorReadiness
   onOpenEvidence: (docPath: EvidenceDocPath) => void
 }
 
@@ -164,7 +158,6 @@ export function ExperienceComposerInspector({
   selection,
   controls,
   presetLibrary,
-  readiness,
   onOpenEvidence,
 }: ExperienceComposerInspectorProps) {
   const [conditionQuery, setConditionQuery] = useState('')
@@ -184,7 +177,6 @@ export function ExperienceComposerInspector({
     selection,
     controls,
     presetLibrary,
-    readiness,
     onOpenEvidence,
     filteredCatalog,
     filteredDims,
@@ -224,24 +216,6 @@ export function ExperienceComposerInspector({
 
       <AdvancedComposerPanel {...controls} />
       <PresetLibraryPanel {...presetLibrary} />
-
-      {readiness.onStartCamera && (
-        <div className="composer__readiness">
-          <div>
-            <strong>Ready to preview</strong>
-            <span>Camera, sound, and microphone remain off.</span>
-          </div>
-          <button
-            type="button"
-            className="ie-btn ie-btn--accent"
-            onClick={readiness.onStartCamera}
-            disabled={readiness.cameraRequesting}
-            aria-busy={readiness.cameraRequesting}
-          >
-            {readiness.cameraRequesting ? 'Requesting camera…' : 'Start camera'}
-          </button>
-        </div>
-      )}
     </div>
   )
 }

@@ -5,7 +5,11 @@ import { canonicalJson } from '../../shared/canonicalJson'
 import { createOutputGuard } from './outputGuard'
 import { isKnownAudioNodeType, rampGain } from './audioGraphBuilder'
 import { configureOutputRouting } from './outputRouting'
-import { getAudioContextTime, getAudioStackTargetVolume } from './audioStackValues'
+import {
+  DEFAULT_MASTER_VOLUME,
+  getAudioContextTime,
+  getAudioStackTargetVolume,
+} from './audioStackValues'
 import { createSynth } from './synth'
 import type { AudioModule } from './types'
 
@@ -36,6 +40,7 @@ class AudioGraphSession {
   private desiredAudioStack: AudioStackConfig | null | undefined
   private desiredAudioKey: string | undefined
   private overriddenKeys = new Set<string>()
+  private masterVolume: number | null = null
 
   constructor(
     initialAudioStack: AudioStackConfig | null | undefined,
@@ -49,7 +54,7 @@ class AudioGraphSession {
     const context = this.options.getContext()
     if (!context) return false
     this.masterGain = context.createGain()
-    this.masterGain.gain.value = this.desiredAudioStack?.master?.volume ?? 0.22
+    this.masterGain.gain.value = this.desiredAudioStack?.master?.volume ?? DEFAULT_MASTER_VOLUME
     this.outputGuard = createOutputGuard(context)
     this.masterGain.connect(this.outputGuard)
     this.outputGuard.connect(context.destination)
@@ -58,6 +63,11 @@ class AudioGraphSession {
     this.synthGain = context.createGain()
     this.synthGain.gain.value = 1
     this.buildAndConnect(this.desiredAudioStack)
+    // The session may have set the volume before the context was ready to build the graph.
+    this.masterGain.gain.setValueAtTime(
+      this.resolveMasterVolume(this.desiredAudioStack),
+      context.currentTime,
+    )
     return true
   }
 
@@ -79,8 +89,11 @@ class AudioGraphSession {
   }
 
   setMasterVolume(value: number) {
+    this.masterVolume = Number.isFinite(value) ? clamp01(value) : 0
+    // During a switch the gain is ramped down; finishConditionSwitch applies the stored volume.
+    if (this.switchTimeoutId !== null) return
     this.masterGain?.gain.setValueAtTime(
-      Number.isFinite(value) ? clamp01(value) : 0,
+      this.masterVolume,
       this.options.getContext()?.currentTime ?? 0,
     )
   }
@@ -248,10 +261,13 @@ class AudioGraphSession {
     if (!this.masterGain) return
     const now = getAudioContextTime(this.options.getContext())
     this.masterGain.gain.setValueAtTime(0, now)
-    this.masterGain.gain.linearRampToValueAtTime(
-      getAudioStackTargetVolume(nextStack),
-      now + rampSec,
-    )
+    this.masterGain.gain.linearRampToValueAtTime(this.resolveMasterVolume(nextStack), now + rampSec)
+  }
+
+  /** The stored master volume wins over the stack's own volume; a disabled stack stays silent. */
+  private resolveMasterVolume(stack: AudioStackConfig | null | undefined): number {
+    const target = getAudioStackTargetVolume(stack)
+    return target === 0 ? 0 : (this.masterVolume ?? target)
   }
 }
 

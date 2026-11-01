@@ -33,7 +33,7 @@ void main() {
   vec4 curr = texture2D(u_map, uv);
   vec4 prev = texture2D(u_prev, vUv + u_jitter);
   vec4 color = mix(curr, prev, u_blend);
-  color.rgb += ieDither(vUv, u_time) * u_dither;
+  color.rgb += ieDither(vUv, mod(u_time, 256.0)) * u_dither;
   gl_FragColor = clamp(color, 0.0, 1.0);
 }
 `

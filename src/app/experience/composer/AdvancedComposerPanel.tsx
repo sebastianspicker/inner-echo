@@ -23,6 +23,7 @@ export function AdvancedComposerPanel(props: AdvancedComposerPanelProps) {
         />
         <LabeledSlider
           label="Reactive response limit"
+          commitOnRelease
           min={0}
           max={1}
           value={props.maxFeedback}

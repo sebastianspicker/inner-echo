@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import { toJSONSchema } from 'zod'
 import type { z } from 'zod'
 import { profileSchema, catalogSchema } from '../../src/domain/experience/schema.ts'
+import { loadRepoJson } from './repoJson.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '../..')
@@ -19,7 +20,6 @@ const GENERATED_DIR = join(ROOT, 'docs', 'generated')
 const CHECK_ONLY = process.argv.includes('--check')
 // Canonical source for condition data
 const CONDITIONS_DIR = join(ROOT, 'src', 'content', 'experience')
-const CATALOG_PATH = join(CONDITIONS_DIR, 'catalog.json')
 const PROFILES_DIR = join(CONDITIONS_DIR, 'profiles')
 
 const DO_NOT_EDIT =
@@ -43,7 +43,7 @@ type Catalog = z.infer<typeof catalogSchema>
 type Profile = z.infer<typeof profileSchema>
 
 function loadCatalog() {
-  const raw = JSON.parse(readFileSync(CATALOG_PATH, 'utf-8'))
+  const raw = loadRepoJson(ROOT, 'src/content/experience/catalog.json')
   const parsed = catalogSchema.safeParse(raw)
   if (!parsed.success)
     throw new Error(`Catalog validation failed: ${JSON.stringify(parsed.error.flatten())}`)
@@ -54,8 +54,7 @@ function loadProfiles() {
   const files = readdirSync(PROFILES_DIR).filter((f) => f.endsWith('.json'))
   const profiles: Profile[] = []
   for (const f of files) {
-    const path = join(PROFILES_DIR, f)
-    const raw = JSON.parse(readFileSync(path, 'utf-8'))
+    const raw = loadRepoJson(ROOT, `src/content/experience/profiles/${f}`)
     const parsed = profileSchema.safeParse(raw)
     if (!parsed.success) {
       console.warn(`[gen-docs] Skip ${f}: validation failed`)

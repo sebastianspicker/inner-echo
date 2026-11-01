@@ -34,8 +34,6 @@ export interface ExperienceComposerPanelProps {
 
   onOpenEvidence: (docPath: EvidenceDocPath) => void
   variant?: 'setup' | 'compact'
-  cameraRequesting?: boolean
-  onStartCamera?: () => void
 }
 
 function toPresetLibraryPanelProps(
@@ -165,10 +163,6 @@ function ComposerWorkspace(props: ComposerWorkspaceProps) {
             onInteractionAmountChange: props.setInteractionAmount,
           }}
           presetLibrary={props.presetLibrary}
-          readiness={{
-            cameraRequesting: props.cameraRequesting,
-            onStartCamera: props.onStartCamera,
-          }}
           onOpenEvidence={props.onOpenEvidence}
         />
       </div>

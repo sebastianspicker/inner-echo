@@ -69,7 +69,7 @@ const productionSources = await Promise.all(
 const productionText = productionSources.join('\n')
 for (const developmentMarker of [
   'Debug (dev only)',
-  'Throw test error from Debug Panel',
+  'Throw test error to verify ErrorBoundary',
   'stress-mode-desc',
 ]) {
   if (productionText.includes(developmentMarker)) {

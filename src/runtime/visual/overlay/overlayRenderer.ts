@@ -10,8 +10,6 @@
 
 import { syncCanvasToContainer } from './canvasSizing'
 
-export { syncCanvasToContainer } from './canvasSizing'
-
 /**
  * Draw the video into the 2D context with cover semantics (match CSS object-fit: cover).
  * Centers and scales the video to fill the given width/height, cropping if needed.

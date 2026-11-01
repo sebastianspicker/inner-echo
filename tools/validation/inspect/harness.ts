@@ -1,12 +1,8 @@
 import { withSeededRandom } from '../../contracts/probes/utils'
+import { loadProfileContracts } from '../../contracts/profiles'
 import { inspectAudioPipeline } from './audio-scenario'
-import { appendUnhandledRejections, buildInspectReport } from './report'
-import {
-  type IssueSink,
-  type IssuesByProfile,
-  loadProfiles,
-  type LoadedProfile,
-} from './shared-validation'
+import { buildInspectReport } from './report'
+import type { IssueSink, IssuesByProfile, LoadedProfile } from './shared-validation'
 import { inspectVideoScenario } from './video-scenario'
 import type {
   InspectHarnessOptions,
@@ -49,10 +45,10 @@ function inspectProfile(
   }
 }
 
-export async function runInspectHarness(
+export function runInspectHarness(
   rootDir: string,
   options: InspectHarnessOptions = {},
-): Promise<InspectHarnessReport> {
+): InspectHarnessReport {
   const frames =
     typeof options.frames === 'number' && Number.isFinite(options.frames)
       ? Math.max(1, Math.floor(options.frames))
@@ -66,13 +62,7 @@ export async function runInspectHarness(
     },
   }
 
-  const unhandledRejections: unknown[] = []
-  const rejectionHandler = (reason: unknown): void => {
-    unhandledRejections.push(reason)
-  }
-  process.on('unhandledRejection', rejectionHandler)
-
-  const loaded = loadProfiles(rootDir)
+  const loaded = loadProfileContracts(rootDir)
   issues.push(...loaded.issues)
 
   const profileResults: ProfileInspectResult[] = []
@@ -82,10 +72,6 @@ export async function runInspectHarness(
     profileResults.push(inspectProfile(profile, frames, sink, perProfileIssueCounts, seed))
     seed += 3
   }
-
-  appendUnhandledRejections(issues, unhandledRejections)
-
-  process.off('unhandledRejection', rejectionHandler)
 
   return buildInspectReport(profileResults, issues)
 }

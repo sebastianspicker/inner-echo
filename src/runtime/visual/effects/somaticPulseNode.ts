@@ -10,10 +10,10 @@
 import { Vector2, type ShaderMaterial, type Material, type Texture } from 'three'
 import type { VideoNode, VideoNodeParams } from './VideoNode'
 import { applyUvParams, clamp, resolveNumberParam } from './paramUtils'
-import { getPulseMaterial, PulseEnvelope, resolvePulseParameters } from './pulseEffectSupport'
+import { PulseEnvelope, resolvePulseParameters } from './pulseEffectSupport'
 import { fastRandom, type FastRandom } from './random'
 import { RADIAL_GLSL } from './shaderKernels'
-import { disposeEffectMaterial, updateTexelSize } from './shaderMaterial'
+import { acquireEffectMaterial, disposeEffectMaterial, updateTexelSize } from './shaderMaterial'
 import { SurgeEnvelope } from './surgeEnvelope'
 
 const FRAG = `
@@ -128,14 +128,14 @@ export class SomaticPulseNode implements VideoNode {
   }
 
   getMaterial(inputTexture: Texture): Material {
-    this.material = getPulseMaterial(this.material, inputTexture, FRAG, {
+    this.material = acquireEffectMaterial(this.material, inputTexture, FRAG, () => ({
       u_depth: { value: 0 },
       u_pulse: { value: 0.5 },
       u_surge: { value: 0 },
       u_tunnel: { value: 0.3 },
       u_blur: { value: 0.12 },
       u_texelSize: { value: new Vector2(1 / 400, 1 / 400) },
-    })
+    }))
     return this.material
   }
 

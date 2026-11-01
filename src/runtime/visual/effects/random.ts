@@ -8,7 +8,7 @@ function normalizeSeed(seed: number): number {
 }
 
 /** Creates a deterministic Mulberry32 generator for tests and isolated consumers. */
-export function createFastRandom(seed: number): FastRandom {
+function createFastRandom(seed: number): FastRandom {
   let state = normalizeSeed(seed)
   return () => {
     state = (state + 0x6d2b79f5) >>> 0

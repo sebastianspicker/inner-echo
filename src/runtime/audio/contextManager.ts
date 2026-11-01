@@ -61,7 +61,8 @@ export function startAudioContext(): Promise<AudioContextStatus> {
     if (startingGeneration === generation) return startingPromise
     return Promise.resolve('off')
   }
-  if (closingPromise) return Promise.resolve('off')
+  // Rejecting (not awaiting) keeps context creation inside the click (ADR-0001).
+  if (closingPromise) return Promise.reject(new Error('Audio is still shutting down. Try again.'))
   startingGeneration = generation
   startingPromise = runAudioContextStart(generation).finally(clearStartingPromise)
 
@@ -118,32 +119,6 @@ function clearStartingPromise(): void {
 }
 
 /**
- * Pauses the audio processing.
- *
- * Suspending the context stops the hardware from processing audio, which saves CPU battery,
- * but keeps the internal audio graph intact so it can be resumed instantly later.
- * Use this when the user clicks "Stop" or hides the application.
- */
-export async function suspendAudioContext(): Promise<void> {
-  if (closingPromise) {
-    await closingPromise
-    notify('off')
-    return
-  }
-  if (sharedContext) {
-    try {
-      await sharedContext.suspend()
-      notify('off')
-    } catch (err) {
-      logger.warn('suspendAudioContext failed', err)
-      notify('off')
-    }
-  } else {
-    notify('off')
-  }
-}
-
-/**
  * Retrieves the currently active `AudioContext` singleton.
  *
  * Modules that need to build an audio graph (like synthesizers or microphone inputs)
@@ -167,7 +142,7 @@ export function addAudioContextListener(fn: AudioContextManagerListener): () => 
 /**
  * Fully destroys the `AudioContext` and releases system audio resources.
  *
- * Unlike `suspendAudioContext`, this permanently shuts down the graph. A completely
+ * This permanently shuts down the graph. A completely
  * new `AudioContext` will need to be instantiated (requiring a new user gesture) to play audio again.
  * Used during complete application teardown.
  */

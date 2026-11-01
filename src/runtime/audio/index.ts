@@ -9,24 +9,11 @@ export type {
   AudioInputMode,
   AudioMetrics,
 } from './types'
-export {
-  startAudioContext,
-  suspendAudioContext,
-  getAudioContext,
-  addAudioContextListener,
-  closeAudioContext,
-} from './contextManager'
-export { createSynth } from './synth'
+export { startAudioContext, closeAudioContext } from './contextManager'
 export type {
   AudioEngineControl,
   AudioEngineDebugState,
 } from './audioEngine'
 export { loadAudioEngine, type AudioEngineFactory } from './loadAudioEngine'
-export { buildAudioChain, connectAudioChain, rampGain } from './audioGraphBuilder'
-export {
-  createLowpass,
-  createHighpass,
-  createTremolo,
-  createNoiseBed,
-  createCompressor,
-} from './fx'
+export { buildAudioChain, connectAudioChain } from './audioGraphBuilder'
+export { DEFAULT_MASTER_VOLUME } from './audioStackValues'

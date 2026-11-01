@@ -1,6 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { loadRepoJson } from '../../docs/repoJson'
+
 export type MotifClaimLabel = 'supported' | 'mixed' | 'artistic' | 'hypothesis'
 export type MotifClaim = {
   dimensionId: string
@@ -14,7 +16,7 @@ type MotifClaimsFile = { claims: MotifClaim[] }
 export function parseMotifClaims(root: string) {
   const filePath = path.join(root, 'docs/references/MOTIF_CLAIMS.json')
   if (!fs.existsSync(filePath)) return new Map<string, MotifClaim>()
-  const data = JSON.parse(fs.readFileSync(filePath, 'utf-8')) as MotifClaimsFile
+  const data = loadRepoJson<MotifClaimsFile>(root, 'docs/references/MOTIF_CLAIMS.json')
   return toClaimMap(data.claims ?? [])
 }
 

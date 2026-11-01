@@ -112,7 +112,6 @@ function ComposerControls({ model }: ModelProps) {
         onApplyPreset={model.onApplyPreset}
         onOpenEvidence={model.openEvidence}
         variant={model.cameraController.isActive ? 'compact' : 'setup'}
-        cameraRequesting={model.cameraController.isRequesting}
       />
       {!model.presentation.profileDefinesReducedMotionControl &&
         model.presentation.showReducedMotionHint && (

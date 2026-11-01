@@ -2,7 +2,8 @@ import type { Profile } from '../../domain/experience/schema'
 import type { AudioMetrics } from '../audio'
 import type { VideoMetrics } from '../visual/overlay'
 import { resolveAudioKeys, resolveCouplingVideoKeys } from './couplingKeys'
-import { getProfileAudioBase } from './profileAudioBase'
+import { GLOBAL_SAFETY_CLAMPS } from '../../domain/experience/safetyLimits'
+import { getProfileAudioParam } from './profileAudioBase'
 
 export type CouplingMapping = {
   kind: 'video' | 'audio'
@@ -11,12 +12,11 @@ export type CouplingMapping = {
   release: number
   clampMin: number
   clampMax: number
-  base0?: number
   compute: (audio: AudioMetrics, video: VideoMetrics, strength: number, base: number) => number
   smoothed: number
 }
 
-type MappingSpec = Omit<CouplingMapping, 'key' | 'base0' | 'smoothed'>
+type MappingSpec = Omit<CouplingMapping, 'key' | 'smoothed'>
 
 const micRmsOr = (audio: AudioMetrics) =>
   typeof audio.micRms === 'number' ? audio.micRms : audio.rms
@@ -164,7 +164,7 @@ const audioSpecs: Array<{ node: string; param: string; spec: MappingSpec }> = [
       attack: 0.25,
       release: 0.6,
       clampMin: 0,
-      clampMax: 0.15,
+      clampMax: GLOBAL_SAFETY_CLAMPS.max_tremolo_depth,
       compute: (audio, video, strength, base) =>
         base + video.motion * (0.05 * strength) + micRmsOr(audio) * (0.07 * strength),
     },
@@ -177,7 +177,7 @@ const audioSpecs: Array<{ node: string; param: string; spec: MappingSpec }> = [
       attack: 0.35,
       release: 0.8,
       clampMin: 0.1,
-      clampMax: 4,
+      clampMax: GLOBAL_SAFETY_CLAMPS.max_tremolo_rate_hz,
       compute: (audio, video, strength, base) =>
         base + video.motion * (1.0 * strength) + micFluxOr(audio) * (1.2 * strength),
     },
@@ -208,7 +208,7 @@ const audioSpecs: Array<{ node: string; param: string; spec: MappingSpec }> = [
       attack: 0.25,
       release: 0.65,
       clampMin: 0,
-      clampMax: 0.08,
+      clampMax: GLOBAL_SAFETY_CLAMPS.max_noise_level,
       compute: (audio, video, strength, base) =>
         base + video.edge * (0.02 * strength) + micRmsOr(audio) * (0.035 * strength),
     },
@@ -269,9 +269,10 @@ export function createVideoCouplingMappings(
 
 export function createAudioCouplingMappings(profile: Profile): CouplingMapping[] {
   return audioSpecs.flatMap(({ node, param, spec }) =>
-    resolveAudioKeys(profile, node, param).map((key) => {
-      const base0 = getProfileAudioBase(profile, key)
-      return { ...spec, key, base0, smoothed: base0 }
+    resolveAudioKeys(profile, node, param).flatMap((key) => {
+      // A param the chain entry does not define has no base to modulate; skip it.
+      const base = getProfileAudioParam(profile, key)
+      return base === undefined ? [] : [{ ...spec, key, smoothed: base }]
     }),
   )
 }

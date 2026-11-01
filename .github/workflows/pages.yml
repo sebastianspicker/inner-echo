@@ -32,9 +32,6 @@ jobs:
       contents: read
     env:
       INNER_ECHO_PAGES_BASE_PATH: ${{ needs.configure.outputs.base_path }}
-      CANDIDATE_SHA: ${{ github.sha }}
-      CI_RUN_ID: ${{ github.run_id }}
-      CI_RUN_ATTEMPT: ${{ github.run_attempt }}
     steps:
       - name: Checkout selected main revision
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -55,8 +52,6 @@ jobs:
         run: npm ci --ignore-scripts && npm rebuild esbuild
 
       - name: Build and verify this manual deployment candidate
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           npm run audit:dependencies
           npm run pages:build
@@ -65,10 +60,17 @@ jobs:
           npm run pages:verify
           npm run notices:verify
           npm run pages:finalize
-          node tools/deployment/write-pages-handoff.mjs
-          CURRENT_MAIN_SHA="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
-          export CURRENT_MAIN_SHA
-          node tools/deployment/validate-pages-handoff.mjs
+
+      - name: Check main has not advanced
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_SHA: ${{ github.sha }}
+        run: |
+          current_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+          if [[ "$current_sha" != "$CANDIDATE_SHA" ]]; then
+            echo "::error::Main advanced while this candidate was built. Start a fresh manual Pages run."
+            exit 1
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

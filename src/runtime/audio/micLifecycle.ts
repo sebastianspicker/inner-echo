@@ -49,6 +49,7 @@ function activateRequestedMicrophone(
   state: MicLifecycleState,
   options: MicLifecycleOptions,
   gateControl: MicGateControl,
+  requestRace: MicRequestRace,
   stream: MediaStream,
   applyInputMode: () => void,
 ): void {
@@ -63,8 +64,17 @@ function activateRequestedMicrophone(
     state.graph = createMicrophoneGraph(context, mixer, stream, options.fftSize, state.sensitivity)
     applyInputMode()
     gateControl.start()
+    for (const track of stream.getAudioTracks()) {
+      track.onended = () => {
+        if (options.isDisposed() || state.graph.stream !== stream) return
+        stopMicrophone(state, options, gateControl, requestRace)
+        options.onStatusChange('error', 'Microphone disconnected')
+      }
+    }
     options.onStatusChange('on')
   } catch (error) {
+    // The graph may have thrown before it took ownership of the stream; stop it here too.
+    stopMediaTracks(stream)
     state.graph = disposeMicrophoneGraph(state.graph, options)
     gateControl.reset()
     if (!options.isDisposed()) {
@@ -84,7 +94,7 @@ async function requestMicrophone(
   if (state.graph.stream) stopMicrophone(state, options, gateControl, requestRace)
   const stream = await requestRace.request()
   if (!stream) return
-  activateRequestedMicrophone(state, options, gateControl, stream, applyInputMode)
+  activateRequestedMicrophone(state, options, gateControl, requestRace, stream, applyInputMode)
 }
 
 function getDebugState(state: MicLifecycleState): MicLifecycleDebugState {

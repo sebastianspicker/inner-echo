@@ -11,6 +11,7 @@ import type {
   AudioInputMode,
   MicStatus,
 } from '../audio'
+import { DEFAULT_MASTER_VOLUME } from '../audio'
 
 function profileHasEnabledAudio(profile: Profile | null): boolean {
   return profile?.audio_stack?.enabled === true
@@ -24,8 +25,15 @@ function selectAudioStack(
   return profile?.audio_stack ? { ...profile.audio_stack, enabled: true } : { enabled: true }
 }
 
-function selectMasterVolume(profile: Profile | null, requested: boolean): number {
-  return requested ? (profile?.audio_stack?.master?.volume ?? 0.22) : 0
+// Once the user moves the slider, their volume wins over the profile's.
+function selectMasterVolume(
+  profile: Profile | null,
+  requested: boolean,
+  userVolume: number | null,
+): number {
+  return requested
+    ? (userVolume ?? profile?.audio_stack?.master?.volume ?? DEFAULT_MASTER_VOLUME)
+    : 0
 }
 
 export interface SoundManagerDeps {
@@ -75,6 +83,7 @@ interface SoundState {
   error: string | null
   enabled: boolean
   masterVolume: number
+  userVolume: number | null
   intensity: number
   mic: MicStatus
   micError: string | null
@@ -91,7 +100,8 @@ function createInitialState(): SoundState {
     status: 'off',
     error: null,
     enabled: false,
-    masterVolume: 0.22,
+    masterVolume: DEFAULT_MASTER_VOLUME,
+    userVolume: null,
     intensity: 1,
     mic: 'off',
     micError: null,
@@ -110,7 +120,7 @@ function enforceInputModeInvariant(state: SoundState): void {
 function syncProfileAudio(state: SoundState, deps: SoundManagerDeps): void {
   if (state.status !== 'on' || !state.control) return
   state.control.setConditionAudio(selectAudioStack(state.profile, state.enabled))
-  state.masterVolume = selectMasterVolume(state.profile, state.enabled)
+  state.masterVolume = selectMasterVolume(state.profile, state.enabled, state.userVolume)
   state.control.setMasterVolume(state.masterVolume)
   deps.notify()
 }
@@ -166,7 +176,7 @@ function install(
     return
   }
   state.control = nextControl
-  state.masterVolume = selectMasterVolume(state.profile, requested)
+  state.masterVolume = selectMasterVolume(state.profile, requested, state.userVolume)
   state.status = 'on'
   state.control.setMasterVolume(state.masterVolume)
   state.control.setIntensity(state.intensity)
@@ -183,14 +193,15 @@ async function stopOrCloseFailure(
   thrown: unknown,
 ): Promise<void> {
   if (requestSeq !== state.seq) return
-  if (state.control) state.control.stop()
-  else await deps.closeAudioContext()
+  const control = state.control
   state.control = null
-  if (requestSeq !== state.seq) return
+  control?.stop()
+  // Report before awaiting the close: an in-flight close can take up to 2 s (Safari, Bluetooth).
   state.enabled = false
   state.status = 'error'
   state.error = thrown instanceof Error ? thrown.message : String(thrown)
   deps.notify()
+  if (!control) await deps.closeAudioContext()
 }
 
 function startSound(state: SoundState, deps: SoundManagerDeps, force: boolean): void {
@@ -249,6 +260,7 @@ type MicActions = Pick<
 function createEngineActions(state: SoundState, deps: SoundManagerDeps): EngineActions {
   return {
     setProfile(nextProfile) {
+      if (nextProfile === state.profile) return
       state.profile = nextProfile
       syncProfileAudio(state, deps)
     },
@@ -269,6 +281,7 @@ function createEngineActions(state: SoundState, deps: SoundManagerDeps): EngineA
     },
     setMasterVolume(value) {
       state.masterVolume = value
+      state.userVolume = value
       state.control?.setMasterVolume(value)
       deps.notify()
     },

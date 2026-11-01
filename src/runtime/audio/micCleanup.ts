@@ -5,7 +5,10 @@ import {
 } from './micTypes'
 
 export function stopMediaTracks(stream: MediaStream): void {
-  for (const track of stream.getTracks()) track.stop()
+  for (const track of stream.getTracks()) {
+    track.onended = null
+    track.stop()
+  }
 }
 
 /** Preserve teardown order: source path, analyser, gate, then mixer routing. */

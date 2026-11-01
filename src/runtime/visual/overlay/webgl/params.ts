@@ -1,11 +1,24 @@
-function toFiniteNumberRecord(value: unknown): Record<string, number> {
-  if (!value || typeof value !== 'object') return {}
-  return Object.fromEntries(
-    Object.entries(value).filter(
-      (entry): entry is [string, number] =>
-        typeof entry[1] === 'number' && Number.isFinite(entry[1]),
-    ),
-  )
+export interface OverrideScratch {
+  video: Record<string, number>
+  audio: Record<string, number>
+}
+
+export function createOverrideScratch(): OverrideScratch {
+  return { video: {}, audio: {} }
+}
+
+/** Copies finite numbers into `out`, clearing it first; returns whether any key was written. */
+function writeFiniteNumberRecord(out: Record<string, number>, value: unknown): boolean {
+  for (const key of Object.keys(out)) delete out[key]
+  if (!value || typeof value !== 'object') return false
+  let written = false
+  for (const [key, item] of Object.entries(value)) {
+    if (typeof item === 'number' && Number.isFinite(item)) {
+      out[key] = item
+      written = true
+    }
+  }
+  return written
 }
 
 /**
@@ -42,23 +55,20 @@ export function writeUvScaleOffset(
   outOffset[1] = (1 - 1 / sy) * 0.5
 }
 
-export function resolveReactiveOverrides(overridesRaw: unknown): {
-  video: Record<string, number>
-  audio: Record<string, number> | null
-} {
-  if (overridesRaw && typeof overridesRaw === 'object' && 'video' in overridesRaw) {
-    const structured = overridesRaw as { video?: unknown; audio?: unknown }
-    const video = toFiniteNumberRecord(structured.video)
-    const audioRecord = toFiniteNumberRecord(structured.audio)
-    return {
-      video,
-      audio: Object.keys(audioRecord).length > 0 ? audioRecord : null,
-    }
-  }
+const NO_OVERRIDES = { video: null, audio: null }
 
+/** Returned records are the scratch objects: valid until the next call. Null means no overrides. */
+export function resolveReactiveOverrides(
+  overridesRaw: unknown,
+  scratch: OverrideScratch,
+): { video: Record<string, number> | null; audio: Record<string, number> | null } {
+  if (!overridesRaw || typeof overridesRaw !== 'object' || !('video' in overridesRaw)) {
+    return NO_OVERRIDES
+  }
+  const structured = overridesRaw as { video?: unknown; audio?: unknown }
   return {
-    video: {},
-    audio: null,
+    video: writeFiniteNumberRecord(scratch.video, structured.video) ? scratch.video : null,
+    audio: writeFiniteNumberRecord(scratch.audio, structured.audio) ? scratch.audio : null,
   }
 }
 

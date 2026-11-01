@@ -103,12 +103,14 @@ function useCameraModel(snapshot: SessionSnapshot) {
 
 function useMultimorbidPresetSeeding(settingsModel: ExperienceSettingsModel): void {
   const { composerMode, conditionId } = settingsModel.settings
+  // The model object is new on every render; depending on it re-ran this effect forever.
+  const { updateSettings } = settingsModel
   useEffect(() => {
     if (composerMode !== 'multimorbid') return
-    settingsModel.updateSettings((previous) => ({
+    updateSettings((previous) => ({
       presets: seedPresetStack(previous.presets, conditionId),
     }))
-  }, [composerMode, conditionId, settingsModel])
+  }, [composerMode, conditionId, updateSettings])
 }
 
 /** An explicit retry reloads the profile and restarts the overlay even for an equivalent profile. */
@@ -152,12 +154,13 @@ function useOpenEvidence(ui: WorkspaceUiState) {
 
 /** Applies a loaded/shared payload in one call: settings.apply(...) + forcing sound off (ADR-0001). */
 function useApplyPreset(settingsModel: ExperienceSettingsModel, session: ExperienceSession) {
+  const { apply } = settingsModel
   return useCallback(
     (payload: PresetPayload) => {
-      settingsModel.apply(payload)
+      apply(payload)
       session.setSoundEnabled(false)
     },
-    [settingsModel, session],
+    [apply, session],
   )
 }
 
