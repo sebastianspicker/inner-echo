@@ -4,24 +4,47 @@ Inner Echo is one private npm package that builds two static browser entries: th
 and a device-free mock. There is no backend, service process, database, account system, or remote
 application API.
 
+New here? Read [System context](#system-context), then the two [user journeys](#user-journeys)
+(Start camera and Enable sound), then [State and lifecycle ownership](#state-and-lifecycle-ownership).
+Those cover what runs where and what one click reaches. The other sections go into detail.
+
 ## System context
+
+Who uses Inner Echo, and what does it talk to?
 
 ```mermaid
 flowchart LR
-  User[User] --> Live[Live experience]
-  Reviewer[Reviewer] --> Demo[Device-free mock]
-  Live --> Browser[Browser media and Web APIs]
-  Live --> Local[Origin-local storage and URL hash]
-  Live --> Bundled[Bundled profiles and evidence]
-  Build[Repository tools] --> Artifact[Static dist artifact]
-  Artifact --> Host[Static host]
-  Host --> Live
-  Host --> Demo
+  User((User)) -->|clicks| Live[Live experience]
+  Reviewer((Reviewer)) -->|clicks| Demo[Device-free mock]
+  subgraph browser [Browser tab]
+    Live
+    Demo
+    Bundled[Bundled profiles and evidence]
+    Local[localStorage and URL hash]
+    Media[getUserMedia and Web Audio]
+  end
+  Live -->|imports JSON and Markdown| Bundled
+  Live -->|"presets, #preset= link"| Local
+  Live -->|"camera, mic, sound"| Media
+  Build[Repository tools] -->|"npm run pages:build"| Host[GitHub Pages]
+  Host -->|static files| Live
+  Host -->|static files| Demo
+  classDef focus fill:#fde68a,stroke:#b45309,color:#1f2937
+  class Live focus
 ```
 
 The static host serves the app. Camera, microphone, and audio all stay inside the browser. The only
 user-facing path off the origin is following an external citation in the evidence drawer; the app
 never fetches citations in the background.
+
+Where in the code:
+
+- [index.html](../index.html) → [src/main.tsx](../src/main.tsx): live entry.
+- [demo/index.html](../demo/index.html) → [src/demo/main.ts](../src/demo/main.ts): mock entry.
+- [src/content/experience/loader.ts](../src/content/experience/loader.ts) and
+  [src/content/evidence/documents.ts](../src/content/evidence/documents.ts): bundled profiles and
+  evidence, loaded as lazy Vite chunks rather than fetched.
+- [tools/deployment/build-pages.mjs](../tools/deployment/build-pages.mjs): Pages artifact.
 
 ## Entries and components
 
@@ -91,28 +114,138 @@ globals by accident.
 Persisted setup-mode values remain `symptom`, `preset`, and `multimorbid` for compatibility, while
 the interface labels them Experience dimensions, Curated collections, and Combine collections.
 
+Where in the code: [src/content/experience/loader.ts](../src/content/experience/loader.ts),
+[src/app/experience/profile/useProfileLoad.ts](../src/app/experience/profile/useProfileLoad.ts),
+[src/domain/experience/composition/](../src/domain/experience/composition/), and
+`useSessionLiveSettings` in
+[src/app/experience/workspace/useExperienceSession.ts](../src/app/experience/workspace/useExperienceSession.ts),
+which calls `session.update()` whenever the profile or a live setting changes.
+
+## User journeys
+
+Each media control is a separate button, and each one reaches a different manager inside the media
+session. The two diagrams below trace the two that start media. Before either click, the profile
+has already reached the session through `session.update()` (step 5 of the data flow above).
+
+### Start camera
+
+What happens between clicking Start camera and seeing effects?
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant view as ExperienceWorkspaceView
+  participant cam as CameraManager
+  participant gum as getUserMedia
+  participant ovl as OverlayManager
+  participant rt as Overlay runtime
+  U->>view: Click "Start camera"
+  view->>cam: session.startCamera()
+  cam->>cam: seq++, state requesting
+  cam->>gum: requestVideoStream() video only
+  alt permission granted
+    gum-->>cam: MediaStream
+    cam->>cam: video.srcObject, video.play()
+    cam->>ovl: setCameraActive(true)
+    ovl->>ovl: overlayConfigurationKey(profile)
+    ovl-)rt: on loadedmetadata, import graph, coupling, overlay
+    rt->>rt: buildVideoNodes(), startOverlayLoop()
+    rt--)view: renderer webgl, 2d or raw
+  else denied or failed
+    gum-->>cam: DOMException
+    cam--)view: state denied or error
+  end
+```
+
+Every state change (steps 3, 7, 11, 13) calls the session's listeners, and the view re-reads one
+immutable snapshot through `useSyncExternalStore`. The camera result is discarded if `seq` moved on
+while the browser prompt was open (step 4), which is how a Stop Everything during the prompt wins.
+The overlay manager starts nothing until the camera is `active`. Step 8 computes a canonical key of
+everything the graph captures, so a later `session.update()` with an equivalent profile keeps the
+running graph instead of rebuilding it. The Three.js graph, coupling, and overlay modules (step 9)
+are separate chunks that load only now. `startOverlayLoop()` prefers WebGL and falls back to
+Canvas2D, then raw video, reporting the real renderer each time (step 11).
+
+Where in the code:
+
+- [src/app/experience/workspace/useExperienceWorkspace.ts](../src/app/experience/workspace/useExperienceWorkspace.ts):
+  `useCameraController` binds the button to `session.startCamera`.
+- [src/runtime/session/session.ts](../src/runtime/session/session.ts): `createExperienceSession`
+  wires camera state to `overlay.setCameraActive`.
+- [src/runtime/session/camera.ts](../src/runtime/session/camera.ts) and
+  [src/runtime/camera/camera.ts](../src/runtime/camera/camera.ts): `start`, `attachStream`,
+  `requestVideoStream`.
+- [src/runtime/session/overlay.ts](../src/runtime/session/overlay.ts): `sync`,
+  `overlayConfigurationKey`, `loadOverlayModules`.
+- [src/runtime/session/overlayReactive.ts](../src/runtime/session/overlayReactive.ts):
+  `createReactiveOverlayLifecycle`, `startReactiveOverlay`.
+- [src/runtime/visual/overlay/index.ts](../src/runtime/visual/overlay/index.ts): `startOverlayLoop`
+  and the renderer fallbacks.
+
+### Enable sound
+
+What happens when the user turns on sound?
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant view as AudioMicControls
+  participant snd as SoundManager
+  participant ctx as contextManager
+  participant eng as audioEngine chunk
+  U->>view: Click the sound button
+  view->>snd: session.enableSound()
+  snd->>snd: seq++, status starting
+  snd->>ctx: startAudioContext() inside the click
+  ctx-->>snd: status on
+  snd->>eng: loadAudioEngine() dynamic import
+  eng-->>snd: createAudioEngine
+  snd->>eng: createAudioEngine(audio stack)
+  snd--)view: status on
+```
+
+Step 4 creates or resumes the `AudioContext` synchronously inside the click, because browsers only
+allow audio to start from a user gesture ([ADR-0001](decisions/0001-direct-user-media-activation.md)). The
+engine code is fetched after that (step 6), so it never runs for users who leave sound off. If the
+user stops sound while steps 4 to 7 are pending, `seq` has moved on and the late engine is stopped
+instead of installed. The microphone follows the same pattern through `session.enableMic()`, and
+is only offered once this engine exists.
+
+Where in the code:
+[src/runtime/session/sound.ts](../src/runtime/session/sound.ts) (`startSound`, `install`),
+[src/runtime/audio/contextManager.ts](../src/runtime/audio/contextManager.ts)
+(`startAudioContext`), [src/runtime/audio/loadAudioEngine.ts](../src/runtime/audio/loadAudioEngine.ts),
+and [src/runtime/audio/audioEngine.ts](../src/runtime/audio/audioEngine.ts).
+
 ## Media and coupling flow
+
+Once camera and sound run, what flows between them on each frame?
 
 ```mermaid
 flowchart LR
-  CameraAction[Start camera action] --> Camera[getUserMedia video]
-  Camera --> Video[HTML video]
-  Video --> WebGL[WebGL node graph]
-  Video --> Canvas[Canvas2D or raw fallback]
-  WebGL --> Stage[Visible stage]
-  Canvas --> Stage
-
-  SoundAction[Enable sound action] --> Audio[AudioContext and synth]
-  MicAction[Enable microphone action] --> Mic[getUserMedia audio]
-  Mic --> Audio
-  Audio --> Output[Limiter and output]
-  Audio --> Features[Audio features]
-  Video --> Metrics[Video metrics]
-  Features --> Coupling[Bounded coupling]
-  Metrics --> Coupling
-  Coupling --> WebGL
-  Coupling --> Audio
+  Video[HTML video] -->|camera frames| WebGL[WebGL node graph]
+  WebGL -->|draws| Stage[Visible stage]
+  Video -.->|sampled pixels| Metrics[Video metrics]
+  Mic[Microphone] -->|MediaStream| Audio[Audio engine]
+  Audio -->|mixed signal| Output[Output guard]
+  Audio -.->|analyser data| Features[Audio features]
+  Metrics -.-> Coupling[Bounded coupling]
+  Features -.-> Coupling
+  Coupling -->|param overrides| WebGL
+  Coupling -->|param overrides| Audio
+  classDef focus fill:#fde68a,stroke:#b45309,color:#1f2937
+  class Coupling focus
 ```
+
+Dotted edges are sampled only when something live needs them. Activation is covered in
+[User journeys](#user-journeys).
+
+Where in the code: [src/runtime/coupling/](../src/runtime/coupling/) (`couplingEngine.ts`,
+`reactiveDriver.ts`), [src/runtime/visual/overlay/videoMetrics.ts](../src/runtime/visual/overlay/videoMetrics.ts),
+[src/runtime/audio/analyserFeatures.ts](../src/runtime/audio/analyserFeatures.ts), and
+[src/runtime/audio/outputGuard.ts](../src/runtime/audio/outputGuard.ts).
 
 Camera, sound, and microphone activate separately. A microphone request is only possible once the
 audio graph exists. Importing a preset updates the desired configuration with audio forced off.
@@ -149,6 +282,29 @@ directly, so direct-activation rules hold inside the click. The public state con
 Interruptions and browser blocks surface through the applicable error state and message, not as
 separate public union members. Visible state follows real runtime transitions; clicking a control
 never optimistically claims capability.
+
+Which states can the camera be in, and what moves it between them?
+
+```mermaid
+stateDiagram-v2
+  [*] --> idle
+  idle --> requesting: startCamera()
+  requesting --> active: video.play() resolves
+  requesting --> denied: NotAllowedError
+  requesting --> error: request or playback failed
+  active --> error: track ended or device removed
+  denied --> requesting: startCamera()
+  error --> requesting: startCamera()
+  requesting --> idle: stopEverything()
+  active --> idle: stopEverything()
+```
+
+The overlay follows this machine: it runs only while the camera is `active`, and leaving `active`
+for any reason disposes it. Sound and microphone have their own machines in
+[src/runtime/session/sound.ts](../src/runtime/session/sound.ts); a camera error never changes them.
+Health monitoring (a 250 ms track poll plus `devicechange`) runs only in `active`. See
+[src/runtime/session/camera.ts](../src/runtime/session/camera.ts) (`setState`, `interrupt`,
+`monitorActiveStream`).
 
 The session is created once per workspace. Its browser services are injected, so tests replace
 them without mocking module paths. Request-sequence guards discard stale async results. Stop Everything invalidates pending camera and
@@ -188,6 +344,36 @@ Vite emits `index.html` and `demo/index.html` without source maps and includes t
 files. The Pages assembler applies the configured base path, adds `.nojekyll`, and injects the
 document-level CSP fallback before load-bearing elements in every HTML entry. See
 [RELEASING.md](RELEASING.md) and [../SECURITY.md](../SECURITY.md).
+
+## Build and release
+
+How does a commit become the live site?
+
+```mermaid
+flowchart LR
+  dev[Local checkout] -->|git push| main[GitHub main]
+  bot[Dependabot PR] -->|pull_request| ci[CI validate job]
+  main -->|manual dispatch| ci
+  main -->|manual dispatch| pages[Pages workflow]
+  pages -->|"verify:source, pages:build"| artifact[(Pages artifact)]
+  artifact -->|"main unchanged, approved"| deploy[GitHub Pages]
+  classDef focus fill:#fde68a,stroke:#b45309,color:#1f2937
+  class pages focus
+```
+
+`npm run verify` is the gate locally and in the CI job: type-check and `vite build`, bundle-boundary
+and notice checks, `verify:source` (generated docs, links, lint, architecture, content, contracts,
+audio), then the tests. The Vitest suite is kept out of the public repository, so `npm test` skips
+it in public clones and in CI. CI adds the dependency audit and the Pages build, and runs only on
+manual dispatch or a Dependabot pull request; a push alone runs nothing. The Pages workflow runs
+the same checks in its own order, refuses to deploy if `main` moved during the build or while
+awaiting environment approval, and only then publishes. Tags and release notes are manual steps in
+[RELEASING.md](RELEASING.md).
+
+Where in the code: [package.json](../package.json) (`verify`, `verify:source`, `pages:*`),
+[.github/workflows/ci.yml](../.github/workflows/ci.yml),
+[.github/workflows/pages.yml](../.github/workflows/pages.yml), and
+[tools/deployment/](../tools/deployment/).
 
 ## App layer map
 

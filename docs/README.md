@@ -6,7 +6,7 @@ don't belong there.
 | Document | Audience and purpose |
 | --- | --- |
 | [../PRODUCT.md](../PRODUCT.md) | Product scope, audience, design principles, and non-goals. |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Component ownership, dependency direction, and runtime flows. |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Component ownership, dependency direction, user journeys, runtime flows, and build and release. |
 | [SAFETY.md](SAFETY.md) | Consent, sensory, language, and accessibility invariants. |
 | [PROFILE_AUTHORING.md](PROFILE_AUTHORING.md) | Profile, mapping, node-registry, and evidence authoring contract. |
 | [RELIABILITY.md](RELIABILITY.md) | Implemented runtime fallbacks and required manual evidence. |
