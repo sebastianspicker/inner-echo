@@ -34,7 +34,6 @@ export interface ContractParamMetadata {
 export interface ContractNodeDefinition {
   kind: 'video' | 'audio'
   node: string
-  aliases?: readonly string[]
   params: Record<string, ContractParamMetadata>
   createHarness(): ProbeHarness
 }
@@ -110,7 +109,6 @@ export interface LoadedContracts {
 export interface RegistryNodeSummary {
   kind: 'video' | 'audio'
   node: string
-  aliases: string[]
   params: Record<
     string,
     {

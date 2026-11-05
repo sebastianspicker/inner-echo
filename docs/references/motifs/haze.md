@@ -35,7 +35,32 @@ These sources come from evidence-corpus sections for the dimensions that current
 > These papers support the phenomena the dimensions describe. They do not claim that this specific
 > node is a biomarker or uniquely correct.
 
-No DOI sources were extracted for the dimensions currently using this motif.
+- Vasterling, J. J., & Arditte Hall, K. A. (2018). Neurocognitive and information processing biases in posttraumatic stress disorder. *Current Psychiatry Reports, 20*, 106. https://doi.org/10.1007/s11920-018-0964-1
+  DOI: https://doi.org/10.1007/s11920-018-0964-1 (`10.1007/s11920-018-0964-1`): from `docs/references/research/remaining-dimensions.md`
+- Jacob, S. N., Dodge, C. P., & Vasterling, J. J. (2019). Posttraumatic stress disorder and neurocognition: A bidirectional relationship? *Clinical Psychology Review, 72*, 101747. https://doi.org/10.1016/j.cpr.2019.101747
+  DOI: https://doi.org/10.1016/j.cpr.2019.101747 (`10.1016/j.cpr.2019.101747`): from `docs/references/research/remaining-dimensions.md`
+- Horn, M., Fovet, T., Vaiva, G., Thomas, P., Amad, A., & D’Hondt, F. (2020). Emotional response in depersonalization: A systematic review of electrodermal activity studies. *Journal of Affective Disorders.* https://doi.org/10.1016/j.jad.2020.07.064
+  DOI: https://doi.org/10.1016/j.jad.2020.07.064 (`10.1016/j.jad.2020.07.064`): from `docs/references/research/remaining-dimensions.md`
+- Topiwala, A., et al. (2021). Subjective cognitive complaints in questionnaire: Relationship with brain structure, cognitive performance and depressive symptoms. *The American Journal of Geriatric Psychiatry, 29*(3), 217-226. https://doi.org/10.1016/j.jagp.2020.07.002
+  DOI: https://doi.org/10.1016/j.jagp.2020.07.002 (`10.1016/j.jagp.2020.07.002`): from `docs/references/research/remaining-dimensions.md`
+- Merritt Millman, L. S., Huang, X., Wainipitapong, S., Medford, N., & Pick, S. (2024). Behavioural, autonomic, and neural responsivity in depersonalisation-derealisation disorder: A systematic review of experimental evidence. *Neuroscience & Biobehavioral Reviews.* https://doi.org/10.1016/j.neubiorev.2024.105783
+  DOI: https://doi.org/10.1016/j.neubiorev.2024.105783 (`10.1016/j.neubiorev.2024.105783`): from `docs/references/research/remaining-dimensions.md`
+- Chung, C., et al. (2024). Cognitive Failures Questionnaire 2.0: Validation and improved measurement invariance. *Personality and Individual Differences, 224*, 112472. https://doi.org/10.1016/j.paid.2023.112472
+  DOI: https://doi.org/10.1016/j.paid.2023.112472 (`10.1016/j.paid.2023.112472`): from `docs/references/research/remaining-dimensions.md`
+- Denno, P., Zhao, S., Husain, M., & Hampshire, A. (2025). Defining brain fog across medical conditions. *Trends in Neurosciences.* https://doi.org/10.1016/j.tins.2025.01.003
+  DOI: https://doi.org/10.1016/j.tins.2025.01.003 (`10.1016/j.tins.2025.01.003`): from `docs/references/research/remaining-dimensions.md`
+- Sierra, M., & Berrios, G. E. (2000). The Cambridge Depersonalisation Scale: A new instrument for the measurement of depersonalisation. *Psychiatry Research, 93*(2), 153-164. https://doi.org/10.1016/S0165-1781(00)00100-1
+  DOI: https://doi.org/10.1016/S0165-1781(00)00100-1 (`10.1016/S0165-1781(00)00100-1`): from `docs/references/research/remaining-dimensions.md`
+- Dalenberg, C. J., et al. (2023). The prevalence of depersonalisation and derealisation: A systematic review. *Journal of Trauma & Dissociation.* https://doi.org/10.1080/15299732.2022.2079796
+  DOI: https://doi.org/10.1080/15299732.2022.2079796 (`10.1080/15299732.2022.2079796`): from `docs/references/research/remaining-dimensions.md`
+- (Meta-analysis) Assessing neurocognitive outcomes in PTSD: A multilevel meta-analytical approach. *European Journal of Psychotraumatology.* https://doi.org/10.1080/20008066.2025.2469978
+  DOI: https://doi.org/10.1080/20008066.2025.2469978 (`10.1080/20008066.2025.2469978`): from `docs/references/research/remaining-dimensions.md`
+- BMC Psychiatry (2024). Unraveling the brain dynamics of depersonalization-derealization disorder. *BMC Psychiatry.* https://doi.org/10.1186/s12888-024-06096-1
+  DOI: https://doi.org/10.1186/s12888-024-06096-1 (`10.1186/s12888-024-06096-1`): from `docs/references/research/remaining-dimensions.md`
+- Denno, P., & Hampshire, A. (2025). Defining Brain Fog - A Transdiagnostic Narrative Review. *European Psychiatry (Abstracts).* https://doi.org/10.1192/j.eurpsy.2025.1226
+  DOI: https://doi.org/10.1192/j.eurpsy.2025.1226 (`10.1192/j.eurpsy.2025.1226`): from `docs/references/research/remaining-dimensions.md`
+- Dossi, G., Delvecchio, G., Prunas, C., Soares, J. C., & Brambilla, P. (2020). Neural bases of cognitive impairments in post-traumatic stress disorders: A mini-review of fMRI findings. *Frontiers in Psychiatry, 11*, 176. https://doi.org/10.3389/fpsyt.2020.00176
+  DOI: https://doi.org/10.3389/fpsyt.2020.00176 (`10.3389/fpsyt.2020.00176`): from `docs/references/research/remaining-dimensions.md`
 
 ## Safety notes (implementation constraints)
 

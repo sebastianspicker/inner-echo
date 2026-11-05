@@ -31,8 +31,8 @@ export function resolveEvidenceHref(
   const normalized = normalizeHref(href)
   if (!normalized) return null
   if (normalized.startsWith('docs/')) return resolveDocumentPath(normalized)
-  if (normalized.startsWith('./') || normalized.startsWith('../')) {
-    return resolveRelativeDocumentPath(current, normalized)
-  }
-  return null
+  // Anything with a scheme (https:, mailto:) or an absolute path leaves the drawer.
+  if (/^[a-z][a-z0-9+.-]*:/i.test(normalized) || normalized.startsWith('/')) return null
+  // `INDEX.md`, `research/x.md`, `./x.md` and `../x.md` are relative to the current document.
+  return resolveRelativeDocumentPath(current, normalized)
 }

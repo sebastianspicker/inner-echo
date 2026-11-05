@@ -31,7 +31,6 @@ export function buildNodeLookup(
   const lookup = new Map<string, ContractNodeDefinition>()
   for (const definition of definitions) {
     lookup.set(definition.node, definition)
-    for (const alias of definition.aliases ?? []) lookup.set(alias, definition)
   }
   return lookup
 }
@@ -54,7 +53,6 @@ export function summarizeNodeDefinitions(
     return {
       kind: definition.kind,
       node: definition.node,
-      aliases: [...(definition.aliases ?? [])],
       params,
     }
   })

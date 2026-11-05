@@ -19,6 +19,15 @@ The evidence corpus does not support claims that Inner Echo:
 See [experience interpretation and reviewed sources](research/experience-interpretation.md) for the
 current collection boundaries and audiovisual design decisions.
 
+## Motifs left out on purpose
+
+- **Grid overlay (`grid_hint`) for compulsive loops:** a grid is an artistic overlay, not a marker
+  of OCD. It is left out of the compulsive-loop dimension and the OCD collection so that
+  compulsions are not equated with ordering.
+- **Chromatic offset (`chroma_aberration`) for depersonalization and derealization:** it can work
+  as a metaphor for an "unreal" or "behind glass" feeling, but the evidence supports the
+  experience, not this signal mapping. Neither dimension uses it.
+
 ## Contributing evidence
 
 1. Add or update the relevant source notes and bibliography under `research/`.

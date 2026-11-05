@@ -39,21 +39,17 @@ function conditionStrength(
   dimensions: Array<{ id: string; weight: number }>,
   dimensionsById: Map<string, ExperienceDimensionDef>,
 ) {
-  const strengthRank: Record<string, number> = {
-    hypothesis: 0,
-    low: 1,
-    medium: 2,
-    high: 3,
-    unrated: 4,
-  }
-  const rankToStrength = ['hypothesis', 'low', 'medium', 'high', 'unrated'] as const
-  let minimumRank = strengthRank.unrated
+  const strengthRank = { hypothesis: 0, low: 1, medium: 2, high: 3 } as const
+  const rankToStrength = ['hypothesis', 'low', 'medium', 'high'] as const
+  let minimumRank: number = strengthRank.high
   for (const dimension of dimensions) {
     const strength = normalizeStrength(dimensionsById.get(dimension.id)?.evidence_strength)
-    minimumRank = Math.min(minimumRank, strengthRank[strength] ?? strengthRank.unrated)
+    // One unrated dimension makes the whole collection unrated, instead of being ignored.
+    if (strength === 'unrated') return strengthLabel(undefined)
+    minimumRank = Math.min(minimumRank, strengthRank[strength])
   }
-  const aggregate = rankToStrength[minimumRank] ?? 'unrated'
-  return strengthLabel(aggregate === 'unrated' ? undefined : aggregate)
+  if (dimensions.length === 0) return strengthLabel(undefined)
+  return strengthLabel(rankToStrength[minimumRank])
 }
 
 export function profileMotifs(profile: Profile): string[] {

@@ -56,10 +56,9 @@ function loadProfiles() {
   for (const f of files) {
     const raw = loadRepoJson(ROOT, `src/content/experience/profiles/${f}`)
     const parsed = profileSchema.safeParse(raw)
-    if (!parsed.success) {
-      console.warn(`[gen-docs] Skip ${f}: validation failed`)
-      continue
-    }
+    // Skipping would silently drop the condition from the catalog and still pass docs:verify.
+    if (!parsed.success)
+      throw new Error(`[gen-docs] ${f} fails the profile schema: ${parsed.error.message}`)
     profiles.push(parsed.data)
   }
   return profiles.sort((a, b) => a.id.localeCompare(b.id))
@@ -70,7 +69,8 @@ function videoNodeNames(p: Profile) {
 }
 
 function audioNodeNames(p: Profile) {
-  const chain = p.audio_stack?.chain
+  // Same rule as the evidence pages (evidencePageModel.profileMotifs): a disabled stack plays nothing.
+  const chain = p.audio_stack?.enabled ? p.audio_stack.chain : undefined
   if (!chain) return []
   return chain.map((n) => n.node).filter(Boolean)
 }

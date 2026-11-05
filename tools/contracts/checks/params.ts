@@ -5,26 +5,14 @@ import type {
   ContractReference,
   RangeCheckResult,
 } from '../probes/types'
-import { runRangeCheck } from './range'
+import { asNumber, runRangeCheck } from './range'
 
-export function asNumber(value: unknown) {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null
-}
-
-export function differs(a: unknown, b: unknown, epsilon = 1e-6) {
+function differs(a: unknown, b: unknown, epsilon = 1e-6) {
   const na = asNumber(a)
   const nb = asNumber(b)
   return na != null && nb != null
     ? Math.abs(na - nb) > epsilon
     : JSON.stringify(a) !== JSON.stringify(b)
-}
-
-export function outOfRangeLow(min: number) {
-  return min - Math.max(1, Math.abs(min) + 1)
-}
-
-export function outOfRangeHigh(max: number) {
-  return max + Math.max(1, Math.abs(max) + 1)
 }
 
 function probeLow(meta: ContractParamMetadata) {

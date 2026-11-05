@@ -8,7 +8,7 @@ import type {
   LoadedProfileContract,
   PolicyCheckResult,
 } from '../probes/types'
-import { asNumber, outOfRangeHigh } from './params'
+import { asNumber, outOfRangeHigh } from './range'
 
 function hasControl(profile: LoadedProfileContract['profile'], names: readonly string[]) {
   return (profile.ui?.controls ?? []).some((control) => {
@@ -128,35 +128,6 @@ function appendReducedMotionCheck(
       profileId,
       sourceFile,
     })
-}
-
-function appendTemporalWarnings(
-  profileContract: LoadedProfileContract,
-  disabled: Set<string>,
-  issues: ContractIssue[],
-  checks: PolicyCheckResult[],
-) {
-  const temporal = new Set(['temporal_smear', 'feedback_loop', 'pulse', 'focus_jitter'])
-  for (const definition of profileContract.profile.video_stack) {
-    const node = String(definition.node).toLowerCase()
-    if (!temporal.has(node) || disabled.has(node)) continue
-    issues.push({
-      severity: 'warning',
-      code: 'REDUCED_MOTION_TEMPORAL_NODE_NOT_DISABLED',
-      message: `Profile "${profileContract.profileId}" keeps temporal node "${node}" active in reduced motion policy`,
-      profileId: profileContract.profileId,
-      sourceFile: profileContract.sourceFile,
-      kind: 'video',
-      node,
-    })
-    checks.push({
-      profileId: profileContract.profileId,
-      policy: 'reduced_motion',
-      status: 'warning',
-      node,
-      message: 'Temporal node should be listed in reduced motion disable policy',
-    })
-  }
 }
 
 function appendVideoClampCheck(
@@ -300,7 +271,6 @@ export function evaluatePolicyChecks(
     appendControlChecks(profileContract, issues, checks)
     appendIntensityCheck(profileContract, issues, checks)
     appendReducedMotionCheck(profileContract, videoLookup, disabled, issues, checks)
-    appendTemporalWarnings(profileContract, disabled, issues, checks)
     appendVideoClampChecks(profileContract, videoLookup, issues, checks)
     appendAudioClampChecks(profileContract, audioLookup, issues, checks)
   }

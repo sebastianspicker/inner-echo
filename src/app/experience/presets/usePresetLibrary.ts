@@ -106,17 +106,30 @@ function useLoadStoredLibrary(patch: Patch): void {
 
 const SHARED_LINK_WARNING = 'This shared setup link could not be read. Showing your current setup.'
 
+/** A link comes from someone else: it may turn Safe Mode or Reduced Motion on, never off. */
+function withLinkProtections(link: PresetPayload, current: PresetPayload): PresetPayload {
+  return {
+    ...link,
+    safeMode: link.safeMode || current.safeMode,
+    reducedMotion: link.reducedMotion || current.reducedMotion,
+  }
+}
+
 function useSharedPresetHashImport(
+  currentPayload: PresetPayload,
   onApply: (payload: PresetPayload) => void,
   setSaveStatusTimed: Feedback['setSaveStatusTimed'],
   patch: Patch,
 ): void {
+  // A ref, so a settings change does not re-subscribe the hash listener.
+  const current = useRef(currentPayload)
+  current.current = currentPayload
   useEffect(() => {
     const importHash = (): void => {
       const decoded = decodePresetFromHash(window.location.hash)
       if (!decoded.ok && decoded.reason === 'missing-prefix') return
       if (decoded.ok) {
-        onApply(decoded.payload)
+        onApply(withLinkProtections(decoded.payload, current.current))
         setSaveStatusTimed('loaded')
       } else {
         patch({ libraryWarning: SHARED_LINK_WARNING })
@@ -275,7 +288,7 @@ export function usePresetLibrary({ currentPayload, onApply }: UsePresetLibraryOp
   const patch = useCallback<Patch>((partial) => setState((prev) => ({ ...prev, ...partial })), [])
   const feedback = useTimedFeedback(patch)
   useLoadStoredLibrary(patch)
-  useSharedPresetHashImport(onApply, feedback.setSaveStatusTimed, patch)
+  useSharedPresetHashImport(currentPayload, onApply, feedback.setSaveStatusTimed, patch)
 
   const selectedSnapshot = useMemo(
     () => state.library.find((item) => item.id === state.selectedLibraryId) ?? null,

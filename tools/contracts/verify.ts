@@ -13,17 +13,9 @@ import type {
   PolicyCheckResult,
   RangeCheckResult,
 } from './probes/types'
-import {
-  asNumber,
-  differs,
-  evaluateReferencedParams,
-  outOfRangeHigh,
-  outOfRangeLow,
-} from './checks/params'
+import { evaluateReferencedParams } from './checks/params'
 import { evaluatePolicyChecks } from './checks/policy'
 import { loadContractJsonReferences } from './jsonReferences'
-
-export { asNumber, differs, outOfRangeHigh, outOfRangeLow }
 
 interface RegistryLookups {
   video: Map<string, ContractNodeDefinition>
@@ -132,6 +124,7 @@ function verifyReactiveVideo({
 
 function verifyReactiveAudio(
   profileContract: LoadedProfileContract,
+  index: number,
   paramKey: string,
   audioLookup: Map<string, ContractNodeDefinition>,
   buckets: IssueBuckets,
@@ -150,7 +143,7 @@ function verifyReactiveAudio(
       message: `Reactive target resolved to unknown audio node "${nodeName}"`,
       profileId: profileContract.profileId,
       sourceFile: profileContract.sourceFile,
-      location: 'reactive.analyser_to_params.target',
+      location: reactiveLocation(index),
       kind: 'audio',
       node: nodeName,
     })
@@ -161,7 +154,7 @@ function verifyReactiveAudio(
       message: `Reactive target param "${param}" is not implemented on audio node "${definition.node}"`,
       profileId: profileContract.profileId,
       sourceFile: profileContract.sourceFile,
-      location: 'reactive.analyser_to_params.target',
+      location: reactiveLocation(index),
       kind: 'audio',
       node: definition.node,
       param,
@@ -199,7 +192,7 @@ function verifyReactiveTargets(
           buckets,
         })
       } else {
-        verifyReactiveAudio(profileContract, resolved.paramKey, lookups.audio, buckets)
+        verifyReactiveAudio(profileContract, index, resolved.paramKey, lookups.audio, buckets)
       }
     }
   }

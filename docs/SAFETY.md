@@ -24,6 +24,7 @@ resource or parameter behavior is a defect.
 - Welcome acknowledgement and setup do not request media or start sound.
 - Camera, sound, and microphone input require separate direct user actions.
 - Hash imports, preset loading, migration, and startup defaults cannot activate media.
+- A shared `#preset=` link can turn Safe Mode or Reduced Motion on, never off.
 - Permission denial, interruption, or an unsupported capability is reported without automatic retry.
 - You can leave setup without granting media permissions.
 - Don't record or log device identifiers, stream details, track labels, media content, or potentially

@@ -1,3 +1,4 @@
+import { parseScopedTarget } from '../../src/domain/experience/parameterTarget'
 import { loadRepoJson } from '../docs/repoJson'
 import type {
   ContractIssue,
@@ -70,13 +71,11 @@ interface NodeReferenceOptions {
 function parseReactiveTarget(
   target: string,
 ): { kind: ReferenceKind; node: string; param: string } | null {
-  const match = /^(video|audio)\.([^.]*)\.(.+)$/i.exec(String(target ?? '').trim())
-  if (!match?.[2]) return null
-  return {
-    kind: match[1].toLowerCase() as ReferenceKind,
-    node: match[2].toLowerCase(),
-    param: match[3].toLowerCase(),
+  for (const kind of ['video', 'audio'] as const) {
+    const parsed = parseScopedTarget(String(target ?? ''), kind)
+    if (parsed) return { kind, node: parsed.nodeId, param: parsed.param }
   }
+  return null
 }
 
 function addNodeAndParamReferences(
@@ -134,24 +133,14 @@ function collectStackReferences(
 function collectReactiveReferences(
   references: ContractReference[],
   profile: LoadedProfileContract,
-  parseErrors: ContractIssue[],
 ) {
   const reactive = profile.profile.reactive?.analyser_to_params ?? []
   for (let i = 0; i < reactive.length; i++) {
     const entry = reactive[i]
     const resolved = parseReactiveTarget(entry.target)
     const location = `reactive.analyser_to_params[${i}].target`
-    if (!resolved) {
-      parseErrors.push({
-        severity: 'warning',
-        code: 'REACTIVE_TARGET_PARSE_WARNING',
-        message: `Could not parse reactive target "${entry.target}" in ${profile.profileId}`,
-        sourceFile: profile.sourceFile,
-        profileId: profile.profileId,
-        location,
-      })
-      continue
-    }
+    // verify.ts reports an unresolvable target as REACTIVE_TARGET_UNRESOLVED.
+    if (!resolved) continue
     references.push({
       kind: resolved.kind,
       node: resolved.node,
@@ -167,7 +156,6 @@ function collectReactiveReferences(
 function collectProfileReferences(
   profiles: LoadedProfileContract[],
   references: ContractReference[],
-  parseErrors: ContractIssue[],
 ) {
   for (const profile of profiles) {
     const { profile: data, profileId, sourceFile } = profile
@@ -191,7 +179,7 @@ function collectProfileReferences(
       'profile_audio_stack_node',
       'profile_audio_stack_param',
     )
-    collectReactiveReferences(references, profile, parseErrors)
+    collectReactiveReferences(references, profile)
   }
 }
 
@@ -344,7 +332,7 @@ function collectDimensionsJsonReferences(
 export function loadContractJsonReferences(rootDir: string): LoadedContracts {
   const { profiles, issues: parseErrors } = loadProfileContracts(rootDir)
   const references: ContractReference[] = []
-  collectProfileReferences(profiles, references, parseErrors)
+  collectProfileReferences(profiles, references)
   collectMappingJsonReferences(rootDir, references, parseErrors)
   collectDimensionsJsonReferences(rootDir, references, parseErrors)
   return { profiles, references, parseErrors }

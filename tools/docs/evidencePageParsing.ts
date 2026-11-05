@@ -113,7 +113,10 @@ function updateMarkdownBlock(state: CorpusParseState, line: string, flush: () =>
 
 function dimensionHeading(line: string, inMarkdownBlock: boolean) {
   const fileFor = line.match(/^##\s+File\s+for\s+([a-z0-9_]+)\s*$/i)
-  const h1 = inMarkdownBlock ? line.match(/^#\s+([a-z0-9_]+)\s*$/i) : null
+  // Corpus blocks name their dimension either `# intrusion` or `# docs/references/dimensions/intrusion.md`.
+  const h1 = inMarkdownBlock
+    ? line.match(/^#\s+(?:docs\/references\/dimensions\/)?([a-z0-9_]+)(?:\.md)?\s*$/i)
+    : null
   return { fileFor, h1, dimensionId: fileFor?.[1] ?? h1?.[1] }
 }
 
@@ -134,7 +137,8 @@ function updateBibliographyState(
     state.currentDim = null
     return true
   }
-  if (!state.inBib && /^##\s+/.test(line) && !hasDimensionHeading) {
+  // Inside a dimension's markdown block, `##` headings are its own sections.
+  if (!state.inBib && !state.inMarkdownBlock && /^##\s+/.test(line) && !hasDimensionHeading) {
     state.currentDim = null
     return true
   }
@@ -175,7 +179,7 @@ function parseCorpusSourceFile(
   sourcesByDimension: Map<string, ScientificSource[]>,
 ) {
   const filePath = path.join(root, corpusPath)
-  if (!fs.existsSync(filePath)) return
+  if (!fs.existsSync(filePath)) throw new Error(`Evidence corpus file is missing: ${corpusPath}`)
   const state: CorpusParseState = {
     currentDim: null,
     inBib: false,

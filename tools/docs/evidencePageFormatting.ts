@@ -136,7 +136,9 @@ function motifDimensionLine(
   claimsByKey: Map<string, MotifClaim>,
 ) {
   const claim = claimsByKey.get(`${dimension.id}|${motif}`)
-  const claimTitle = claimLabelTitle(claim?.label ?? 'artistic')
+  // Same override as dimClaimLabel: a hypothesis-strength dimension cannot carry a stronger claim.
+  const hypothesis = dimension.strength === strengthLabel('hypothesis')
+  const claimTitle = claimLabelTitle(hypothesis ? 'hypothesis' : (claim?.label ?? 'artistic'))
   const corpusPart = motifDimensionCorpusPart(dimension.id, matrixByDim)
   const claimSourcesPart = motifClaimSourcesPart(claim)
   return `- ${dimension.label} (\`${dimension.id}\`): Evidence (dimension): ${dimension.strength}: Claim: ${claimTitle}: \`${dimension.doc}\`${corpusPart}${claimSourcesPart}`

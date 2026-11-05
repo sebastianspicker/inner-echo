@@ -33,7 +33,18 @@ These sources come from evidence-corpus sections for the dimensions that current
 > These papers support the phenomena the dimensions describe. They do not claim that this specific
 > node is a biomarker or uniquely correct.
 
-No DOI sources were extracted for the dimensions currently using this motif.
+- Sarigiannidis, I., Grillon, C., Ernst, M., Roiser, J. P., & Robinson, O. J. (2020). Anxiety makes time pass quicker while fear has no effect. *Cognition, 197*, 104116. https://doi.org/10.1016/j.cognition.2019.104116
+  DOI: https://doi.org/10.1016/j.cognition.2019.104116 (`10.1016/j.cognition.2019.104116`): from `docs/references/research/remaining-dimensions.md`
+- Lake, J. I., LaBar, K. S., & Meck, W. H. (2016). Emotional modulation of interval timing and time perception. *Neuroscience & Biobehavioral Reviews, 64*, 403-420. https://doi.org/10.1016/j.neubiorev.2016.03.003
+  DOI: https://doi.org/10.1016/j.neubiorev.2016.03.003 (`10.1016/j.neubiorev.2016.03.003`): from `docs/references/research/remaining-dimensions.md`
+- Antal, A., et al. (2025). Physiological stress and time perception: A systematic review. Psychoneuroendocrinology. https://doi.org/10.1016/j.psyneuen.2025.106664
+  DOI: https://doi.org/10.1016/j.psyneuen.2025.106664 (`10.1016/j.psyneuen.2025.106664`): from `docs/references/research/remaining-dimensions.md`
+- Bar-Haim, Y., Kerem, A., Lamy, D., & Zakay, D. (2010). When time slows down: The influence of threat on time perception in anxiety. *Cognition & Emotion, 24*(2), 255-263. https://doi.org/10.1080/02699930903387603
+  DOI: https://doi.org/10.1080/02699930903387603 (`10.1080/02699930903387603`): from `docs/references/research/remaining-dimensions.md`
+- Stetson, C., Fiesta, M. P., & Eagleman, D. M. (2007). Does time really slow down during a frightening event? *PLOS ONE, 2*(12), e1295. https://doi.org/10.1371/journal.pone.0001295
+  DOI: https://doi.org/10.1371/journal.pone.0001295 (`10.1371/journal.pone.0001295`): from `docs/references/research/remaining-dimensions.md`
+- Cui, S., et al. (2023). The effect of emotion on time perception: A meta-analysis. *Psychonomic Bulletin & Review.* https://doi.org/10.3758/s13423-022-02148-3
+  DOI: https://doi.org/10.3758/s13423-022-02148-3 (`10.3758/s13423-022-02148-3`): from `docs/references/research/remaining-dimensions.md`
 
 ## Safety notes (implementation constraints)
 

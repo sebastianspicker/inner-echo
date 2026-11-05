@@ -36,7 +36,7 @@ export function WelcomeStep({ onContinue, onOpenEvidence }: WelcomeStepProps) {
   }
 
   return (
-    <section className="welcome-step ie-titlePage" aria-labelledby="welcome-title">
+    <main className="ie-titlePage" aria-labelledby="welcome-title">
       <header className="ie-titlePage__head">
         <div className="ie-titlePage__brand">
           <img src={brandMarkUrl} alt="" aria-hidden="true" />
@@ -109,6 +109,6 @@ export function WelcomeStep({ onContinue, onOpenEvidence }: WelcomeStepProps) {
           </li>
         </ol>
       </section>
-    </section>
+    </main>
   )
 }

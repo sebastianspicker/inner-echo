@@ -67,7 +67,7 @@ export interface SoundManager {
   setInputMode(mode: AudioInputMode): void
   setMicSensitivity(value: number): void
   setMicGate(value: number): void
-  /** Stop Everything: stop or close, but preserve soundEnabled and inputMode. */
+  /** Stop Everything: stop or close; keeps soundEnabled, and inputMode unless it needs the mic. */
   stopForStopEverything(): void
   /** Unmount: stop or close only; leaves visible state untouched. */
   releaseEngine(): void
@@ -301,6 +301,8 @@ function createLifecycleActions(state: SoundState, deps: SoundManagerDeps): Life
       state.error = null
       state.mic = 'off'
       state.micError = null
+      // The engine's mic-off callback is ignored after the seq bump, so enforce it here.
+      enforceInputModeInvariant(state)
       deps.notify()
     },
     releaseEngine() {

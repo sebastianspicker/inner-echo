@@ -6,6 +6,9 @@
  * - any dimension mapping entry declares a rationale_doc that doesn't exist
  * - any experience profile in `src/content/experience/profiles/*.json` lacks a corresponding `docs/references/conditions/<id>.md`
  * - canonical evidence IA files are missing
+ * - a motif claim has an unknown label, dimension or motif
+ * - no DOI source can be extracted from the research corpus
+ * - a generated evidence page is stale
  *
  * IMPORTANT: Does not modify `src/content/experience/**` (read-only).
  */
@@ -18,7 +21,7 @@ import type {
   ExperienceDimensionsFile,
 } from '../../src/domain/experience/schema'
 import { parseMotifClaims } from '../contracts/motifs/claims'
-import type { MotifClaim } from '../contracts/motifs/claims'
+import type { MotifClaim, MotifClaimLabel } from '../contracts/motifs/claims'
 import {
   loadDimensions,
   loadProfiles,
@@ -99,13 +102,45 @@ function verifyMotifClaims(root: string, errors: string[]) {
     errors.push('Missing motif claims file: docs/references/MOTIF_CLAIMS.json')
     return
   }
+  // Loaded outside the try, so a dimensions error is not reported as invalid claims JSON.
+  const motifsByDimension = new Map<string, Set<string>>()
+  for (const dimension of loadDimensions(root)) {
+    const motifs = new Set<string>()
+    addDimensionMotifs(dimension, motifs)
+    motifsByDimension.set(dimension.id, motifs)
+  }
   try {
     const data = loadRepoJson<MotifClaimsFile>(root, 'docs/references/MOTIF_CLAIMS.json')
-    for (const claim of data.claims ?? []) verifyClaimSources(root, claim, errors)
+    for (const claim of data.claims ?? []) {
+      verifyClaimTarget(claim, motifsByDimension, errors)
+      verifyClaimSources(root, claim, errors)
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     errors.push(`Invalid JSON in docs/references/MOTIF_CLAIMS.json: ${message}`)
   }
+}
+
+const CLAIM_LABELS: ReadonlySet<string> = new Set<MotifClaimLabel>([
+  'supported',
+  'mixed',
+  'artistic',
+  'hypothesis',
+])
+
+/** A mistyped label would render as "Hypothesis"; an unknown pair would never be shown. */
+function verifyClaimTarget(
+  claim: MotifClaim,
+  motifsByDimension: Map<string, Set<string>>,
+  errors: string[],
+) {
+  const key = `${claim.dimensionId}|${claim.motif}`
+  if (!CLAIM_LABELS.has(claim.label))
+    errors.push(`Motif claim (${key}) has unknown label: ${String(claim.label)}`)
+  const motifs = motifsByDimension.get(claim.dimensionId)
+  if (!motifs) errors.push(`Motif claim (${key}) names an unknown dimension`)
+  else if (!motifs.has(claim.motif))
+    errors.push(`Motif claim (${key}) names a motif the dimension does not use`)
 }
 
 function verifyClaimSources(root: string, claim: MotifClaim, errors: string[]) {
@@ -136,6 +171,9 @@ function verifyMotifPages(root: string, motifs: Set<string>, errors: string[]) {
 
 function verifyGeneratedPages(root: string, errors: string[]) {
   const stale: string[] = []
+  const sourcesByDim = parseCorpusSourcesByDimension(root)
+  // The motif pages list these sources; an empty result means the corpus parser broke.
+  if (sourcesByDim.size === 0) errors.push('No DOI sources were extracted from the research corpus')
   writeEvidencePages({
     root,
     stale,
@@ -143,7 +181,7 @@ function verifyGeneratedPages(root: string, errors: string[]) {
     profiles: loadProfiles(root),
     matrixByDim: parseEvidenceMatrix(root),
     claimsByKey: parseMotifClaims(root),
-    sourcesByDim: parseCorpusSourcesByDimension(root),
+    sourcesByDim,
   })
   for (const file of stale) {
     errors.push(

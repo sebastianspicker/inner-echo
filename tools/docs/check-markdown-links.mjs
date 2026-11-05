@@ -89,7 +89,15 @@ for (const filePath of maintainedFiles) {
     const withoutFragment = target.split('#', 1)[0]
     if (!withoutFragment) continue
     checked += 1
-    const resolved = path.resolve(path.dirname(filePath), decodeURIComponent(withoutFragment))
+    let decoded
+    try {
+      decoded = decodeURIComponent(withoutFragment)
+    } catch {
+      // A malformed escape such as `100%.md` cannot name a file; report it instead of crashing.
+      missing.push(`${path.relative(root, filePath)} -> ${target}`)
+      continue
+    }
+    const resolved = path.resolve(path.dirname(filePath), decoded)
     if (!isAvailable(resolved)) {
       missing.push(`${path.relative(root, filePath)} -> ${target}`)
     }
