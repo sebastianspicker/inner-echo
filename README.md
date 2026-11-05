@@ -7,6 +7,8 @@ A browser camera toy for talking about inner experience. Pick an experience patt
 lays a gentle audiovisual metaphor over your own camera feed — focus tightening, colour draining,
 a steady pulse — so an invisible state has something to point at.
 
+> _Claude was used to polish and proof-read the code and documentation of this repository._
+
 <details>
 <summary>Status and limitations</summary>
 
@@ -102,7 +104,8 @@ it never touches the browser. `src/content/` turns bundled JSON and Markdown int
 (`src/runtime/session/`) that the app subscribes to. `src/app/` composes the workflow. The demo
 stays isolated from all of it.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full picture.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for diagrams of what runs where, what a Start camera or
+sound click reaches, and how a commit becomes the live site.
 
 ## Local state
 
