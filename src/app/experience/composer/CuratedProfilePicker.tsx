@@ -11,7 +11,6 @@ export interface CuratedProfilePickerProps {
   onChange: (id: string) => void
   disabled?: boolean
   id?: string
-  'aria-label'?: string
 }
 
 export function CuratedProfilePicker({
@@ -20,7 +19,6 @@ export function CuratedProfilePicker({
   onChange,
   disabled = false,
   id = 'condition-picker',
-  'aria-label': ariaLabel,
 }: CuratedProfilePickerProps) {
   const options = catalog ?? []
   const selected = options.find((entry) => entry.id === value)
@@ -36,7 +34,6 @@ export function CuratedProfilePicker({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        aria-label={ariaLabel}
         aria-describedby={`${id}-desc`}
       >
         {selectedMissing && <option value={value}>{value} (unavailable)</option>}

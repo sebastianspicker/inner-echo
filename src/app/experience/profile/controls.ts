@@ -5,12 +5,11 @@
  * not import runtime). This wrapper supplies `IMPLEMENTED_VIDEO_NODES` so app call sites
  * keep the short `{ reducedMotion }` shape instead of repeating it everywhere.
  */
-import type { Profile, UIControl } from '../../../domain/experience/schema'
+import type { Profile } from '../../../domain/experience/schema'
 import {
   getDefaultControlValues as domainGetDefaultControlValues,
   mergeControlValuesWithDefaults,
   mergePersistedControlValues as domainMergePersistedControlValues,
-  resolveControl as domainResolveControl,
   resolveProfileControls as domainResolveProfileControls,
   type ResolvedControl,
 } from '../../../domain/experience/controls'
@@ -24,17 +23,6 @@ export function getDefaultControlValues(
   options: { reducedMotion?: boolean } = {},
 ): Record<string, number | boolean> {
   return domainGetDefaultControlValues(profile, {
-    ...options,
-    supportedNodeIds: IMPLEMENTED_VIDEO_NODES,
-  })
-}
-
-export function resolveControl(
-  control: UIControl,
-  profile: Profile,
-  options: { reducedMotion?: boolean } = {},
-): ResolvedControl | null {
-  return domainResolveControl(control, profile, {
     ...options,
     supportedNodeIds: IMPLEMENTED_VIDEO_NODES,
   })

@@ -69,9 +69,9 @@ function collectPresetVideoContributions(
   for (const { preset, profile } of loadedProfiles) {
     for (const [index, definition] of profile.video_stack.entries()) {
       const node = normalizeNodeType(definition.node)
-      const id = makeIdForNode(definition)
-      const key = id || node
-      addContribution(entries, key, node, key, {
+      // Keyed by node type: authored ids differ between profiles (`edge` vs `sharpen`), and two
+      // nodes of one type would stack their effect past the per-node safety caps.
+      addContribution(entries, node, node, makeIdForNode(definition) || node, {
         w: preset.weight,
         params: definition.params ?? {},
         source: `preset:${preset.profileId}`,
@@ -99,8 +99,7 @@ function collectDimensionVideoContributions(
         options.report.missingNodes.video.push(node)
         continue
       }
-      const key = makeIdForNode(definition) || node
-      addContribution(entries, key, node, key, {
+      addContribution(entries, node, node, makeIdForNode(definition) || node, {
         w: strength,
         params: definition.params ?? {},
         source: `dim:${dimension.dimensionId}`,
@@ -148,9 +147,7 @@ function collectPresetAudioContributions(
     if (typeof volume === 'number') masterVolumes.push({ w: preset.weight, v: volume })
     for (const [index, definition] of (audio?.chain ?? []).entries()) {
       const node = normalizeNodeType(definition.node)
-      const id = (definition.id ?? definition.node ?? '').toString()
-      const key = id || node
-      addContribution(entries, key, node, key, {
+      addContribution(entries, node, node, node, {
         w: preset.weight,
         params: definition.params ?? {},
         source: `preset:${preset.profileId}`,

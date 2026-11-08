@@ -98,7 +98,7 @@
             <span class="ie-caption__note">An interpretation, not a reproduction.</span>
           </figcaption>
         </figure>
-        <p class="feedback" data-feedback aria-live="polite" hidden></p>
+        <p class="feedback" data-feedback aria-live="polite"></p>
       </section>
       <aside class="control-rail" aria-label="Demo controls">
         <section>
@@ -124,8 +124,8 @@
         </section>
         <section>
           <div class="section-heading"><span>Sound</span></div>
-          <div class="switch-control"><div><strong>Synthesized audio</strong><small>A state-only simulation; no audio is produced</small></div><button class="ie-btn ie-btn--small" type="button" aria-label="Synthesized audio" aria-pressed="false" data-simulation="audioEnabled">Simulate</button></div>
-          <div class="switch-control"><div><strong>Microphone coupling</strong><small>A state-only simulation; no microphone is requested</small></div><button class="ie-btn ie-btn--small" type="button" aria-label="Microphone coupling" aria-pressed="false" data-simulation="micEnabled">Simulate</button></div>
+          <div class="switch-control"><div><strong id="sim-audio-label">Synthesized audio</strong><small>A state-only simulation; no audio is produced</small></div><button class="ie-btn ie-btn--small" type="button" id="sim-audio" aria-labelledby="sim-audio sim-audio-label" aria-pressed="false" data-simulation="audioEnabled">Simulate</button></div>
+          <div class="switch-control"><div><strong id="sim-mic-label">Microphone coupling</strong><small>A state-only simulation; no microphone is requested</small></div><button class="ie-btn ie-btn--small" type="button" id="sim-mic" aria-labelledby="sim-mic sim-mic-label" aria-pressed="false" data-simulation="micEnabled">Simulate</button></div>
         </section>
         <section class="evidence-note" data-evidence-note aria-labelledby="evidence-title" hidden>
           <div class="section-heading"><span id="evidence-title">Evidence note</span></div>

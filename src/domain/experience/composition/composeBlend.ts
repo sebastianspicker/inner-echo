@@ -90,6 +90,11 @@ export function sortStackKeys<
 }
 
 export const VIDEO_ORDER_GROUP: Record<string, number> = {
+  // Spatial base layers: the curated anxiety, dpdr, panic and adhd profiles put them first.
+  gaze_tunnel: 5,
+  glass_veil: 5,
+  salience_competition: 5,
+  somatic_pulse: 5,
   grain: 10,
   edge_sharpen: 20,
   soft_blur: 22,
@@ -101,6 +106,7 @@ export const VIDEO_ORDER_GROUP: Record<string, number> = {
   feedback_loop: 70,
   pulse: 80,
   interference: 90,
+  intrusion_burst: 92,
   focus_jitter: 95,
   grid_hint: 100,
 }

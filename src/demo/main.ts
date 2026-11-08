@@ -147,8 +147,9 @@ function renderControls(profile: Profile, active: boolean) {
     : 'Starting the demo changes local interface state only.'
 
   const feedback = getRequiredElement<HTMLElement>('[data-feedback]')
-  feedback.hidden = !state.feedback
-  feedback.textContent = state.feedback
+  // Stays rendered (a live region hidden when its text arrives is not announced) and is written
+  // only on change, so unrelated re-renders do not re-announce the last message.
+  if (feedback.textContent !== state.feedback) feedback.textContent = state.feedback
 }
 
 function render() {
@@ -169,6 +170,12 @@ function updateState(next: Partial<DemoState>) {
 function resetDemo(message: string) {
   state = { ...initialState(), phase: 'setup', feedback: message }
   render()
+}
+
+const FOCUS_AFTER_ACTION: Record<string, string> = {
+  continue: 'start',
+  start: 'stop',
+  stop: 'start',
 }
 
 document.addEventListener('click', (event) => {
@@ -235,6 +242,9 @@ document.addEventListener('click', (event) => {
       updateState({ feedback: `Mock setup saved: ${selectedProfile().name}. No data was stored.` })
       break
   }
+  // Continue, Start and Stop hide themselves; hand keyboard focus to the button that replaces them.
+  const replacement = FOCUS_AFTER_ACTION[target.dataset.action ?? '']
+  if (replacement) getRequiredElement<HTMLElement>(`[data-action="${replacement}"]`).focus()
 })
 
 document.addEventListener('input', (event) => {

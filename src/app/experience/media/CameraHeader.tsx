@@ -7,7 +7,6 @@ export interface CameraHeaderProps {
   cameraState: CameraState
   audioStatus: AudioContextStatus
   audioEnabled: boolean
-  effectsLabel: string
   canStop: boolean
   onOpenEvidence: (docPath: EvidenceDocPath) => void
   onStop: () => void

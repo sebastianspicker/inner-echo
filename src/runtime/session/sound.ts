@@ -216,6 +216,10 @@ function startSound(state: SoundState, deps: SoundManagerDeps, force: boolean): 
       if (requestSeq !== state.seq) return
       if (nextStatus !== 'on') {
         state.status = nextStatus
+        // The context manager's detailed reason only reaches listeners, and none exists yet.
+        if (nextStatus === 'error') {
+          state.error = 'Audio could not start. The browser may be blocking sound; try again.'
+        }
         deps.notify()
         return
       }

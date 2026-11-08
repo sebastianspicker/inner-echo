@@ -9,7 +9,7 @@ import {
   type PresetPayload,
   type PresetSnapshotV2,
 } from './format'
-import { loadPresetLibrary, persistPresetLibrary } from './storage'
+import { loadPresetLibrary, persistPresetLibrary, PRESET_LIBRARY_STORAGE_KEY } from './storage'
 
 export type CopyStatus = 'idle' | 'copied' | 'failed'
 export type CopyAction = 'configuration' | 'share-link'
@@ -101,6 +101,20 @@ function useLoadStoredLibrary(patch: Patch): void {
       patch({ library: [] })
     }
     // Runs once per mount; patch is a stable setState-derived callback.
+  }, [patch])
+
+  // Another tab saved or deleted: adopt its library, or this tab's next write would drop that change.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== null && event.key !== PRESET_LIBRARY_STORAGE_KEY) return
+      try {
+        patch({ library: loadPresetLibrary().snapshots })
+      } catch (error) {
+        logger.warn('Preset library reload after another tab changed it failed', error)
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
   }, [patch])
 }
 

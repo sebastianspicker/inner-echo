@@ -60,6 +60,28 @@ function validateProfile(file: string, ids: Set<string>, failures: { count: numb
   validateReactiveMappings(profile, failures)
 }
 
+// The runtime loads `profiles/<catalog id>.json`, so every catalog id needs exactly that file and
+// every file must declare the id it is named after.
+function validateProfileFiles(files: string[], ids: Set<string>, failures: { count: number }) {
+  if (files.length === 0) {
+    console.error('[conditions-validate] no profile files found')
+    failures.count++
+  }
+  for (const file of files) {
+    const id = (loadJson(join(PROFILES_DIR, file)) as { id?: unknown }).id
+    if (`${String(id)}.json` !== file) {
+      console.error(`[conditions-validate] profile id ${String(id)} does not match file ${file}`)
+      failures.count++
+    }
+  }
+  for (const id of ids) {
+    if (!files.includes(`${id}.json`)) {
+      console.error(`[conditions-validate] catalog id has no profile file: ${id}`)
+      failures.count++
+    }
+  }
+}
+
 function validateProfileCatalog(profile: Profile, ids: Set<string>, failures: { count: number }) {
   if (!ids.has(profile.id)) {
     console.error(`[conditions-validate] profile not in catalog: ${profile.id}`)
@@ -143,6 +165,7 @@ function main() {
   const ids = new Set(catalogParsed.data.conditions.map((c) => c.id))
 
   for (const file of files) validateProfile(file, ids, failures)
+  validateProfileFiles(files, ids, failures)
   validateDemoProfiles(catalogParsed.data.conditions, failures)
 
   if (failures.count > 0) {

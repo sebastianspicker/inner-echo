@@ -183,10 +183,13 @@ export interface ReactiveOverlayStartupParams extends ReactiveOverlayElements {
   reducedMotion: boolean
   overlayControlRef: Ref<OverlayControl | null>
   reactiveRefs: ReactivePipelineRefs
-  safeMode: boolean
-  intensity: number
-  controlValues: Record<string, number | boolean>
-  stressMode: boolean
+  /** Read when the overlay actually starts, after the module load, so changes made meanwhile apply. */
+  getLiveParams: () => {
+    safeMode: boolean
+    intensity: number
+    controlValues: Record<string, number | boolean>
+    stressMode: boolean
+  }
   onOverlayStateChange?: (state: OverlayRuntimeState) => void
 }
 
@@ -201,10 +204,7 @@ export function startReactiveOverlay(
     reducedMotion,
     overlayControlRef,
     reactiveRefs,
-    safeMode,
-    intensity,
-    controlValues,
-    stressMode,
+    getLiveParams,
     onOverlayStateChange,
   }: ReactiveOverlayStartupParams,
 ): void {
@@ -232,6 +232,7 @@ export function startReactiveOverlay(
   )
   overlayControlRef.current = control
 
+  const { safeMode, intensity, controlValues, stressMode } = getLiveParams()
   const clampedIntensity = effectiveIntensity(activeProfile, intensity, safeMode)
   control.setParams({
     intensity: clampedIntensity,

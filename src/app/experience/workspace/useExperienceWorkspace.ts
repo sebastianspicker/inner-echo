@@ -44,7 +44,6 @@ function useAudioModel(session: ExperienceSession, snapshot: SessionSnapshot) {
       micGate,
       handleEnableAudio: session.enableSound,
       handleDisableAudio: session.disableSound,
-      handleAudioEnabledChange: session.setSoundEnabled,
       handleMasterVolumeChange: session.setMasterVolume,
       handleEnableMic: session.enableMic,
       handleDisableMic: session.disableMic,

@@ -42,11 +42,13 @@ export function finalizeAudioStack(
     })),
   )
   const enabled = settings.audioEnabled && collected.anyAudioDeclared
-  const baseMaster = enabled ? mergeNumericWeighted(collected.masterVolumes) : 0
+  // 0.2 only when nothing authored a volume; an authored 0 is a real choice.
+  const authored = collected.masterVolumes.some((m) => clamp01(m.w) > 0 && Number.isFinite(m.v))
+  const master = enabled && authored ? mergeNumericWeighted(collected.masterVolumes) : 0.2
   return {
     enabled,
     input: 'synth',
-    master: { volume: clamp01(baseMaster || 0.2) },
+    master: { volume: clamp01(master) },
     chain,
   }
 }

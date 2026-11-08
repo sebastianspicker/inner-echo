@@ -10,7 +10,8 @@ function rel(p: string): string {
 
 async function main(): Promise<void> {
   const rootDir = process.cwd()
-  const framesRaw = Number(process.env.INSPECT_FRAMES ?? 120)
+  // A blank INSPECT_FRAMES (an empty CI variable) means unset, not Number('') = 0 -> 1 frame.
+  const framesRaw = Number(process.env.INSPECT_FRAMES?.trim() || 120)
   const frames = Number.isFinite(framesRaw) ? Math.max(1, Math.floor(framesRaw)) : 120
 
   const report = runInspectHarness(rootDir, { frames })

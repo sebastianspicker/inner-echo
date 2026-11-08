@@ -62,8 +62,21 @@ function listIgnoredPaths() {
 
 const ignoredPaths = listIgnoredPaths()
 
-function isAvailable(resolved) {
+// macOS file systems ignore case, the Linux Pages build does not: match each segment exactly.
+function existsWithExactCase(resolved) {
   if (!fs.existsSync(resolved)) return false
+  const relativePath = path.relative(root, resolved)
+  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) return true
+  let directory = root
+  for (const segment of relativePath.split(path.sep).filter(Boolean)) {
+    if (!fs.readdirSync(directory).includes(segment)) return false
+    directory = path.join(directory, segment)
+  }
+  return true
+}
+
+function isAvailable(resolved) {
+  if (!existsWithExactCase(resolved)) return false
   return !ignoredPaths.some(
     (ignored) => resolved === ignored || resolved.startsWith(`${ignored}${path.sep}`),
   )

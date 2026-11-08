@@ -112,21 +112,6 @@ fieldset.ie-panelSection {
   border-top: 1px solid var(--rule);
 }
 
-.ie-safety__actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-3);
-}
-
-.ie-safety__actions .ie-btn--accent {
-  width: 100%;
-}
-
-.ie-safety__actionNote {
-  color: var(--ink-3);
-  font-size: var(--t-13);
-}
-
 /* Control rows: label and value on one line, the control beneath at full width. */
 
 .ie-control,

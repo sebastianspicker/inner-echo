@@ -31,6 +31,7 @@ export function AdvancedComposerPanel(props: AdvancedComposerPanelProps) {
         />
         <LabeledSlider
           label="Interaction amount"
+          commitOnRelease
           min={0}
           max={1}
           value={props.interactionAmount}

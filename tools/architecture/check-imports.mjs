@@ -5,8 +5,9 @@ import { demoAllowedLayers } from './layers.mjs'
 const root = process.cwd()
 const sourceRoot = resolve(root, 'src')
 const sourceExtensions = ['.ts', '.tsx']
+// Static, re-export, dynamic and side-effect (`import './x'`) imports.
 const importPattern =
-  /(?:import\s+(?:type\s+)?[^'"`]*?from\s*|export\s+[^'"`]*?from\s*|import\s*\(\s*)['"`]([^'"`]+)['"`]/g
+  /(?:import\s+(?:type\s+)?[^'"`]*?from\s*|export\s+[^'"`]*?from\s*|import\s*\(\s*|\bimport\s*)['"`]([^'"`]+)['"`]/g
 
 function collectSourceFiles(directory) {
   const files = []

@@ -25,7 +25,6 @@ function WorkspaceHeader({ model }: ModelProps) {
       cameraState={model.camera.cameraState}
       audioStatus={model.audio.audioStatus}
       audioEnabled={model.audio.audioEnabled}
-      effectsLabel={model.presentation.effectsLabel}
       canStop={model.cameraController.canStop}
       onOpenEvidence={model.openEvidence}
       onStop={model.cameraController.stop}
@@ -130,17 +129,9 @@ function WorkspaceComfort({ model }: ModelProps) {
       intensity={settings.intensity}
       safeMode={settings.safeMode}
       reducedMotion={settings.reducedMotion}
-      isRequesting={model.cameraController.isRequesting}
-      isActive={model.cameraController.isActive}
-      canStart
-      canStop={model.cameraController.canStop}
       onIntensityChange={model.setIntensity}
       onSafeModeChange={model.setSafeMode}
       onReducedMotionChange={model.setReducedMotion}
-      onStart={model.cameraController.start}
-      onStop={model.cameraController.stop}
-      variant={model.cameraController.isActive ? 'live' : 'setup'}
-      showCameraActions={false}
     />
   )
 }
@@ -172,17 +163,10 @@ function MediaControls({ model }: ModelProps) {
       {model.cameraController.isActive && (
         <EffectControls
           profile={model.profileLoad.profile}
-          intensity={settings.intensity}
-          safeMode={settings.safeMode}
           stressMode={settings.stressMode}
           reducedMotion={settings.reducedMotion}
-          audioEnabled={audio.audioEnabled}
           controlValues={model.profileLoad.controlValues}
-          onIntensityChange={model.setIntensity}
-          onSafeModeChange={model.setSafeMode}
           onStressModeChange={model.setStressMode}
-          onReducedMotionChange={model.setReducedMotion}
-          onAudioEnabledChange={audio.handleAudioEnabledChange}
           onControlValuesChange={model.profileLoad.setControlValues}
         />
       )}
@@ -307,6 +291,16 @@ function WorkspacePanel({ model }: ModelProps) {
   useLayoutEffect(() => {
     if (cameraActive && panelRef.current) panelRef.current.scrollTop = 0
   }, [cameraActive])
+
+  // Start camera and Stop Everything unmount once pressed; keep keyboard focus in the controls
+  // instead of dropping it to <body>. Only on a change, so page load never moves focus.
+  const transition = `${cameraActive}:${model.cameraController.canStop}`
+  const lastTransition = useRef(transition)
+  useLayoutEffect(() => {
+    if (lastTransition.current === transition) return
+    lastTransition.current = transition
+    if (document.activeElement === document.body) panelRef.current?.focus()
+  }, [transition])
 
   return (
     <aside

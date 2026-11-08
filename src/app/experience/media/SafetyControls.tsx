@@ -5,25 +5,14 @@ export interface SafetyControlsProps {
   intensity: number
   safeMode: boolean
   reducedMotion: boolean
-  isRequesting: boolean
-  isActive: boolean
-  canStart: boolean
-  canStop: boolean
   onIntensityChange: (value: number) => void
   onSafeModeChange: (value: boolean) => void
   onReducedMotionChange: (value: boolean) => void
-  onStart: () => void
-  onStop: () => void
-  variant?: 'setup' | 'live'
-  showCameraActions?: boolean
 }
 
 export function SafetyControls(props: SafetyControlsProps) {
   return (
-    <section
-      className={`ie-safety ie-safety--${props.variant ?? 'live'}`}
-      aria-labelledby="safety-controls-title"
-    >
+    <section className="ie-safety" aria-labelledby="safety-controls-title">
       <div className="ie-safety__heading">
         <h2 id="safety-controls-title" className="ie-sectionHead">
           Comfort
@@ -57,34 +46,6 @@ export function SafetyControls(props: SafetyControlsProps) {
           onChange={props.onReducedMotionChange}
         />
       </div>
-      {props.showCameraActions !== false && (
-        <div className="ie-safety__actions">
-          <button
-            type="button"
-            className="ie-btn ie-btn--accent"
-            onClick={props.onStart}
-            disabled={!props.canStart || props.isRequesting || props.isActive}
-            aria-busy={props.isRequesting}
-          >
-            {props.isRequesting ? 'Requesting camera…' : 'Start camera'}
-          </button>
-          {props.variant === 'setup' && (
-            <span className="ie-safety__actionNote">
-              Requests camera access. Sound and microphone stay off.
-            </span>
-          )}
-          {props.variant !== 'setup' && (
-            <button
-              type="button"
-              className="ie-btn ie-btn--danger"
-              onClick={props.onStop}
-              disabled={!props.canStop}
-            >
-              Stop Everything
-            </button>
-          )}
-        </div>
-      )}
     </section>
   )
 }

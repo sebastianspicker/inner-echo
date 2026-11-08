@@ -97,7 +97,6 @@ function CuratedSelection(props: InspectorSelectionProps) {
         catalog={props.filteredCatalog}
         value={props.selection.conditionId}
         onChange={props.selection.onConditionIdChange}
-        aria-label="Curated collection"
       />
       <div className="composer__row-meta">
         <EvidenceGrade badge={currentConditionBadge} />

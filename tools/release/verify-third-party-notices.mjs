@@ -77,7 +77,22 @@ const notice = fs.readFileSync(noticePath, 'utf8')
 const failures = []
 
 const { dependencies = {} } = JSON.parse(read('package.json').toString('utf8'))
-for (const name of Object.keys(dependencies)) {
+// Direct runtime dependencies and everything they pull in (react-dom -> scheduler) ship in the
+// bundle, so each needs an entry. shortcut: reads only top-level node_modules, which is where npm
+// places this small tree; walk nested node_modules if a version conflict ever nests one.
+const runtimePackages = new Set()
+const pending = Object.keys(dependencies)
+while (pending.length > 0) {
+  const name = pending.pop()
+  if (runtimePackages.has(name)) continue
+  const direct = name in dependencies
+  // An uninstalled optional transitive package (platform-specific) is not in the bundle.
+  if (!direct && !fs.existsSync(path.join(root, 'node_modules', name, 'package.json'))) continue
+  runtimePackages.add(name)
+  const metadata = packageMetadata(name)
+  pending.push(...Object.keys({ ...metadata.dependencies, ...metadata.optionalDependencies }))
+}
+for (const name of runtimePackages) {
   if (!entries.some((entry) => entry.name === name)) {
     failures.push(`${name}: runtime dependency has no entry in this notice check`)
   }

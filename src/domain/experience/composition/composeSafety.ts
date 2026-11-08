@@ -35,6 +35,7 @@ const GENERIC_VIDEO_PARAM_EXCLUSIONS = new Set([
   'scale',
   'decay',
   'jitter',
+  'surge_interval',
 ])
 
 export function clampAudioParams(
@@ -162,8 +163,10 @@ function createSafetyLimits(
   }
 }
 
+/** A profile clamp can only tighten the global limit (`fallback`), never raise it. */
 function readSafetyLimit(clamps: Record<string, unknown>, key: string, fallback: number): number {
-  return typeof clamps[key] === 'number' ? clamps[key] : fallback
+  const value = clamps[key]
+  return typeof value === 'number' ? Math.min(value, fallback) : fallback
 }
 
 type DimensionSafetyEntry = {
@@ -210,6 +213,11 @@ export function deriveComposedSafety(
   }
 
   const mergedSafeModeClamps = mergeSafeModeClamps(safeModeClampsList)
+  // Dimension clamps carry no max_intensity; without one Safe Mode would not damp at all.
+  // 0.75 is the strictest share a bundled profile uses.
+  if (typeof mergedSafeModeClamps.max_intensity !== 'number') {
+    mergedSafeModeClamps.max_intensity = 0.75
+  }
   const mergedWarnings = mergeWarnings(warningsLists)
   const mergedDisableNodes = mergeDisableNodes(reducedMotionDisableLists)
 

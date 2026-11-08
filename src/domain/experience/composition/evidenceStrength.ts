@@ -13,14 +13,20 @@ export function evidenceStrengthRank(value: unknown): number {
 
 const STRENGTH_BY_RANK: (EvidenceStrength | '')[] = ['', 'high', 'medium', 'low', 'hypothesis']
 
-/** The strongest evidence rating among a profile's experience dimensions, or '' if none. */
+/**
+ * The weakest evidence rating among a profile's experience dimensions (higher rank is weaker), or
+ * '' when there are none or any is unrated. Same rule as the generated evidence pages
+ * (`conditionStrength` in tools/docs/evidencePageModel.ts).
+ */
 export function profileStrength(
   profile: Profile | null,
   dimById: Map<string, ExperienceDimensionDef>,
 ): string {
   let rank = 0
   for (const dimension of profile?.experience_dimensions ?? []) {
-    rank = Math.max(rank, evidenceStrengthRank(dimById.get(dimension.id)?.evidence_strength))
+    const dimensionRank = evidenceStrengthRank(dimById.get(dimension.id)?.evidence_strength)
+    if (dimensionRank === 0) return ''
+    rank = Math.max(rank, dimensionRank)
   }
   return STRENGTH_BY_RANK[rank] ?? ''
 }

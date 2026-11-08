@@ -115,6 +115,12 @@
   font-size: var(--t-14);
 }
 
+/* Collapsed but still in the accessibility tree, unlike display: none. */
+.feedback:empty {
+  padding: 0;
+  border: 0;
+}
+
 /* The rail */
 
 .control-rail {
