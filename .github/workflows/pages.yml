@@ -10,6 +10,18 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Every deploy job is gated on main; without this a dispatch from another branch ends as a
+  # silent all-skipped run that looks like success.
+  reject-non-main:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Refuse to deploy from a branch other than main
+        run: |
+          echo "::error::Pages deploys only from main; this run was dispatched from ${GITHUB_REF}."
+          exit 1
+
   configure:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

@@ -10,12 +10,14 @@ export function evaluateCouplingMappings(
   video: VideoMetrics,
   strength: number,
   resolveBase: (mapping: CouplingMapping) => number,
+  audioStrength = strength,
 ): { video: Record<string, number>; audio: Record<string, number> } {
   const outVideo: Record<string, number> = {}
   const outAudio: Record<string, number> = {}
 
   for (const mapping of mappings) {
-    const target = mapping.compute(audio, video, strength, resolveBase(mapping))
+    const mappingStrength = mapping.kind === 'audio' ? audioStrength : strength
+    const target = mapping.compute(audio, video, mappingStrength, resolveBase(mapping))
     mapping.smoothed = smoothStep(
       mapping.smoothed,
       target,

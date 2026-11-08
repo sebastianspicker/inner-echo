@@ -103,7 +103,17 @@ export function createCouplingEngine(
         return { video: {}, audio: {} }
       }
 
-      return evaluateCouplingMappings(mappings, deltaSec, audio, video, strength, resolveBase)
+      // Audio bases are intensity-scaled, so the coupling added on top is too: intensity 0 stays
+      // neutral, full intensity is unchanged.
+      return evaluateCouplingMappings(
+        mappings,
+        deltaSec,
+        audio,
+        video,
+        strength,
+        resolveBase,
+        strength * clamp01(intensity),
+      )
     },
   }
 }
