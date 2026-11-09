@@ -217,13 +217,9 @@ function parseNumberHints(hint: unknown): number[] {
 
 function pickFromHint(hint: unknown, strength01: number): unknown {
   const nums = parseNumberHints(hint)
-  if (nums.length >= 2) {
-    const a = nums[0]
-    const b = nums[1]
-    const lo = Math.min(a, b)
-    const hi = Math.max(a, b)
-    return lo + (hi - lo) * clamp01(strength01)
-  }
+  // A range reads "at low weight..at full weight"; the written order decides the direction, so a
+  // negative-going effect is written "-0.25..-0.45".
+  if (nums.length >= 2) return nums[0] + (nums[1] - nums[0]) * clamp01(strength01)
   if (nums.length === 1) return nums[0]
   if (typeof hint === 'string') {
     const s = hint.toLowerCase()

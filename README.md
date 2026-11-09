@@ -117,6 +117,7 @@ nothing in production.
 | --- | --- | --- |
 | `localStorage` | `inner-echo-welcome-acknowledged-v2` | Whether you have seen the welcome. |
 | `localStorage` | `ie_custom_presets_v2` | Up to 30 validated setup snapshots. |
+| `localStorage` | `ie_custom_presets_v2_unreadable` | A copy of the stored setups, written only when some could not be read. |
 | URL hash | `#preset=` | A shared setup, capped at 8,192 characters. |
 
 The loader can also migrate the older `ie_custom_preset` key. Loading, migrating, or importing a

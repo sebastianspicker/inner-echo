@@ -55,6 +55,7 @@ interface SessionState {
   stage: StageElements | null
   liveSettings: LiveSettings
   cachedSnapshot: SessionSnapshot | null
+  cameraRequested: boolean
 }
 
 function createManagers(
@@ -123,11 +124,16 @@ function createLifecycleActions(
       managers.overlay.setLiveSettings(session.liveSettings)
     },
     retryOverlay: () => managers.overlay.retry(),
-    startCamera: () => void managers.camera.start(),
+    startCamera() {
+      session.cameraRequested = true
+      void managers.camera.start()
+    },
     stopEverything() {
       managers.camera.stop()
       managers.sound.stopForStopEverything()
-      clearStageCanvases(session.stage)
+      // Clearing asks the canvas for a context. On a canvas the renderer never used, that would
+      // create one with default options, and the renderer would later inherit them.
+      if (session.cameraRequested) clearStageCanvases(session.stage)
       notifyListeners()
     },
     release() {
@@ -145,7 +151,6 @@ function createSoundActions(
   ExperienceSession,
   | 'enableSound'
   | 'disableSound'
-  | 'setSoundEnabled'
   | 'setMasterVolume'
   | 'enableMic'
   | 'disableMic'
@@ -156,7 +161,6 @@ function createSoundActions(
   return {
     enableSound: () => managers.sound.enableSound(),
     disableSound: () => managers.sound.disableSound(),
-    setSoundEnabled: (enabled) => managers.sound.setSoundEnabled(enabled),
     setMasterVolume: (value) => managers.sound.setMasterVolume(value),
     enableMic: () => managers.sound.enableMic(),
     disableMic: () => managers.sound.disableMic(),
@@ -175,6 +179,7 @@ export function createExperienceSession(
     stage: null,
     liveSettings: DEFAULT_LIVE_SETTINGS,
     cachedSnapshot: null,
+    cameraRequested: false,
   }
   const notifyListeners = () => {
     for (const listener of listeners) listener()

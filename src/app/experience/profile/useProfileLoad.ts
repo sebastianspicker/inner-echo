@@ -9,7 +9,7 @@ import type {
 } from '../../../domain/experience/composition/types'
 import { logger } from '../../../platform/logger'
 import { composeEffectiveProfile, type ComposeReport } from './composeExperience'
-import { mergeControlValuesWithDefaults, mergePersistedControlValues } from './controls'
+import { mergePersistedControlValues } from './controls'
 import { useAsyncEffect } from './useAsyncEffect'
 import {
   createComposedProfileLoadFailure,
@@ -96,11 +96,7 @@ function applyComposedProfileLoadResult(
 ): void {
   setters.setProfile(result.profile)
   setters.setComposeReport(result.composeReport)
-  setters.setControlValues((previous) =>
-    result.status === 'ready'
-      ? mergeControlValuesWithDefaults(result.controlValues, previous)
-      : result.controlValues,
-  )
+  setters.setControlValues(result.controlValues)
   setters.setProfileLoadStatus(result.status)
   setters.setProfileLoadError(result.error)
 }

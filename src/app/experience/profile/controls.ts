@@ -8,14 +8,12 @@
 import type { Profile } from '../../../domain/experience/schema'
 import {
   getDefaultControlValues as domainGetDefaultControlValues,
-  mergeControlValuesWithDefaults,
   mergePersistedControlValues as domainMergePersistedControlValues,
   resolveProfileControls as domainResolveProfileControls,
   type ResolvedControl,
 } from '../../../domain/experience/controls'
 import { IMPLEMENTED_VIDEO_NODES } from '../../../runtime/capabilities'
 
-export { mergeControlValuesWithDefaults }
 export type { ResolvedControl }
 
 export function getDefaultControlValues(

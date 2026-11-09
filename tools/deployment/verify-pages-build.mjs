@@ -8,6 +8,7 @@ import {
   findForbiddenDemoFrameworks,
 } from './demo-artifact-policy.mjs'
 import { getPagesBasePath, pagesContentSecurityPolicy } from './pages-config.mjs'
+import { headerContentSecurityPolicy } from '../shared/csp.mjs'
 
 const root = resolve(import.meta.dirname, '../..')
 const output = resolve(root, 'dist')
@@ -45,6 +46,11 @@ function verifyCsp(document, path) {
   const content = policies[0]?.getAttribute('content') ?? ''
   if (content !== `${pagesContentSecurityPolicy};`) {
     failures.push(`${path}: Pages CSP differs from the deployment policy`)
+  }
+  // The comparison above uses the constant that produced the page, so a weakened constant
+  // would pass it; these literals do not move with it.
+  if (/unsafe-|\*/.test(content)) {
+    failures.push(`${path}: Pages CSP must not allow unsafe-* sources or wildcards`)
   }
   if (content.includes('frame-ancestors')) {
     failures.push(`${path}: meta CSP must not claim header-only frame-ancestors protection`)
@@ -153,6 +159,12 @@ if (demoEntry) {
   )) {
     failures.push(`mock demo static bundle contains forbidden ${forbiddenCapability} capability`)
   }
+}
+
+// public/_headers is a hand copy of the header policy for hosts that support response headers.
+const headersFile = await readFile(resolve(root, 'public/_headers'), 'utf8')
+if (!headersFile.includes(`Content-Security-Policy: ${headerContentSecurityPolicy}\n`)) {
+  failures.push('public/_headers: Content-Security-Policy differs from tools/shared/csp.mjs')
 }
 
 const hiddenFiles = relativeFiles.filter(

@@ -12,8 +12,6 @@ export const pageRecovery = {
 
 export interface ErrorBoundaryProps {
   children: ReactNode
-  fallback?: ReactNode
-  onReset?: () => void
 }
 
 interface ErrorBoundaryState {
@@ -40,30 +38,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
   }
 
-  /**
-   * Clean up resources when the boundary unmounts while in an error state.
-   * Without this, resources (audio contexts, streams, etc.) may leak if the
-   * boundary is removed from the tree without the user clicking "Reset".
-   */
-  componentWillUnmount(): void {
-    if (this.state.hasError && this.props.onReset) {
-      this.props.onReset()
-    }
-  }
-
   handleReset = (): void => {
-    // Clear error state first so the boundary recovers even if onReset throws.
     this.setState({ hasError: false, error: null })
-    if (this.props.onReset) {
-      this.props.onReset()
-      return
-    }
     pageRecovery.reload()
   }
 
   render(): ReactNode {
     if (this.state.hasError && this.state.error) {
-      if (this.props.fallback) return this.props.fallback
       return (
         <div role="alert" className="ie-errorBoundary">
           <h2 className="ie-errorBoundaryTitle">Something unexpected happened</h2>

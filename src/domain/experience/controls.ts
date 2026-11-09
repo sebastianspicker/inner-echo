@@ -193,19 +193,6 @@ export function getDefaultControlValues(
   return out
 }
 
-/** Merge previous control values into a fresh default set, keeping matching-type overrides. */
-export function mergeControlValuesWithDefaults(
-  defaults: Record<string, number | boolean>,
-  previous: Record<string, number | boolean>,
-): Record<string, number | boolean> {
-  const next: Record<string, number | boolean> = { ...defaults }
-  for (const [key, fallback] of Object.entries(defaults)) {
-    const previousValue = previous[key]
-    if (typeof previousValue === typeof fallback) next[key] = previousValue
-  }
-  return next
-}
-
 /** Recompute profile defaults, keeping the user's persisted global control overrides. */
 export function mergePersistedControlValues(
   profile: Profile,

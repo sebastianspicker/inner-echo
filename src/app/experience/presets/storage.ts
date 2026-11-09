@@ -9,6 +9,7 @@ import {
 
 export const PRESET_LIBRARY_STORAGE_KEY = 'ie_custom_presets_v2'
 export const LEGACY_PRESET_STORAGE_KEY = 'ie_custom_preset'
+export const UNREADABLE_PRESET_LIBRARY_STORAGE_KEY = 'ie_custom_presets_v2_unreadable'
 
 export type PresetLibraryParseReason =
   | 'empty'
@@ -66,7 +67,7 @@ export function parsePresetLibraryWithDiagnostics(serialized: string): PresetLib
 }
 
 const PRESET_LIBRARY_PARSE_WARNING =
-  'Saved preset library could not be read completely. Existing storage was left unchanged.'
+  'Some saved setups could not be read. A copy of the stored data is kept in this browser.'
 const LEGACY_PRESET_MIGRATION_WARNING =
   'Legacy preset storage could not be migrated. Existing storage was left unchanged.'
 
@@ -96,8 +97,16 @@ function parseCurrentLibrary(): LoadedPresetLibrary {
   const raw = localStorage.getItem(PRESET_LIBRARY_STORAGE_KEY)
   if (!raw) return { snapshots: [], warning: null }
   const result = parsePresetLibraryWithDiagnostics(raw)
-  const warning = result.diagnostics.ok ? null : PRESET_LIBRARY_PARSE_WARNING
-  return { snapshots: result.snapshots, warning }
+  if (result.diagnostics.ok) return { snapshots: result.snapshots, warning: null }
+  // The next save writes only the readable setups back; keep the full text so a later version
+  // can still migrate the rest. shortcut: holds the latest unreadable copy only, keep a history
+  // if two format changes ever overlap.
+  try {
+    localStorage.setItem(UNREADABLE_PRESET_LIBRARY_STORAGE_KEY, raw)
+  } catch (error) {
+    logger.warn('Unreadable preset library could not be backed up', error)
+  }
+  return { snapshots: result.snapshots, warning: PRESET_LIBRARY_PARSE_WARNING }
 }
 
 /** Loads the saved library, migrating the legacy single-preset key when v2 is empty and clean. */

@@ -12,7 +12,7 @@ const DEFAULT_CONDITION_ID = 'none'
 /**
  * The workspace's tunable settings as one object, so a preset payload applies in a single
  * `apply()` call. Sound-enabled is not a setting: the runtime session is its sole owner
- * (snapshot.soundEnabled / session.setSoundEnabled).
+ * (snapshot.soundEnabled / session.enableSound / session.disableSound).
  */
 export interface ExperienceSettings {
   composerMode: ComposerMode

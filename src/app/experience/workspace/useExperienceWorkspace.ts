@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { EvidenceDocPath } from '../../../content/evidence'
+import { getExperienceDimensions } from '../../../content/experience/experienceDimensions'
+import { hasBundledProfile } from '../../../content/experience/loader'
 import { describeAppliedClamps } from '../../../domain/experience/safety'
 import type { ExperienceSession, SessionSnapshot } from '../../../runtime/session'
 import { getCameraIssueMessage } from '../media/mediaMessages'
@@ -151,13 +153,23 @@ function useOpenEvidence(ui: WorkspaceUiState) {
   )
 }
 
+/** A link or an older setup may name a dimension or collection this build has no row for; it could not be unticked. */
+export function withKnownSelections(payload: PresetPayload): PresetPayload {
+  const known = new Set(getExperienceDimensions().map((dimension) => dimension.id))
+  return {
+    ...payload,
+    dimensions: payload.dimensions.filter((d) => known.has(d.dimensionId)),
+    presets: payload.presets.filter((preset) => hasBundledProfile(preset.profileId)),
+  }
+}
+
 /** Applies a loaded/shared payload in one call: settings.apply(...) + forcing sound off (ADR-0001). */
 function useApplyPreset(settingsModel: ExperienceSettingsModel, session: ExperienceSession) {
   const { apply } = settingsModel
   return useCallback(
     (payload: PresetPayload) => {
-      apply(payload)
-      session.setSoundEnabled(false)
+      apply(withKnownSelections(payload))
+      session.disableSound()
     },
     [apply, session],
   )

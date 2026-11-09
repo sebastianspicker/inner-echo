@@ -8,6 +8,7 @@
  * - video graph can be built (unknown nodes treated as failures here)
  * - reactive mappings resolve (video + audio targets), unknown targets are failures
  * - the device-free demo's profile rows use the catalog's labels and descriptions
+ * - the dimension list and the dimension-to-signal mapping validate against their schemas
  *
  * Run: npm run conditions:validate
  */
@@ -16,7 +17,13 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
-import { catalogSchema, profileSchema, type Profile } from '../../src/domain/experience/schema'
+import {
+  catalogSchema,
+  dimensionToSignalMappingFileSchema,
+  experienceDimensionsFileSchema,
+  profileSchema,
+  type Profile,
+} from '../../src/domain/experience/schema'
 import { IMPLEMENTED_VIDEO_NODES } from '../../src/runtime/capabilities'
 import { buildVideoNodes } from '../../src/runtime/visual/graph'
 import { resolveAnalyserTarget } from '../../src/runtime/coupling'
@@ -147,6 +154,21 @@ function validateDemoProfiles(
   }
 }
 
+// The app rejects either file as a whole when it fails its schema, and every dimension then
+// composes to nothing with only a development-only warning.
+function validateDimensionFiles(failures: { count: number }) {
+  const checks = [
+    ['experience-dimensions.json', experienceDimensionsFileSchema],
+    ['dimension-to-signal-mapping.json', dimensionToSignalMappingFileSchema],
+  ] as const
+  for (const [file, schema] of checks) {
+    const parsed = schema.safeParse(loadJson(join(CONDITIONS_DIR, file)))
+    if (parsed.success) continue
+    console.error(`[conditions-validate] schema failed: ${file}`, parsed.error.flatten())
+    failures.count++
+  }
+}
+
 function main() {
   const catalogRaw = loadJson(CATALOG_PATH)
   const catalogParsed = catalogSchema.safeParse(catalogRaw)
@@ -167,6 +189,7 @@ function main() {
   for (const file of files) validateProfile(file, ids, failures)
   validateProfileFiles(files, ids, failures)
   validateDemoProfiles(catalogParsed.data.conditions, failures)
+  validateDimensionFiles(failures)
 
   if (failures.count > 0) {
     console.error(`[conditions-validate] FAIL (${failures.count} issue(s))`)

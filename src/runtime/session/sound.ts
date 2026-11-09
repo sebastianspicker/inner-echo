@@ -13,10 +13,6 @@ import type {
 } from '../audio'
 import { DEFAULT_MASTER_VOLUME } from '../audio'
 
-function profileHasEnabledAudio(profile: Profile | null): boolean {
-  return profile?.audio_stack?.enabled === true
-}
-
 function selectAudioStack(
   profile: Profile | null,
   requested: boolean,
@@ -59,7 +55,6 @@ export interface SoundManager {
   setProfile(profile: Profile | null): void
   enableSound(): void
   disableSound(): void
-  setSoundEnabled(enabled: boolean): void
   setMasterVolume(value: number): void
   setIntensity(value: number): void
   enableMic(): void
@@ -152,17 +147,20 @@ function install(
   state: SoundState,
   deps: SoundManagerDeps,
   createEngine: AudioEngineFactory,
-  force: boolean,
   requestSeq: number,
 ): void {
   if (requestSeq !== state.seq) return
   state.control?.stop()
   state.control = null
-  const requested = profileHasEnabledAudio(state.profile) || force || state.enabled
-  if (profileHasEnabledAudio(state.profile) || force) state.enabled = true
-  const nextControl = createEngine(selectAudioStack(state.profile, requested), {
+  state.enabled = true
+  const nextControl = createEngine(selectAudioStack(state.profile, true), {
     onStatusChange: (nextStatus, nextError) => {
       if (requestSeq !== state.seq) return
+      // Tear a failed engine down, so a retry starts from a clean context instead of on top of it.
+      if (nextStatus === 'error') {
+        void stopOrCloseFailure(state, deps, requestSeq, new Error(nextError ?? 'Audio stopped.'))
+        return
+      }
       state.status = nextStatus
       state.error = nextError ?? null
       deps.notify()
@@ -176,7 +174,7 @@ function install(
     return
   }
   state.control = nextControl
-  state.masterVolume = selectMasterVolume(state.profile, requested, state.userVolume)
+  state.masterVolume = selectMasterVolume(state.profile, true, state.userVolume)
   state.status = 'on'
   state.control.setMasterVolume(state.masterVolume)
   state.control.setIntensity(state.intensity)
@@ -204,7 +202,7 @@ async function stopOrCloseFailure(
   if (!control) await deps.closeAudioContext()
 }
 
-function startSound(state: SoundState, deps: SoundManagerDeps, force: boolean): void {
+function startSound(state: SoundState, deps: SoundManagerDeps): void {
   const requestSeq = ++state.seq
   state.error = null
   state.status = 'starting'
@@ -226,7 +224,7 @@ function startSound(state: SoundState, deps: SoundManagerDeps, force: boolean): 
       try {
         const createEngine = await deps.loadAudioEngine()
         if (requestSeq !== state.seq) return
-        install(state, deps, createEngine, force, requestSeq)
+        install(state, deps, createEngine, requestSeq)
       } catch (thrown) {
         await stopOrCloseFailure(state, deps, requestSeq, thrown)
       }
@@ -248,12 +246,7 @@ function disableSound(state: SoundState, deps: SoundManagerDeps): void {
 
 type EngineActions = Pick<
   SoundManager,
-  | 'setProfile'
-  | 'enableSound'
-  | 'disableSound'
-  | 'setSoundEnabled'
-  | 'setMasterVolume'
-  | 'setIntensity'
+  'setProfile' | 'enableSound' | 'disableSound' | 'setMasterVolume' | 'setIntensity'
 >
 type LifecycleActions = Pick<SoundManager, 'stopForStopEverything' | 'releaseEngine'>
 type MicActions = Pick<
@@ -270,19 +263,9 @@ function createEngineActions(state: SoundState, deps: SoundManagerDeps): EngineA
     },
     enableSound() {
       if (state.status === 'on' || state.status === 'starting') return
-      startSound(state, deps, true)
+      startSound(state, deps)
     },
     disableSound: () => disableSound(state, deps),
-    setSoundEnabled(nextEnabled) {
-      if (!nextEnabled) {
-        disableSound(state, deps)
-        return
-      }
-      state.enabled = true
-      if (state.status !== 'on' && state.status !== 'starting') startSound(state, deps, true)
-      syncProfileAudio(state, deps)
-      deps.notify()
-    },
     setMasterVolume(value) {
       state.masterVolume = value
       state.userVolume = value

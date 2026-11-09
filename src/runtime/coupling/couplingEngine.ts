@@ -72,6 +72,16 @@ export function createCouplingEngine(
     ...createAudioCouplingMappings(profile),
   ]
 
+  // Scaled audio bases only change with intensity, so they are not rebuilt per frame either.
+  const audioBases = new Map<string, number>()
+  const rebuildAudioBases = () => {
+    for (const mapping of mappings) {
+      if (mapping.kind === 'audio')
+        audioBases.set(mapping.key, getScaledProfileAudioBase(profile, mapping.key, intensity))
+    }
+  }
+  rebuildAudioBases()
+
   const rebuildVideoMappings = () => {
     const audioMappings = mappings.filter((mapping) => mapping.kind === 'audio')
     mappings = [...buildVideoMappings(), ...audioMappings]
@@ -82,7 +92,11 @@ export function createCouplingEngine(
       couplingStrength = clamp01(next.couplingStrength)
       maxFeedback = clamp01(next.maxFeedback)
       safeMode = next.safeMode === true
-      intensity = next.intensity ?? 1
+      const nextIntensity = next.intensity ?? 1
+      if (nextIntensity !== intensity) {
+        intensity = nextIntensity
+        rebuildAudioBases()
+      }
       if (typeof next.reducedMotion === 'boolean' && next.reducedMotion !== reducedMotion) {
         reducedMotion = next.reducedMotion
         rebuildVideoMappings()
@@ -93,7 +107,7 @@ export function createCouplingEngine(
       const strength = couplingStrength * maxFeedback * safetyDamping
       const resolveBase = (mapping: CouplingMapping) =>
         mapping.kind === 'audio'
-          ? getScaledProfileAudioBase(profile, mapping.key, intensity)
+          ? (audioBases.get(mapping.key) as number)
           : getBaseNumeric(baseControlValues, mapping.key, videoBases.get(mapping.key) as number)
 
       if (strength === 0) {

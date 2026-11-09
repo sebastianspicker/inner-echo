@@ -99,6 +99,10 @@ export async function loadSelectedProfiles(
       report.missingPresets.push(preset.profileId)
       continue
     }
+    // A profile without nodes (the clean baseline) adds nothing to the blend, and its zero
+    // intensity limits would otherwise cap the whole composition at 0.
+    const audio = profile.audio_stack
+    if (!profile.video_stack.length && !audio?.chain?.length && !audio?.enabled) continue
     loadedProfiles.push({ preset, profile })
   }
   return loadedProfiles

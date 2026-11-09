@@ -11,6 +11,7 @@
  *    frame (60fps), which returns the calculated, smoothed, and clamped parameter overrides.
  */
 
+import { scaleAudioParam } from '../../domain/experience/audioIntensity'
 import type { Profile } from '../../domain/experience/schema'
 import { getProfileEntryForBuiltIndex } from '../../domain/experience/videoStack'
 import { IMPLEMENTED_VIDEO_NODES } from '../capabilities'
@@ -103,7 +104,8 @@ export function createReactiveDriver(
   options?: { reducedMotion?: boolean },
 ): {
   getVideoOverrides(delta: number, rms: number): Record<string, number>
-  getAudioOverrides(delta: number, rms: number): Record<string, number>
+  /** `intensity` scales the result like every other audio parameter: 0 is neutral. */
+  getAudioOverrides(delta: number, rms: number, intensity?: number): Record<string, number>
 } {
   const list = profile.reactive?.analyser_to_params
   if (!list?.length) {
@@ -126,7 +128,7 @@ export function createReactiveDriver(
     audioOut = {}
     for (const m of mappings) {
       const reactiveValue = rms * m.scale + m.offset
-      const raw = m.kind === 'video' ? m.baseValue + reactiveValue : reactiveValue
+      const raw = m.baseValue + reactiveValue
       const smoothed = smoothStep(m.smoothed, raw, delta, m.attack, m.release)
       m.smoothed = smoothed
       const v = clamp(smoothed, m.clampMin, m.clampMax)
@@ -152,14 +154,20 @@ export function createReactiveDriver(
       lastStep = stepAll(delta, rms)
       return { ...lastStep.video }
     },
-    getAudioOverrides(delta: number, rms: number) {
+    getAudioOverrides(delta: number, rms: number, intensity = 1) {
       if (!audioConsumed && lastStepSeq === frameSeq) {
         audioConsumed = true
-        return { ...lastStep.audio }
+      } else {
+        lastStep = stepAll(delta, rms)
+        lastStepSeq = frameSeq
       }
-      lastStep = stepAll(delta, rms)
-      lastStepSeq = frameSeq
-      return { ...lastStep.audio }
+      const scaled: Record<string, number> = {}
+      for (const [key, value] of Object.entries(lastStep.audio)) {
+        const parts = key.split('.')
+        const node = profile.audio_stack?.chain?.[Number(parts[1])]?.node ?? ''
+        scaled[key] = scaleAudioParam(node, parts.slice(2).join('.'), value, intensity)
+      }
+      return scaled
     },
   }
 }

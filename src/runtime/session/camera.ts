@@ -119,7 +119,7 @@ function handlePlaybackFailure(
   error: unknown,
 ): void {
   if (requestSeq !== internal.seq) return
-  if (import.meta.env?.DEV) logger.warn('video.play failed', error)
+  logger.warn('video.play failed', error)
   stopVideoStream(failedStream)
   internal.stream = null
   if (internal.video) internal.video.srcObject = null

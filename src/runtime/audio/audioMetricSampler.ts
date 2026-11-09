@@ -68,8 +68,6 @@ function sampleMicMetrics(
 export function createAudioMetricSampler(fftSize: number) {
   const mainHistory = createSpectrumHistory(fftSize)
   const micHistory = createSpectrumHistory(fftSize)
-  let lastMainRms = 0
-
   const sampleMicRms = (analyser: AnalyserNode) => {
     const sample = computeRms(analyser, micHistory.scratchTime)
     micHistory.scratchTime = sample.scratch
@@ -81,8 +79,7 @@ export function createAudioMetricSampler(fftSize: number) {
       if (!analyser) return 0
       const sample = computeRms(analyser, mainHistory.scratchTime)
       mainHistory.scratchTime = sample.scratch
-      lastMainRms = sample.rms
-      return lastMainRms
+      return sample.rms
     },
     sampleMicRms,
     resetMicHistory() {
@@ -101,10 +98,8 @@ export function createAudioMetricSampler(fftSize: number) {
 
       const hasSpectralHistory = mainHistory.previous?.length === analyser.frequencyBinCount
       const main = sampleAnalyser(analyser, mainHistory)
-      lastMainRms = main.rms
-
       return {
-        rms: lastMainRms,
+        rms: main.rms,
         centroid: main.centroid,
         flux: hasSpectralHistory ? main.flux : 0,
         low: main.low,

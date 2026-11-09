@@ -109,7 +109,6 @@ export interface ExperienceSession {
   release(): void
   enableSound(): void
   disableSound(): void
-  setSoundEnabled(enabled: boolean): void
   setMasterVolume(value: number): void
   enableMic(): void
   disableMic(): void

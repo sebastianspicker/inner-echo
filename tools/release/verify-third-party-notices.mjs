@@ -127,6 +127,18 @@ for (const entry of entries) {
   }
 }
 
+// Shipped assets that are not npm packages (the Geist fonts under src/shared/design/fonts).
+for (const published of ['third-party-licenses/geist-OFL-1.1.txt']) {
+  if (!notice.includes(published)) {
+    failures.push(`${published}: license path is missing from public/THIRD_PARTY_NOTICES.txt`)
+  }
+  if (!fs.existsSync(path.join(root, 'public', published))) {
+    failures.push(`${published}: license text is missing from public/`)
+  } else if (requireDist && !read(`public/${published}`).equals(read(`dist/${published}`))) {
+    failures.push(`${published}: dist license text differs from the public source`)
+  }
+}
+
 if (requireDist) {
   const distributedNotice = read('dist/THIRD_PARTY_NOTICES.txt')
   if (!fs.readFileSync(noticePath).equals(distributedNotice)) {

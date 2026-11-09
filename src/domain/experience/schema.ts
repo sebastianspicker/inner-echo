@@ -94,19 +94,24 @@ export const audioStackSchema = z.object({
 })
 
 /** One analyser-to-param mapping (source, target, scale, smoothing, clamp). */
-export const analyserToParamSchema = z.object({
-  source: z.enum(['rms']),
-  target: z.string(), // e.g. "video.grain.amount", "video.temporal_smear.feedback"
-  scale: z.number().optional(),
-  offset: z.number().optional(),
-  smoothing: z
-    .object({
-      attack: z.number().min(0).optional(),
-      release: z.number().min(0).optional(),
-    })
-    .optional(),
-  clamp: z.tuple([z.number(), z.number()]).optional(),
-})
+export const analyserToParamSchema = z
+  .object({
+    source: z.enum(['rms']),
+    target: z.string(), // e.g. "video.grain.amount", "video.temporal_smear.feedback"
+    scale: z.number().optional(),
+    offset: z.number().optional(),
+    smoothing: z
+      .object({
+        attack: z.number().min(0).optional(),
+        release: z.number().min(0).optional(),
+      })
+      .optional(),
+    clamp: z.tuple([z.number(), z.number()]).optional(),
+  })
+  // The default clamp is 0..1, which would pin a value in Hz or dB to the bottom of its range.
+  .refine((mapping) => !mapping.target.toLowerCase().startsWith('audio.') || mapping.clamp, {
+    message: 'an audio target needs an explicit clamp',
+  })
 
 /** Reactive config: analyser RMS to video/audio parameter mappings. */
 export const reactiveSchema = z.object({

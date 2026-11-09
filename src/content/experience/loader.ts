@@ -22,6 +22,11 @@ function getProfilePath(id: string): string {
   return `./profiles/${id}.json`
 }
 
+/** Whether a profile with this id ships in the bundle. */
+export function hasBundledProfile(id: string): boolean {
+  return getProfilePath(id) in profileModules
+}
+
 /**
  * Load and validate the experience catalog.
  * Returns null on failure (invalid JSON or validation error); logs to console.

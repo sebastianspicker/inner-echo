@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { logger } from '../../../platform/logger'
 import { copyTextToClipboard } from './clipboard'
 import {
+  createPresetPayload,
   createPresetSnapshot,
   decodePresetFromHash,
   DEFAULT_PRESET_NAME,
@@ -221,7 +222,7 @@ function useSaveActions({ state, patch, feedback, currentPayload, selectedSnapsh
       ...selectedSnapshot,
       name: state.presetName.trim() || selectedSnapshot.name,
       createdAt: nowIso(),
-      payload: currentPayload,
+      payload: createPresetPayload(currentPayload),
     }
     const next = state.library.map((item) => (item.id === selectedSnapshot.id ? updated : item))
     if (!persistAndSet(patch, next)) return

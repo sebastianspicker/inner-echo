@@ -109,7 +109,11 @@ export function createOverridesGetter(
   ) => {
     const reactiveRms = Math.max(audio.rms, audio.micRms ?? 0)
     const videoReactive = driver.getVideoOverrides(delta, reactiveRms)
-    const audioReactive = driver.getAudioOverrides(delta, reactiveRms)
+    const audioReactive = driver.getAudioOverrides(
+      delta,
+      reactiveRms,
+      refs.intensityRef?.current ?? 1,
+    )
 
     clearRecord(baseAfterReactive)
     copyRecord(baseAfterReactive, baseControlValues)

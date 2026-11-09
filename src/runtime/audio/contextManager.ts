@@ -91,8 +91,16 @@ function getOrCreateAudioContext(): AudioContext {
   const AudioCtx =
     window.AudioContext ??
     (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-  sharedContext = new AudioCtx()
-  return sharedContext
+  const context = new AudioCtx()
+  // Browsers pause a running context on their own (a call or a screen lock on a phone). Report
+  // it, or the page keeps showing sound as on while nothing plays.
+  context.onstatechange = () => {
+    if (context !== sharedContext || closingPromise || lastNotifiedStatus !== 'on') return
+    if (context.state === 'running' || context.state === 'closed') return
+    notify('error', 'The browser paused the sound. Press Retry audio.')
+  }
+  sharedContext = context
+  return context
 }
 
 function reportStartedContext(context: AudioContext): AudioContextStatus {
